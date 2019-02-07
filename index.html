@@ -110,7 +110,7 @@
 <p>我们改造一下，改造成能够用于盲注的句式：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select * from flag.flag where fid=1 and (database()=&apos;flag&apos;)*999*pow(999,102)</span><br></pre></td></tr></table></figure>
 <p>对’flag’字符串进行修改，可以看到不同的结果：</p>
-<p><img src="" alt="https://laohulaohuhu.cn/Twings/2019272246.png"></p>
+<p><img src="https://laohulaohuhu.cn/Twings/2019272246.png" alt=""></p>
 <p>思路很简单，就是利用MySQL的double类型溢出报错，而pow函数会返回double类型的数据。</p>
 <hr>
 <p>这只是一个简单的思路和用法，如果有更多的骚操作和骚思路，欢迎跟我一起交流~</p>

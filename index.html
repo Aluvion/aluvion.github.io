@@ -41,9 +41,9 @@
     <h2 class="author">Aluvion</h2>
     <h3 class="description">摸鱼</h3>
     <div class="count-box">
-      <a href="/archives"><div><strong>2</strong><br>文章</div></a>
+      <a href="/archives"><div><strong>3</strong><br>文章</div></a>
       <a href="/categories"><div><strong>0</strong><br>分类</div></a>
-      <a href="/tags"><div><strong>1</strong><br>标签</div></a>
+      <a href="/tags"><div><strong>2</strong><br>标签</div></a>
     </div>
     <ul class="blog-link">
      
@@ -68,6 +68,84 @@
 </div>
 
         <section id="main">
+  
+    <article id="post-CVE-2019-1003000复现" class="wow slideInRight article article-type-post" itemscope="" itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/02/26/CVE-2019-1003000复现/" class="article-date">
+  <time class="post-time" datetime="2019-02-26T10:56:00.000Z" itemprop="datePublished">
+    <span class="post-month">2月</span><br>
+    <span class="post-day">26</span>
+  </time>
+</a>
+   
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/02/26/CVE-2019-1003000复现/">CVE-2019-1003000复现</a>
+    </h1>
+  
+
+        <div>
+          
+          
+              
+
+          
+        </div>
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="漏洞详情"><a href="#漏洞详情" class="headerlink" title="漏洞详情"></a>漏洞详情</h3><p><a href="https://devco.re/blog/2019/01/16/hacking-Jenkins-part1-play-with-dynamic-routing/" target="_blank" rel="noopener">https://devco.re/blog/2019/01/16/hacking-Jenkins-part1-play-with-dynamic-routing/</a></p>
+<p><a href="https://devco.re/blog/2019/02/19/hacking-Jenkins-part2-abusing-meta-programming-for-unauthenticated-RCE/" target="_blank" rel="noopener">https://devco.re/blog/2019/02/19/hacking-Jenkins-part2-abusing-meta-programming-for-unauthenticated-RCE/</a></p>
+<hr>
+<h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>因为docker部署的 Jenkins 会自行安装插件，这里可能会有一些插件版本上面的问题，所以我们的漏洞环境采用GitHub项目+docker进行搭建，GitHub地址：<a href="https://github.com/adamyordan/cve-2019-1003000-jenkins-rce-poc.git。" target="_blank" rel="noopener">https://github.com/adamyordan/cve-2019-1003000-jenkins-rce-poc.git。</a></p>
+<p>下载到的项目有EXP和环境源码，我们主要用的是sample-vuln目录下的代码，这里可以直接运行他的run.sh进行docker的搭建，docker会自行下载需要的images。（PS：我的虚拟机下载images有点慢，所以我用VPS下载然后再导出导入）</p>
+<p>这个环境跟Orange大佬的环境稍有不同，Orange大佬的环境采用的是Read-only Mode的权限模式，而这个环境用的是Authenticated Mode，同时还给了一个user1/user1的用户，就我们复现漏洞而言并没有什么关系。</p>
+<hr>
+<h3 id="漏洞复现"><a href="#漏洞复现" class="headerlink" title="漏洞复现"></a>漏洞复现</h3><h6 id="生成攻击JAR"><a href="#生成攻击JAR" class="headerlink" title="生成攻击JAR"></a>生成攻击JAR</h6><p><img src="https://laohulaohuhu.cn/Twings/20192261.png" alt=""></p>
+<p>然后 jar cvf poc-1.jar * 打包成jar文件，并部署到自己的VPS上面</p>
+<h6 id="让服务器下载恶意jar并执行payload"><a href="#让服务器下载恶意jar并执行payload" class="headerlink" title="让服务器下载恶意jar并执行payload"></a>让服务器下载恶意jar并执行payload</h6><p><img src="https://laohulaohuhu.cn/Twings/20192262.png" alt=""></p>
+<p><img src="https://laohulaohuhu.cn/Twings/20192263.png" alt=""></p>
+<p>命令成功执行</p>
+<p>其中有几点需要注意的地方：</p>
+<ol>
+<li><p>Payload中各个参数的意义：</p>
+<p>name：什么都可以</p>
+<p>root：你的VPS的地址</p>
+<p>group：恶意jar文件存放的路径，cn.laohulaohuhu即<a href="https://laohulaohuhu.cn/cn/laohulaohuhu目录" target="_blank" rel="noopener">https://laohulaohuhu.cn/cn/laohulaohuhu目录</a></p>
+<p>module、version：恶意jar文件的名字，即module-version.jar</p>
+</li>
+<li><p>服务器会缓存访问到的jar文件，再次提交相同group的payload的时候，服务端不会再去访问我们的jar。</p>
+</li>
+</ol>
+<p><img src="https://laohulaohuhu.cn/Twings/20192264.png" alt=""></p>
+<h6 id="反弹shell"><a href="#反弹shell" class="headerlink" title="反弹shell"></a>反弹shell</h6><p>修改java代码，再次生成恶意jar文件并提交payload</p>
+<p><img src="https://laohulaohuhu.cn/Twings/20192265.png" alt=""></p>
+<hr>
+<p>作者水平有限，如有错误请指出Orz</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2019/02/26/CVE-2019-1003000复现/" data-id="cjslql5z4000344v6md33gatr" class="article-share-link">分享</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复现/">复现</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+
   
     <article id="post-基于报错的盲注" class="wow slideInRight article article-type-post" itemscope="" itemprop="blogPost">
   <div class="article-meta">
@@ -118,7 +196,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/02/07/基于报错的盲注/" data-id="cjruqr0t40000s4v6ak23g2p2" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/02/07/基于报错的盲注/" data-id="cjslql5yx000244v6sa4jblcp" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
@@ -169,7 +247,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/02/06/hello-world/" data-id="cjruqr0t90002s4v6ef4hteh5" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/02/06/hello-world/" data-id="cjslql5zf000844v649c6k032" class="article-share-link">分享</a>
       
       
     </footer>
@@ -221,9 +299,9 @@
     <h2 class="author">Aluvion</h2>
     <h3 class="description">摸鱼</h3>
     <div class="count-box">
-      <a href="/archives"><div><strong>2</strong><br>文章</div></a>
+      <a href="/archives"><div><strong>3</strong><br>文章</div></a>
       <a href="/categories"><div><strong>0</strong><br>分类</div></a>
-      <a href="/tags"><div><strong>1</strong><br>标签</div></a>
+      <a href="/tags"><div><strong>2</strong><br>标签</div></a>
     </div>
 
 

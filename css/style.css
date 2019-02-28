@@ -2040,7 +2040,7 @@ pre .html .doctype,
 pre .css .id,
 pre .css .class,
 pre .css .pseudo {
-  color: #f2777a;
+  color: #000;
 }
 pre .number,
 pre .preprocessor,

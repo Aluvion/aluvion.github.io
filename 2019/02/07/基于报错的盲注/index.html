@@ -13,12 +13,12 @@
 <meta property="og:site_name" content="Twings">
 <meta property="og:description" content="说到SQL盲注，一般来说就是两种：布尔盲注和时间盲注。布尔盲注基于True和False，是比较常用和便捷的手法；时间盲注基于延时，较为麻烦，一般来说是作为没有任何回显情况下的最后的注入手段。而很少见到有人提到基于报错的盲注方式。 报错盲注思路类似布尔盲注，利用的是SQL语句报错与否造成的回显结果的不同，我们需要找到一句能够报错的SQL语句，而且它还要满足一个条件：能够用布尔来控制报错与否。 下面举">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="https://laohulaohuhu.cn/Twings/2019272246.png">
-<meta property="og:updated_time" content="2019-02-28T05:40:47.230Z">
+<meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/tree/master/css/images/2019272246.png?raw=true">
+<meta property="og:updated_time" content="2019-03-04T15:38:01.258Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="基于报错的盲注">
 <meta name="twitter:description" content="说到SQL盲注，一般来说就是两种：布尔盲注和时间盲注。布尔盲注基于True和False，是比较常用和便捷的手法；时间盲注基于延时，较为麻烦，一般来说是作为没有任何回显情况下的最后的注入手段。而很少见到有人提到基于报错的盲注方式。 报错盲注思路类似布尔盲注，利用的是SQL语句报错与否造成的回显结果的不同，我们需要找到一句能够报错的SQL语句，而且它还要满足一个条件：能够用布尔来控制报错与否。 下面举">
-<meta name="twitter:image" content="https://laohulaohuhu.cn/Twings/2019272246.png">
+<meta name="twitter:image" content="https://github.com/Aluvion/aluvion.github.io/tree/master/css/images/2019272246.png?raw=true">
   
     <link rel="alternate" href="/atom.xml" title="Twings" type="application/atom+xml">
   
@@ -112,7 +112,7 @@
 <p>我们改造一下，改造成能够用于盲注的句式：</p>
 <figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> flag.flag <span class="keyword">where</span> fid=<span class="number">1</span> <span class="keyword">and</span> (<span class="keyword">database</span>()=<span class="string">'flag'</span>)*<span class="number">999</span>*<span class="keyword">pow</span>(<span class="number">999</span>,<span class="number">102</span>)</span><br></pre></td></tr></table></figure>
 <p>对’flag’字符串进行修改，可以看到不同的结果：</p>
-<p><img src="https://laohulaohuhu.cn/Twings/2019272246.png" alt=""></p>
+<p><img src="https://github.com/Aluvion/aluvion.github.io/tree/master/css/images/2019272246.png?raw=true" alt=""></p>
 <p>思路很简单，就是利用MySQL的double类型溢出报错，而pow函数会返回double类型的数据。</p>
 <hr>
 <p>这只是一个简单的思路和用法，如果有更多的骚操作和骚思路，欢迎跟我一起交流~</p>
@@ -120,7 +120,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/02/07/基于报错的盲注/" data-id="cjsuicpuh0006lcv6n4c0xcuy" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/02/07/基于报错的盲注/" data-id="cjsuifaji000a1cv6e8khm5o4" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>

@@ -117,7 +117,7 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run -id --name nexus -p 32770:8081 -p 8888:8888 nexus</span><br></pre></td></tr></table></figure>
 <p>运行镜像。然后我们exec进入容器里面，运行start-nexus-repository-manager.sh开启Web服务，这样一来测试环境就搭建完成了，</p>
 <h6 id="IDEA配置"><a href="#IDEA配置" class="headerlink" title="IDEA配置"></a>IDEA配置</h6><p>用IDEA打开源码文件夹，等待maven将代码下载完，然后点击右上方Edit Configuration配置远程调试：</p>
-<p><img src="https://laohulaohuhu.cn/Twings/201903042.png" alt=""></p>
+<p><img src="https://github.com/Aluvion/aluvion.github.io/tree/master/css/images/201903042.png?raw=true" alt=""></p>
 <hr>
 <p>参考文章：</p>
 <p><a href="https://www.anquanke.com/post/id/171116" target="_blank" rel="noopener">https://www.anquanke.com/post/id/171116</a></p>
@@ -126,7 +126,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/04/Nexus-Repository-Manager-3-CVE-2019-7238-IDEA远程调试/" data-id="cjsuicpue0005lcv6lwmr7rft" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/03/04/Nexus-Repository-Manager-3-CVE-2019-7238-IDEA远程调试/" data-id="cjsuifajc00061cv64gza1sog" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复现/">复现</a></li></ul>
@@ -177,17 +177,17 @@
 <p>因为我的电脑上的Winrar已经更新的原因，这里我采用win7的虚拟机进行复现。</p>
 <hr>
 <p>首先我们要生成一个ACE压缩文件，这里需要用到一个Winace软件，将恶意文件压缩进去，这里用putty作为测试：</p>
-<p><img src="https://laohulaohuhu.cn/Twings/2019311.png" alt=""></p>
+<p><img src="https://github.com/Aluvion/aluvion.github.io/tree/master/css/images/2019311.png?raw=true" alt=""></p>
 <p>这里为了目录穿越要选择 store full path 选项。</p>
 <p>压缩完成会得到一个ace文件，接下来我们就需要修改这个文件，来将文件名修改成一个带有目录穿越符号的恶意文件名。</p>
 <p>github上面有一个项目可以提取ace文件的一些信息，可以使用 git clone <a href="https://github.com/droe/acefile" target="_blank" rel="noopener">https://github.com/droe/acefile</a> 来进行下载，我们生成的ace文件信息如下：</p>
-<p><img src="https://laohulaohuhu.cn/Twings/2019313.png" alt=""></p>
+<p><img src="https://github.com/Aluvion/aluvion.github.io/tree/master/css/images/2019313.png?raw=true" alt=""></p>
 <p>我们修改文件名的同时也要修改的参数是这几个：crc、size、filename的长度。</p>
 <p>相对于文件中的地方从前往后就是：</p>
-<p><img src="https://laohulaohuhu.cn/Twings/2019312.png" alt=""></p>
+<p><img src="https://github.com/Aluvion/aluvion.github.io/tree/master/css/images/2019312.png?raw=true" alt=""></p>
 <p>我们使用010Editor进行修改，按顺序修改文件名、filename长度、size、crc，具体的修改操作可以参考下面的链接。</p>
 <p>修改结束后：</p>
-<p><img src="https://laohulaohuhu.cn/Twings/2019314.png" alt=""></p>
+<p><img src="https://github.com/Aluvion/aluvion.github.io/tree/master/css/images/2019314.png?raw=true" alt=""></p>
 <p>然后将修改后的ace文件放入虚拟机桌面进行解压，成功看到putty出现在启动文件夹中！</p>
 <hr>
 <p>参考文章：</p>
@@ -197,7 +197,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/01/Winrar远程代码执行漏洞复现/" data-id="cjsuicpu90002lcv64a6umxgv" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/03/01/Winrar远程代码执行漏洞复现/" data-id="cjsuifaht00001cv6zyeruutw" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复现/">复现</a></li></ul>
@@ -267,7 +267,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/02/27/GoogleCTF2018-beginners-js_safe_1/" data-id="cjsuicpu50001lcv6ex2w4iz7" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/02/27/GoogleCTF2018-beginners-js_safe_1/" data-id="cjsuifaiu00021cv68d8gjf5z" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTF/">CTF</a></li></ul>
@@ -320,10 +320,10 @@
 <p>下载到的项目有EXP和环境源码，我们主要用的是sample-vuln目录下的代码，这里可以直接运行他的run.sh进行docker的搭建，docker会自行下载需要的images。（PS：我的虚拟机下载images有点慢，所以我用VPS下载然后再导出导入）</p>
 <p>这个环境跟Orange大佬的环境稍有不同，Orange大佬的环境采用的是Read-only Mode的权限模式，而这个环境用的是Authenticated Mode，同时还给了一个user1/user1的用户，就我们复现漏洞而言并没有什么关系。</p>
 <hr>
-<h3 id="漏洞复现"><a href="#漏洞复现" class="headerlink" title="漏洞复现"></a>漏洞复现</h3><h6 id="生成攻击JAR"><a href="#生成攻击JAR" class="headerlink" title="生成攻击JAR"></a>生成攻击JAR</h6><p><img src="https://laohulaohuhu.cn/Twings/20192261.png" alt=""></p>
+<h3 id="漏洞复现"><a href="#漏洞复现" class="headerlink" title="漏洞复现"></a>漏洞复现</h3><h6 id="生成攻击JAR"><a href="#生成攻击JAR" class="headerlink" title="生成攻击JAR"></a>生成攻击JAR</h6><p><img src="https://github.com/Aluvion/aluvion.github.io/tree/master/css/images/20192261.png?raw=true" alt=""></p>
 <p>然后 jar cvf poc-1.jar * 打包成jar文件，并部署到自己的VPS上面</p>
-<h6 id="让服务器下载恶意jar并执行payload"><a href="#让服务器下载恶意jar并执行payload" class="headerlink" title="让服务器下载恶意jar并执行payload"></a>让服务器下载恶意jar并执行payload</h6><p><img src="https://laohulaohuhu.cn/Twings/20192262.png" alt=""></p>
-<p><img src="https://laohulaohuhu.cn/Twings/20192263.png" alt=""></p>
+<h6 id="让服务器下载恶意jar并执行payload"><a href="#让服务器下载恶意jar并执行payload" class="headerlink" title="让服务器下载恶意jar并执行payload"></a>让服务器下载恶意jar并执行payload</h6><p><img src="https://github.com/Aluvion/aluvion.github.io/tree/master/css/images/20192262.png?raw=true" alt=""></p>
+<p><img src="https://github.com/Aluvion/aluvion.github.io/tree/master/css/images/20192263.png?raw=true" alt=""></p>
 <p>命令成功执行</p>
 <p>其中有几点需要注意的地方：</p>
 <ol>
@@ -336,16 +336,16 @@
 <li><p>服务器会缓存访问到的jar文件，再次提交相同group的payload的时候，服务端不会再去访问我们的jar。</p>
 </li>
 </ol>
-<p><img src="https://laohulaohuhu.cn/Twings/20192264.png" alt=""></p>
+<p><img src="https://github.com/Aluvion/aluvion.github.io/tree/master/css/images/20192264.png?raw=true" alt=""></p>
 <h6 id="反弹shell"><a href="#反弹shell" class="headerlink" title="反弹shell"></a>反弹shell</h6><p>修改java代码，再次生成恶意jar文件并提交payload</p>
-<p><img src="https://laohulaohuhu.cn/Twings/20192265.png" alt=""></p>
+<p><img src="https://github.com/Aluvion/aluvion.github.io/tree/master/css/images/20192265.png?raw=true" alt=""></p>
 <hr>
 <p>作者水平有限，如有错误请指出Orz</p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/02/26/CVE-2019-1003000复现/" data-id="cjsuicpul0009lcv6k0872su6" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/02/26/CVE-2019-1003000复现/" data-id="cjsuifaje00071cv631rhr7r8" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复现/">复现</a></li></ul>
@@ -400,7 +400,7 @@
 <p>我们改造一下，改造成能够用于盲注的句式：</p>
 <figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> flag.flag <span class="keyword">where</span> fid=<span class="number">1</span> <span class="keyword">and</span> (<span class="keyword">database</span>()=<span class="string">'flag'</span>)*<span class="number">999</span>*<span class="keyword">pow</span>(<span class="number">999</span>,<span class="number">102</span>)</span><br></pre></td></tr></table></figure>
 <p>对’flag’字符串进行修改，可以看到不同的结果：</p>
-<p><img src="https://laohulaohuhu.cn/Twings/2019272246.png" alt=""></p>
+<p><img src="https://github.com/Aluvion/aluvion.github.io/tree/master/css/images/2019272246.png?raw=true" alt=""></p>
 <p>思路很简单，就是利用MySQL的double类型溢出报错，而pow函数会返回double类型的数据。</p>
 <hr>
 <p>这只是一个简单的思路和用法，如果有更多的骚操作和骚思路，欢迎跟我一起交流~</p>
@@ -408,7 +408,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/02/07/基于报错的盲注/" data-id="cjsuicpuh0006lcv6n4c0xcuy" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/02/07/基于报错的盲注/" data-id="cjsuifaji000a1cv6e8khm5o4" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
@@ -459,7 +459,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/02/06/hello-world/" data-id="cjsuicpub0004lcv6vm2wldk3" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/02/06/hello-world/" data-id="cjsuifaja00051cv608ua8cyl" class="article-share-link">分享</a>
       
       
     </footer>

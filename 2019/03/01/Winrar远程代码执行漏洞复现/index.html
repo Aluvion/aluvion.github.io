@@ -13,15 +13,15 @@
 <meta property="og:site_name" content="Twings">
 <meta property="og:description" content="最近出现的有名的Winrar的一个漏洞，成因是Winrar在处理ACE文件的时候处理不当，存在一个目录穿越漏洞，攻击者可以通过精心构造的压缩包，在受害人解压的时候实现任意文件写入。 因为这个漏洞网上已经有了很多的相关文章，复现过程也没有什么坑，所以我就从简复现一下。 因为我的电脑上的Winrar已经更新的原因，这里我采用win7的虚拟机进行复现。  首先我们要生成一个ACE压缩文件，这里需要用到一">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="https://laohulaohuhu.cn/Twings/2019311.png">
-<meta property="og:image" content="https://laohulaohuhu.cn/Twings/2019313.png">
-<meta property="og:image" content="https://laohulaohuhu.cn/Twings/2019312.png">
-<meta property="og:image" content="https://laohulaohuhu.cn/Twings/2019314.png">
-<meta property="og:updated_time" content="2019-03-01T06:49:23.650Z">
+<meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/tree/master/css/images/2019311.png?raw=true">
+<meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/tree/master/css/images/2019313.png?raw=true">
+<meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/tree/master/css/images/2019312.png?raw=true">
+<meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/tree/master/css/images/2019314.png?raw=true">
+<meta property="og:updated_time" content="2019-03-04T15:38:29.658Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Winrar远程代码执行漏洞复现">
 <meta name="twitter:description" content="最近出现的有名的Winrar的一个漏洞，成因是Winrar在处理ACE文件的时候处理不当，存在一个目录穿越漏洞，攻击者可以通过精心构造的压缩包，在受害人解压的时候实现任意文件写入。 因为这个漏洞网上已经有了很多的相关文章，复现过程也没有什么坑，所以我就从简复现一下。 因为我的电脑上的Winrar已经更新的原因，这里我采用win7的虚拟机进行复现。  首先我们要生成一个ACE压缩文件，这里需要用到一">
-<meta name="twitter:image" content="https://laohulaohuhu.cn/Twings/2019311.png">
+<meta name="twitter:image" content="https://github.com/Aluvion/aluvion.github.io/tree/master/css/images/2019311.png?raw=true">
   
     <link rel="alternate" href="/atom.xml" title="Twings" type="application/atom+xml">
   
@@ -111,17 +111,17 @@
 <p>因为我的电脑上的Winrar已经更新的原因，这里我采用win7的虚拟机进行复现。</p>
 <hr>
 <p>首先我们要生成一个ACE压缩文件，这里需要用到一个Winace软件，将恶意文件压缩进去，这里用putty作为测试：</p>
-<p><img src="https://laohulaohuhu.cn/Twings/2019311.png" alt=""></p>
+<p><img src="https://github.com/Aluvion/aluvion.github.io/tree/master/css/images/2019311.png?raw=true" alt=""></p>
 <p>这里为了目录穿越要选择 store full path 选项。</p>
 <p>压缩完成会得到一个ace文件，接下来我们就需要修改这个文件，来将文件名修改成一个带有目录穿越符号的恶意文件名。</p>
 <p>github上面有一个项目可以提取ace文件的一些信息，可以使用 git clone <a href="https://github.com/droe/acefile" target="_blank" rel="noopener">https://github.com/droe/acefile</a> 来进行下载，我们生成的ace文件信息如下：</p>
-<p><img src="https://laohulaohuhu.cn/Twings/2019313.png" alt=""></p>
+<p><img src="https://github.com/Aluvion/aluvion.github.io/tree/master/css/images/2019313.png?raw=true" alt=""></p>
 <p>我们修改文件名的同时也要修改的参数是这几个：crc、size、filename的长度。</p>
 <p>相对于文件中的地方从前往后就是：</p>
-<p><img src="https://laohulaohuhu.cn/Twings/2019312.png" alt=""></p>
+<p><img src="https://github.com/Aluvion/aluvion.github.io/tree/master/css/images/2019312.png?raw=true" alt=""></p>
 <p>我们使用010Editor进行修改，按顺序修改文件名、filename长度、size、crc，具体的修改操作可以参考下面的链接。</p>
 <p>修改结束后：</p>
-<p><img src="https://laohulaohuhu.cn/Twings/2019314.png" alt=""></p>
+<p><img src="https://github.com/Aluvion/aluvion.github.io/tree/master/css/images/2019314.png?raw=true" alt=""></p>
 <p>然后将修改后的ace文件放入虚拟机桌面进行解压，成功看到putty出现在启动文件夹中！</p>
 <hr>
 <p>参考文章：</p>
@@ -131,7 +131,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/01/Winrar远程代码执行漏洞复现/" data-id="cjsuicpu90002lcv64a6umxgv" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/03/01/Winrar远程代码执行漏洞复现/" data-id="cjsuifaht00001cv6zyeruutw" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复现/">复现</a></li></ul>

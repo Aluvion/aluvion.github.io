@@ -5,12 +5,12 @@
 // .cb-slideshow li:nth-child(5) span { background-image: url('https://ws1.sinaimg.cn/large/005ODKsIgw1f5ymp3mngpj31hc0xcdiu.jpg');}
 // .cb-slideshow li:nth-child(6) span { background-image: url('https://ws1.sinaimg.cn/large/005ODKsIgw1fam1v0u0n0j31hc0xcjxc.jpg');} */
 
-.cb-slideshow li:nth-child(1) span { background-image: url('https://github.com/Aluvion/aluvion.github.io/tree/master/css/images/f3a0339cfd76ba474d9280fbcda7fd66.jpg?raw=true');}
-.cb-slideshow li:nth-child(2) span { background-image: url('https://github.com/Aluvion/aluvion.github.io/tree/master/css/images/d46ac713b4c22c3629a3497c14775b62.jpg?raw=true');}
-.cb-slideshow li:nth-child(3) span { background-image: url('https://github.com/Aluvion/aluvion.github.io/tree/master/css/images/b240427cc481eb7e215fa4f9b16e63aa.jpg?raw=true');}
-.cb-slideshow li:nth-child(4) span { background-image: url('https://github.com/Aluvion/aluvion.github.io/tree/master/css/images/1332165f891f12d402cad064d8efd8da.jpg?raw=true');}
-.cb-slideshow li:nth-child(5) span { background-image: url('https://github.com/Aluvion/aluvion.github.io/tree/master/css/images/363c2505e9af8cb40f75676f601944b5.jpeg?raw=true');}
-.cb-slideshow li:nth-child(6) span { background-image: url('https://github.com/Aluvion/aluvion.github.io/tree/master/css/images/267eb41e7277613209f9c379c79d6951.jpg?raw=true');}
+.cb-slideshow li:nth-child(1) span { background-image: url('https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/f3a0339cfd76ba474d9280fbcda7fd66.jpg?raw=true');}
+.cb-slideshow li:nth-child(2) span { background-image: url('https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/d46ac713b4c22c3629a3497c14775b62.jpg?raw=true');}
+.cb-slideshow li:nth-child(3) span { background-image: url('https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/b240427cc481eb7e215fa4f9b16e63aa.jpg?raw=true');}
+.cb-slideshow li:nth-child(4) span { background-image: url('https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/1332165f891f12d402cad064d8efd8da.jpg?raw=true');}
+.cb-slideshow li:nth-child(5) span { background-image: url('https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/363c2505e9af8cb40f75676f601944b5.jpeg?raw=true');}
+.cb-slideshow li:nth-child(6) span { background-image: url('https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/267eb41e7277613209f9c379c79d6951.jpg?raw=true');}
 
 .hidden-xs{
 

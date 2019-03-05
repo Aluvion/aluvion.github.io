@@ -133,10 +133,22 @@
 <p><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/201903044.png?raw=true" alt=""></p>
 <p><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/201903045.png?raw=true" alt=""></p>
 <p>因为两个条件使用and相连，也就是说where条件前面的不满足，就不会执行他的自定义函数contentExpression，那我们的表达式也就不会执行了，这就是为什么新搭建的环境需要在现有的Repository添加asset的原因了。</p>
-<p>我们访问网站，用admin/admin123的账号登陆上去，然后给maven-releases仓库添加一个asset：</p>
+<p>我们访问网站，用admin/admin123的账号登陆上去，然后给maven-releases仓库添加一个asset，任意一个Jar文件都可以：</p>
+<p><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/201903048.png?raw=true" alt=""></p>
 <p>添加之后，发包：</p>
+<p><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/201903049.png?raw=true" alt=""></p>
+<p><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/2019030410.png?raw=true" alt=""></p>
 <p>命令成功执行。</p>
-<h5 id="最后"><a href="#最后" class="headerlink" title="最后"></a>最后</h5><p>iswin大师傅提到的能够获取回显的方式，我调试了两三天还是无法得出，希望会的师傅能带带我Orz</p>
+<h5 id="最后"><a href="#最后" class="headerlink" title="最后"></a>最后</h5><p>iswin大师傅提到的能够获取回显的方式，我尝试了这么几种方式：</p>
+<ol>
+<li><p>jexl表达式</p>
+</li>
+<li><p>反射thread-currentthread()-threadlocals</p>
+</li>
+<li><p>通过别的类的函数获取threadlocals变量</p>
+</li>
+</ol>
+<p>然而调试了两三天还是无法得出，只能知道threadlocals变量中有一个webcontext，而webcontext中有response对象，希望会的师傅能带带我Orz</p>
 <hr>
 <p>参考文章：</p>
 <p><a href="https://www.anquanke.com/post/id/171116" target="_blank" rel="noopener">https://www.anquanke.com/post/id/171116</a></p>
@@ -145,7 +157,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/04/Nexus-Repository-Manager-3-CVE-2019-7238-IDEA远程调试/" data-id="cjsv5jui70007q0v6rje7voio" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/03/04/Nexus-Repository-Manager-3-CVE-2019-7238-IDEA远程调试/" data-id="cjsv5le0z000awkv66epoorm3" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复现/">复现</a></li></ul>
@@ -216,7 +228,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/01/Winrar远程代码执行漏洞复现/" data-id="cjsv5juhu0000q0v629ezm3lh" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/03/01/Winrar远程代码执行漏洞复现/" data-id="cjsv5le0p0002wkv6bt2ednwn" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复现/">复现</a></li></ul>
@@ -286,7 +298,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/02/27/GoogleCTF2018-beginners-js_safe_1/" data-id="cjsv5juhz0002q0v6hhdgw16v" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/02/27/GoogleCTF2018-beginners-js_safe_1/" data-id="cjsv5le0k0000wkv6q4pwd16e" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTF/">CTF</a></li></ul>
@@ -364,7 +376,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/02/26/CVE-2019-1003000复现/" data-id="cjsv5jui50006q0v6aerto7zt" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/02/26/CVE-2019-1003000复现/" data-id="cjsv5le0v0006wkv6cngr2s06" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复现/">复现</a></li></ul>
@@ -427,7 +439,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/02/07/基于报错的盲注/" data-id="cjsv5jui9000aq0v6b6qism1s" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/02/07/基于报错的盲注/" data-id="cjsv5le0x0007wkv6wjzkzcvs" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
@@ -478,7 +490,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/02/06/hello-world/" data-id="cjsv5jui30005q0v6r7g2m0dq" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/02/06/hello-world/" data-id="cjsv5le0t0005wkv6s2re75ob" class="article-share-link">分享</a>
       
       
     </footer>

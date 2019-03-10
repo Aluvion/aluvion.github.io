@@ -5,19 +5,19 @@
   
   <title>基于报错的盲注 | Twings</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="说到SQL盲注，一般来说就是两种：布尔盲注和时间盲注。布尔盲注基于True和False，是比较常用和便捷的手法；时间盲注基于延时，较为麻烦，一般来说是作为没有任何回显情况下的最后的注入手段。而很少见到有人提到基于报错的盲注方式。 报错盲注思路类似布尔盲注，利用的是SQL语句报错与否造成的回显结果的不同，我们需要找到一句能够报错的SQL语句，而且它还要满足一个条件：能够用布尔来控制报错与否。 下面举">
+  <meta name="description" content="说到SQL盲注，一般来说就是两种：布尔盲注和时间盲注。布尔盲注基于True和False，是比较常用和便捷的手法；时间盲注基于延时，较为麻烦，一般来说是作为没有任何回显情况下的最后的注入手段。而很少见到有人提到基于报错的盲注方式。 报错盲注思路类似布尔盲注，利用的是SQL语句报错与否造成的回显结果的不同，我们需要找到一句能够报错的SQL语句，而且它还要满足一个条件：能够用布尔来控制报错与否。">
 <meta name="keywords" content="Web">
 <meta property="og:type" content="article">
 <meta property="og:title" content="基于报错的盲注">
 <meta property="og:url" content="http://yoursite.com/2019/02/07/基于报错的盲注/index.html">
 <meta property="og:site_name" content="Twings">
-<meta property="og:description" content="说到SQL盲注，一般来说就是两种：布尔盲注和时间盲注。布尔盲注基于True和False，是比较常用和便捷的手法；时间盲注基于延时，较为麻烦，一般来说是作为没有任何回显情况下的最后的注入手段。而很少见到有人提到基于报错的盲注方式。 报错盲注思路类似布尔盲注，利用的是SQL语句报错与否造成的回显结果的不同，我们需要找到一句能够报错的SQL语句，而且它还要满足一个条件：能够用布尔来控制报错与否。 下面举">
+<meta property="og:description" content="说到SQL盲注，一般来说就是两种：布尔盲注和时间盲注。布尔盲注基于True和False，是比较常用和便捷的手法；时间盲注基于延时，较为麻烦，一般来说是作为没有任何回显情况下的最后的注入手段。而很少见到有人提到基于报错的盲注方式。 报错盲注思路类似布尔盲注，利用的是SQL语句报错与否造成的回显结果的不同，我们需要找到一句能够报错的SQL语句，而且它还要满足一个条件：能够用布尔来控制报错与否。">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/2019272246.png?raw=true">
-<meta property="og:updated_time" content="2019-03-04T15:46:19.744Z">
+<meta property="og:updated_time" content="2019-03-10T06:02:42.143Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="基于报错的盲注">
-<meta name="twitter:description" content="说到SQL盲注，一般来说就是两种：布尔盲注和时间盲注。布尔盲注基于True和False，是比较常用和便捷的手法；时间盲注基于延时，较为麻烦，一般来说是作为没有任何回显情况下的最后的注入手段。而很少见到有人提到基于报错的盲注方式。 报错盲注思路类似布尔盲注，利用的是SQL语句报错与否造成的回显结果的不同，我们需要找到一句能够报错的SQL语句，而且它还要满足一个条件：能够用布尔来控制报错与否。 下面举">
+<meta name="twitter:description" content="说到SQL盲注，一般来说就是两种：布尔盲注和时间盲注。布尔盲注基于True和False，是比较常用和便捷的手法；时间盲注基于延时，较为麻烦，一般来说是作为没有任何回显情况下的最后的注入手段。而很少见到有人提到基于报错的盲注方式。 报错盲注思路类似布尔盲注，利用的是SQL语句报错与否造成的回显结果的不同，我们需要找到一句能够报错的SQL语句，而且它还要满足一个条件：能够用布尔来控制报错与否。">
 <meta name="twitter:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/2019272246.png?raw=true">
   
     <link rel="alternate" href="/atom.xml" title="Twings" type="application/atom+xml">
@@ -105,6 +105,7 @@
       
         <p>说到SQL盲注，一般来说就是两种：布尔盲注和时间盲注。布尔盲注基于True和False，是比较常用和便捷的手法；时间盲注基于延时，较为麻烦，一般来说是作为没有任何回显情况下的最后的注入手段。而很少见到有人提到基于报错的盲注方式。</p>
 <p>报错盲注思路类似布尔盲注，利用的是SQL语句报错与否造成的回显结果的不同，我们需要找到一句能够报错的SQL语句，而且它还要满足一个条件：能够用布尔来控制报错与否。</p>
+<a id="more"></a>
 <p>下面举一个简单的例子，我们尝试这么一条SQL语句：</p>
 <figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="keyword">pow</span>(<span class="number">999</span>,<span class="number">999</span>)</span><br></pre></td></tr></table></figure>
 <p>我们可以看到回显是：</p>
@@ -120,7 +121,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/02/07/基于报错的盲注/" data-id="cjt2idpxd000dkcv61lvm0yag" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/02/07/基于报错的盲注/" data-id="cjt2ii493000bhcv62co6pg4x" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>

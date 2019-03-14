@@ -3,25 +3,19 @@
 <head><meta name="generator" content="Hexo 3.8.0">
   <meta charset="utf-8">
   
-  <title>Winrar远程代码执行漏洞复现 | Twings</title>
+  <title>DNS-Rebinding | Twings</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="最近出现的有名的Winrar的一个漏洞，成因是Winrar在处理ACE文件的时候处理不当，存在一个目录穿越漏洞，攻击者可以通过精心构造的压缩包，在受害人解压的时候实现任意文件写入。 因为这个漏洞网上已经有了很多的相关文章，复现过程也没有什么坑，所以我就从简复现一下。 因为我的电脑上的Winrar已经更新的原因，这里我采用win7的虚拟机进行复现。">
-<meta name="keywords" content="二进制,复现">
+  <meta name="description" content="摸鱼">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Winrar远程代码执行漏洞复现">
-<meta property="og:url" content="http://yoursite.com/2019/03/01/Winrar远程代码执行漏洞复现/index.html">
+<meta property="og:title" content="DNS-Rebinding">
+<meta property="og:url" content="http://yoursite.com/2019/03/14/DNS-Rebinding/index.html">
 <meta property="og:site_name" content="Twings">
-<meta property="og:description" content="最近出现的有名的Winrar的一个漏洞，成因是Winrar在处理ACE文件的时候处理不当，存在一个目录穿越漏洞，攻击者可以通过精心构造的压缩包，在受害人解压的时候实现任意文件写入。 因为这个漏洞网上已经有了很多的相关文章，复现过程也没有什么坑，所以我就从简复现一下。 因为我的电脑上的Winrar已经更新的原因，这里我采用win7的虚拟机进行复现。">
+<meta property="og:description" content="摸鱼">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/2019311.png?raw=true">
-<meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/2019313.png?raw=true">
-<meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/2019312.png?raw=true">
-<meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/2019314.png?raw=true">
-<meta property="og:updated_time" content="2019-03-10T16:02:33.195Z">
+<meta property="og:updated_time" content="2019-03-14T15:04:21.692Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Winrar远程代码执行漏洞复现">
-<meta name="twitter:description" content="最近出现的有名的Winrar的一个漏洞，成因是Winrar在处理ACE文件的时候处理不当，存在一个目录穿越漏洞，攻击者可以通过精心构造的压缩包，在受害人解压的时候实现任意文件写入。 因为这个漏洞网上已经有了很多的相关文章，复现过程也没有什么坑，所以我就从简复现一下。 因为我的电脑上的Winrar已经更新的原因，这里我采用win7的虚拟机进行复现。">
-<meta name="twitter:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/2019311.png?raw=true">
+<meta name="twitter:title" content="DNS-Rebinding">
+<meta name="twitter:description" content="摸鱼">
   
     <link rel="alternate" href="/atom.xml" title="Twings" type="application/atom+xml">
   
@@ -74,12 +68,12 @@
   </div>
 </div>
 
-        <section id="main"><article id="post-Winrar远程代码执行漏洞复现" class="wow slideInRight article article-type-post" itemscope="" itemprop="blogPost">
+        <section id="main"><article id="post-DNS-Rebinding" class="wow slideInRight article article-type-post" itemscope="" itemprop="blogPost">
   <div class="article-meta">
-    <a href="/2019/03/01/Winrar远程代码执行漏洞复现/" class="article-date">
-  <time class="post-time" datetime="2019-03-01T04:04:29.000Z" itemprop="datePublished">
+    <a href="/2019/03/14/DNS-Rebinding/" class="article-date">
+  <time class="post-time" datetime="2019-03-14T15:04:21.000Z" itemprop="datePublished">
     <span class="post-month">3月</span><br>
-    <span class="post-day">01</span>
+    <span class="post-day">14</span>
   </time>
 </a>
    
@@ -91,7 +85,7 @@
         
   
     <h1 class="article-title" itemprop="name">
-      Winrar远程代码执行漏洞复现
+      DNS-Rebinding
     </h1>
   
 
@@ -106,56 +100,23 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>最近出现的有名的Winrar的一个漏洞，成因是Winrar在处理ACE文件的时候处理不当，存在一个目录穿越漏洞，攻击者可以通过精心构造的压缩包，在受害人解压的时候实现任意文件写入。</p>
-<p>因为这个漏洞网上已经有了很多的相关文章，复现过程也没有什么坑，所以我就从简复现一下。</p>
-<p>因为我的电脑上的Winrar已经更新的原因，这里我采用win7的虚拟机进行复现。</p>
-<a id="more"></a>
-<hr>
-<p>首先我们要生成一个ACE压缩文件，这里需要用到一个Winace软件，将恶意文件压缩进去，这里用putty作为测试：</p>
-<p><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/2019311.png?raw=true" alt=""></p>
-<p>这里为了目录穿越要选择 store full path 选项。</p>
-<p>压缩完成会得到一个ace文件，接下来我们就需要修改这个文件，来将文件名修改成一个带有目录穿越符号的恶意文件名。</p>
-<p>github上面有一个项目可以提取ace文件的一些信息，可以使用 git clone <a href="https://github.com/droe/acefile" target="_blank" rel="noopener">https://github.com/droe/acefile</a> 来进行下载，我们生成的ace文件信息如下：</p>
-<p><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/2019313.png?raw=true" alt=""></p>
-<p>我们修改文件名的同时也要修改的参数是这几个：crc、size、filename的长度。</p>
-<p>相对于文件中的地方从前往后就是：</p>
-<p><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/2019312.png?raw=true" alt=""></p>
-<p>我们使用010Editor进行修改，按顺序修改文件名、filename长度、size、crc，具体的修改操作可以参考下面的链接。</p>
-<p>修改结束后：</p>
-<p><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/2019314.png?raw=true" alt=""></p>
-<p>然后将修改后的ace文件放入虚拟机桌面进行解压，成功看到putty出现在启动文件夹中！</p>
-<hr>
-<p>参考文章：</p>
-<p><a href="https://mp.weixin.qq.com/s?__biz=Mzg5MTA3NTg2MA%3D%3D&amp;mid=2247483812&amp;idx=1&amp;sn=91a32ac6a6eeb62798e08cbb74016042&amp;scene=45#wechat_redirect" target="_blank" rel="noopener">https://mp.weixin.qq.com/s?__biz=Mzg5MTA3NTg2MA%3D%3D&amp;mid=2247483812&amp;idx=1&amp;sn=91a32ac6a6eeb62798e08cbb74016042&amp;scene=45#wechat_redirect</a></p>
-<p><a href="https://www.freebuf.com/column/196660.html" target="_blank" rel="noopener">https://www.freebuf.com/column/196660.html</a></p>
-
+        
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/01/Winrar远程代码执行漏洞复现/" data-id="cjt8ruvpb0008mcv621d5ujsz" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/03/14/DNS-Rebinding/" data-id="cjt8ruvgd0000mcv6nhsnpqwl" class="article-share-link">分享</a>
       
       
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/二进制/">二进制</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复现/">复现</a></li></ul>
-
     </footer>
   </div>
   
     
 <nav id="article-nav">
   
-    <a href="/2019/03/04/Nexus-Repository-Manager-3-CVE-2019-7238-IDEA远程调试/" id="article-nav-newer" class="article-nav-link-wrap">
-      <strong class="article-nav-caption">上一篇</strong>
-      <div class="article-nav-title">
-        
-          Nexus Repository Manager 3 CVE-2019-7238 IDEA远程调试
-        
-      </div>
-    </a>
   
-  
-    <a href="/2019/02/27/GoogleCTF2018-beginners-js_safe_1/" id="article-nav-older" class="article-nav-link-wrap">
+    <a href="/2019/03/14/在连接MySQL服务端时读取客户端文件/" id="article-nav-older" class="article-nav-link-wrap">
       <strong class="article-nav-caption">下一篇</strong>
-      <div class="article-nav-title">GoogleCTF2018-beginners-js_safe_1</div>
+      <div class="article-nav-title">在连接MySQL服务端时读取客户端文件</div>
     </a>
   
 </nav>

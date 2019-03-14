@@ -13,7 +13,7 @@
 <meta property="og:site_name" content="Twings">
 <meta property="og:description" content="前言最近在hgame week4看到这么一个知识点，因为之前没有注意，现在仔细一看觉得很有意思，所以稍微研究学习一下。 利用场景受害人连接了攻击者开启的恶意伪MySQL服务。 利用条件受害人开启了local_infile或连接时加上了–enable-local-infile，且不使用SSL连接 利用效果任意文件读取（受害人当前权限下）。">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2019-03-14T13:42:51.955Z">
+<meta property="og:updated_time" content="2019-03-14T15:11:38.406Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="在连接MySQL服务端时读取客户端文件">
 <meta name="twitter:description" content="前言最近在hgame week4看到这么一个知识点，因为之前没有注意，现在仔细一看觉得很有意思，所以稍微研究学习一下。 利用场景受害人连接了攻击者开启的恶意伪MySQL服务。 利用条件受害人开启了local_infile或连接时加上了–enable-local-infile，且不使用SSL连接 利用效果任意文件读取（受害人当前权限下）。">
@@ -43,7 +43,7 @@
     <h2 class="author">Aluvion</h2>
     <h3 class="description">摸鱼</h3>
     <div class="count-box">
-      <a href="/archives"><div><strong>9</strong><br>文章</div></a>
+      <a href="/archives"><div><strong>10</strong><br>文章</div></a>
       <a href="/categories"><div><strong>0</strong><br>分类</div></a>
       <a href="/tags"><div><strong>4</strong><br>标签</div></a>
     </div>
@@ -141,7 +141,7 @@
 <h6 id="packet-packet-num-0-1"><a href="#packet-packet-num-0-1" class="headerlink" title="packet.packet_num != 0"></a>packet.packet_num != 0</h6><p>有两种情况，这个包是Auth包或者File包，如果是Auth包就直接返回个Response OK包表示登录认证成功（不管账号密码正确与否），如果是File包则又有两种情况：长度为1，表示传输文件结束，则回复一个Response OK包；长度不为1，表示文件内容，则开始处理文件内容。</p>
 <hr>
 <p>如果想要更加深入地研究脚本（或者研究MySQL通信），可以使用pwntools写一个脚本来进行交互，简单的交互脚本如下：</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line">context.log_level = <span class="string">'debug'</span></span><br><span class="line"></span><br><span class="line">target = remote(<span class="string">"laohulaohuhu.cn"</span>, <span class="string">"3306"</span>)</span><br><span class="line">target.recv()</span><br><span class="line">payload = <span class="string">"\x0d\x00\x00"</span></span><br><span class="line">payload += <span class="string">"\x01Twings Client"</span></span><br><span class="line">pause()</span><br><span class="line"></span><br><span class="line">target.send(payload)</span><br><span class="line">target.recv()</span><br><span class="line">payload2 = <span class="string">"\x12\x00\x00\x00\x03Give me the flag!"</span></span><br><span class="line">pause()</span><br><span class="line"></span><br><span class="line">target.send(payload2)</span><br><span class="line">target.recv()</span><br><span class="line">payload3 = <span class="string">"\x0d\x00\x00\x02Twings here!\n\x00\x00\x00\x03"</span></span><br><span class="line">pause()</span><br><span class="line"></span><br><span class="line">target.send(payload3)</span><br><span class="line">target.recv()</span><br><span class="line">payload4 = <span class="string">"\x01\x00\x00\x00\x01"</span></span><br><span class="line">pause()</span><br><span class="line"></span><br><span class="line">target.send(payload4)</span><br><span class="line">target.interactive()</span><br><span class="line">target.close()</span><br></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line">context.log_level = <span class="string">'debug'</span></span><br><span class="line"></span><br><span class="line">target = remote(<span class="string">"*.*.*.*"</span>, <span class="string">"3306"</span>)</span><br><span class="line">target.recv()</span><br><span class="line">payload = <span class="string">"\x0d\x00\x00"</span></span><br><span class="line">payload += <span class="string">"\x01Twings Client"</span></span><br><span class="line">pause()</span><br><span class="line"></span><br><span class="line">target.send(payload)</span><br><span class="line">target.recv()</span><br><span class="line">payload2 = <span class="string">"\x12\x00\x00\x00\x03Give me the flag!"</span></span><br><span class="line">pause()</span><br><span class="line"></span><br><span class="line">target.send(payload2)</span><br><span class="line">target.recv()</span><br><span class="line">payload3 = <span class="string">"\x0d\x00\x00\x02Twings here!\n\x00\x00\x00\x03"</span></span><br><span class="line">pause()</span><br><span class="line"></span><br><span class="line">target.send(payload3)</span><br><span class="line">target.recv()</span><br><span class="line">payload4 = <span class="string">"\x01\x00\x00\x00\x01"</span></span><br><span class="line">pause()</span><br><span class="line"></span><br><span class="line">target.send(payload4)</span><br><span class="line">target.interactive()</span><br><span class="line">target.close()</span><br></pre></td></tr></table></figure>
 <hr>
 <p>参考：</p>
 <p><a href="https://lightless.me/archives/read-mysql-client-file.html" target="_blank" rel="noopener">https://lightless.me/archives/read-mysql-client-file.html</a></p>
@@ -150,7 +150,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/14/在连接MySQL服务端时读取客户端文件/" data-id="cjt8orsnc0006sov624tmm86n" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/03/14/在连接MySQL服务端时读取客户端文件/" data-id="cjt8ruvpf000cmcv6zph5aywn" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
@@ -160,6 +160,15 @@
   
     
 <nav id="article-nav">
+  
+    <a href="/2019/03/14/DNS-Rebinding/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">上一篇</strong>
+      <div class="article-nav-title">
+        
+          DNS-Rebinding
+        
+      </div>
+    </a>
   
   
     <a href="/2019/03/10/Wordpress5-0-RCE-CVE-2019-8942复现/" id="article-nav-older" class="article-nav-link-wrap">
@@ -213,7 +222,7 @@
     <h2 class="author">Aluvion</h2>
     <h3 class="description">摸鱼</h3>
     <div class="count-box">
-      <a href="/archives"><div><strong>9</strong><br>文章</div></a>
+      <a href="/archives"><div><strong>10</strong><br>文章</div></a>
       <a href="/categories"><div><strong>0</strong><br>分类</div></a>
       <a href="/tags"><div><strong>4</strong><br>标签</div></a>
     </div>

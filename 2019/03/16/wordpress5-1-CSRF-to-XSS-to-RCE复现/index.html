@@ -114,6 +114,10 @@
     
     <div class="article-entry" itemprop="articleBody">
       
+        <div id="toc" class="toc-article">
+    <div class="toc-title">目录</div>
+    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#前言"><span class="toc-text">前言</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#危害版本"><span class="toc-text">危害版本</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#利用条件"><span class="toc-text">利用条件</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#修复"><span class="toc-text">修复</span></a></li></ol></li></ol><li class="toc-item toc-level-3"><a class="toc-link" href="#环境搭建"><span class="toc-text">环境搭建</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#漏洞复现"><span class="toc-text">漏洞复现</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#调试分析"><span class="toc-text">调试分析</span></a></li>
+</div>
         <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>就几天刚披露的一个wordpress5.1的漏洞，虽然漏洞有一定的利用条件，不过最后所能造成的危害还是比较大的。复现了一遍下来，感觉wordpress对于管理员的防备十分的薄弱，似乎是认为管理员就是服务器的拥有者的原因，所以wordpress后台getshell非常地容易。具体攻击思路是攻击者在自己的网站上放置一个CSRF攻击的HTML页面，让受害人访问，然后就会向wordpess的文章中插入一条带有恶意JS代码的评论（stored xss），因为使用的是a标签的缘故，所以还需要受害人将鼠标移动到评论的上方（这些都可以靠社工），然后触发XSS漏洞，攻击者可以修改插件或者主题的PHP代码，得到一个webshell。</p>
 <h5 id="危害版本"><a href="#危害版本" class="headerlink" title="危害版本"></a>危害版本</h5><p>wordpress版本&lt;5.1.1</p>
 <h5 id="利用条件"><a href="#利用条件" class="headerlink" title="利用条件"></a>利用条件</h5><p>具有unfiltered_html权限的用户访问了攻击者编写的恶意页面，并触发了恶意评论中a标签的on事件。</p>
@@ -158,7 +162,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/16/wordpress5-1-CSRF-to-XSS-to-RCE复现/" data-id="cjtbl2rmc0006hgv6yf6koqgf" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/03/16/wordpress5-1-CSRF-to-XSS-to-RCE复现/" data-id="cjtblde510009pov6x26569l6" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复现/">复现</a></li></ul>

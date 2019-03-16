@@ -104,10 +104,10 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <div id="toc" class="toc-article">
+        <!-- <div id="toc" class="toc-article">
     <div class="toc-title">目录</div>
     <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#前言"><span class="toc-text">前言</span></a><ol class="toc-child"><li class="toc-item toc-level-6"><a class="toc-link" href="#DNS、TTL"><span class="toc-text">DNS、TTL</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#后端检验"><span class="toc-text">后端检验</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#DNS-Rebinding"><span class="toc-text">DNS Rebinding</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#防御方法"><span class="toc-text">防御方法</span></a></li></ol></li></ol><li class="toc-item toc-level-3"><a class="toc-link" href="#实现方式"><span class="toc-text">实现方式</span></a><ol class="toc-child"><li class="toc-item toc-level-6"><a class="toc-link" href="#第一种：特定域名实现"><span class="toc-text">第一种：特定域名实现</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#第二种：向域名商添加DNS解析记录"><span class="toc-text">第二种：向域名商添加DNS解析记录</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#第三种：利用ceye-io"><span class="toc-text">第三种：利用ceye.io</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#第四种：向域名商添加DNS解析记录，并自行搭建DNS服务器"><span class="toc-text">第四种：向域名商添加DNS解析记录，并自行搭建DNS服务器</span></a></li></ol></li>
-</div>
+</div> -->
         <hr>
 <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>在SSRF漏洞的利用中，经常能看到后端对输入域名或者IP的各种检验过滤，那我们就需要用各种方式来进行绕过了，而其中有一种叫做DNS Rebinding（DNS重绑定）的绕过方式有别于其他的绕过方式，很有趣。</p>
 <h6 id="DNS、TTL"><a href="#DNS、TTL" class="headerlink" title="DNS、TTL"></a>DNS、TTL</h6><p>访问域名的时候，服务器会先向DNS服务器发出解析请求，DNS服务器再向域名指定的授权DNS服务器发出解析请求，得到该域名对应的IP，然后去访问该IP地址。</p>
@@ -139,7 +139,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/14/DNS-Rebinding/" data-id="cjtblde4t0002pov6exqwbb8z" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/03/14/DNS-Rebinding/" data-id="cjtbljdan0002v8v6e3tzcaf5" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>

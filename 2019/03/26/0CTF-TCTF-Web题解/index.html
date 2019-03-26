@@ -5,30 +5,30 @@
   
   <title>0CTF/TCTF2019 Web题解 | Twings</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="前言这次的CTF比赛虽然只有两道Web题，但是难度还是有的，用到的知识点也很有趣，而菜鸡的我在群内大师傅的提点下总算是把题目给做出来了，这里总结一下。  Ghost pepper题目地址：http://111.186.63.207:31337/ 题目分析一道Java的题目，一开始的验证用karaf/karaf就可以过去，然后就进入了漫无止尽的404…在找不到路由的情况下什么都做不了，所以我们第一步">
+  <meta name="description" content="前言这次的CTF比赛虽然只有两道Web题，但是难度还是有的，用到的知识点也很有趣，而菜鸡的我在群内大师傅的提点下总算是把题目给做出来了，这里总结一下。">
 <meta name="keywords" content="Web,CTF">
 <meta property="og:type" content="article">
 <meta property="og:title" content="0CTF&#x2F;TCTF2019 Web题解">
 <meta property="og:url" content="http://yoursite.com/2019/03/26/0CTF-TCTF-Web题解/index.html">
 <meta property="og:site_name" content="Twings">
-<meta property="og:description" content="前言这次的CTF比赛虽然只有两道Web题，但是难度还是有的，用到的知识点也很有趣，而菜鸡的我在群内大师傅的提点下总算是把题目给做出来了，这里总结一下。  Ghost pepper题目地址：http://111.186.63.207:31337/ 题目分析一道Java的题目，一开始的验证用karaf/karaf就可以过去，然后就进入了漫无止尽的404…在找不到路由的情况下什么都做不了，所以我们第一步">
+<meta property="og:description" content="前言这次的CTF比赛虽然只有两道Web题，但是难度还是有的，用到的知识点也很有趣，而菜鸡的我在群内大师傅的提点下总算是把题目给做出来了，这里总结一下。">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032601.png?raw=true">
+<meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032604.png?raw=true">
 <meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032602.png?raw=true">
 <meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032603.png?raw=true">
-<meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032604.png?raw=true">
 <meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032605.png?raw=true">
 <meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032606.png?raw=true">
+<meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032601.png?raw=true">
 <meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032607.png?raw=true">
 <meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032608.png?raw=true">
 <meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032609.png?raw=true">
 <meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032610.png?raw=true">
 <meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032611.png?raw=true">
-<meta property="og:updated_time" content="2019-03-26T13:26:13.425Z">
+<meta property="og:updated_time" content="2019-03-26T13:32:05.290Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="0CTF&#x2F;TCTF2019 Web题解">
-<meta name="twitter:description" content="前言这次的CTF比赛虽然只有两道Web题，但是难度还是有的，用到的知识点也很有趣，而菜鸡的我在群内大师傅的提点下总算是把题目给做出来了，这里总结一下。  Ghost pepper题目地址：http://111.186.63.207:31337/ 题目分析一道Java的题目，一开始的验证用karaf/karaf就可以过去，然后就进入了漫无止尽的404…在找不到路由的情况下什么都做不了，所以我们第一步">
-<meta name="twitter:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032601.png?raw=true">
+<meta name="twitter:description" content="前言这次的CTF比赛虽然只有两道Web题，但是难度还是有的，用到的知识点也很有趣，而菜鸡的我在群内大师傅的提点下总算是把题目给做出来了，这里总结一下。">
+<meta name="twitter:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032604.png?raw=true">
   
     <link rel="alternate" href="/atom.xml" title="Twings" type="application/atom+xml">
   
@@ -118,13 +118,14 @@
     <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#前言"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Ghost-pepper"><span class="toc-text">Ghost pepper</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#题目分析"><span class="toc-text">题目分析</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#解题流程"><span class="toc-text">解题流程</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#本地环境搭建"><span class="toc-text">本地环境搭建</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Wallbreaker-Easy"><span class="toc-text">Wallbreaker Easy</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#题目分析-1"><span class="toc-text">题目分析</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#解题流程-1"><span class="toc-text">解题流程</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#本地环境搭建-1"><span class="toc-text">本地环境搭建</span></a></li></ol></li></ol>
 </div> -->
         <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>这次的CTF比赛虽然只有两道Web题，但是难度还是有的，用到的知识点也很有趣，而菜鸡的我在群内大师傅的提点下总算是把题目给做出来了，这里总结一下。</p>
+<a id="more"></a>
 <hr>
 <h3 id="Ghost-pepper"><a href="#Ghost-pepper" class="headerlink" title="Ghost pepper"></a>Ghost pepper</h3><p>题目地址：<a href="http://111.186.63.207:31337/" target="_blank" rel="noopener">http://111.186.63.207:31337/</a></p>
 <h4 id="题目分析"><a href="#题目分析" class="headerlink" title="题目分析"></a>题目分析</h4><p>一道Java的题目，一开始的验证用karaf/karaf就可以过去，然后就进入了漫无止尽的404…在找不到路由的情况下什么都做不了，所以我们第一步就是要去找到后端的路由。</p>
 <p>这里就有点脑洞了，题目Ghost pepper=鬼椒=Jolokia，而Jolokia是一个JMX连接器，它能让外部通过向其暴露在外的HTTP接口POST JSON的方式来进行访问和修改 JMX 属性、执行 JMX 操作、搜索 MBean、列出 MBean 的 Meta-data 等操作。利用方式参考：<a href="https://www.anquanke.com/post/id/103016、https://www.anquanke.com/post/id/173262。" target="_blank" rel="noopener">https://www.anquanke.com/post/id/103016、https://www.anquanke.com/post/id/173262。</a></p>
 <p>结合之前验证的时候提示的Karaf，Karaf则是一个OSGI容器，它被用来对bundle进行管理，我们可以通过它来进行bundle的安装和运行。此时我们可以猜测服务端的搭建流程是先安装了Karaf，然后在Karaf中安装了Jolokia来进行远程管理，所以我们就可以通过Jolokia来对它进行远程访问，通过让它安装恶意bundle然后运行的方式，执行我们的恶意代码。</p>
 <p>接下来我们需要知道访问接口时所需要的参数，我们下载源码进行审计，在apache-karaf-4.2.4\bundle\core\src\main\java\org\apache\karaf\bundle\core\internal\BundlesMBeanImpl.java中可以看到：</p>
-<p><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032601.png?raw=true" alt=""></p>
+<p><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032604.png?raw=true" alt=""></p>
 <p>在start bundle的时候会调用它的start函数，所以我们可以编写一个恶意的bundle，在里面实现一个恶意的start方法，然后向服务端POST JSON数据，让服务端安装我们的恶意bundle并执行里面的start方法，就可以getshell了。</p>
 <h4 id="解题流程"><a href="#解题流程" class="headerlink" title="解题流程"></a>解题流程</h4><ul>
 <li><p>karaf/karaf通过验证</p>
@@ -140,12 +141,12 @@
 <ul>
 <li><p>将恶意bundle打包成jar文件，然后放到我们的VPS上面。</p>
 </li>
-<li><p>向服务端POST JSON数据，install我们的恶意bundle<br><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032604.png?raw=true" alt=""></p>
+<li><p>向服务端POST JSON数据，install我们的恶意bundle<br><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032605.png?raw=true" alt=""></p>
 </li>
 </ul>
 <p>  从第一个返回包中拿到bundleId，然后POST第二个包，start我们的恶意bundle</p>
-<p><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032605.png?raw=true" alt=""></p>
-<p>  getshell<br><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032606.png?raw=true" alt=""></p>
+<p><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032606.png?raw=true" alt=""></p>
+<p>  getshell<br><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032601.png?raw=true" alt=""></p>
 <h4 id="本地环境搭建"><a href="#本地环境搭建" class="headerlink" title="本地环境搭建"></a>本地环境搭建</h4><p>我使用的环境是docker搭建的Ubuntu18.04，Karaf可以去它的官网进行下载：<a href="http://karaf.apache.org/download.html" target="_blank" rel="noopener">http://karaf.apache.org/download.html</a></p>
 <p>要注意的是Karaf的各个版本对Java版本的支持不一，我下载的是Karaf Runtime 4.1.7的版本，然后：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">apt-get install openjdk-8-jdk # 安装jdk8</span><br><span class="line">tar xvf apache-karaf-4.1.7.tar.gz # 解包</span><br></pre></td></tr></table></figure>
@@ -195,7 +196,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/26/0CTF-TCTF-Web题解/" data-id="cjtpte1rw00041cv6vxa5msyf" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/03/26/0CTF-TCTF-Web题解/" data-id="cjtptgst700005gv6h8005q8m" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTF/">CTF</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>

@@ -18,13 +18,13 @@
 <meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032603.png?raw=true">
 <meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032605.png?raw=true">
 <meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032606.png?raw=true">
-<meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032601.png?raw=true">
 <meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032607.png?raw=true">
+<meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032601.png?raw=true">
 <meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032608.png?raw=true">
 <meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032609.png?raw=true">
 <meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032610.png?raw=true">
 <meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032611.png?raw=true">
-<meta property="og:updated_time" content="2019-03-26T13:32:05.290Z">
+<meta property="og:updated_time" content="2019-03-26T13:34:16.505Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="0CTF&#x2F;TCTF2019 Web题解">
 <meta name="twitter:description" content="前言这次的CTF比赛虽然只有两道Web题，但是难度还是有的，用到的知识点也很有趣，而菜鸡的我在群内大师傅的提点下总算是把题目给做出来了，这里总结一下。">
@@ -146,13 +146,13 @@
 </ul>
 <p>  从第一个返回包中拿到bundleId，然后POST第二个包，start我们的恶意bundle</p>
 <p><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032606.png?raw=true" alt=""></p>
-<p>  getshell<br><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032601.png?raw=true" alt=""></p>
+<p>  getshell<br><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032607.png?raw=true" alt=""></p>
 <h4 id="本地环境搭建"><a href="#本地环境搭建" class="headerlink" title="本地环境搭建"></a>本地环境搭建</h4><p>我使用的环境是docker搭建的Ubuntu18.04，Karaf可以去它的官网进行下载：<a href="http://karaf.apache.org/download.html" target="_blank" rel="noopener">http://karaf.apache.org/download.html</a></p>
 <p>要注意的是Karaf的各个版本对Java版本的支持不一，我下载的是Karaf Runtime 4.1.7的版本，然后：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">apt-get install openjdk-8-jdk # 安装jdk8</span><br><span class="line">tar xvf apache-karaf-4.1.7.tar.gz # 解包</span><br></pre></td></tr></table></figure>
 <p>在Karaf中安装Jolokia的方式可以看这里：<a href="https://karaf.apache.org/manual/latest/#_jmx_http_bridge_with_jolokia，如果安装失败也可以看看其他版本的手册，比如https://karaf.apache.org/manual/latest-3.0.x/monitoring" target="_blank" rel="noopener">https://karaf.apache.org/manual/latest/#_jmx_http_bridge_with_jolokia，如果安装失败也可以看看其他版本的手册，比如https://karaf.apache.org/manual/latest-3.0.x/monitoring</a></p>
 <p>访问8181端口就可以看到环境成功地搭建起来了：</p>
-<p><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032607.png?raw=true" alt=""></p>
+<p><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032601.png?raw=true" alt=""></p>
 <p>这样搭起来的环境和题目稍有不同，可以访问的MBean要少一些，不过不影响解题。</p>
 <hr>
 <h3 id="Wallbreaker-Easy"><a href="#Wallbreaker-Easy" class="headerlink" title="Wallbreaker Easy"></a>Wallbreaker Easy</h3><p>题目地址：<a href="http://111.186.63.208:31340/" target="_blank" rel="noopener">http://111.186.63.208:31340/</a></p>
@@ -196,7 +196,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/26/0CTF-TCTF-Web题解/" data-id="cjtptgst700005gv6h8005q8m" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/03/26/0CTF-TCTF-Web题解/" data-id="cjtptnf7h0000p8v6wo7kwkci" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTF/">CTF</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>

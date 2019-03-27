@@ -24,7 +24,7 @@
 <meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032609.png?raw=true">
 <meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032610.png?raw=true">
 <meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032611.png?raw=true">
-<meta property="og:updated_time" content="2019-03-26T13:42:53.246Z">
+<meta property="og:updated_time" content="2019-03-27T10:33:36.406Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="0CTF&#x2F;TCTF2019 Web题解">
 <meta name="twitter:description" content="前言这次的CTF比赛虽然只有两道Web题，但是难度还是有的，用到的知识点也很有趣，而菜鸡的我在群内大师傅的提点下总算是把题目给做出来了，这里总结一下。">
@@ -123,7 +123,8 @@
 <h3 id="Ghost-pepper"><a href="#Ghost-pepper" class="headerlink" title="Ghost pepper"></a>Ghost pepper</h3><p>题目地址：<a href="http://111.186.63.207:31337/" target="_blank" rel="noopener">http://111.186.63.207:31337/</a></p>
 <h4 id="题目分析"><a href="#题目分析" class="headerlink" title="题目分析"></a>题目分析</h4><p>一道Java的题目，一开始的验证用karaf/karaf就可以过去，然后就进入了漫无止尽的404…在找不到路由的情况下什么都做不了，所以我们第一步就是要去找到后端的路由。</p>
 <p>这里就有点脑洞了，题目Ghost pepper=鬼椒=Jolokia，而Jolokia是一个JMX连接器，它能让外部通过向其暴露在外的HTTP接口POST JSON的方式来进行访问和修改 JMX 属性、执行 JMX 操作、搜索 MBean、列出 MBean 的 Meta-data 等操作。利用方式参考：<a href="https://www.anquanke.com/post/id/103016、https://www.anquanke.com/post/id/173262。" target="_blank" rel="noopener">https://www.anquanke.com/post/id/103016、https://www.anquanke.com/post/id/173262。</a></p>
-<p>结合之前验证的时候提示的Karaf，Karaf则是一个OSGI容器，它被用来对bundle进行管理，我们可以通过它来进行bundle的安装和运行。此时我们可以猜测服务端的搭建流程是先安装了Karaf，然后在Karaf中安装了Jolokia来进行远程管理，所以我们就可以通过Jolokia来对它进行远程访问，通过让它安装恶意bundle然后运行的方式，执行我们的恶意代码。</p>
+<p>结合之前验证的时候提示的Karaf，Karaf则是一个OSGI容器，它可以被用来对bundle进行管理，我们可以通过它来进行bundle的安装和运行，也可以安装插件来实现更多的功能。此时我们可以猜测服务端的搭建流程是先安装了Karaf，然后在Karaf中安装了Jolokia来进行远程管理，所以我们就可以通过Jolokia来对它进行远程访问，通过让它安装恶意bundle然后运行的方式，执行我们的恶意代码。</p>
+<p>还有另外一个更加简单的解法，来自郁离歌师傅：<a href="http://yulige.top/?p=673" target="_blank" rel="noopener">http://yulige.top/?p=673</a></p>
 <p>接下来我们需要知道访问接口时所需要的参数，我们下载源码进行审计，在apache-karaf-4.2.4\bundle\core\src\main\java\org\apache\karaf\bundle\core\internal\BundlesMBeanImpl.java中可以看到：</p>
 <p><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032604.png?raw=true" alt=""></p>
 <p>在start bundle的时候会调用它的start函数，所以我们可以编写一个恶意的bundle，在里面实现一个恶意的start方法，然后向服务端POST JSON数据，让服务端安装我们的恶意bundle并执行里面的start方法，就可以getshell了。</p>
@@ -132,7 +133,7 @@
 </li>
 <li><p>访问jolokia/list得到可以访问的MBean</p>
 </li>
-<li><p>由于提示karaf的原因，将关注点放在karaf上面，可以看到我们能够访问bundle的install和start<br><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032602.png?raw=true" alt=""></p>
+<li><p>由于提示karaf的原因，将关注点放在karaf上面，可以看到我们能够访问bundle的install和start，当然也可以郁离歌师傅那样，直接调用feature（feature在Karaf中可以用来安装各种工具，安装Jolokia用的就是这个）安装一个webconsole，然后执行命令。<br><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032602.png?raw=true" alt=""></p>
 </li>
 </ul>
 <ul>
@@ -150,11 +151,10 @@
 <h4 id="本地环境搭建"><a href="#本地环境搭建" class="headerlink" title="本地环境搭建"></a>本地环境搭建</h4><p>我使用的环境是docker搭建的Ubuntu18.04，Karaf可以去它的官网进行下载：<a href="http://karaf.apache.org/download.html" target="_blank" rel="noopener">http://karaf.apache.org/download.html</a></p>
 <p>要注意的是Karaf的各个版本对Java版本的支持不一，我下载的是Karaf Runtime 4.1.7的版本，然后：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">apt-get install openjdk-8-jdk # 安装jdk8</span><br><span class="line">tar xvf apache-karaf-4.1.7.tar.gz # 解包</span><br></pre></td></tr></table></figure>
-<p>在Karaf中安装Jolokia的方式可以看这里：<a href="https://karaf.apache.org/manual/latest/#_jmx_http_bridge_with_jolokia" target="_blank" rel="noopener">https://karaf.apache.org/manual/latest/#_jmx_http_bridge_with_jolokia</a></p>
-<p>如果安装失败也可以看看其他版本的手册，比如<a href="https://karaf.apache.org/manual/latest-3.0.x/monitoring" target="_blank" rel="noopener">https://karaf.apache.org/manual/latest-3.0.x/monitoring</a></p>
-<p>访问8181端口就可以看到环境成功地搭建起来了：</p>
+<p>在Karaf中安装Jolokia的方式可以看这里：<a href="https://karaf.apache.org/manual/latest/#_jmx_http_bridge_with_jolokia" target="_blank" rel="noopener">https://karaf.apache.org/manual/latest/#_jmx_http_bridge_with_jolokia</a> ，这样搭建起来的就跟题目基本一样了，MBean的数量也差不多，访问时候的验证可以用karaf/karaf的默认账号密码，验证通过就有了管理员权限，就可以为所欲为了（比如安装webconsole）。</p>
+<p>如果安装失败也可以看看其他版本的手册，比如<a href="https://karaf.apache.org/manual/latest-3.0.x/monitoring" target="_blank" rel="noopener">https://karaf.apache.org/manual/latest-3.0.x/monitoring</a> ，这种方法跟上一种不同的是访问Jolokia没有账号密码的验证（如果要访问webconsole才需要验证），环境和题目稍有不同，可以访问的MBean要少一些，不过不影响解题。</p>
+<p>这样看来webconsole可能像是个非预期解？访问8181端口就可以看到环境成功地搭建起来了：</p>
 <p><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032601.png?raw=true" alt=""></p>
-<p>这样搭起来的环境和题目稍有不同，可以访问的MBean要少一些，不过不影响解题。</p>
 <hr>
 <h3 id="Wallbreaker-Easy"><a href="#Wallbreaker-Easy" class="headerlink" title="Wallbreaker Easy"></a>Wallbreaker Easy</h3><p>题目地址：<a href="http://111.186.63.208:31340/" target="_blank" rel="noopener">http://111.186.63.208:31340/</a></p>
 <h4 id="题目分析-1"><a href="#题目分析-1" class="headerlink" title="题目分析"></a>题目分析</h4><p>按照题目的提示，流程就是利用ImageMagick的漏洞绕过PHP的disable_functions，来执行根目录下的readflag程序。题目除了disable_functions之外还做了open_basedir的限制：</p>
@@ -197,7 +197,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/26/0CTF-TCTF-Web题解/" data-id="cjtptyl4t0000j8v67relgqpw" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/03/26/0CTF-TCTF-Web题解/" data-id="cjtr2ngtk0000j0v6xcksc4tj" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTF/">CTF</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>

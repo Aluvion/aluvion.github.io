@@ -6,7 +6,7 @@
   <title>0CTF/TCTF2019 Web题解 | Twings</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="description" content="前言这次的CTF比赛虽然只有两道Web题，但是难度还是有的，用到的知识点也很有趣，而菜鸡的我在群内大师傅的提点下总算是把题目给做出来了，这里总结一下。">
-<meta name="keywords" content="Web,CTF">
+<meta name="keywords" content="CTF,Web">
 <meta property="og:type" content="article">
 <meta property="og:title" content="0CTF&#x2F;TCTF2019 Web题解">
 <meta property="og:url" content="http://yoursite.com/2019/03/26/0CTF-TCTF-Web题解/index.html">
@@ -24,7 +24,7 @@
 <meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032609.png?raw=true">
 <meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032610.png?raw=true">
 <meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032611.png?raw=true">
-<meta property="og:updated_time" content="2019-03-28T03:19:38.029Z">
+<meta property="og:updated_time" content="2019-03-28T13:00:47.369Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="0CTF&#x2F;TCTF2019 Web题解">
 <meta name="twitter:description" content="前言这次的CTF比赛虽然只有两道Web题，但是难度还是有的，用到的知识点也很有趣，而菜鸡的我在群内大师傅的提点下总算是把题目给做出来了，这里总结一下。">
@@ -55,9 +55,9 @@
     <h2 class="author">Aluvion</h2>
     <h3 class="description">摸鱼</h3>
     <div class="count-box">
-      <a href="/archives"><div><strong>14</strong><br>文章</div></a>
+      <a href="/archives"><div><strong>15</strong><br>文章</div></a>
       <a href="/categories"><div><strong>0</strong><br>分类</div></a>
-      <a href="/tags"><div><strong>4</strong><br>标签</div></a>
+      <a href="/tags"><div><strong>5</strong><br>标签</div></a>
     </div>
     <ul class="blog-link">
      
@@ -182,6 +182,7 @@
 <p>更多的解法，利用LD_PRELOAD环境变量+调用execve的PHP函数：</p>
 <p><a href="https://balsn.tw/ctf_writeup/20190323-0ctf_tctf2019quals/#wallbreaker-easy" target="_blank" rel="noopener">https://balsn.tw/ctf_writeup/20190323-0ctf_tctf2019quals/#wallbreaker-easy</a></p>
 <p><a href="https://www.freebuf.com/articles/web/192052.html" target="_blank" rel="noopener">https://www.freebuf.com/articles/web/192052.html</a></p>
+<p>一叶飘零师傅的改进版：<a href="https://www.anquanke.com/post/id/175403#h2-0" target="_blank" rel="noopener">https://www.anquanke.com/post/id/175403#h2-0</a></p>
 <p>绕过open_basedir读文件：</p>
 <p><a href="https://balsn.tw/ctf_writeup/20190323-0ctf_tctf2019quals/#wallbreaker-easy" target="_blank" rel="noopener">https://balsn.tw/ctf_writeup/20190323-0ctf_tctf2019quals/#wallbreaker-easy</a></p>
 <h4 id="解题流程-1"><a href="#解题流程-1" class="headerlink" title="解题流程"></a>解题流程</h4><p>直接贴脚本，我使用的是第二个delegate（delegate decode=”png” encode=”bpg” command=”&quot;@BPGEncodeDelegate@&quot; -b 12 -sstdout=%%stderr &quot;%Q&quot; -o &quot;%o&quot; &quot;%i&quot;”），即调用了bpgenc的delegate：</p>
@@ -205,7 +206,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/26/0CTF-TCTF-Web题解/" data-id="cjts35b3h0000vkv6p2sqozq2" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/03/26/0CTF-TCTF-Web题解/" data-id="cjtu5cs6c0006agv6ql5hq358" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTF/">CTF</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
@@ -215,6 +216,15 @@
   
     
 <nav id="article-nav">
+  
+    <a href="/2019/03/28/0CTF-TCTF-Crypto学习/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">上一篇</strong>
+      <div class="article-nav-title">
+        
+          0CTF/TCTF2019 Crypto学习
+        
+      </div>
+    </a>
   
   
     <a href="/2019/03/22/划水CVE-2019-9194复现/" id="article-nav-older" class="article-nav-link-wrap">
@@ -268,9 +278,9 @@
     <h2 class="author">Aluvion</h2>
     <h3 class="description">摸鱼</h3>
     <div class="count-box">
-      <a href="/archives"><div><strong>14</strong><br>文章</div></a>
+      <a href="/archives"><div><strong>15</strong><br>文章</div></a>
       <a href="/categories"><div><strong>0</strong><br>分类</div></a>
-      <a href="/tags"><div><strong>4</strong><br>标签</div></a>
+      <a href="/tags"><div><strong>5</strong><br>标签</div></a>
     </div>
 
 

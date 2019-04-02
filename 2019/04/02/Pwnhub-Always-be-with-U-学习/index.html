@@ -5,18 +5,18 @@
   
   <title>Pwnhub Always be with U 学习 | Twings</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="前言前几天Pwnhub的一个密码学专题的比赛，当时我看了一会觉得没有想法不会做，就去忙别的事情了（我密码学是真的菜），现在各位师傅出writeup了，所以我就回来研究学习一下，结论：密码学的各种攻击知道的太少；密码学的库我用得不多，有的情况下不知道怎么编写代码。在文章里记录一下脚本，以后遇到了相似的题目也可以回来看看。  题目一参考链接：https://www.sjoerdlangkemper.n">
+  <meta name="description" content="前言前几天Pwnhub的一个密码学专题的比赛，当时我看了一会觉得没有想法不会做，就去忙别的事情了（我密码学是真的菜），现在各位师傅出writeup了，所以我就回来研究学习一下，结论：密码学的各种攻击知道的太少；密码学的库我用得不多，有的情况下不知道怎么编写代码。在文章里记录一下脚本，以后遇到了相似的题目也可以回来看看。">
 <meta name="keywords" content="Crypto,CTF">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Pwnhub Always be with U 学习">
 <meta property="og:url" content="http://yoursite.com/2019/04/02/Pwnhub-Always-be-with-U-学习/index.html">
 <meta property="og:site_name" content="Twings">
-<meta property="og:description" content="前言前几天Pwnhub的一个密码学专题的比赛，当时我看了一会觉得没有想法不会做，就去忙别的事情了（我密码学是真的菜），现在各位师傅出writeup了，所以我就回来研究学习一下，结论：密码学的各种攻击知道的太少；密码学的库我用得不多，有的情况下不知道怎么编写代码。在文章里记录一下脚本，以后遇到了相似的题目也可以回来看看。  题目一参考链接：https://www.sjoerdlangkemper.n">
+<meta property="og:description" content="前言前几天Pwnhub的一个密码学专题的比赛，当时我看了一会觉得没有想法不会做，就去忙别的事情了（我密码学是真的菜），现在各位师傅出writeup了，所以我就回来研究学习一下，结论：密码学的各种攻击知道的太少；密码学的库我用得不多，有的情况下不知道怎么编写代码。在文章里记录一下脚本，以后遇到了相似的题目也可以回来看看。">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2019-04-02T07:26:22.880Z">
+<meta property="og:updated_time" content="2019-04-02T07:29:34.403Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Pwnhub Always be with U 学习">
-<meta name="twitter:description" content="前言前几天Pwnhub的一个密码学专题的比赛，当时我看了一会觉得没有想法不会做，就去忙别的事情了（我密码学是真的菜），现在各位师傅出writeup了，所以我就回来研究学习一下，结论：密码学的各种攻击知道的太少；密码学的库我用得不多，有的情况下不知道怎么编写代码。在文章里记录一下脚本，以后遇到了相似的题目也可以回来看看。  题目一参考链接：https://www.sjoerdlangkemper.n">
+<meta name="twitter:description" content="前言前几天Pwnhub的一个密码学专题的比赛，当时我看了一会觉得没有想法不会做，就去忙别的事情了（我密码学是真的菜），现在各位师傅出writeup了，所以我就回来研究学习一下，结论：密码学的各种攻击知道的太少；密码学的库我用得不多，有的情况下不知道怎么编写代码。在文章里记录一下脚本，以后遇到了相似的题目也可以回来看看。">
   
     <link rel="alternate" href="/atom.xml" title="Twings" type="application/atom+xml">
   
@@ -106,6 +106,7 @@
     <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#前言"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#题目一"><span class="toc-text">题目一</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#题目二"><span class="toc-text">题目二</span></a></li></ol>
 </div> -->
         <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>前几天Pwnhub的一个密码学专题的比赛，当时我看了一会觉得没有想法不会做，就去忙别的事情了（我密码学是真的菜），现在各位师傅出writeup了，所以我就回来研究学习一下，结论：密码学的各种攻击知道的太少；密码学的库我用得不多，有的情况下不知道怎么编写代码。在文章里记录一下脚本，以后遇到了相似的题目也可以回来看看。</p>
+<a id="more"></a>
 <hr>
 <h3 id="题目一"><a href="#题目一" class="headerlink" title="题目一"></a>题目一</h3><p>参考链接：<a href="https://www.sjoerdlangkemper.nl/2016/08/23/compression-side-channel-attacks/" target="_blank" rel="noopener">https://www.sjoerdlangkemper.nl/2016/08/23/compression-side-channel-attacks/</a></p>
 <p>注意点：0x0a</p>
@@ -117,7 +118,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/04/02/Pwnhub-Always-be-with-U-学习/" data-id="cjtzgmag10012ucv6khcjn2yw" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/04/02/Pwnhub-Always-be-with-U-学习/" data-id="cjtzgpi9d000dosv6a7tf4dek" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTF/">CTF</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Crypto/">Crypto</a></li></ul>

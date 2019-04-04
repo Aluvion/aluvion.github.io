@@ -3,18 +3,20 @@
 <head><meta name="generator" content="Hexo 3.8.0">
   <meta charset="utf-8">
   
-  <title>Twings</title>
+  <title>Go(1) | Twings</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="摸鱼">
-<meta property="og:type" content="website">
-<meta property="og:title" content="Twings">
-<meta property="og:url" content="http://yoursite.com/index.html">
+  <meta name="description" content="前言开个go的坑，填坑时间不定。  环境搭建系统：docker+Ubuntu18.04镜像 安装golang： 12apt-get updateapt-get install golang 在Ubuntu18.04下即可安装1.10版本的golang，如果需要最新版本的可以去https://golang.org/dl/（需要翻墙），或者直接wget下载，然后解压、建立工作目录并配置环境变量： 12">
+<meta name="keywords" content="Web">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Go(1)">
+<meta property="og:url" content="http://yoursite.com/2019/04/04/Go-1/index.html">
 <meta property="og:site_name" content="Twings">
-<meta property="og:description" content="摸鱼">
+<meta property="og:description" content="前言开个go的坑，填坑时间不定。  环境搭建系统：docker+Ubuntu18.04镜像 安装golang： 12apt-get updateapt-get install golang 在Ubuntu18.04下即可安装1.10版本的golang，如果需要最新版本的可以去https://golang.org/dl/（需要翻墙），或者直接wget下载，然后解压、建立工作目录并配置环境变量： 12">
 <meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-04-04T08:31:27.694Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Twings">
-<meta name="twitter:description" content="摸鱼">
+<meta name="twitter:title" content="Go(1)">
+<meta name="twitter:description" content="前言开个go的坑，填坑时间不定。  环境搭建系统：docker+Ubuntu18.04镜像 安装golang： 12apt-get updateapt-get install golang 在Ubuntu18.04下即可安装1.10版本的golang，如果需要最新版本的可以去https://golang.org/dl/（需要翻墙），或者直接wget下载，然后解压、建立工作目录并配置环境变量： 12">
   
     <link rel="alternate" href="/atom.xml" title="Twings" type="application/atom+xml">
   
@@ -67,9 +69,7 @@
   </div>
 </div>
 
-        <section id="main">
-  
-    <article id="post-Go-1" class="wow slideInRight article article-type-post" itemscope="" itemprop="blogPost">
+        <section id="main"><article id="post-Go-1" class="wow slideInRight article article-type-post" itemscope="" itemprop="blogPost">
   <div class="article-meta">
     <a href="/2019/04/04/Go-1/" class="article-date">
   <time class="post-time" datetime="2019-04-04T02:50:00.000Z" itemprop="datePublished">
@@ -85,8 +85,8 @@
       <header class="article-header">
         
   
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/04/04/Go-1/">Go(1)</a>
+    <h1 class="article-title" itemprop="name">
+      Go(1)
     </h1>
   
 
@@ -165,532 +165,22 @@
     </footer>
   </div>
   
-</article>
-
-
-
-
-  
-    <article id="post-自动绑定漏洞-war远程调试" class="wow slideInRight article article-type-post" itemscope="" itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2019/04/02/自动绑定漏洞-war远程调试/" class="article-date">
-  <time class="post-time" datetime="2019-04-02T11:29:19.000Z" itemprop="datePublished">
-    <span class="post-month">4月</span><br>
-    <span class="post-day">02</span>
-  </time>
-</a>
-   
-  </div>
-  <div class="article-inner">
     
-    
-      <header class="article-header">
-        
+<nav id="article-nav">
   
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/04/02/自动绑定漏洞-war远程调试/">自动绑定漏洞+war远程调试</a>
-    </h1>
   
+    <a href="/2019/04/02/自动绑定漏洞-war远程调试/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">下一篇</strong>
+      <div class="article-nav-title">自动绑定漏洞+war远程调试</div>
+    </a>
+  
+</nav>
 
-        <div>
-          
-          
-              
-
-          
-        </div>
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>这些天看了看volgactf2019的题目，里面有一道100分的web题shop，因为是少见的Java Web代码审计题目，源码以war包的形式给出，而且考点是我没有怎么了解过的Spring自动绑定漏洞，所以现在写一篇文章研究总结一下这个漏洞。</p>
-<p>漏洞的发生和利用在下面的参考链接里都写得很清楚了，所以我主要对非预期解的大小写绕过和预期解的传递对象成员变量两种情况做一下分析，分析的方式是本地环境+IDEA远程调试war。</p>
-        
-          <p class="article-more-link">
-            <a href="/2019/04/02/自动绑定漏洞-war远程调试/#more">Read More</a>
-          </p>
-        
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/04/02/自动绑定漏洞-war远程调试/" data-id="cju2dugzb0011c8v6wysl96jy" class="article-share-link">分享</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTF/">CTF</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
-
-    </footer>
-  </div>
   
 </article>
 
 
 
-
-  
-    <article id="post-Pwnhub-Always-be-with-U-学习" class="wow slideInRight article article-type-post" itemscope="" itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2019/04/02/Pwnhub-Always-be-with-U-学习/" class="article-date">
-  <time class="post-time" datetime="2019-04-02T07:12:01.000Z" itemprop="datePublished">
-    <span class="post-month">4月</span><br>
-    <span class="post-day">02</span>
-  </time>
-</a>
-   
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/04/02/Pwnhub-Always-be-with-U-学习/">Pwnhub Always be with U 学习</a>
-    </h1>
-  
-
-        <div>
-          
-          
-              
-
-          
-        </div>
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>前几天Pwnhub的一个密码学专题的比赛，当时我看了一会觉得没有想法不会做，就去忙别的事情了（我密码学是真的菜），现在各位师傅出writeup了，所以我就回来研究学习一下，结论：密码学的各种攻击知道的太少；密码学的库我用得不多，有的情况下不知道怎么编写代码。在文章里记录一下脚本，以后遇到了相似的题目也可以回来看看。</p>
-        
-          <p class="article-more-link">
-            <a href="/2019/04/02/Pwnhub-Always-be-with-U-学习/#more">Read More</a>
-          </p>
-        
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/04/02/Pwnhub-Always-be-with-U-学习/" data-id="cju2dugyx000hc8v64gkbmlfd" class="article-share-link">分享</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTF/">CTF</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Crypto/">Crypto</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-
-
-  
-    <article id="post-Gopher-HTTP2" class="wow slideInRight article article-type-post" itemscope="" itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2019/03/30/Gopher-HTTP2/" class="article-date">
-  <time class="post-time" datetime="2019-03-30T14:57:33.000Z" itemprop="datePublished">
-    <span class="post-month">3月</span><br>
-    <span class="post-day">30</span>
-  </time>
-</a>
-   
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/03/30/Gopher-HTTP2/">Gopher-HTTP2</a>
-    </h1>
-  
-
-        <div>
-          
-          
-              
-
-          
-        </div>
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>最近逛pwnhub的时候，看到了以前的一道题Pink friend，因为题目已经关闭的原因，所以我直接去看了下题解，发现题目的解法是利用gopher来发HTTP2的包，顿时觉得很有意思，这种操作方式和HTTP2都是我所不熟悉的，所以决定要稍微研究一下，然后写篇文章总结一下。本文不侧重HTTP2包的分析，网上有很多的分析文章，本文只是研究总结下这种操作方式。</p>
-        
-          <p class="article-more-link">
-            <a href="/2019/03/30/Gopher-HTTP2/#more">Read More</a>
-          </p>
-        
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/30/Gopher-HTTP2/" data-id="cju2dugyp0007c8v6fqcjm6y3" class="article-share-link">分享</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-
-
-  
-    <article id="post-0CTF-TCTF-Crypto学习" class="wow slideInRight article article-type-post" itemscope="" itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2019/03/28/0CTF-TCTF-Crypto学习/" class="article-date">
-  <time class="post-time" datetime="2019-03-28T03:52:44.000Z" itemprop="datePublished">
-    <span class="post-month">3月</span><br>
-    <span class="post-day">28</span>
-  </time>
-</a>
-   
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/03/28/0CTF-TCTF-Crypto学习/">0CTF/TCTF2019 Crypto学习</a>
-    </h1>
-  
-
-        <div>
-          
-          
-              
-
-          
-        </div>
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>这次比赛的密码题还是很好玩的，虽然我太菜了做不出来，但是我还是要复现学习一下，希望以后能做出密码题来吧。</p>
-        
-          <p class="article-more-link">
-            <a href="/2019/03/28/0CTF-TCTF-Crypto学习/#more">Read More</a>
-          </p>
-        
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/28/0CTF-TCTF-Crypto学习/" data-id="cju2dugya0000c8v6pxap30ck" class="article-share-link">分享</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTF/">CTF</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Crypto/">Crypto</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-
-
-  
-    <article id="post-0CTF-TCTF-Web题解" class="wow slideInRight article article-type-post" itemscope="" itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2019/03/26/0CTF-TCTF-Web题解/" class="article-date">
-  <time class="post-time" datetime="2019-03-26T10:57:55.000Z" itemprop="datePublished">
-    <span class="post-month">3月</span><br>
-    <span class="post-day">26</span>
-  </time>
-</a>
-   
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/03/26/0CTF-TCTF-Web题解/">0CTF/TCTF2019 Web题解</a>
-    </h1>
-  
-
-        <div>
-          
-          
-              
-
-          
-        </div>
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>这次的CTF比赛虽然只有两道Web题，但是难度还是有的，用到的知识点也很有趣，而菜鸡的我在群内大师傅的提点下总算是把题目给做出来了，这里总结一下。</p>
-        
-          <p class="article-more-link">
-            <a href="/2019/03/26/0CTF-TCTF-Web题解/#more">Read More</a>
-          </p>
-        
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/26/0CTF-TCTF-Web题解/" data-id="cju2dugym0004c8v60qlbcfx0" class="article-share-link">分享</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTF/">CTF</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-
-
-  
-    <article id="post-划水CVE-2019-9194复现" class="wow slideInRight article article-type-post" itemscope="" itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2019/03/22/划水CVE-2019-9194复现/" class="article-date">
-  <time class="post-time" datetime="2019-03-22T10:47:42.000Z" itemprop="datePublished">
-    <span class="post-month">3月</span><br>
-    <span class="post-day">22</span>
-  </time>
-</a>
-   
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/03/22/划水CVE-2019-9194复现/">划水CVE-2019-9194复现</a>
-    </h1>
-  
-
-        <div>
-          
-          
-              
-
-          
-        </div>
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>elFinder是一个Web文件管理平台，能够上传文件和对文件进行一些操作，其中在对图片进行旋转操作的时候，会拼接命令后执行，来调用Linux下的工具exiftran。而在这个过程中，作者一个失误导致了拼接命令的时候，没有使用在前几行进行过过滤的变量，而是使用了纯净未过滤的变量，这就导致了一个命令注入的漏洞。</p>
-<p>19、20、21这三天疯狂摸鱼，研究了一下PHP7.2通过写mem的方式绕过disabled functions，结果发现payload只有php-cli能用（也许php-cgi也可以？），php-fpm和mod_php都没有读取和写入mem的权限。然后又研究了一下Fastjson的绕过，结果踩进了Java的坑里，半天都爬不上来。</p>
-<p>今天看到这个漏洞，漏洞原理和复现都很简单，所以复现一下，继续第四天划水的学习生活……</p>
-<p>GitHub更新详情：<a href="https://github.com/Studio-42/elFinder/compare/2.1.47...2.1" target="_blank" rel="noopener">https://github.com/Studio-42/elFinder/compare/2.1.47...2.1</a></p>
-        
-          <p class="article-more-link">
-            <a href="/2019/03/22/划水CVE-2019-9194复现/#more">Read More</a>
-          </p>
-        
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/22/划水CVE-2019-9194复现/" data-id="cju2dugza000zc8v6ae9bgv8y" class="article-share-link">分享</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复现/">复现</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-
-
-  
-    <article id="post-Java反序列化漏洞-Fastjson" class="wow slideInRight article article-type-post" itemscope="" itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2019/03/17/Java反序列化漏洞-Fastjson/" class="article-date">
-  <time class="post-time" datetime="2019-03-17T06:36:48.000Z" itemprop="datePublished">
-    <span class="post-month">3月</span><br>
-    <span class="post-day">17</span>
-  </time>
-</a>
-   
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/03/17/Java反序列化漏洞-Fastjson/">Java反序列化漏洞-Fastjson</a>
-    </h1>
-  
-
-        <div>
-          
-          
-              
-
-          
-        </div>
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <hr>
-<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>一直想学习一下Java反序列化漏洞的相关利用，寒假期间学习了Java原生类的反序列化漏洞（Apache Commons Collections组件），不过到现在都还没有做一个总结。刚好最近有师傅问到shiro反序列化漏洞的相关事情，所以现在从这篇文章开始，学习各种Java反序列化漏洞，顺便做一个总结并记录下来。环境搭建采用的是Maven+Spring MVC，方便快捷。</p>
-<h3 id="Fastjson"><a href="#Fastjson" class="headerlink" title="Fastjson"></a>Fastjson</h3><p>Fastjson是一个性能很好的Java语言实现的Json解析器和生成器，由来自阿里巴巴的工程师开发。具有极快的性能，接口简单易用。Fastjson使用parseObject来进行反序列化。</p>
-<p>Fastjson提供了两个主要接口toJSONString和parseObject来实现Json数据的序列化和反系列化。</p>
-<p>项目地址：<a href="https://github.com/alibaba/fastjson" target="_blank" rel="noopener">https://github.com/alibaba/fastjson</a></p>
-<h3 id="影响范围"><a href="#影响范围" class="headerlink" title="影响范围"></a>影响范围</h3><p>fastjson &lt;= 1.2.24</p>
-<p>JDK8： 1.2.22 &lt;= fastjson &lt;= 1.2.24</p>
-        
-          <p class="article-more-link">
-            <a href="/2019/03/17/Java反序列化漏洞-Fastjson/#more">Read More</a>
-          </p>
-        
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/17/Java反序列化漏洞-Fastjson/" data-id="cju2dugyq0008c8v653p8fx1a" class="article-share-link">分享</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-
-
-  
-    <article id="post-wordpress5-1-CSRF-to-XSS-to-RCE复现" class="wow slideInRight article article-type-post" itemscope="" itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2019/03/16/wordpress5-1-CSRF-to-XSS-to-RCE复现/" class="article-date">
-  <time class="post-time" datetime="2019-03-16T04:12:47.000Z" itemprop="datePublished">
-    <span class="post-month">3月</span><br>
-    <span class="post-day">16</span>
-  </time>
-</a>
-   
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/03/16/wordpress5-1-CSRF-to-XSS-to-RCE复现/">wordpress5.1-CSRF_to_XSS_to_RCE复现</a>
-    </h1>
-  
-
-        <div>
-          
-          
-              
-
-          
-        </div>
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>就几天刚披露的一个wordpress5.1的漏洞，虽然漏洞有一定的利用条件，不过最后所能造成的危害还是比较大的。复现了一遍下来，感觉wordpress对于管理员的防备十分的薄弱，似乎是认为管理员就是服务器的拥有者的原因，所以wordpress后台getshell非常地容易。具体攻击思路是攻击者在自己的网站上放置一个CSRF攻击的HTML页面，让受害人访问，然后就会向wordpess的文章中插入一条带有恶意JS代码的评论（stored xss），因为使用的是a标签的缘故，所以还需要受害人将鼠标移动到评论的上方（这些都可以靠社工），然后触发XSS漏洞，攻击者可以修改插件或者主题的PHP代码，得到一个webshell。</p>
-<h5 id="危害版本"><a href="#危害版本" class="headerlink" title="危害版本"></a>危害版本</h5><p>wordpress版本&lt;5.1.1</p>
-<h5 id="利用条件"><a href="#利用条件" class="headerlink" title="利用条件"></a>利用条件</h5><p>具有unfiltered_html权限的用户访问了攻击者编写的恶意页面，并触发了恶意评论中a标签的on事件。</p>
-<h5 id="修复"><a href="#修复" class="headerlink" title="修复"></a>修复</h5><p>增加了对a标签属性的xss过滤。</p>
-<p>如果nonce错误则与无unfiltered_html权限的用户接受相同的评论过滤。</p>
-        
-          <p class="article-more-link">
-            <a href="/2019/03/16/wordpress5-1-CSRF-to-XSS-to-RCE复现/#more">Read More</a>
-          </p>
-        
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/16/wordpress5-1-CSRF-to-XSS-to-RCE复现/" data-id="cju2dugz5000rc8v64u7ikrs8" class="article-share-link">分享</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复现/">复现</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-
-
-  
-    <article id="post-DNS-Rebinding" class="wow slideInRight article article-type-post" itemscope="" itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2019/03/14/DNS-Rebinding/" class="article-date">
-  <time class="post-time" datetime="2019-03-14T15:04:21.000Z" itemprop="datePublished">
-    <span class="post-month">3月</span><br>
-    <span class="post-day">14</span>
-  </time>
-</a>
-   
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/03/14/DNS-Rebinding/">DNS-Rebinding</a>
-    </h1>
-  
-
-        <div>
-          
-          
-              
-
-          
-        </div>
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <hr>
-<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>在SSRF漏洞的利用中，经常能看到后端对输入域名或者IP的各种检验过滤，那我们就需要用各种方式来进行绕过了，而其中有一种叫做DNS Rebinding（DNS重绑定）的绕过方式有别于其他的绕过方式，很有趣。</p>
-<h6 id="DNS、TTL"><a href="#DNS、TTL" class="headerlink" title="DNS、TTL"></a>DNS、TTL</h6><p>访问域名的时候，服务器会先向DNS服务器发出解析请求，DNS服务器再向域名指定的授权DNS服务器发出解析请求，得到该域名对应的IP，然后去访问该IP地址。</p>
-<p>TTL指DNS缓存的存活时间。在第一次DNS请求后，请求结果会被DNS服务器缓存下来，在缓存存活时间内不再请求，而是直接将结果返回。</p>
-<h6 id="后端检验"><a href="#后端检验" class="headerlink" title="后端检验"></a>后端检验</h6><p>一般来说后端检验并执行会向DNS服务器发出两次请求，第一次询问对应IP是否合法（在内网），第二次获取对应IP进行访问。有时候可以通过302跳转来绕过。</p>
-<h6 id="DNS-Rebinding"><a href="#DNS-Rebinding" class="headerlink" title="DNS Rebinding"></a>DNS Rebinding</h6><p>通过各种手段，让后端第一次DNS请求得到的IP为外网，第二次为内网。</p>
-<h6 id="防御方法"><a href="#防御方法" class="headerlink" title="防御方法"></a>防御方法</h6><p>缓存第一次DNS解析结果。</p>
-        
-          <p class="article-more-link">
-            <a href="/2019/03/14/DNS-Rebinding/#more">Read More</a>
-          </p>
-        
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/14/DNS-Rebinding/" data-id="cju2dugyk0003c8v6idbz9a2w" class="article-share-link">分享</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-
-
-  
-
-
-  <nav id="page-nav">
-    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/">next &raquo;</a>
-  </nav>
 </section>
         
           <aside id="sidebar">

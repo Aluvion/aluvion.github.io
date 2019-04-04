@@ -5,18 +5,18 @@
   
   <title>Go(1) | Twings</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="前言开个go的坑，填坑时间不定。  环境搭建系统：docker+Ubuntu18.04镜像 安装golang： 12apt-get updateapt-get install golang 在Ubuntu18.04下即可安装1.10版本的golang，如果需要最新版本的可以去https://golang.org/dl/（需要翻墙），或者直接wget下载，然后解压、建立工作目录并配置环境变量： 12">
+  <meta name="description" content="前言开个go的坑，填坑时间不定。">
 <meta name="keywords" content="Web">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Go(1)">
 <meta property="og:url" content="http://yoursite.com/2019/04/04/Go-1/index.html">
 <meta property="og:site_name" content="Twings">
-<meta property="og:description" content="前言开个go的坑，填坑时间不定。  环境搭建系统：docker+Ubuntu18.04镜像 安装golang： 12apt-get updateapt-get install golang 在Ubuntu18.04下即可安装1.10版本的golang，如果需要最新版本的可以去https://golang.org/dl/（需要翻墙），或者直接wget下载，然后解压、建立工作目录并配置环境变量： 12">
+<meta property="og:description" content="前言开个go的坑，填坑时间不定。">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2019-04-04T08:31:27.694Z">
+<meta property="og:updated_time" content="2019-04-04T08:35:18.974Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Go(1)">
-<meta name="twitter:description" content="前言开个go的坑，填坑时间不定。  环境搭建系统：docker+Ubuntu18.04镜像 安装golang： 12apt-get updateapt-get install golang 在Ubuntu18.04下即可安装1.10版本的golang，如果需要最新版本的可以去https://golang.org/dl/（需要翻墙），或者直接wget下载，然后解压、建立工作目录并配置环境变量： 12">
+<meta name="twitter:description" content="前言开个go的坑，填坑时间不定。">
   
     <link rel="alternate" href="/atom.xml" title="Twings" type="application/atom+xml">
   
@@ -106,6 +106,7 @@
     <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#前言"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#环境搭建"><span class="toc-text">环境搭建</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Hello-World-amp-amp-Go-Web-服务器"><span class="toc-text">Hello  World &amp;&amp; Go Web 服务器</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#多路复用-amp-amp-更多的Server配置"><span class="toc-text">多路复用 &amp;&amp; 更多的Server配置</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#处理器-amp-amp-处理器函数"><span class="toc-text">处理器 &amp;&amp; 处理器函数</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#使用第三方多路复用器"><span class="toc-text">使用第三方多路复用器</span></a></li></ol>
 </div> -->
         <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>开个go的坑，填坑时间不定。</p>
+<a id="more"></a>
 <hr>
 <h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>系统：docker+Ubuntu18.04镜像</p>
 <p>安装golang：</p>
@@ -151,13 +152,14 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">package main</span><br><span class="line"></span><br><span class="line">import (</span><br><span class="line">    &quot;fmt&quot;</span><br><span class="line">	&quot;net/http&quot;</span><br><span class="line">	&quot;julienschmidt/httprouter&quot;</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">func index(writer http.ResponseWriter, request *http.Request, p httprouter.Params) &#123;</span><br><span class="line">    fmt.Fprintf(writer, &quot;Index,  %s!&quot;, p.ByName(&quot;p&quot;))</span><br><span class="line">&#125;</span><br><span class="line">func login(writer http.ResponseWriter, request *http.Request, p httprouter.Params) &#123;</span><br><span class="line">    fmt.Fprintf(writer, &quot;Login, %s!&quot;, p.ByName(&quot;id&quot;))</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func main() &#123;</span><br><span class="line">	mux := httprouter.New()</span><br><span class="line">	mux.GET(&quot;/index:p&quot;, index)</span><br><span class="line">	mux.GET(&quot;/login/:id&quot;, login)</span><br><span class="line">    server := http.Server &#123;</span><br><span class="line">		Addr: &quot;0.0.0.0:80&quot;,</span><br><span class="line">		Handler: mux,</span><br><span class="line">	&#125;</span><br><span class="line">	server.ListenAndServe()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <hr>
 <p>HTTP2 &amp;&amp; HTTPS</p>
+<p>不整了，这个就靠反向代理。</p>
 <hr>
 <p>Orz</p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/04/04/Go-1/" data-id="cju2dugyn0005c8v61mrr4s2c" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/04/04/Go-1/" data-id="cju2dwwgq0009swv6nvoema5t" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>

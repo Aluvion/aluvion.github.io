@@ -24,7 +24,7 @@
 <meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/CDN/2019040506.png?raw=true">
 <meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/CDN/2019040507.png?raw=true">
 <meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/CDN/2019040508.png?raw=true">
-<meta property="og:updated_time" content="2019-04-05T13:26:07.646Z">
+<meta property="og:updated_time" content="2019-04-05T13:29:57.495Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="SVG XSS-CDN-Web缓存投毒">
 <meta name="twitter:description" content="前言好长一段时间之前看到的一篇文章和一道题，结果我一直干别的事情，都没有好好研究一下，现在赶紧补一下坑，写篇文章总结记录一哈。 题目的预期解是SVG XSS，而非预期解是缓存投毒。">
@@ -130,7 +130,7 @@
 <hr>
 <h3 id="缓存投毒"><a href="#缓存投毒" class="headerlink" title="缓存投毒"></a>缓存投毒</h3><p>writeup：<a href="https://ctftime.org/writeup/13925" target="_blank" rel="noopener">https://ctftime.org/writeup/13925</a></p>
 <p>Web缓存投毒：<a href="https://www.anquanke.com/post/id/156356" target="_blank" rel="noopener">https://www.anquanke.com/post/id/156356</a></p>
-<p>原理就是利用CDN缓存，攻击者在CDN上缓存一个恶意的静态资源，如果受害人HTI了这个资源，就会受到攻击。</p>
+<p>原理就是利用CDN缓存，攻击者在CDN上缓存一个恶意的静态资源，如果受害人HIT了这个资源，就会受到攻击。</p>
 <p>在这道题目里面，按照题目的配置Vary: Accept-Encoding, Cookie，按理来说由于请求头中Cookie的不同，admin应该是无法命中缓存的才对，但是尝试过后我们会发现，Cookie似乎没有起到作用？</p>
 <p>尝试更多之后我发现，手机上的微信浏览器却不会命中缓存。</p>
 <p>我对微信浏览器进行抓包的时候，它又命中了缓存：</p>
@@ -168,7 +168,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/04/04/SVG-XSS-CDN-Web缓存投毒/" data-id="cju43v9x9001724v6647trq4t" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/04/04/SVG-XSS-CDN-Web缓存投毒/" data-id="cju43wjwq000jlkv60k72rsbc" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTF/">CTF</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>

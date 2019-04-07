@@ -3,18 +3,20 @@
 <head><meta name="generator" content="Hexo 3.8.0">
   <meta charset="utf-8">
   
-  <title>归档: 2019/3 | Twings</title>
+  <title>西湖论剑Web | Twings</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="摸鱼">
-<meta property="og:type" content="website">
-<meta property="og:title" content="Twings">
-<meta property="og:url" content="http://yoursite.com/archives/2019/03/page/2/index.html">
+  <meta name="description" content="前言打了个西湖论剑的比赛，虽然他的Web题出得很没有质量，虽然最有质量的一题还是抄的GoogleCTF，但毕竟还是有点东西的，所以还是写篇博客总结一下。 因为主办方的比赛结束的一刹那就关掉了环境（这也太难受了吧），所以我就只讲一下主要思路了。">
+<meta name="keywords" content="CTF,Web">
+<meta property="og:type" content="article">
+<meta property="og:title" content="西湖论剑Web">
+<meta property="og:url" content="http://yoursite.com/2019/04/07/西湖论剑Web/index.html">
 <meta property="og:site_name" content="Twings">
-<meta property="og:description" content="摸鱼">
+<meta property="og:description" content="前言打了个西湖论剑的比赛，虽然他的Web题出得很没有质量，虽然最有质量的一题还是抄的GoogleCTF，但毕竟还是有点东西的，所以还是写篇博客总结一下。 因为主办方的比赛结束的一刹那就关掉了环境（这也太难受了吧），所以我就只讲一下主要思路了。">
 <meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-04-07T15:32:05.310Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Twings">
-<meta name="twitter:description" content="摸鱼">
+<meta name="twitter:title" content="西湖论剑Web">
+<meta name="twitter:description" content="前言打了个西湖论剑的比赛，虽然他的Web题出得很没有质量，虽然最有质量的一题还是抄的GoogleCTF，但毕竟还是有点东西的，所以还是写篇博客总结一下。 因为主办方的比赛结束的一刹那就关掉了环境（这也太难受了吧），所以我就只讲一下主要思路了。">
   
     <link rel="alternate" href="/atom.xml" title="Twings" type="application/atom+xml">
   
@@ -67,69 +69,105 @@
   </div>
 </div>
 
-        <section id="main">
-  
-  
+        <section id="main"><article id="post-西湖论剑Web" class="wow slideInRight article article-type-post" itemscope="" itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/04/07/西湖论剑Web/" class="article-date">
+  <time class="post-time" datetime="2019-04-07T14:46:28.000Z" itemprop="datePublished">
+    <span class="post-month">4月</span><br>
+    <span class="post-day">07</span>
+  </time>
+</a>
+   
+  </div>
+  <div class="article-inner">
     
     
-      
-      
-      <section class="archives-wrap animated rubberBand">
-        <div class="archive-year-wrap">
-          <a href="/archives/2019" class="archive-year">2019</a>
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      西湖论剑Web
+    </h1>
+  
+
+        <div>
+          
+          
+              
+
+          
         </div>
-        <div class="archives">
+      </header>
     
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/2019/03/04/Nexus-Repository-Manager-3-CVE-2019-7238-IDEA远程调试/" class="archive-article-date">
-  <time class="post-time" datetime="2019-03-04T11:31:13.000Z" itemprop="datePublished">
-    <span class="post-month">3月</span><br>
-    <span class="post-day">04</span>
-  </time>
-</a>
+    <div class="article-entry" itemprop="articleBody">
       
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/03/04/Nexus-Repository-Manager-3-CVE-2019-7238-IDEA远程调试/">Nexus Repository Manager 3 CVE-2019-7238 IDEA远程调试</a>
-    </h1>
-  
+        <!-- <div id="toc" class="toc-article">
+    <div class="toc-title">目录</div>
+    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#前言"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Web1"><span class="toc-text">Web1</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Web2"><span class="toc-text">Web2</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Web3"><span class="toc-text">Web3</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Web4"><span class="toc-text">Web4</span></a></li></ol>
+</div> -->
+        <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>打了个西湖论剑的比赛，虽然他的Web题出得很没有质量，虽然最有质量的一题还是抄的GoogleCTF，但毕竟还是有点东西的，所以还是写篇博客总结一下。</p>
+<p>因为主办方的比赛结束的一刹那就关掉了环境（这也太难受了吧），所以我就只讲一下主要思路了。</p>
+<a id="more"></a>
+<hr>
+<h3 id="Web1"><a href="#Web1" class="headerlink" title="Web1"></a>Web1</h3><p>出题人犯错把strpos函数的参数写反了的题目，先通过index.php读取源码，看到index.php有提示dir.php，然后用dir.php列目录，最后直接读取根目录的flag即可。</p>
+<h3 id="Web2"><a href="#Web2" class="headerlink" title="Web2"></a>Web2</h3><ul>
+<li>在main.php页面写xss，过滤可以在onerror和=之间加个换行符来绕过</li>
+<li>在report.php提交main.php的URL</li>
+<li>在自己的xss平台接收cookie</li>
+<li>换掉自己的cookie，访问exec.php</li>
+<li>通过测试curl发现可以执行系统命令，直接反弹shell</li>
+<li>在根目录找到flag</li>
+</ul>
+<h3 id="Web3"><a href="#Web3" class="headerlink" title="Web3"></a>Web3</h3><p>脑洞/Misc题目。</p>
+<ul>
+<li>扫目录得到.DS_Store，看到目录e10adc3949ba59abbe56e057f20f883e</li>
+<li>再次扫目录，发现.git泄露</li>
+<li>下载得到一个压缩包、一张图片和一个PHP</li>
+<li>发现压缩包里面有三个文件，相同的图片和PHP，以及一个hint</li>
+<li>将图片压缩成一个ZIP（坑，要使用2345进行压缩），进行ZIP明文攻击，得到解密后的hint</li>
+<li>hint给了code和下一步的提示</li>
+<li>向index.php GET提交code，得到一个时间戳</li>
+<li>用php_mt_seed进行爆破，得到seed，访问/flag/seed.txt，得到flag</li>
+</ul>
+<h3 id="Web4"><a href="#Web4" class="headerlink" title="Web4"></a>Web4</h3><p>源码地址：<a href="https://github.com/google/google-ctf/tree/master/2018/quals/web-bbs" target="_blank" rel="noopener">https://github.com/google/google-ctf/tree/master/2018/quals/web-bbs</a></p>
+<p>writeup：</p>
+<p><a href="https://blog.dragonsector.pl/2018/07/google-ctf-2018-quals-bbs.html" target="_blank" rel="noopener">https://blog.dragonsector.pl/2018/07/google-ctf-2018-quals-bbs.html</a></p>
+<p><a href="https://ctftime.org/writeup/10369" target="_blank" rel="noopener">https://ctftime.org/writeup/10369</a></p>
+<p>思路：</p>
+<ul>
+<li>因为其他输入点都被编码的缘故，所以只能将Javascript代码插入PNG图片中上传，制作恶意PNG图片的脚本可以在writeup中找到。</li>
+<li>ajax参数污染，让管理员加载恶意PNG图片指定位置的代码作为Javascript来执行，漏洞代码：</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">function load_post() &#123;</span><br><span class="line"> var q = qs.parse(location.search, &#123;ignoreQueryPrefix: true&#125;);</span><br><span class="line"> var url = q.p;</span><br><span class="line"></span><br><span class="line"> $.ajax(url).then((text) =&gt; &#123;</span><br><span class="line">  $(&apos;#post&apos;).html(atob(text));</span><br><span class="line"> &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<hr>
+<p>Orz</p>
 
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/2019/03/01/Winrar远程代码执行漏洞复现/" class="archive-article-date">
-  <time class="post-time" datetime="2019-03-01T04:04:29.000Z" itemprop="datePublished">
-    <span class="post-month">3月</span><br>
-    <span class="post-day">01</span>
-  </time>
-</a>
       
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/03/01/Winrar远程代码执行漏洞复现/">Winrar远程代码执行漏洞复现</a>
-    </h1>
-  
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2019/04/07/西湖论剑Web/" data-id="cju735c4x001g6wv6hub7zvut" class="article-share-link">分享</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTF/">CTF</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
 
-    </header>
+    </footer>
   </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2019/04/04/SVG-XSS-CDN-Web缓存投毒/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">下一篇</strong>
+      <div class="article-nav-title">SVG XSS-CDN-Web缓存投毒</div>
+    </a>
+  
+</nav>
+
+  
 </article>
-  
-  
-    </div></section>
-  
 
 
-  <nav id="page-nav">
-    <a class="extend prev" rel="prev" href="/archives/2019/03/">&laquo; pre</a><a class="page-number" href="/archives/2019/03/">1</a><span class="page-number current">2</span>
-  </nav>
 
 </section>
         

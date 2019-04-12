@@ -5,22 +5,22 @@
   
   <title>JavaScript原型链污染 | Twings</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="前言最近看到一篇关于在模板注入中利用原型链污染RCE的文章，才想起来还没有总结过原型链污染这种JavaScript的特殊漏洞，所以打算写一篇文章，通过XSS、几道CTF题目和复现漏洞的方式，温故知新一下。 目录1. XSS to win) 2. CTF1 3. CTF2 4. CTF3 5. Handlebars模板注入到RCE">
+  <meta name="description" content="前言最近看到一篇关于在模板注入中利用原型链污染RCE的文章，才想起来还没有总结过原型链污染这种JavaScript的特殊漏洞，所以打算写一篇文章，通过XSS、几道CTF题目和复现漏洞的方式，温故知新一下。">
 <meta name="keywords" content="CTF,Web,复现">
 <meta property="og:type" content="article">
 <meta property="og:title" content="JavaScript原型链污染">
 <meta property="og:url" content="http://yoursite.com/2019/04/11/JavaScript原型链污染/index.html">
 <meta property="og:site_name" content="Twings">
-<meta property="og:description" content="前言最近看到一篇关于在模板注入中利用原型链污染RCE的文章，才想起来还没有总结过原型链污染这种JavaScript的特殊漏洞，所以打算写一篇文章，通过XSS、几道CTF题目和复现漏洞的方式，温故知新一下。 目录1. XSS to win) 2. CTF1 3. CTF2 4. CTF3 5. Handlebars模板注入到RCE">
+<meta property="og:description" content="前言最近看到一篇关于在模板注入中利用原型链污染RCE的文章，才想起来还没有总结过原型链污染这种JavaScript的特殊漏洞，所以打算写一篇文章，通过XSS、几道CTF题目和复现漏洞的方式，温故知新一下。">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/js_prototype_pollution/2019041101.png">
 <meta property="og:image" content="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/js_prototype_pollution/2019041102.png">
 <meta property="og:image" content="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/js_prototype_pollution/2019041103.png">
 <meta property="og:image" content="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/js_prototype_pollution/2019041104.png">
-<meta property="og:updated_time" content="2019-04-12T06:04:40.140Z">
+<meta property="og:updated_time" content="2019-04-12T06:08:40.995Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="JavaScript原型链污染">
-<meta name="twitter:description" content="前言最近看到一篇关于在模板注入中利用原型链污染RCE的文章，才想起来还没有总结过原型链污染这种JavaScript的特殊漏洞，所以打算写一篇文章，通过XSS、几道CTF题目和复现漏洞的方式，温故知新一下。 目录1. XSS to win) 2. CTF1 3. CTF2 4. CTF3 5. Handlebars模板注入到RCE">
+<meta name="twitter:description" content="前言最近看到一篇关于在模板注入中利用原型链污染RCE的文章，才想起来还没有总结过原型链污染这种JavaScript的特殊漏洞，所以打算写一篇文章，通过XSS、几道CTF题目和复现漏洞的方式，温故知新一下。">
 <meta name="twitter:image" content="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/js_prototype_pollution/2019041101.png">
   
     <link rel="alternate" href="/atom.xml" title="Twings" type="application/atom+xml">
@@ -108,21 +108,21 @@
       
         <!-- <div id="toc" class="toc-article">
     <div class="toc-title">目录</div>
-    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#前言"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#目录"><span class="toc-text">目录</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#原型链污染"><span class="toc-text">原型链污染</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#XSS-prompt-1-to-win"><span class="toc-text">XSS - prompt(1) to win</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#CTF1"><span class="toc-text">CTF1</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#CTF2"><span class="toc-text">CTF2</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#CTF3"><span class="toc-text">CTF3</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Handlebars模板注入到RCE"><span class="toc-text">Handlebars模板注入到RCE</span></a></li></ol>
+    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#前言"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#目录"><span class="toc-text">目录</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#原型链污染"><span class="toc-text">原型链污染</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#XSS"><span class="toc-text">XSS</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#CTF1"><span class="toc-text">CTF1</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#CTF2"><span class="toc-text">CTF2</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#CTF3"><span class="toc-text">CTF3</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Handlebars模板注入到RCE"><span class="toc-text">Handlebars模板注入到RCE</span></a></li></ol>
 </div> -->
         <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>最近看到一篇关于在模板注入中利用原型链污染RCE的文章，才想起来还没有总结过原型链污染这种JavaScript的特殊漏洞，所以打算写一篇文章，通过XSS、几道CTF题目和复现漏洞的方式，温故知新一下。</p>
-<h3 id="目录"><a href="#目录" class="headerlink" title="目录"></a>目录</h3><p><a href="#XSS - prompt(1">1. XSS</a> to win)</p>
+<a id="more"></a>
+<h3 id="目录"><a href="#目录" class="headerlink" title="目录"></a>目录</h3><p><a href="#XSS">1. XSS</a></p>
 <p><a href="#CTF1">2. CTF1</a></p>
 <p><a href="#CTF2">3. CTF2</a></p>
 <p><a href="#CTF3">4. CTF3</a></p>
 <p><a href="#Handlebars模板注入到RCE">5. Handlebars模板注入到RCE</a></p>
-<a id="more"></a>
 <h3 id="原型链污染"><a href="#原型链污染" class="headerlink" title="原型链污染"></a>原型链污染</h3><p>有关原型链的详细解析看这里：<a href="https://blog.csdn.net/cc18868876837/article/details/81211729" target="_blank" rel="noopener">https://blog.csdn.net/cc18868876837/article/details/81211729</a></p>
 <p>我这里只举一个简单的栗子：</p>
 <figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">&gt; a = []</span><br><span class="line">&lt; []</span><br><span class="line">&gt; a.__proto__.Twings = <span class="string">"Aluvion"</span></span><br><span class="line">&lt; <span class="string">"Aluvion"</span></span><br><span class="line">&gt; b = []</span><br><span class="line">&lt; []</span><br><span class="line">&gt; b.Twings</span><br><span class="line">&lt; <span class="string">"Aluvion"</span></span><br></pre></td></tr></table></figure>
 <p>简单来说就是通过给一个实例的原型对象赋值，影响同一个原型对象的其他实例。</p>
 <hr>
-<h3 id="XSS-prompt-1-to-win"><a href="#XSS-prompt-1-to-win" class="headerlink" title="XSS - prompt(1) to win"></a>XSS - prompt(1) to win</h3><p>传送门：<a href="http://prompt.ml/13" target="_blank" rel="noopener">http://prompt.ml/13</a></p>
+<h3 id="XSS"><a href="#XSS" class="headerlink" title="XSS"></a>XSS</h3><p>prompt(1) to win 传送门：<a href="http://prompt.ml/13" target="_blank" rel="noopener">http://prompt.ml/13</a></p>
 <p>关键代码：</p>
 <figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">...</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">extend</span>(<span class="params">obj</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> source, prop;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">1</span>, length = <span class="built_in">arguments</span>.length; i &lt; length; i++) &#123;</span><br><span class="line">        source = <span class="built_in">arguments</span>[i];</span><br><span class="line">        <span class="keyword">for</span> (prop <span class="keyword">in</span> source) &#123;</span><br><span class="line">        	obj[prop] = source[prop];</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> obj;</span><br><span class="line">&#125;</span><br><span class="line">...</span><br><span class="line"><span class="keyword">var</span> config = extend(&#123;</span><br><span class="line">	source: <span class="string">'http://placehold.it/350x150'</span></span><br><span class="line">&#125;, <span class="built_in">JSON</span>.parse(input));</span><br><span class="line"><span class="keyword">if</span> (<span class="regexp">/[^\w:\/.]/</span>.test(config.source)) &#123;</span><br><span class="line">	<span class="keyword">delete</span> config.source;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">var</span> source = config.source.replace(<span class="regexp">/"/g</span>, <span class="string">''</span>);</span><br><span class="line"><span class="keyword">return</span> <span class="string">'&lt;img src="&#123;&#123;source&#125;&#125;"&gt;'</span>.replace(<span class="string">'&#123;&#123;source&#125;&#125;'</span>, source);</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
 <p>目标就是最后在source中逃逸出一个双引号来。</p>
@@ -200,7 +200,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/04/11/JavaScript原型链污染/" data-id="cjudo33ew000c90v603yz2yoa" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/04/11/JavaScript原型链污染/" data-id="cjudo7x7n000cmkv6dkellxbw" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTF/">CTF</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复现/">复现</a></li></ul>

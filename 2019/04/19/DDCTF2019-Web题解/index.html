@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="utf-8">
+  
+  <title>DDCTF2019-Web题解 | Twings</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="前言最近举办的比赛 DDCTF2019 ，菜鸡 Web 手第二次打这个比赛，题目相比去年整体质量有所下降，有质量的题目只有三题左右，不过也是个能学到东西的好比赛。 比赛最后两天没有肝 Java 题，被hint弄昏了，辣鸡选手分不清命令执行和代码执行，当然也有对 ysoserial 不熟悉等各种原因在内，所以到最后还是没有能够 AK Web 题目，算是一个遗憾吧，希望明年能变得更强。">
+<meta name="keywords" content="CTF,Web">
+<meta property="og:type" content="article">
+<meta property="og:title" content="DDCTF2019-Web题解">
+<meta property="og:url" content="http://yoursite.com/2019/04/19/DDCTF2019-Web题解/index.html">
+<meta property="og:site_name" content="Twings">
+<meta property="og:description" content="前言最近举办的比赛 DDCTF2019 ，菜鸡 Web 手第二次打这个比赛，题目相比去年整体质量有所下降，有质量的题目只有三题左右，不过也是个能学到东西的好比赛。 比赛最后两天没有肝 Java 题，被hint弄昏了，辣鸡选手分不清命令执行和代码执行，当然也有对 ysoserial 不熟悉等各种原因在内，所以到最后还是没有能够 AK Web 题目，算是一个遗憾吧，希望明年能变得更强。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/DDCTF2019/2019041999.png">
+<meta property="og:updated_time" content="2019-04-19T12:32:42.671Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="DDCTF2019-Web题解">
+<meta name="twitter:description" content="前言最近举办的比赛 DDCTF2019 ，菜鸡 Web 手第二次打这个比赛，题目相比去年整体质量有所下降，有质量的题目只有三题左右，不过也是个能学到东西的好比赛。 比赛最后两天没有肝 Java 题，被hint弄昏了，辣鸡选手分不清命令执行和代码执行，当然也有对 ysoserial 不熟悉等各种原因在内，所以到最后还是没有能够 AK Web 题目，算是一个遗憾吧，希望明年能变得更强。">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/DDCTF2019/2019041999.png">
+  
+    <link rel="alternate" href="/atom.xml" title="Twings" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/plugin/bganimation/bg.css">
+  
+
+</head>
+</html>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <div class="widget-wrap mobile-header">
+  <h3 class="widget-title"></h3>
+  <div class="widget">
+    <img class="avatar" src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/31733328.jfif?raw=true">
+    <h2 class="author">Aluvion</h2>
+    <h3 class="description">摸鱼</h3>
+    <div class="count-box">
+      <a href="/archives"><div><strong>25</strong><br>文章</div></a>
+      <a href="/categories"><div><strong>0</strong><br>分类</div></a>
+      <a href="/tags"><div><strong>5</strong><br>标签</div></a>
+    </div>
+    <ul class="blog-link">
+     
+          <a href="/" title="Home">
+            <li>主页</li>
+          </a>
+        
+          <a href="/archives" title="Archives">
+            <li>归档</li>
+          </a>
+        
+          <a href="/categories" title="Categories">
+            <li>分类</li>
+          </a>
+        
+          <a href="/tags" title="Tags">
+            <li>标签</li>
+          </a>
+        
+    </ul>
+  </div>
+</div>
+
+        <section id="main"><article id="post-DDCTF2019-Web题解" class="wow slideInRight article article-type-post" itemscope="" itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/04/19/DDCTF2019-Web题解/" class="article-date">
+  <time class="post-time" datetime="2019-04-19T11:11:18.000Z" itemprop="datePublished">
+    <span class="post-month">4月</span><br>
+    <span class="post-day">19</span>
+  </time>
+</a>
+   
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      DDCTF2019-Web题解
+    </h1>
+  
+
+        <div>
+          
+          
+              
+
+          
+        </div>
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <!-- <div id="toc" class="toc-article">
+    <div class="toc-title">目录</div>
+    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#前言"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#滴"><span class="toc-text">滴~</span></a></li></ol><li class="toc-item toc-level-2"><a class="toc-link" href="#WEB-签到题"><span class="toc-text">WEB 签到题</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Upload-IMG"><span class="toc-text">Upload-IMG</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#homebrew-event-loop"><span class="toc-text">homebrew event loop</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#欢迎报名DDCTF"><span class="toc-text">欢迎报名DDCTF</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#大吉大利-今晚吃鸡"><span class="toc-text">大吉大利,今晚吃鸡~</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#mysql弱口令"><span class="toc-text">mysql弱口令</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#再来1杯Java"><span class="toc-text">再来1杯Java</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Padding-Oracle"><span class="toc-text">Padding Oracle</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#文件读取"><span class="toc-text">文件读取</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Java反序列化漏洞"><span class="toc-text">Java反序列化漏洞</span></a></li>
+</div> -->
+        <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>最近举办的比赛 DDCTF2019 ，菜鸡 Web 手第二次打这个比赛，题目相比去年整体质量有所下降，有质量的题目只有三题左右，不过也是个能学到东西的好比赛。</p>
+<p>比赛最后两天没有肝 Java 题，被hint弄昏了，辣鸡选手分不清命令执行和代码执行，当然也有对 ysoserial 不熟悉等各种原因在内，所以到最后还是没有能够 AK Web 题目，算是一个遗憾吧，希望明年能变得更强。</p>
+<a id="more"></a>
+<hr>
+<h3 id="滴"><a href="#滴" class="headerlink" title="滴~"></a>滴~</h3><p>脑洞题，使用文件读取漏洞读取源码，然后根据注释的提示，找到该作者该日期的文章，看到文件名 practice.txt.swp ，访问即可看到下一步，只是简单的变量覆盖就不说了。</p>
+<h2 id="WEB-签到题"><a href="#WEB-签到题" class="headerlink" title="WEB 签到题"></a>WEB 签到题</h2><p>坑，带上 HTTP 头 didictf_username: admin 访问即可看到源码，利用格式化字符串读取 key ，然后就是简单的反序列化读取文件就不说了。</p>
+<h3 id="Upload-IMG"><a href="#Upload-IMG" class="headerlink" title="Upload-IMG"></a>Upload-IMG</h3><p>考点在于绕过 gd 库对图片的渲染，让 gd 库渲染生成的新图片能留下 phpinfo 字符串，参考：<a href="https://xz.aliyun.com/t/416" target="_blank" rel="noopener">https://xz.aliyun.com/t/416</a> 。用文章给出的脚本打一遍下来就可以了，注意不是每张图片都可以成功，如果这张图片不行就换一张，或者可以直接搜索其他人使用的素材。</p>
+<h2 id="homebrew-event-loop"><a href="#homebrew-event-loop" class="headerlink" title="homebrew event loop"></a>homebrew event loop</h2><p>Python 代码审计，比较有意思的题目，贴下代码：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># -*- encoding: utf-8 -*- </span></span><br><span class="line"><span class="comment"># written in python 2.7 </span></span><br><span class="line">__author__ = <span class="string">'garzon'</span> </span><br><span class="line"></span><br><span class="line"><span class="keyword">from</span> flask <span class="keyword">import</span> Flask, session, request, Response </span><br><span class="line"><span class="keyword">import</span> urllib </span><br><span class="line"></span><br><span class="line">app = Flask(__name__) </span><br><span class="line">app.secret_key = <span class="string">'*********************'</span> <span class="comment"># censored </span></span><br><span class="line">url_prefix = <span class="string">'/d5af31f66147e857'</span> </span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">FLAG</span><span class="params">()</span>:</span> </span><br><span class="line">    <span class="keyword">return</span> <span class="string">'FLAG_is_here_but_i_wont_show_you'</span>  <span class="comment"># censored </span></span><br><span class="line">     </span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">trigger_event</span><span class="params">(event)</span>:</span> </span><br><span class="line">    session[<span class="string">'log'</span>].append(event) </span><br><span class="line">    <span class="keyword">if</span> len(session[<span class="string">'log'</span>]) &gt; <span class="number">5</span>: session[<span class="string">'log'</span>] = session[<span class="string">'log'</span>][<span class="number">-5</span>:] </span><br><span class="line">    <span class="keyword">if</span> type(event) == type([]): </span><br><span class="line">        request.event_queue += event </span><br><span class="line">    <span class="keyword">else</span>: </span><br><span class="line">        request.event_queue.append(event) </span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">get_mid_str</span><span class="params">(haystack, prefix, postfix=None)</span>:</span> </span><br><span class="line">    haystack = haystack[haystack.find(prefix)+len(prefix):] </span><br><span class="line">    <span class="keyword">if</span> postfix <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">None</span>: </span><br><span class="line">        haystack = haystack[:haystack.find(postfix)] </span><br><span class="line">    <span class="keyword">return</span> haystack </span><br><span class="line">     </span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">RollBackException</span>:</span> <span class="keyword">pass</span> </span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">execute_event_loop</span><span class="params">()</span>:</span> </span><br><span class="line">    valid_event_chars = set(<span class="string">'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789:;#'</span>) </span><br><span class="line">    resp = <span class="keyword">None</span> </span><br><span class="line">    <span class="keyword">while</span> len(request.event_queue) &gt; <span class="number">0</span>: </span><br><span class="line">        event = request.event_queue[<span class="number">0</span>] <span class="comment"># `event` is something like "action:ACTION;ARGS0#ARGS1#ARGS2......" </span></span><br><span class="line">        request.event_queue = request.event_queue[<span class="number">1</span>:] </span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">not</span> event.startswith((<span class="string">'action:'</span>, <span class="string">'func:'</span>)): <span class="keyword">continue</span> </span><br><span class="line">        <span class="keyword">for</span> c <span class="keyword">in</span> event: </span><br><span class="line">            <span class="keyword">if</span> c <span class="keyword">not</span> <span class="keyword">in</span> valid_event_chars: <span class="keyword">break</span> </span><br><span class="line">        <span class="keyword">else</span>: </span><br><span class="line">            is_action = event[<span class="number">0</span>] == <span class="string">'a'</span> </span><br><span class="line">            action = get_mid_str(event, <span class="string">':'</span>, <span class="string">';'</span>) </span><br><span class="line">            args = get_mid_str(event, action+<span class="string">';'</span>).split(<span class="string">'#'</span>) </span><br><span class="line">            <span class="keyword">try</span>: </span><br><span class="line">                event_handler = eval(action + (<span class="string">'_handler'</span> <span class="keyword">if</span> is_action <span class="keyword">else</span> <span class="string">'_function'</span>)) </span><br><span class="line">                ret_val = event_handler(args) </span><br><span class="line">            <span class="keyword">except</span> RollBackException: </span><br><span class="line">                <span class="keyword">if</span> resp <span class="keyword">is</span> <span class="keyword">None</span>: resp = <span class="string">''</span> </span><br><span class="line">                resp += <span class="string">'ERROR! All transactions have been cancelled. &lt;br /&gt;'</span> </span><br><span class="line">                resp += <span class="string">'&lt;a href="./?action:view;index"&gt;Go back to index.html&lt;/a&gt;&lt;br /&gt;'</span> </span><br><span class="line">                session[<span class="string">'num_items'</span>] = request.prev_session[<span class="string">'num_items'</span>] </span><br><span class="line">                session[<span class="string">'points'</span>] = request.prev_session[<span class="string">'points'</span>] </span><br><span class="line">                <span class="keyword">break</span> </span><br><span class="line">            <span class="keyword">except</span> Exception, e: </span><br><span class="line">                <span class="keyword">if</span> resp <span class="keyword">is</span> <span class="keyword">None</span>: resp = <span class="string">''</span> </span><br><span class="line">                <span class="comment">#resp += str(e) # only for debugging </span></span><br><span class="line">                <span class="keyword">continue</span> </span><br><span class="line">            <span class="keyword">if</span> ret_val <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">None</span>: </span><br><span class="line">                <span class="keyword">if</span> resp <span class="keyword">is</span> <span class="keyword">None</span>: resp = ret_val </span><br><span class="line">                <span class="keyword">else</span>: resp += ret_val </span><br><span class="line">    <span class="keyword">if</span> resp <span class="keyword">is</span> <span class="keyword">None</span> <span class="keyword">or</span> resp == <span class="string">''</span>: resp = (<span class="string">'404 NOT FOUND'</span>, <span class="number">404</span>) </span><br><span class="line">    session.modified = <span class="keyword">True</span> </span><br><span class="line">    <span class="keyword">return</span> resp </span><br><span class="line">     </span><br><span class="line"><span class="meta">@app.route(url_prefix+'/') </span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">entry_point</span><span class="params">()</span>:</span> </span><br><span class="line">    querystring = urllib.unquote(request.query_string) </span><br><span class="line">    request.event_queue = [] </span><br><span class="line">    <span class="keyword">if</span> querystring == <span class="string">''</span> <span class="keyword">or</span> (<span class="keyword">not</span> querystring.startswith(<span class="string">'action:'</span>)) <span class="keyword">or</span> len(querystring) &gt; <span class="number">100</span>: </span><br><span class="line">        querystring = <span class="string">'action:index;False#False'</span> </span><br><span class="line">    <span class="keyword">if</span> <span class="string">'num_items'</span> <span class="keyword">not</span> <span class="keyword">in</span> session: </span><br><span class="line">        session[<span class="string">'num_items'</span>] = <span class="number">0</span> </span><br><span class="line">        session[<span class="string">'points'</span>] = <span class="number">3</span> </span><br><span class="line">        session[<span class="string">'log'</span>] = [] </span><br><span class="line">    request.prev_session = dict(session) </span><br><span class="line">    trigger_event(querystring) </span><br><span class="line">    <span class="keyword">return</span> execute_event_loop() </span><br><span class="line"></span><br><span class="line"><span class="comment"># handlers/functions below -------------------------------------- </span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">view_handler</span><span class="params">(args)</span>:</span> </span><br><span class="line">    page = args[<span class="number">0</span>] </span><br><span class="line">    html = <span class="string">''</span> </span><br><span class="line">    html += <span class="string">'[INFO] you have &#123;&#125; diamonds, &#123;&#125; points now.&lt;br /&gt;'</span>.format(session[<span class="string">'num_items'</span>], session[<span class="string">'points'</span>]) </span><br><span class="line">    <span class="keyword">if</span> page == <span class="string">'index'</span>: </span><br><span class="line">        html += <span class="string">'&lt;a href="./?action:index;True%23False"&gt;View source code&lt;/a&gt;&lt;br /&gt;'</span> </span><br><span class="line">        html += <span class="string">'&lt;a href="./?action:view;shop"&gt;Go to e-shop&lt;/a&gt;&lt;br /&gt;'</span> </span><br><span class="line">        html += <span class="string">'&lt;a href="./?action:view;reset"&gt;Reset&lt;/a&gt;&lt;br /&gt;'</span> </span><br><span class="line">    <span class="keyword">elif</span> page == <span class="string">'shop'</span>: </span><br><span class="line">        html += <span class="string">'&lt;a href="./?action:buy;1"&gt;Buy a diamond (1 point)&lt;/a&gt;&lt;br /&gt;'</span> </span><br><span class="line">    <span class="keyword">elif</span> page == <span class="string">'reset'</span>: </span><br><span class="line">        <span class="keyword">del</span> session[<span class="string">'num_items'</span>] </span><br><span class="line">        html += <span class="string">'Session reset.&lt;br /&gt;'</span> </span><br><span class="line">    html += <span class="string">'&lt;a href="./?action:view;index"&gt;Go back to index.html&lt;/a&gt;&lt;br /&gt;'</span> </span><br><span class="line">    <span class="keyword">return</span> html </span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">index_handler</span><span class="params">(args)</span>:</span> </span><br><span class="line">    bool_show_source = str(args[<span class="number">0</span>]) </span><br><span class="line">    bool_download_source = str(args[<span class="number">1</span>]) </span><br><span class="line">    <span class="keyword">if</span> bool_show_source == <span class="string">'True'</span>: </span><br><span class="line">     </span><br><span class="line">        source = open(<span class="string">'eventLoop.py'</span>, <span class="string">'r'</span>) </span><br><span class="line">        html = <span class="string">''</span> </span><br><span class="line">        <span class="keyword">if</span> bool_download_source != <span class="string">'True'</span>: </span><br><span class="line">            html += <span class="string">'&lt;a href="./?action:index;True%23True"&gt;Download this .py file&lt;/a&gt;&lt;br /&gt;'</span> </span><br><span class="line">            html += <span class="string">'&lt;a href="./?action:view;index"&gt;Go back to index.html&lt;/a&gt;&lt;br /&gt;'</span> </span><br><span class="line">             </span><br><span class="line">        <span class="keyword">for</span> line <span class="keyword">in</span> source: </span><br><span class="line">            <span class="keyword">if</span> bool_download_source != <span class="string">'True'</span>: </span><br><span class="line">                html += line.replace(<span class="string">'&amp;'</span>,<span class="string">'&amp;amp;'</span>).replace(<span class="string">'\t'</span>, <span class="string">'&amp;nbsp;'</span>*<span class="number">4</span>).replace(<span class="string">' '</span>,<span class="string">'&amp;nbsp;'</span>).replace(<span class="string">'&lt;'</span>, <span class="string">'&amp;lt;'</span>).replace(<span class="string">'&gt;'</span>,<span class="string">'&amp;gt;'</span>).replace(<span class="string">'\n'</span>, <span class="string">'&lt;br /&gt;'</span>) </span><br><span class="line">            <span class="keyword">else</span>: </span><br><span class="line">                html += line </span><br><span class="line">        source.close() </span><br><span class="line">         </span><br><span class="line">        <span class="keyword">if</span> bool_download_source == <span class="string">'True'</span>: </span><br><span class="line">            headers = &#123;&#125; </span><br><span class="line">            headers[<span class="string">'Content-Type'</span>] = <span class="string">'text/plain'</span> </span><br><span class="line">            headers[<span class="string">'Content-Disposition'</span>] = <span class="string">'attachment; filename=serve.py'</span> </span><br><span class="line">            <span class="keyword">return</span> Response(html, headers=headers) </span><br><span class="line">        <span class="keyword">else</span>: </span><br><span class="line">            <span class="keyword">return</span> html </span><br><span class="line">    <span class="keyword">else</span>: </span><br><span class="line">        trigger_event(<span class="string">'action:view;index'</span>) </span><br><span class="line">         </span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">buy_handler</span><span class="params">(args)</span>:</span> </span><br><span class="line">    num_items = int(args[<span class="number">0</span>]) </span><br><span class="line">    <span class="keyword">if</span> num_items &lt;= <span class="number">0</span>: <span class="keyword">return</span> <span class="string">'invalid number(&#123;&#125;) of diamonds to buy&lt;br /&gt;'</span>.format(args[<span class="number">0</span>]) </span><br><span class="line">    session[<span class="string">'num_items'</span>] += num_items  </span><br><span class="line">    trigger_event([<span class="string">'func:consume_point;&#123;&#125;'</span>.format(num_items), <span class="string">'action:view;index'</span>]) </span><br><span class="line">     </span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">consume_point_function</span><span class="params">(args)</span>:</span> </span><br><span class="line">    point_to_consume = int(args[<span class="number">0</span>]) </span><br><span class="line">    <span class="keyword">if</span> session[<span class="string">'points'</span>] &lt; point_to_consume: <span class="keyword">raise</span> RollBackException() </span><br><span class="line">    session[<span class="string">'points'</span>] -= point_to_consume </span><br><span class="line">     </span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">show_flag_function</span><span class="params">(args)</span>:</span> </span><br><span class="line">    flag = args[<span class="number">0</span>] </span><br><span class="line">    <span class="comment">#return flag # GOTCHA! We noticed that here is a backdoor planted by a hacker which will print the flag, so we disabled it. </span></span><br><span class="line">    <span class="keyword">return</span> <span class="string">'You naughty boy! ;) &lt;br /&gt;'</span> </span><br><span class="line">     </span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">get_flag_handler</span><span class="params">(args)</span>:</span> </span><br><span class="line">    <span class="keyword">if</span> session[<span class="string">'num_items'</span>] &gt;= <span class="number">5</span>: </span><br><span class="line">        trigger_event(<span class="string">'func:show_flag;'</span> + FLAG()) <span class="comment"># show_flag_function has been disabled, no worries </span></span><br><span class="line">    trigger_event(<span class="string">'action:view;index'</span>) </span><br><span class="line">     </span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">'__main__'</span>: </span><br><span class="line">    app.run(debug=<span class="keyword">False</span>, host=<span class="string">'0.0.0.0'</span>)</span><br></pre></td></tr></table></figure>
+<p>getflag 的方法很明确，就是弄到五颗以上钻石，然后调用 get_flag_handler ，最后再解码 cookie 就能拿到 flag 了。</p>
+<p>仔细看一下就可以发现，题目对输入的字符串做了过滤，只允许数字字母和 _:;# 等少数几种特殊字符，无法任意执行命令，可以一次购买多个钻石，但是钻石的数量不能为负数，且每次购买钻石之后都会将 consume_point_function 塞进队列里来 check 余额，如果余额不足就会回滚。</p>
+<p>解题思路：</p>
+<ul>
+<li>在 eval 函数中通过 # 注释来调用任意函数，该函数参数只能为 list 。</li>
+<li>因为他的函数调用都是通过队列来顺序调用，并且购买钻石和检查余额不在同一个函数中，所以我们可以通过调用 trigger_event 来打乱他的队列，在购买钻石、检查余额之间插入一个 get_flag_handler 。</li>
+</ul>
+<p>在 eval 中调用 trigger_event ，将 buy_handler 和 get_flag_handler 塞进队列中，使用 buy_handler 购买5个以上的钻石，然后直接调用 get_flag_handler 把 flag 存入 cookie ，这样就算之后服务端检查余额回滚了也不影响我们 getflag ，get 提交 payload ：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">action:trigger_event%23;action:buy;5%23action:get_flag;</span><br></pre></td></tr></table></figure>
+<h2 id="欢迎报名DDCTF"><a href="#欢迎报名DDCTF" class="headerlink" title="欢迎报名DDCTF"></a>欢迎报名DDCTF</h2><p>一道 XSS + SQL 注入的题目，很简单但是也很坑。</p>
+<p>题目本来有个 swp 源码泄露，后来出题人给删除了。</p>
+<p>报名页面的 content 可以进行 XSS ，利用 script 远程加载或者 eval(atob(“payload”)) ，都可以。</p>
+<p>利用 XSS 打到 admin.php 的页面，看到一个 query_aIeMu0FUoVrW0NWPHbN6z4xh.php ，提示这里可以输入 id 进行查询，这里是简单的宽字节回显注入，注入出 flag 即可。</p>
+<p><strong>坑点：</strong></p>
+<ul>
+<li>管理员不定时点击。</li>
+<li>宽字节注入点难以发现，粗略测试过根本没有察觉，思路直接跑偏去了其他地方（比如攻击管理员所在的服务器、在 login.php 进行注入）。</li>
+</ul>
+<h3 id="大吉大利-今晚吃鸡"><a href="#大吉大利-今晚吃鸡" class="headerlink" title="大吉大利,今晚吃鸡~"></a>大吉大利,今晚吃鸡~</h3><p>坑，整数溢出 + 脚本题目。</p>
+<p>服务端在下单时接收单价和付款进行计算时，使用的数据类型不是同一个，所以我们可以通过溢出来让单价为0，即可买到门票。最后的吃鸡部分，写个脚本不停注册然后用自己的账号把他们踢掉即可。</p>
+<h2 id="mysql弱口令"><a href="#mysql弱口令" class="headerlink" title="mysql弱口令"></a>mysql弱口令</h2><p>比较有意思的题目，考点是 MySQL LOAD DATA INFILE 的利用。</p>
+<p>工具： <a href="https://github.com/Gifts/Rogue-MySql-Server" target="_blank" rel="noopener">https://github.com/Gifts/Rogue-MySql-Server</a> 。</p>
+<p>不停读文件就完事了，在 root 的 .bash_history 文件里发现源码文件，在源码文件中发现 flag 的路径，直接读取 /var/lib/mysql/security/flag.ibd 即可，或者也可以读取 root 目录下的 .mysql_history （非预期？）。</p>
+<h2 id="再来1杯Java"><a href="#再来1杯Java" class="headerlink" title="再来1杯Java"></a>再来1杯Java</h2><p>源码包：<a href="https://github.com/Aluvion/aluvion.github.io/blob/master/file/DDCTF2019/Java.zip" target="_blank" rel="noopener">https://github.com/Aluvion/aluvion.github.io/blob/master/file/DDCTF2019/Java.zip</a></p>
+<p>本地搭建环境也很简单，题目是个 Spring-Boot 的项目，把 class 反编译一下，然后再配置运行 Application.java 即可。</p>
+<p>题目分为三个部分，密码、文件读取和反序列化。</p>
+<h4 id="Padding-Oracle"><a href="#Padding-Oracle" class="headerlink" title="Padding Oracle"></a>Padding Oracle</h4><p>根据提示，需要我们成为 admin ，观察 HTTP 请求，可以得知我们需要伪造一个 cookie ，脚本如下（写得有点乱）：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># -*- coding:utf8 -*-</span></span><br><span class="line"><span class="keyword">import</span> base64</span><br><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"><span class="keyword">import</span> urllib</span><br><span class="line"></span><br><span class="line">url = <span class="string">"http://c1n0h7ku1yw24husxkxxgn3pcbqu56zj.ddctf2019.com:5023/api/account_info"</span></span><br><span class="line">data = base64.b64decode(<span class="string">"UGFkT3JhY2xlOml2L2NiY8O+7uQmXKFqNVUuI9c7VBe42FqRvernmQhsxyPnvxaF"</span>)</span><br><span class="line"><span class="comment"># iv = data[:16]</span></span><br><span class="line"><span class="comment"># c = data[16:32]</span></span><br><span class="line"></span><br><span class="line">m = <span class="string">""</span></span><br><span class="line">myd = requests.session()</span><br><span class="line">c_final2 = <span class="string">"\xA7\xD3\x87\x8A\x04f\xC7\x0BY\x26K\x5E\xD3\x3FP\x13"</span></span><br><span class="line"><span class="comment"># c_final1 = "\x2BC\x0D\x2BP\x5BR\x5CU\x16K\x04\x40\x0F\x07\x22"</span></span><br><span class="line"><span class="comment"># c_final11 = "P\xBE\x15\x9D\x03y\xA2bv.u\x10\xD3\xE7\x03\xF8"</span></span><br><span class="line">c_final11 = <span class="string">"\x00\xDFq\xD2q\x18\xC1\x0E\x13\x14\x1Cf\xFC\x84a\x9B"</span></span><br><span class="line"></span><br><span class="line">IV = <span class="string">""</span></span><br><span class="line">i_need = <span class="string">'&#123;"id":100,"roleA'</span></span><br><span class="line"><span class="keyword">for</span> x <span class="keyword">in</span> range(<span class="number">16</span>):</span><br><span class="line">    IV += chr(ord(c_final11[x]) ^ ord(i_need[x]))</span><br><span class="line">c = <span class="string">""</span></span><br><span class="line">i_need = <span class="string">'dmin":true&#125;'</span> + <span class="number">5</span> * <span class="string">"\x05"</span></span><br><span class="line"><span class="keyword">for</span> x <span class="keyword">in</span> range(<span class="number">16</span>):</span><br><span class="line">    c += chr(ord(c_final2[x]) ^ ord(i_need[x]))</span><br><span class="line"><span class="keyword">print</span> base64.b64encode(IV + c + data[<span class="number">32</span>:])</span><br><span class="line"></span><br><span class="line">exit(<span class="number">1</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># Padding Oracle</span></span><br><span class="line"><span class="keyword">for</span> x <span class="keyword">in</span> xrange(<span class="number">1</span>, <span class="number">17</span>):</span><br><span class="line">    <span class="keyword">for</span> y <span class="keyword">in</span> xrange(<span class="number">0</span>, <span class="number">256</span>):</span><br><span class="line">        IV = <span class="string">"\x00"</span> * (<span class="number">16</span> - x) + chr(y) + <span class="string">""</span>.join(chr(ord(i) ^ x) <span class="keyword">for</span> i <span class="keyword">in</span> c_final11)</span><br><span class="line">        payload = base64.b64encode(IV + c)</span><br><span class="line">        headers = &#123;</span><br><span class="line">            <span class="string">"Accept"</span>: <span class="string">"application/json, text/plain, */*"</span>,</span><br><span class="line">            <span class="string">"Accept-Encoding"</span>: <span class="string">"gzip, deflate"</span>,</span><br><span class="line">            <span class="string">"Accept-Language"</span>: <span class="string">"zh-CN,zh;q=0.9"</span>,</span><br><span class="line">            <span class="string">"Connection"</span>: <span class="string">"keep-alive"</span>,</span><br><span class="line">            <span class="string">"Cookie"</span>: <span class="string">"token="</span> + payload,</span><br><span class="line">            <span class="string">"Host"</span>: <span class="string">"c1n0h7ku1yw24husxkxxgn3pcbqu56zj.ddctf2019.com:5023"</span>,</span><br><span class="line">            <span class="string">"Referer"</span>: <span class="string">"http://c1n0h7ku1yw24husxkxxgn3pcbqu56zj.ddctf2019.com:5023/home"</span>,</span><br><span class="line">            <span class="string">"User-Agent"</span>: <span class="string">"Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36"</span><span class="string">""</span></span><br><span class="line">        &#125;</span><br><span class="line">        result = myd.get(url, headers=headers).content</span><br><span class="line">        <span class="keyword">if</span> <span class="string">"decrypt err"</span> <span class="keyword">not</span> <span class="keyword">in</span> result:</span><br><span class="line">            c_final11 = chr(y ^ x) + c_final11</span><br><span class="line">            <span class="keyword">print</span> <span class="string">"[+]Get: "</span> + urllib.quote(c_final11)</span><br><span class="line">            <span class="keyword">break</span></span><br><span class="line">        <span class="keyword">if</span> y == <span class="number">255</span>:</span><br><span class="line">            <span class="keyword">print</span> <span class="string">"[!]Error!"</span></span><br><span class="line">            exit(<span class="number">1</span>)</span><br><span class="line"><span class="keyword">print</span> urllib.quote(c_final11)</span><br><span class="line"><span class="comment"># for x in xrange(16):</span></span><br><span class="line"><span class="comment">#     m += chr(ord(c_final11[x]) ^ ord(iv[x]))</span></span><br><span class="line"><span class="comment"># print m</span></span><br><span class="line"><span class="comment"># print urllib.quote(m)</span></span><br><span class="line"></span><br><span class="line">exit(<span class="number">1</span>)</span><br></pre></td></tr></table></figure>
+<p>修改 cookie ，成为 admin 后看到一个下载链接，这里有一个任意文件下载漏洞。</p>
+<h3 id="文件读取"><a href="#文件读取" class="headerlink" title="文件读取"></a>文件读取</h3><p>下载到一个 1.txt ，提示说：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Try to hack~ </span><br><span class="line">Hint:</span><br><span class="line">1. Env: Springboot + JDK8(openjdk version &quot;1.8.0_181&quot;) + Docker~ </span><br><span class="line">2. You can not exec commands~</span><br></pre></td></tr></table></figure>
+<p>坑，利用文件读取漏洞，跑字典可以在 /proc/self/fd/15 处下载到一个 zip ，里面就是题目的源码。</p>
+<h3 id="Java反序列化漏洞"><a href="#Java反序列化漏洞" class="headerlink" title="Java反序列化漏洞"></a>Java反序列化漏洞</h3><p>参考 writeup ：<a href="https://xz.aliyun.com/t/4862#toc-7" target="_blank" rel="noopener">https://xz.aliyun.com/t/4862#toc-7</a></p>
+<p>我虽然了解一点 Java 反序列化漏洞，但是从来没有用过 ysoserial 这个工具，趁这个机会也正好学习一下。</p>
+<p>审计代码，可以看到它提供了一个无法回显的反序列化接口，并且使用 Serialkiller 对我们反序列化的类进行了黑名单过滤。所以我们的第一个目标就是绕过这份黑名单。</p>
+<p>根据提示的 JRMP ，我们注意到黑名单中的 JRMP 类只有三个：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">regexp</span>&gt;</span>java\.rmi\.registry\.Registry$<span class="tag">&lt;/<span class="name">regexp</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">regexp</span>&gt;</span>java\.rmi\.server\.ObjID$<span class="tag">&lt;/<span class="name">regexp</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">regexp</span>&gt;</span>java\.rmi\.server\.RemoteObjectInvocationHandler$<span class="tag">&lt;/<span class="name">regexp</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>参考文章：<a href="https://xz.aliyun.com/t/2479" target="_blank" rel="noopener">https://xz.aliyun.com/t/2479</a> ，找个方式，修改 ysoserial 中的 JRMPClient ，重新编译再输出 payload 即可。</p>
+<p>现在我们就可以通过 JRMP 的方式来反序列化任意类了，关注项目依赖中的 commons-collections:3.1 ，我们通过这个低版本的组件实现代码执行，参考文章：<a href="https://blog.csdn.net/fnmsd/article/details/79534877" target="_blank" rel="noopener">https://blog.csdn.net/fnmsd/article/details/79534877</a></p>
+<p>效果：</p>
+<p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/DDCTF2019/2019041999.png" alt=""></p>
+<hr>
+<p>参考文章：</p>
+<p><a href="https://github.com/frohoff/ysoserial" target="_blank" rel="noopener">https://github.com/frohoff/ysoserial</a></p>
+<p><a href="https://paper.seebug.org/584/" target="_blank" rel="noopener">https://paper.seebug.org/584/</a></p>
+<p><a href="https://xz.aliyun.com/t/2479" target="_blank" rel="noopener">https://xz.aliyun.com/t/2479</a></p>
+<p><a href="https://xz.aliyun.com/t/2041" target="_blank" rel="noopener">https://xz.aliyun.com/t/2041</a></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2019/04/19/DDCTF2019-Web题解/" data-id="cjuo21sgx00047gv6kknpb30p" class="article-share-link">分享</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTF/">CTF</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2019/04/18/Spring-Cloud-Config-Server-路径穿越与任意文件读取漏洞CVE-2019-3799复现/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">下一篇</strong>
+      <div class="article-nav-title">Spring Cloud Config Server 路径穿越与任意文件读取漏洞 CVE-2019-3799复现</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    <div class="widget-wrap">
+  <h3 class="widget-title"></h3>
+  <div class="widget">
+    <h1 class="blog-title">Twings</h1>
+    <h2 class="blog-subtitle"></h2>
+    <ul class="blog-link">
+     
+          <a href="/" title="Home">
+            <li>主页</li>
+          </a>
+        
+          <a href="/archives" title="Archives">
+            <li>归档</li>
+          </a>
+        
+          <a href="/categories" title="Categories">
+            <li>分类</li>
+          </a>
+        
+          <a href="/tags" title="Tags">
+            <li>标签</li>
+          </a>
+        
+    </ul>
+  </div>
+</div>
+
+  
+    <div class="widget-wrap">
+  <h3 class="widget-title"></h3>
+  <div class="widget">
+    <img class="avatar" src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/31733328.jfif?raw=true">
+    <h2 class="author">Aluvion</h2>
+    <h3 class="description">摸鱼</h3>
+    <div class="count-box">
+      <a href="/archives"><div><strong>25</strong><br>文章</div></a>
+      <a href="/categories"><div><strong>0</strong><br>分类</div></a>
+      <a href="/tags"><div><strong>5</strong><br>标签</div></a>
+    </div>
+
+
+
+    <div class="social-link">
+      
+        <a class="hvr-bounce-in" href="https://github.com/Aluvion" target="_blank" title="Github">
+          Github
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://www.jianshu.com/u/4cdc8b6d5436" target="_blank" title="简书">
+          简书
+        </a>
+      
+    </div>
+
+    <div class="friend-link">
+      <h2>友情链接</h2>
+      
+        <a class="hvr-bounce-in" href="https://github.com/Pr0phet" target="_blank" title="pr0phet">
+          pr0phet
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://coomrade.github.io" target="_blank" title="coomrade">
+          coomrade
+        </a>
+      
+        <a class="hvr-bounce-in" href="http://blog.y2pj.tw/wordpress/" target="_blank" title="y2pj">
+          y2pj
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://zszcr.github.io/" target="_blank" title="zszcr">
+          zszcr
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://23r3f.github.io/" target="_blank" title="23r3f">
+          23r3f
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://xi4or0uji.github.io/" target="_blank" title="xi4or0uji">
+          xi4or0uji
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://hack4.fun/" target="_blank" title="tokyocolq">
+          tokyocolq
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://glarcy.github.io/" target="_blank" title="glarcy">
+          glarcy
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://wulidecade.cn" target="_blank" title="小白">
+          小白
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://littleredlie.github.io/" target="_blank" title="LittleRed">
+          LittleRed
+        </a>
+      
+        <a class="hvr-bounce-in" href="http://blog.shanamaid.top/" target="_blank" title="ShanaMaid">
+          ShanaMaid
+        </a>
+      
+    </div>
+  </div>
+</div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy;2018 - 2019 Aluvion<br>
+      由<a href="http://hexo.io/" target="_blank">Hexo</a>强力驱动 | 
+      主题-<a href="https://github.com/ShanaMaid/hexo-theme-shana">Shana</a>
+      
+    </div>
+    
+  </div>
+</footer>
+    </div>
+    
+
+<script src="//apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
+<script src="//apps.bdimg.com/libs/wow/0.1.6/wow.min.js"></script>
+<script>
+new WOW().init();
+</script>   
+
+
+  <link rel="stylesheet" href="/plugin/fancybox/jquery.fancybox.css">
+  <script src="/plugin/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+  <link rel="stylesheet" href="/plugin/galmenu/GalMenu.css">
+  <script src="/plugin/galmenu/GalMenu.js"></script>
+  <div class="GalMenu GalDropDown">
+      <div class="circle" id="gal">
+        <div class="ring">
+          
+            <a href="/" title="" class="menuItem">首页</a>
+          
+            <a href="/tags" title="" class="menuItem">标签</a>
+          
+            <a href="/categories" title="" class="menuItem">分类</a>
+          
+            <a href="/archives" title="" class="menuItem">归档</a>
+          
+            <a href="/???" title="" class="menuItem">None</a>
+          
+            <a href="/???" title="" class="menuItem">None</a>
+          
+        </div>
+        
+          <audio id="audio" src="#"></audio>
+        
+      </div> 
+</div>
+<div id="overlay" style="opacity: 1; cursor: pointer;"></div>
+  <script type="text/javascript">var items = document.querySelectorAll('.menuItem');
+    for (var i = 0,
+    l = items.length; i < l; i++) {
+      items[i].style.left = (50 - 35 * Math.cos( - 0.5 * Math.PI - 2 * (1 / l) * i * Math.PI)).toFixed(4) + "%";
+      items[i].style.top = (50 + 35 * Math.sin( - 0.5 * Math.PI - 2 * (1 / l) * i * Math.PI)).toFixed(4) + "%"
+    }</script>
+<script type="text/javascript">
+  $(document).ready(function() {
+    $('body').GalMenu({
+      'menu': 'GalDropDown'
+    })
+  });
+</script>
+
+  <section class="hidden-xs"> 
+  <ul class="cb-slideshow"> 
+    <li><span>苟利</span></li> 
+    <li><span>国家</span></li> 
+    <li><span>生死以</span></li> 
+    <li><span>岂能</span></li> 
+    <li><span>祸福</span></li> 
+    <li><span>趋避之</span></li> 
+  </ul>
+</section>
+<script src="/js/script.js"></script>
+
+
+
+  </div>
+</body>
+</html>

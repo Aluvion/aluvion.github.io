@@ -41,7 +41,7 @@
     <h2 class="author">Aluvion</h2>
     <h3 class="description">摸鱼</h3>
     <div class="count-box">
-      <a href="/archives"><div><strong>30</strong><br>文章</div></a>
+      <a href="/archives"><div><strong>31</strong><br>文章</div></a>
       <a href="/categories"><div><strong>0</strong><br>分类</div></a>
       <a href="/tags"><div><strong>6</strong><br>标签</div></a>
     </div>
@@ -68,6 +68,65 @@
 </div>
 
         <section id="main">
+  
+    <article id="post-wordpress5-1-CSRF-to-XSS-to-RCE复现" class="wow slideInRight article article-type-post" itemscope="" itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/03/16/wordpress5-1-CSRF-to-XSS-to-RCE复现/" class="article-date">
+  <time class="post-time" datetime="2019-03-16T04:12:47.000Z" itemprop="datePublished">
+    <span class="post-month">3月</span><br>
+    <span class="post-day">16</span>
+  </time>
+</a>
+   
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/03/16/wordpress5-1-CSRF-to-XSS-to-RCE复现/">wordpress5.1-CSRF_to_XSS_to_RCE复现</a>
+    </h1>
+  
+
+        <div>
+          
+          
+              
+
+          
+        </div>
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>就几天刚披露的一个wordpress5.1的漏洞，虽然漏洞有一定的利用条件，不过最后所能造成的危害还是比较大的。复现了一遍下来，感觉wordpress对于管理员的防备十分的薄弱，似乎是认为管理员就是服务器的拥有者的原因，所以wordpress后台getshell非常地容易。具体攻击思路是攻击者在自己的网站上放置一个CSRF攻击的HTML页面，让受害人访问，然后就会向wordpess的文章中插入一条带有恶意JS代码的评论（stored xss），因为使用的是a标签的缘故，所以还需要受害人将鼠标移动到评论的上方（这些都可以靠社工），然后触发XSS漏洞，攻击者可以修改插件或者主题的PHP代码，得到一个webshell。</p>
+<h5 id="危害版本"><a href="#危害版本" class="headerlink" title="危害版本"></a>危害版本</h5><p>wordpress版本&lt;5.1.1</p>
+<h5 id="利用条件"><a href="#利用条件" class="headerlink" title="利用条件"></a>利用条件</h5><p>具有unfiltered_html权限的用户访问了攻击者编写的恶意页面，并触发了恶意评论中a标签的on事件。</p>
+<h5 id="修复"><a href="#修复" class="headerlink" title="修复"></a>修复</h5><p>增加了对a标签属性的xss过滤。</p>
+<p>如果nonce错误则与无unfiltered_html权限的用户接受相同的评论过滤。</p>
+        
+          <p class="article-more-link">
+            <a href="/2019/03/16/wordpress5-1-CSRF-to-XSS-to-RCE复现/#more">Read More</a>
+          </p>
+        
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2019/03/16/wordpress5-1-CSRF-to-XSS-to-RCE复现/" data-id="cjvaiwooi001q4sv6jeb87xti" class="article-share-link">分享</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复现/">复现</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+
   
     <article id="post-DNS-Rebinding" class="wow slideInRight article article-type-post" itemscope="" itemprop="blogPost">
   <div class="article-meta">
@@ -116,7 +175,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/14/DNS-Rebinding/" data-id="cjv8awghh000aecv6gn8q98pe" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/03/14/DNS-Rebinding/" data-id="cjvaiwonh000u4sv6aivne7td" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
@@ -175,7 +234,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/14/在连接MySQL服务端时读取客户端文件/" data-id="cjv8awgif001kecv6nb7me025" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/03/14/在连接MySQL服务端时读取客户端文件/" data-id="cjvaiwooq001z4sv6l69dyx6w" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
@@ -237,7 +296,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/10/Wordpress5-0-RCE-CVE-2019-8942复现/" data-id="cjv8awgi70018ecv636gbugy0" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/03/10/Wordpress5-0-RCE-CVE-2019-8942复现/" data-id="cjvaiwool001t4sv6m0d6188i" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复现/">复现</a></li></ul>
@@ -293,7 +352,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/09/cve-2019-5736-复现失败/" data-id="cjv8awgia001decv6fsplw8m2" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/03/09/cve-2019-5736-复现失败/" data-id="cjvaiwood001m4sv6sh4jbawj" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/二进制/">二进制</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复现/">复现</a></li></ul>
@@ -350,7 +409,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/04/Nexus-Repository-Manager-3-CVE-2019-7238-IDEA远程调试/" data-id="cjv8awghx000tecv6qd5yfv4n" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/03/04/Nexus-Repository-Manager-3-CVE-2019-7238-IDEA远程调试/" data-id="cjvaiwonz00154sv6pl1ao3lg" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复现/">复现</a></li></ul>
@@ -407,7 +466,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/01/Winrar远程代码执行漏洞复现/" data-id="cjv8awgi60016ecv6ajkxfmhw" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/03/01/Winrar远程代码执行漏洞复现/" data-id="cjvaiwoo8001h4sv6vyj2mct6" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/二进制/">二进制</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复现/">复现</a></li></ul>
@@ -465,7 +524,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/02/27/GoogleCTF2018-beginners-js_safe_1/" data-id="cjv8awghl000eecv6be204hj6" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/02/27/GoogleCTF2018-beginners-js_safe_1/" data-id="cjvaiwonq000x4sv652zb77lc" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTF/">CTF</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
@@ -525,7 +584,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/02/26/CVE-2019-1003000复现/" data-id="cjv8awghf0007ecv6cehf39k5" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/02/26/CVE-2019-1003000复现/" data-id="cjvaiwomx00054sv6b3pp9lev" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复现/">复现</a></li></ul>
@@ -581,7 +640,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/02/07/基于报错的盲注/" data-id="cjv8awgik001secv6ed41jm8q" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/02/07/基于报错的盲注/" data-id="cjvaiwoor00214sv66kn9n8z9" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
@@ -595,63 +654,10 @@
 
 
   
-    <article id="post-hello-world" class="wow slideInRight article article-type-post" itemscope="" itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2019/02/06/hello-world/" class="article-date">
-  <time class="post-time" datetime="2019-02-06T12:22:55.277Z" itemprop="datePublished">
-    <span class="post-month">2月</span><br>
-    <span class="post-day">06</span>
-  </time>
-</a>
-   
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/02/06/hello-world/">Hello World</a>
-    </h1>
-  
-
-        <div>
-          
-          
-              
-
-          
-        </div>
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <!-- <div id="toc" class="toc-article">
-    <div class="toc-title">目录</div>
-    
-</div> -->
-        <p>博客搭好了似乎，以后就不在简书上面写东西了。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/02/06/hello-world/" data-id="cjv8awgi9001aecv6289y08wx" class="article-share-link">分享</a>
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-
-
-  
 
 
   <nav id="page-nav">
-    <a class="extend prev" rel="prev" href="/page/2/">&laquo; pre</a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><span class="page-number current">3</span>
+    <a class="extend prev" rel="prev" href="/page/2/">&laquo; pre</a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><span class="page-number current">3</span><a class="page-number" href="/page/4/">4</a><a class="extend next" rel="next" href="/page/4/">next &raquo;</a>
   </nav>
 </section>
         
@@ -692,7 +698,7 @@
     <h2 class="author">Aluvion</h2>
     <h3 class="description">摸鱼</h3>
     <div class="count-box">
-      <a href="/archives"><div><strong>30</strong><br>文章</div></a>
+      <a href="/archives"><div><strong>31</strong><br>文章</div></a>
       <a href="/categories"><div><strong>0</strong><br>分类</div></a>
       <a href="/tags"><div><strong>6</strong><br>标签</div></a>
     </div>

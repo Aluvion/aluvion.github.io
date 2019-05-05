@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="utf-8">
+  
+  <title>*CTF2019-996game复现/nodejs+mongodb使用 | Twings</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="前言上个周末打的 *CTF，密码实在是复现不动了，只能来搞搞 Web 这个样子… 虽然 Web 题出的不算太好，不过还是能学到东西的，值得复现一波。 根据题目的环境，先自己搭一个 nodejs + mongodb 来玩玩。">
+<meta name="keywords" content="CTF,Web">
+<meta property="og:type" content="article">
+<meta property="og:title" content="*CTF2019-996game复现&#x2F;nodejs+mongodb使用">
+<meta property="og:url" content="http://yoursite.com/2019/05/05/CTF2019-996game复现-nodejs-mongodb使用/index.html">
+<meta property="og:site_name" content="Twings">
+<meta property="og:description" content="前言上个周末打的 *CTF，密码实在是复现不动了，只能来搞搞 Web 这个样子… 虽然 Web 题出的不算太好，不过还是能学到东西的，值得复现一波。 根据题目的环境，先自己搭一个 nodejs + mongodb 来玩玩。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-05-05T05:54:27.525Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="*CTF2019-996game复现&#x2F;nodejs+mongodb使用">
+<meta name="twitter:description" content="前言上个周末打的 *CTF，密码实在是复现不动了，只能来搞搞 Web 这个样子… 虽然 Web 题出的不算太好，不过还是能学到东西的，值得复现一波。 根据题目的环境，先自己搭一个 nodejs + mongodb 来玩玩。">
+  
+    <link rel="alternate" href="/atom.xml" title="Twings" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/plugin/bganimation/bg.css">
+  
+
+</head>
+</html>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <div class="widget-wrap mobile-header">
+  <h3 class="widget-title"></h3>
+  <div class="widget">
+    <img class="avatar" src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/31733328.jfif?raw=true">
+    <h2 class="author">Aluvion</h2>
+    <h3 class="description">摸鱼</h3>
+    <div class="count-box">
+      <a href="/archives"><div><strong>31</strong><br>文章</div></a>
+      <a href="/categories"><div><strong>0</strong><br>分类</div></a>
+      <a href="/tags"><div><strong>6</strong><br>标签</div></a>
+    </div>
+    <ul class="blog-link">
+     
+          <a href="/" title="Home">
+            <li>主页</li>
+          </a>
+        
+          <a href="/archives" title="Archives">
+            <li>归档</li>
+          </a>
+        
+          <a href="/categories" title="Categories">
+            <li>分类</li>
+          </a>
+        
+          <a href="/tags" title="Tags">
+            <li>标签</li>
+          </a>
+        
+    </ul>
+  </div>
+</div>
+
+        <section id="main"><article id="post-CTF2019-996game复现-nodejs-mongodb使用" class="wow slideInRight article article-type-post" itemscope="" itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/05/05/CTF2019-996game复现-nodejs-mongodb使用/" class="article-date">
+  <time class="post-time" datetime="2019-05-05T04:04:07.000Z" itemprop="datePublished">
+    <span class="post-month">5月</span><br>
+    <span class="post-day">05</span>
+  </time>
+</a>
+   
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      *CTF2019-996game复现/nodejs+mongodb使用
+    </h1>
+  
+
+        <div>
+          
+          
+              
+
+          
+        </div>
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <!-- <div id="toc" class="toc-article">
+    <div class="toc-title">目录</div>
+    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#前言"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#环境搭建"><span class="toc-text">环境搭建</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#题目分析"><span class="toc-text">题目分析</span></a></li></ol>
+</div> -->
+        <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>上个周末打的 *CTF，密码实在是复现不动了，只能来搞搞 Web 这个样子…</p>
+<p>虽然 Web 题出的不算太好，不过还是能学到东西的，值得复现一波。</p>
+<p>根据题目的环境，先自己搭一个 nodejs + mongodb 来玩玩。</p>
+<a id="more"></a>
+<hr>
+<h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>老样子的 Docker，经过国赛的出题之后我暂时抛弃了 Ubuntu XD，现在我用的是 Alpine 的镜像：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker pull node:12-alpine</span><br></pre></td></tr></table></figure>
+<p>然后：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">docker run -id --name mongo -p 32770:27017 node:alpine-12</span><br><span class="line">docker exec -it mongo sh</span><br></pre></td></tr></table></figure>
+<p>接着把 mongodb 装上：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">apk update</span><br><span class="line">apk add mongodb</span><br></pre></td></tr></table></figure>
+<p>现在运行 mongod 启动 mongodb，会得到报错：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">exception in initAndListen: NonExistentPath: Data directory /data/db not found., terminating</span><br></pre></td></tr></table></figure>
+<p>所以先把目录建好：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mkdir -p /data/db</span><br></pre></td></tr></table></figure>
+<p>然后运行：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mongod &amp;</span><br></pre></td></tr></table></figure>
+<p>或者 Ctrl + z 然后 bg 运行，也可以加上 nohup 把日志重定向到文件里，此时即可打开 mongodb 的 shell：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">/ # mongo</span><br><span class="line">MongoDB shell version v4.0.5</span><br><span class="line">connecting to: mongodb://127.0.0.1:27017/?gssapiServiceName=mongodb</span><br><span class="line">2019-05-05T04:28:52.574+0000 I NETWORK  [listener] connection accepted from 127.0.0.1:58228 #1 (1 connection now open)</span><br><span class="line">2019-05-05T04:28:52.575+0000 I NETWORK  [conn1] received client metadata from 127.0.0.1:58228 conn1: &#123; application: &#123; name: "MongoDB Shell" &#125;, driver: &#123; name: "MongoDB Internal Client", version: "4.0.5" &#125;, os: &#123; type: "Linux", name: "NAME="Alpine Linux"", architecture: "x86_64", version: "Kernel 4.4.0-91-generic" &#125; &#125;</span><br><span class="line">Implicit session: session &#123; "id" : UUID("b4340836-bd10-4434-ad95-1698a36e2cac") &#125;</span><br><span class="line">MongoDB server version: 4.0.5</span><br><span class="line">...</span><br><span class="line"></span><br><span class="line"><span class="meta">&gt;</span></span><br></pre></td></tr></table></figure>
+<p>mongodb shell 的官方手册看这里：<a href="https://docs.mongodb.com/manual/mongo/" target="_blank" rel="noopener">https://docs.mongodb.com/manual/mongo/</a></p>
+<p>然后我们就按照题目漏洞点那样建个 players 数据库：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;</span> use players</span><br><span class="line">switched to db players</span><br><span class="line"><span class="meta">&gt;</span> db.players.insertOne( &#123;username: 'Twings'&#125; )</span><br><span class="line">2019-05-05T04:43:54.884+0000 I STORAGE  [conn2] createCollection: players.players with generated UUID: 72b73c04-59cd-49ee-bdb7-2914c7ffdcb9</span><br><span class="line">&#123;</span><br><span class="line">        "acknowledged" : true,</span><br><span class="line">        "insertedId" : ObjectId("5cce6a0ae051d04aaa654a18")</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta">&gt;</span> db.players.find()</span><br><span class="line">&#123; "_id" : ObjectId("5cce6a0ae051d04aaa654a18"), "username" : "Twings" &#125;</span><br><span class="line"><span class="meta">&gt;</span></span><br></pre></td></tr></table></figure>
+<p>然后开放 mongodb 远程连接，因为找不到配置文件，所以我查看了 mongod 的选项，然后运行 mongod –bind_ip_all 启动 mongodb，可以看到现在已经可以远程访问了：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">/etc/conf.d # netstat -nltp</span><br><span class="line">Active Internet connections (only servers)</span><br><span class="line">Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name</span><br><span class="line">tcp        0      0 0.0.0.0:27017           0.0.0.0:*               LISTEN      358/mongod</span><br></pre></td></tr></table></figure>
+<p>接下来我们写一个简易的 nodejs 服务 server.js（npm 把依赖装好）：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> ObjectId = <span class="built_in">require</span>(<span class="string">'mongodb'</span>).ObjectID;</span><br><span class="line"><span class="keyword">const</span> express = <span class="built_in">require</span>(<span class="string">'express'</span>);</span><br><span class="line"></span><br><span class="line">app = express();</span><br><span class="line"></span><br><span class="line">app.get(<span class="string">"/"</span>, (req, res) =&gt; &#123;</span><br><span class="line">    var id = JSON.parse(req.query.id); # 因为题目中id可以为对象，所以这里使用JSON来传递对象</span><br><span class="line">    <span class="keyword">var</span> MongoClient = <span class="built_in">require</span>(<span class="string">'mongodb'</span>).MongoClient;</span><br><span class="line">    <span class="keyword">var</span> url = <span class="string">"mongodb://0.0.0.0:32770/"</span>;</span><br><span class="line">    MongoClient.connect(url, &#123; <span class="attr">useNewUrlParser</span>: <span class="literal">true</span> &#125;, <span class="function"><span class="keyword">function</span>(<span class="params">err, db</span>) </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (err) &#123;</span><br><span class="line">           res.send(err); </span><br><span class="line">        &#125;<span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">var</span> dbo = db.db(<span class="string">"players"</span>);</span><br><span class="line">            <span class="keyword">var</span> whereStr = &#123;<span class="string">"_id"</span>: <span class="keyword">new</span> ObjectId(id)&#125;;</span><br><span class="line">            dbo.collection(<span class="string">"players"</span>).find(whereStr).toArray(<span class="function"><span class="keyword">function</span>(<span class="params">err, result</span>) </span>&#123;</span><br><span class="line">                <span class="keyword">if</span>(err) &#123;</span><br><span class="line">                    res.send(err);</span><br><span class="line">                &#125;<span class="keyword">else</span> &#123;</span><br><span class="line">                    res.send(result);</span><br><span class="line">                    db.close();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;)</span><br><span class="line"></span><br><span class="line">app.listen(<span class="number">3000</span>, () =&gt; <span class="built_in">console</span>.log(<span class="string">`App listening on port 3000!`</span>));</span><br></pre></td></tr></table></figure>
+<p>运行 server.js，访问 <a href="http://localhost:3000/?id=%225cce6a0ae051d04aaa654a18%22" target="_blank" rel="noopener">http://localhost:3000/?id=%225cce6a0ae051d04aaa654a18%22</a> 即可看到成功查询：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[&#123;<span class="attr">"_id"</span>:<span class="string">"5cce6a0ae051d04aaa654a18"</span>,<span class="attr">"username"</span>:<span class="string">"Twings"</span>&#125;]</span><br></pre></td></tr></table></figure>
+<h3 id="题目分析"><a href="#题目分析" class="headerlink" title="题目分析"></a>题目分析</h3><p>题目里有一句很明显的 eval 代码动态执行：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">GameServer.loadPlayer = <span class="function"><span class="keyword">function</span>(<span class="params">socket,id</span>)</span>&#123;</span><br><span class="line">    GameServer.server.db.collection(<span class="string">'players'</span>).findOne(&#123;<span class="attr">_id</span>: <span class="keyword">new</span> ObjectId(id)&#125;,<span class="function"><span class="keyword">function</span>(<span class="params">err,doc</span>)</span>&#123;</span><br><span class="line">        <span class="keyword">if</span>(err) &#123;</span><br><span class="line">	    <span class="keyword">if</span>(!doc) &#123;</span><br><span class="line">		eval(err.message.split(':').pop()); # 很奇怪的处理语句</span><br><span class="line">	    &#125;</span><br><span class="line">	    <span class="keyword">throw</span> err;</span><br><span class="line">	&#125;</span><br><span class="line">        <span class="keyword">if</span>(!doc) &#123;</span><br><span class="line">	    <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">var</span> player = <span class="keyword">new</span> Player();</span><br><span class="line">        <span class="keyword">var</span> mongoID = doc._id.toString();</span><br><span class="line">        player.setIDs(mongoID,socket.id);</span><br><span class="line">        player.getDataFromDb(doc);</span><br><span class="line">        GameServer.finalizePlayer(socket,player);</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>所以我们的思路就是想办法控制报错信息，根据提示：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">db.a.find(&#123;&quot;b&quot;:&#123;&quot;$gt&quot;:1,&quot;c&quot;:&quot;d&quot;&#125;&#125;)</span><br></pre></td></tr></table></figure>
+<p>我们在 mongodb shell 试一试：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;</span> db.players.findOne(&#123;_id: &#123;"$gt":1,"c":"d"&#125;&#125;)</span><br><span class="line">2019-05-05T05:24:18.297+0000 E QUERY    [js] Error: error: &#123;</span><br><span class="line">    "ok" : 0,</span><br><span class="line">    "errmsg" : "unknown operator: c",</span><br><span class="line">    "code" : 2,</span><br><span class="line">    "codeName" : "BadValue"</span><br><span class="line">&#125; :</span><br><span class="line">_getErrorWithCode@src/mongo/shell/utils.js:25:13</span><br><span class="line">DBCommandCursor@src/mongo/shell/query.js:708:1</span><br><span class="line">DBQuery.prototype._exec@src/mongo/shell/query.js:113:28</span><br><span class="line">DBQuery.prototype.hasNext@src/mongo/shell/query.js:288:5</span><br><span class="line">DBCollection.prototype.findOne@src/mongo/shell/collection.js:260:10</span><br><span class="line">@(shell):1:1</span><br></pre></td></tr></table></figure>
+<p>只要我们能控制 id，就可以控制 err.message.split(‘:’).pop()。然后我们就需要审计 new ObjectId(id)，看看如何控制 id，下断点把调试开起来，为了控制报错，我们要传入的数据类型为对象，我们先用 {“$gt”:”1”,”c”:”d”} 试一试：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> ObjectID = <span class="function"><span class="keyword">function</span> <span class="title">ObjectID</span>(<span class="params">id</span>) </span>&#123;</span><br><span class="line">  <span class="comment">// Duck-typing to support ObjectId from different npm packages</span></span><br><span class="line">  <span class="keyword">if</span> (id <span class="keyword">instanceof</span> ObjectID) <span class="keyword">return</span> id;</span><br><span class="line">  <span class="keyword">if</span> (!(<span class="keyword">this</span> <span class="keyword">instanceof</span> ObjectID)) <span class="keyword">return</span> <span class="keyword">new</span> ObjectID(id);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">this</span>._bsontype = <span class="string">'ObjectID'</span>;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// The most common usecase (blank id, new objectId instance)</span></span><br><span class="line">  <span class="keyword">if</span> (id == <span class="literal">null</span> || <span class="keyword">typeof</span> id === <span class="string">'number'</span>) &#123;</span><br><span class="line">    <span class="comment">// Generate a new id</span></span><br><span class="line">    <span class="keyword">this</span>.id = <span class="keyword">this</span>.generate(id);</span><br><span class="line">    <span class="comment">// If we are caching the hex string</span></span><br><span class="line">    <span class="keyword">if</span> (ObjectID.cacheHexString) <span class="keyword">this</span>.__id = <span class="keyword">this</span>.toString(<span class="string">'hex'</span>);</span><br><span class="line">    <span class="comment">// Return the object</span></span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Check if the passed in id is valid</span></span><br><span class="line">  <span class="keyword">var</span> valid = ObjectID.isValid(id);</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Throw an error if it's not a valid setup</span></span><br><span class="line">  <span class="keyword">if</span> (!valid &amp;&amp; id != <span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">Error</span>(</span><br><span class="line">      <span class="string">'Argument passed in must be a single String of 12 bytes or a string of 24 hex characters'</span></span><br><span class="line">    );</span><br><span class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> (valid &amp;&amp; <span class="keyword">typeof</span> id === <span class="string">'string'</span> &amp;&amp; id.length === <span class="number">24</span> &amp;&amp; hasBufferType) &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> ObjectID(utils.toBuffer(id, <span class="string">'hex'</span>));</span><br><span class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> (valid &amp;&amp; <span class="keyword">typeof</span> id === <span class="string">'string'</span> &amp;&amp; id.length === <span class="number">24</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> ObjectID.createFromHexString(id);</span><br><span class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> (id != <span class="literal">null</span> &amp;&amp; id.length === <span class="number">12</span>) &#123;</span><br><span class="line">    <span class="comment">// assume 12 byte string</span></span><br><span class="line">    <span class="keyword">this</span>.id = id;</span><br><span class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> (id != <span class="literal">null</span> &amp;&amp; id.toHexString) &#123;</span><br><span class="line">    <span class="comment">// Duck-typing to support ObjectId from different npm packages</span></span><br><span class="line">    <span class="keyword">return</span> id;</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">Error</span>(</span><br><span class="line">      <span class="string">'Argument passed in must be a single String of 12 bytes or a string of 24 hex characters'</span></span><br><span class="line">    );</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (ObjectID.cacheHexString) <span class="keyword">this</span>.__id = <span class="keyword">this</span>.toString(<span class="string">'hex'</span>);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>首先要绕过的是 ObjectID.isValid：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">ObjectID.isValid = <span class="function"><span class="keyword">function</span> <span class="title">isValid</span>(<span class="params">id</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">if</span> (id == <span class="literal">null</span>) <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (<span class="keyword">typeof</span> id === <span class="string">'number'</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (<span class="keyword">typeof</span> id === <span class="string">'string'</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> id.length === <span class="number">12</span> || (id.length === <span class="number">24</span> &amp;&amp; checkForHexRegExp.test(id));</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (id <span class="keyword">instanceof</span> ObjectID) &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (id <span class="keyword">instanceof</span> _Buffer) &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Duck-Typing detection of ObjectId like objects</span></span><br><span class="line">  <span class="keyword">if</span> (id.toHexString) &#123;</span><br><span class="line">    <span class="keyword">return</span> id.id.length === <span class="number">12</span> || (id.id.length === <span class="number">24</span> &amp;&amp; checkForHexRegExp.test(id.id));</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>很简单，只要给我们的对象加上 toHexString 和 id.length 即可轻松绕过，修改 payload 为 {“$gt”:”1”,”c”:”d”,”toHexString”:true,”id”:{“length”:12}}，即可看到回显报错可控：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;<span class="attr">"ok"</span>:<span class="number">0</span>,<span class="attr">"errmsg"</span>:<span class="string">"unknown operator: c"</span>,<span class="attr">"code"</span>:<span class="number">2</span>,<span class="attr">"codeName"</span>:<span class="string">"BadValue"</span>,<span class="attr">"name"</span>:<span class="string">"MongoError"</span>&#125;</span><br></pre></td></tr></table></figure>
+<p>之后就是 RCE 跑个 perl 脚本 getflag 了。</p>
+<hr>
+<p>参考链接：</p>
+<p><a href="https://github.com/sixstars/starctf2019/tree/master/web-996game" target="_blank" rel="noopener">https://github.com/sixstars/starctf2019/tree/master/web-996game</a></p>
+<p><a href="https://xz.aliyun.com/t/5006#toc-2" target="_blank" rel="noopener">https://xz.aliyun.com/t/5006#toc-2</a></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2019/05/05/CTF2019-996game复现-nodejs-mongodb使用/" data-id="cjvaiwomw00044sv6r45ofmyy" class="article-share-link">分享</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTF/">CTF</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2019/05/02/Python黑魔法-绕过空格实现变量覆盖/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">下一篇</strong>
+      <div class="article-nav-title">Python黑魔法-[]绕过空格实现变量覆盖</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    <div class="widget-wrap">
+  <h3 class="widget-title"></h3>
+  <div class="widget">
+    <h1 class="blog-title">Twings</h1>
+    <h2 class="blog-subtitle"></h2>
+    <ul class="blog-link">
+     
+          <a href="/" title="Home">
+            <li>主页</li>
+          </a>
+        
+          <a href="/archives" title="Archives">
+            <li>归档</li>
+          </a>
+        
+          <a href="/categories" title="Categories">
+            <li>分类</li>
+          </a>
+        
+          <a href="/tags" title="Tags">
+            <li>标签</li>
+          </a>
+        
+    </ul>
+  </div>
+</div>
+
+  
+    <div class="widget-wrap">
+  <h3 class="widget-title"></h3>
+  <div class="widget">
+    <img class="avatar" src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/31733328.jfif?raw=true">
+    <h2 class="author">Aluvion</h2>
+    <h3 class="description">摸鱼</h3>
+    <div class="count-box">
+      <a href="/archives"><div><strong>31</strong><br>文章</div></a>
+      <a href="/categories"><div><strong>0</strong><br>分类</div></a>
+      <a href="/tags"><div><strong>6</strong><br>标签</div></a>
+    </div>
+
+
+
+    <div class="social-link">
+      
+        <a class="hvr-bounce-in" href="https://github.com/Aluvion" target="_blank" title="Github">
+          Github
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://www.jianshu.com/u/4cdc8b6d5436" target="_blank" title="简书">
+          简书
+        </a>
+      
+    </div>
+
+    <div class="friend-link">
+      <h2>友情链接</h2>
+      
+        <a class="hvr-bounce-in" href="https://github.com/Pr0phet" target="_blank" title="pr0phet">
+          pr0phet
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://coomrade.github.io" target="_blank" title="C0mRaDe">
+          C0mRaDe
+        </a>
+      
+        <a class="hvr-bounce-in" href="http://blog.y2pj.tw/wordpress/" target="_blank" title="y2pj">
+          y2pj
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://zszcr.github.io/" target="_blank" title="zszcr">
+          zszcr
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://23r3f.github.io/" target="_blank" title="23r3f">
+          23r3f
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://xi4or0uji.github.io/" target="_blank" title="xi4or0uji">
+          xi4or0uji
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://hack4.fun/" target="_blank" title="tokyocolq">
+          tokyocolq
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://glarcy.github.io/" target="_blank" title="glarcy">
+          glarcy
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://wulidecade.cn" target="_blank" title="小白">
+          小白
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://littleredlie.github.io/" target="_blank" title="LittleRed">
+          LittleRed
+        </a>
+      
+        <a class="hvr-bounce-in" href="http://blog.shanamaid.top/" target="_blank" title="ShanaMaid">
+          ShanaMaid
+        </a>
+      
+    </div>
+  </div>
+</div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy;2018 - 2019 Aluvion<br>
+      由<a href="http://hexo.io/" target="_blank">Hexo</a>强力驱动 | 
+      主题-<a href="https://github.com/ShanaMaid/hexo-theme-shana">Shana</a>
+      
+    </div>
+    
+  </div>
+</footer>
+    </div>
+    
+
+<script src="//apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
+<script src="//apps.bdimg.com/libs/wow/0.1.6/wow.min.js"></script>
+<script>
+new WOW().init();
+</script>   
+
+
+  <link rel="stylesheet" href="/plugin/fancybox/jquery.fancybox.css">
+  <script src="/plugin/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+  <link rel="stylesheet" href="/plugin/galmenu/GalMenu.css">
+  <script src="/plugin/galmenu/GalMenu.js"></script>
+  <div class="GalMenu GalDropDown">
+      <div class="circle" id="gal">
+        <div class="ring">
+          
+            <a href="/" title="" class="menuItem">首页</a>
+          
+            <a href="/tags" title="" class="menuItem">标签</a>
+          
+            <a href="/categories" title="" class="menuItem">分类</a>
+          
+            <a href="/archives" title="" class="menuItem">归档</a>
+          
+            <a href="/???" title="" class="menuItem">None</a>
+          
+            <a href="/???" title="" class="menuItem">None</a>
+          
+        </div>
+        
+          <audio id="audio" src="#"></audio>
+        
+      </div> 
+</div>
+<div id="overlay" style="opacity: 1; cursor: pointer;"></div>
+  <script type="text/javascript">var items = document.querySelectorAll('.menuItem');
+    for (var i = 0,
+    l = items.length; i < l; i++) {
+      items[i].style.left = (50 - 35 * Math.cos( - 0.5 * Math.PI - 2 * (1 / l) * i * Math.PI)).toFixed(4) + "%";
+      items[i].style.top = (50 + 35 * Math.sin( - 0.5 * Math.PI - 2 * (1 / l) * i * Math.PI)).toFixed(4) + "%"
+    }</script>
+<script type="text/javascript">
+  $(document).ready(function() {
+    $('body').GalMenu({
+      'menu': 'GalDropDown'
+    })
+  });
+</script>
+
+  <section class="hidden-xs"> 
+  <ul class="cb-slideshow"> 
+    <li><span>苟利</span></li> 
+    <li><span>国家</span></li> 
+    <li><span>生死以</span></li> 
+    <li><span>岂能</span></li> 
+    <li><span>祸福</span></li> 
+    <li><span>趋避之</span></li> 
+  </ul>
+</section>
+<script src="/js/script.js"></script>
+
+
+
+  </div>
+</body>
+</html>

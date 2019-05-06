@@ -23,7 +23,7 @@
 <meta property="og:image" content="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/java_el/2019042507.png">
 <meta property="og:image" content="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/java_el/2019042508.png">
 <meta property="og:image" content="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/java_el/2019042509.png">
-<meta property="og:updated_time" content="2019-04-26T14:06:20.935Z">
+<meta property="og:updated_time" content="2019-05-06T13:03:08.627Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Java特色-表达式注入漏洞从入门到放弃">
 <meta name="twitter:description" content="前言看 Java 相关的漏洞有一段时间了，觉得 Java 特色的很多漏洞和知识点都相当有趣，比如反序列化、JNDI 注入、JRMP 等等，最近翻文章的时候看到了 Spring-data-commons(CVE-2018-1273) 这个漏洞，看到了 Spring 框架特色的 Spel 表达式注入，想起来以前写了一半差一步的 Nexus Repository Manager 3 CVE-2019-7">
@@ -54,7 +54,7 @@
     <h2 class="author">Aluvion</h2>
     <h3 class="description">摸鱼</h3>
     <div class="count-box">
-      <a href="/archives"><div><strong>31</strong><br>文章</div></a>
+      <a href="/archives"><div><strong>32</strong><br>文章</div></a>
       <a href="/categories"><div><strong>0</strong><br>分类</div></a>
       <a href="/tags"><div><strong>6</strong><br>标签</div></a>
     </div>
@@ -114,10 +114,11 @@
       
         <!-- <div id="toc" class="toc-article">
     <div class="toc-title">目录</div>
-    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#前言"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Java-表达式"><span class="toc-text">Java 表达式</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#EL"><span class="toc-text">EL</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#OGNL"><span class="toc-text">OGNL</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Jexl"><span class="toc-text">Jexl</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Spel"><span class="toc-text">Spel</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Spring-data-commons-CVE-2018-1273"><span class="toc-text">Spring-data-commons(CVE-2018-1273)</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#环境搭建"><span class="toc-text">环境搭建</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#漏洞分析"><span class="toc-text">漏洞分析</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#修复方案"><span class="toc-text">修复方案</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Javacon"><span class="toc-text">Javacon</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#环境搭建-1"><span class="toc-text">环境搭建</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Nuxeo-rce"><span class="toc-text">Nuxeo rce</span></a></li></ol>
+    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#前言"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#为什么会有这种漏洞"><span class="toc-text">为什么会有这种漏洞</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Java-表达式"><span class="toc-text">Java 表达式</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#EL"><span class="toc-text">EL</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#OGNL"><span class="toc-text">OGNL</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Jexl"><span class="toc-text">Jexl</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Spel"><span class="toc-text">Spel</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Spring-data-commons-CVE-2018-1273"><span class="toc-text">Spring-data-commons(CVE-2018-1273)</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#环境搭建"><span class="toc-text">环境搭建</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#漏洞分析"><span class="toc-text">漏洞分析</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#修复方案"><span class="toc-text">修复方案</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Javacon"><span class="toc-text">Javacon</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#环境搭建-1"><span class="toc-text">环境搭建</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Nuxeo-rce"><span class="toc-text">Nuxeo rce</span></a></li></ol>
 </div> -->
         <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>看 Java 相关的漏洞有一段时间了，觉得 Java 特色的很多漏洞和知识点都相当有趣，比如反序列化、JNDI 注入、JRMP 等等，最近翻文章的时候看到了 Spring-data-commons(CVE-2018-1273) 这个漏洞，看到了 Spring 框架特色的 Spel 表达式注入，想起来以前写了一半差一步的 <a href="https://aluvion.github.io/2019/03/04/Nexus-Repository-Manager-3-CVE-2019-7238-IDEA%E8%BF%9C%E7%A8%8B%E8%B0%83%E8%AF%95/" target="_blank" rel="noopener"><strong>Nexus Repository Manager 3 CVE-2019-7238(Jexl表达式)</strong> </a>，还想到了以前做过的 ph 牛的 code-breaking ，以及 nuxeo rce ，正好写一起总结一番。</p>
 <a id="more"></a>
+<h3 id="为什么会有这种漏洞"><a href="#为什么会有这种漏洞" class="headerlink" title="为什么会有这种漏洞"></a>为什么会有这种漏洞</h3><p>因为服务端没有对我们的输入进行过滤就直接进行表达式的解析和执行，所以我们得以恶意的表达式注入到了服务端进行执行。</p>
 <h3 id="Java-表达式"><a href="#Java-表达式" class="headerlink" title="Java 表达式"></a>Java 表达式</h3><p>众所周知，语言的安全性和它的简便性往往是成反比的，比如全世界最好的语言 PHP，在方便了开发的同时也诞生了很多的“黑魔法”。Java 表达式就是为了方便开发者进行开发而诞生的一种工具，开发者使用 Java 表达式，可以方便地进行运算，并动态赋值。</p>
 <p>在 Java 中有多种表达式语言，语言大同小异，我这里只做一下简单的介绍。</p>
 <h4 id="EL"><a href="#EL" class="headerlink" title="EL"></a>EL</h4><p>参考链接：</p>
@@ -216,7 +217,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/04/25/Java特色-表达式注入漏洞从入门到放弃/" data-id="cjvaiwoo4001b4sv6s4emfvwd" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/04/25/Java特色-表达式注入漏洞从入门到放弃/" data-id="cjvcfjydh0017esv6hil7kniy" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTF/">CTF</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复现/">复现</a></li></ul>
@@ -288,7 +289,7 @@
     <h2 class="author">Aluvion</h2>
     <h3 class="description">摸鱼</h3>
     <div class="count-box">
-      <a href="/archives"><div><strong>31</strong><br>文章</div></a>
+      <a href="/archives"><div><strong>32</strong><br>文章</div></a>
       <a href="/categories"><div><strong>0</strong><br>分类</div></a>
       <a href="/tags"><div><strong>6</strong><br>标签</div></a>
     </div>

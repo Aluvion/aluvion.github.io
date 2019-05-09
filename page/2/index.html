@@ -41,7 +41,7 @@
     <h2 class="author">Aluvion</h2>
     <h3 class="description">摸鱼</h3>
     <div class="count-box">
-      <a href="/archives"><div><strong>33</strong><br>文章</div></a>
+      <a href="/archives"><div><strong>34</strong><br>文章</div></a>
       <a href="/categories"><div><strong>0</strong><br>分类</div></a>
       <a href="/tags"><div><strong>6</strong><br>标签</div></a>
     </div>
@@ -68,6 +68,64 @@
 </div>
 
         <section id="main">
+  
+    <article id="post-Spring-Cloud-Config-Server-路径穿越与任意文件读取漏洞CVE-2019-3799复现" class="wow slideInRight article article-type-post" itemscope="" itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/04/18/Spring-Cloud-Config-Server-路径穿越与任意文件读取漏洞CVE-2019-3799复现/" class="article-date">
+  <time class="post-time" datetime="2019-04-18T06:27:47.000Z" itemprop="datePublished">
+    <span class="post-month">4月</span><br>
+    <span class="post-day">18</span>
+  </time>
+</a>
+   
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/04/18/Spring-Cloud-Config-Server-路径穿越与任意文件读取漏洞CVE-2019-3799复现/">Spring Cloud Config Server 路径穿越与任意文件读取漏洞 CVE-2019-3799复现</a>
+    </h1>
+  
+
+        <div>
+          
+          
+              
+
+          
+        </div>
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>在分布式系统中，由于服务众多的关系，为了方便服务配置文件统一管理，实时更新，所以需要分布式配置中心组件，而 Spring Cloud Config 项目就是一个能解决分布式系统需求的配置管理方案。</p>
+<p>Spring Cloud Config 分为 server 和 client 两个部分： server 用于从 GitHub 或其他地方获取配置文件、存储，并通过 HTTP 接口的方式将它们提供给 client ， client 再通过这些配置文件来初始化自身。</p>
+<p>按照官方文档的说明，想要获取官方示例中的 <a href="https://github.com/spring-cloud-samples/config-repo/blob/master/test.json" target="_blank" rel="noopener">https://github.com/spring-cloud-samples/config-repo/blob/master/test.json</a> 文件，在配置好 server 之后， client 就可以访问 server 的 /{name}/{profile}/{label}/{path} (这里是 /foo/default/master/test.json ) HTTP 接口， server 会访问 GitHub 并将文件下载到本地，然后通过 HTTP 响应返回给 client 。</p>
+<p>在这个过程中，由于 server 没有对输入的 path 进行检查的原因，所以存在一个服务端目录穿越和任意文件读取的漏洞。</p>
+        
+          <p class="article-more-link">
+            <a href="/2019/04/18/Spring-Cloud-Config-Server-路径穿越与任意文件读取漏洞CVE-2019-3799复现/#more">Read More</a>
+          </p>
+        
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2019/04/18/Spring-Cloud-Config-Server-路径穿越与任意文件读取漏洞CVE-2019-3799复现/" data-id="cjvgph7so0023kov6w36wcu84" class="article-share-link">分享</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复现/">复现</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+
   
     <article id="post-Nodejs-express-session-file-store库下的session伪造" class="wow slideInRight article article-type-post" itemscope="" itemprop="blogPost">
   <div class="article-meta">
@@ -111,7 +169,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/04/16/Nodejs-express-session-file-store库下的session伪造/" data-id="cjvg6mktd000v3cv64paacqk7" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/04/16/Nodejs-express-session-file-store库下的session伪造/" data-id="cjvgph7s0000okov667a52nz2" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
@@ -166,7 +224,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/04/11/JavaScript原型链污染/" data-id="cjvg6mkt9000q3cv6msutimv5" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/04/11/JavaScript原型链污染/" data-id="cjvgph7s2000tkov68ws9tpkm" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTF/">CTF</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复现/">复现</a></li></ul>
@@ -222,7 +280,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/04/07/西湖论剑Web/" data-id="cjvg6mkur00213cv61c04v7xt" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/04/07/西湖论剑Web/" data-id="cjvgph7sy002hkov6wl8bqp1v" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTF/">CTF</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
@@ -278,7 +336,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/04/04/SVG-XSS-CDN-Web缓存投毒/" data-id="cjvg6mkth00103cv6gbfhdg8b" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/04/04/SVG-XSS-CDN-Web缓存投毒/" data-id="cjvgph7s5000ykov6tj85hloa" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTF/">CTF</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
@@ -333,7 +391,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/04/04/Go-1/" data-id="cjvg6mksy000g3cv6hzs1cm7v" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/04/04/Go-1/" data-id="cjvgph7rm000akov6fesdc01g" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
@@ -389,7 +447,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/04/02/自动绑定漏洞-war远程调试/" data-id="cjvg6mkuh001w3cv6xoemj9qn" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/04/02/自动绑定漏洞-war远程调试/" data-id="cjvgph7ux002wkov6tr7ab1zr" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTF/">CTF</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
@@ -444,7 +502,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/04/02/Pwnhub-Always-be-with-U-学习/" data-id="cjvg6mktk00153cv6lcrhltl8" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/04/02/Pwnhub-Always-be-with-U-学习/" data-id="cjvgph7s1000rkov6ox6rb4mm" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTF/">CTF</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Crypto/">Crypto</a></li></ul>
@@ -499,7 +557,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/30/Gopher-HTTP2/" data-id="cjvg6mkt2000l3cv6djri6tgk" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/03/30/Gopher-HTTP2/" data-id="cjvgph7ry000mkov6ksbzyvkk" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
@@ -554,65 +612,10 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/28/0CTF-TCTF-Crypto学习/" data-id="cjvg6mks400003cv6s0xqt4pc" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/03/28/0CTF-TCTF-Crypto学习/" data-id="cjvgph7rp000ekov6noiibrjj" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTF/">CTF</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Crypto/">Crypto</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-
-
-  
-    <article id="post-0CTF-TCTF-Web题解" class="wow slideInRight article article-type-post" itemscope="" itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2019/03/26/0CTF-TCTF-Web题解/" class="article-date">
-  <time class="post-time" datetime="2019-03-26T10:57:55.000Z" itemprop="datePublished">
-    <span class="post-month">3月</span><br>
-    <span class="post-day">26</span>
-  </time>
-</a>
-   
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/03/26/0CTF-TCTF-Web题解/">0CTF/TCTF2019 Web题解</a>
-    </h1>
-  
-
-        <div>
-          
-          
-              
-
-          
-        </div>
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>这次的CTF比赛虽然只有两道Web题，但是难度还是有的，用到的知识点也很有趣，而菜鸡的我在群内大师傅的提点下总算是把题目给做出来了，这里总结一下。</p>
-        
-          <p class="article-more-link">
-            <a href="/2019/03/26/0CTF-TCTF-Web题解/#more">Read More</a>
-          </p>
-        
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/26/0CTF-TCTF-Web题解/" data-id="cjvg6mksi00053cv6zvz3pcqq" class="article-share-link">分享</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTF/">CTF</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
 
     </footer>
   </div>
@@ -667,7 +670,7 @@
     <h2 class="author">Aluvion</h2>
     <h3 class="description">摸鱼</h3>
     <div class="count-box">
-      <a href="/archives"><div><strong>33</strong><br>文章</div></a>
+      <a href="/archives"><div><strong>34</strong><br>文章</div></a>
       <a href="/categories"><div><strong>0</strong><br>分类</div></a>
       <a href="/tags"><div><strong>6</strong><br>标签</div></a>
     </div>

@@ -6,13 +6,14 @@
   <title>虚拟机环境搭建 | Twings</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="description" content="前言最近打 pwn，发现环境很诡异， 所以干脆重装一遍虚拟机，顺便记录一下自己虚拟机的环境，以后方便玩坏了又重装。">
+<meta name="keywords" content="Web,Pwn,Crypto">
 <meta property="og:type" content="article">
 <meta property="og:title" content="虚拟机环境搭建">
 <meta property="og:url" content="http://yoursite.com/2019/05/09/虚拟机环境搭建/index.html">
 <meta property="og:site_name" content="Twings">
 <meta property="og:description" content="前言最近打 pwn，发现环境很诡异， 所以干脆重装一遍虚拟机，顺便记录一下自己虚拟机的环境，以后方便玩坏了又重装。">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2019-05-09T04:59:09.230Z">
+<meta property="og:updated_time" content="2019-05-09T10:59:39.808Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="虚拟机环境搭建">
 <meta name="twitter:description" content="前言最近打 pwn，发现环境很诡异， 所以干脆重装一遍虚拟机，顺便记录一下自己虚拟机的环境，以后方便玩坏了又重装。">
@@ -42,7 +43,7 @@
     <h2 class="author">Aluvion</h2>
     <h3 class="description">摸鱼</h3>
     <div class="count-box">
-      <a href="/archives"><div><strong>33</strong><br>文章</div></a>
+      <a href="/archives"><div><strong>34</strong><br>文章</div></a>
       <a href="/categories"><div><strong>0</strong><br>分类</div></a>
       <a href="/tags"><div><strong>6</strong><br>标签</div></a>
     </div>
@@ -102,7 +103,7 @@
       
         <!-- <div id="toc" class="toc-article">
     <div class="toc-title">目录</div>
-    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#前言"><span class="toc-text">前言</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#sudo-不需要密码"><span class="toc-text">sudo 不需要密码</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#安装-docker"><span class="toc-text">安装 docker</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#安装-PHP"><span class="toc-text">安装 PHP</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#安装-pwntools"><span class="toc-text">安装 pwntools</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#安装-Pwngdb"><span class="toc-text">安装 Pwngdb</span></a></li></ol></li></ol>
+    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#前言"><span class="toc-text">前言</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#sudo-不需要密码"><span class="toc-text">sudo 不需要密码</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#安装-docker"><span class="toc-text">安装 docker</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#安装-PHP"><span class="toc-text">安装 PHP</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#安装-pwntools"><span class="toc-text">安装 pwntools</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#安装-Pwndbg"><span class="toc-text">安装 Pwndbg</span></a></li></ol></li></ol>
 </div> -->
         <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>最近打 pwn，发现环境很诡异， 所以干脆重装一遍虚拟机，顺便记录一下自己虚拟机的环境，以后方便玩坏了又重装。</p>
 <a id="more"></a>
@@ -120,7 +121,7 @@
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">root@Aluvion:/home/aluvion/桌面/Docker# php -v</span><br><span class="line">PHP 7.3.5-1+ubuntu16.04.1+deb.sury.org+1 (cli) (built: May  3 2019 10:00:05) ( NTS )</span><br><span class="line">Copyright (c) 1997-2018 The PHP Group</span><br><span class="line">Zend Engine v3.3.5, Copyright (c) 1998-2018 Zend Technologies</span><br><span class="line">    with Zend OPcache v7.3.5-1+ubuntu16.04.1+deb.sury.org+1, Copyright (c) 1999-2018, by Zend Technologies</span><br></pre></td></tr></table></figure>
 <h5 id="安装-pwntools"><a href="#安装-pwntools" class="headerlink" title="安装 pwntools"></a>安装 pwntools</h5><p>做密码做 pwn 都能用，赞。</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">apt-get install python-pip python-dev git libssl-dev libffi-dev build-essential</span><br><span class="line">sudo pip install --upgrade pip</span><br><span class="line">sudo pip install --upgrade pwntools</span><br></pre></td></tr></table></figure>
-<h5 id="安装-Pwngdb"><a href="#安装-Pwngdb" class="headerlink" title="安装 Pwngdb"></a>安装 Pwngdb</h5><p>看堆很方便，赞。</p>
+<h5 id="安装-Pwndbg"><a href="#安装-Pwndbg" class="headerlink" title="安装 Pwndbg"></a>安装 Pwndbg</h5><p>看堆很方便，赞。</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git clone https://github.com/pwndbg/pwndbg</span><br><span class="line">cd pwndbg</span><br><span class="line">./setup.sh</span><br></pre></td></tr></table></figure>
 <p>暂时用到的就这些了，其他东西等之后做 ROP 或者别的要用到再装。</p>
 <hr>
@@ -131,14 +132,25 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/05/09/虚拟机环境搭建/" data-id="cjvg6mkuj001y3cv6n0wz47o9" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/05/09/虚拟机环境搭建/" data-id="cjvgph7sx002fkov6gwhwvjyp" class="article-share-link">分享</a>
       
       
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Crypto/">Crypto</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Pwn/">Pwn</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
+
     </footer>
   </div>
   
     
 <nav id="article-nav">
+  
+    <a href="/2019/05/09/堆入门-JarvisOJ-Level6-x64/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">上一篇</strong>
+      <div class="article-nav-title">
+        
+          堆入门-JarvisOJ-Level6_x64
+        
+      </div>
+    </a>
   
   
     <a href="/2019/05/06/FastCGI浅析/" id="article-nav-older" class="article-nav-link-wrap">
@@ -192,7 +204,7 @@
     <h2 class="author">Aluvion</h2>
     <h3 class="description">摸鱼</h3>
     <div class="count-box">
-      <a href="/archives"><div><strong>33</strong><br>文章</div></a>
+      <a href="/archives"><div><strong>34</strong><br>文章</div></a>
       <a href="/categories"><div><strong>0</strong><br>分类</div></a>
       <a href="/tags"><div><strong>6</strong><br>标签</div></a>
     </div>

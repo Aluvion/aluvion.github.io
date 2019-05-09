@@ -5,17 +5,17 @@
   
   <title>虚拟机环境搭建 | Twings</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="前言最近打 pwn，发现环境很诡异， 所以干脆重装一遍虚拟机，顺便记录一下自己虚拟机的环境，以后方便玩坏了又重装。 sudo 不需要密码修改 /etc/sudoers 文件，加上一句 NOPASSWD： 1234# Allow members of group sudo to execute any command%sudo	ALL=(ALL:ALL) ALLaluvion ALL=(ALL) N">
+  <meta name="description" content="前言最近打 pwn，发现环境很诡异， 所以干脆重装一遍虚拟机，顺便记录一下自己虚拟机的环境，以后方便玩坏了又重装。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="虚拟机环境搭建">
 <meta property="og:url" content="http://yoursite.com/2019/05/09/虚拟机环境搭建/index.html">
 <meta property="og:site_name" content="Twings">
-<meta property="og:description" content="前言最近打 pwn，发现环境很诡异， 所以干脆重装一遍虚拟机，顺便记录一下自己虚拟机的环境，以后方便玩坏了又重装。 sudo 不需要密码修改 /etc/sudoers 文件，加上一句 NOPASSWD： 1234# Allow members of group sudo to execute any command%sudo	ALL=(ALL:ALL) ALLaluvion ALL=(ALL) N">
+<meta property="og:description" content="前言最近打 pwn，发现环境很诡异， 所以干脆重装一遍虚拟机，顺便记录一下自己虚拟机的环境，以后方便玩坏了又重装。">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2019-05-09T04:39:16.726Z">
+<meta property="og:updated_time" content="2019-05-09T04:59:09.230Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="虚拟机环境搭建">
-<meta name="twitter:description" content="前言最近打 pwn，发现环境很诡异， 所以干脆重装一遍虚拟机，顺便记录一下自己虚拟机的环境，以后方便玩坏了又重装。 sudo 不需要密码修改 /etc/sudoers 文件，加上一句 NOPASSWD： 1234# Allow members of group sudo to execute any command%sudo	ALL=(ALL:ALL) ALLaluvion ALL=(ALL) N">
+<meta name="twitter:description" content="前言最近打 pwn，发现环境很诡异， 所以干脆重装一遍虚拟机，顺便记录一下自己虚拟机的环境，以后方便玩坏了又重装。">
   
     <link rel="alternate" href="/atom.xml" title="Twings" type="application/atom+xml">
   
@@ -105,6 +105,7 @@
     <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#前言"><span class="toc-text">前言</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#sudo-不需要密码"><span class="toc-text">sudo 不需要密码</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#安装-docker"><span class="toc-text">安装 docker</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#安装-PHP"><span class="toc-text">安装 PHP</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#安装-pwntools"><span class="toc-text">安装 pwntools</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#安装-Pwngdb"><span class="toc-text">安装 Pwngdb</span></a></li></ol></li></ol>
 </div> -->
         <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>最近打 pwn，发现环境很诡异， 所以干脆重装一遍虚拟机，顺便记录一下自己虚拟机的环境，以后方便玩坏了又重装。</p>
+<a id="more"></a>
 <h5 id="sudo-不需要密码"><a href="#sudo-不需要密码" class="headerlink" title="sudo 不需要密码"></a>sudo 不需要密码</h5><p>修改 /etc/sudoers 文件，加上一句 NOPASSWD：</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span> Allow members of group sudo to execute any command</span><br><span class="line"><span class="meta">%</span>sudo	ALL=(ALL:ALL) ALL</span><br><span class="line"></span><br><span class="line">aluvion ALL=(ALL) NOPASSWD: ALL</span><br></pre></td></tr></table></figure>
 <h5 id="安装-docker"><a href="#安装-docker" class="headerlink" title="安装 docker"></a>安装 docker</h5><p>一个 docker 就可以解决一万种环境，赞。</p>
@@ -130,7 +131,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/05/09/虚拟机环境搭建/" data-id="cjvg623el002bp4v6pt0g9lve" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/05/09/虚拟机环境搭建/" data-id="cjvg6mkuj001y3cv6n0wz47o9" class="article-share-link">分享</a>
       
       
     </footer>

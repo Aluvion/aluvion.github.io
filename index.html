@@ -101,37 +101,16 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <!-- <div id="toc" class="toc-article">
-    <div class="toc-title">目录</div>
-    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#前言"><span class="toc-text">前言</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#sudo-不需要密码"><span class="toc-text">sudo 不需要密码</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#安装-docker"><span class="toc-text">安装 docker</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#安装-PHP"><span class="toc-text">安装 PHP</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#安装-pwntools"><span class="toc-text">安装 pwntools</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#安装-Pwngdb"><span class="toc-text">安装 Pwngdb</span></a></li></ol></li></ol>
-</div> -->
         <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>最近打 pwn，发现环境很诡异， 所以干脆重装一遍虚拟机，顺便记录一下自己虚拟机的环境，以后方便玩坏了又重装。</p>
-<h5 id="sudo-不需要密码"><a href="#sudo-不需要密码" class="headerlink" title="sudo 不需要密码"></a>sudo 不需要密码</h5><p>修改 /etc/sudoers 文件，加上一句 NOPASSWD：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span> Allow members of group sudo to execute any command</span><br><span class="line"><span class="meta">%</span>sudo	ALL=(ALL:ALL) ALL</span><br><span class="line"></span><br><span class="line">aluvion ALL=(ALL) NOPASSWD: ALL</span><br></pre></td></tr></table></figure>
-<h5 id="安装-docker"><a href="#安装-docker" class="headerlink" title="安装 docker"></a>安装 docker</h5><p>一个 docker 就可以解决一万种环境，赞。</p>
-<p><a href="https://docs.docker.com/install/linux/docker-ce/ubuntu/" target="_blank" rel="noopener">https://docs.docker.com/install/linux/docker-ce/ubuntu/</a></p>
-<p>先换个 Ubuntu 源，然后：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">apt-get update</span><br><span class="line">apt-get install apt-transport-https ca-certificates curl gnupg-agent software-properties-common</span><br><span class="line">curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -</span><br><span class="line">add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"</span><br><span class="line">apt-get update</span><br><span class="line">apt-get install docker-ce</span><br></pre></td></tr></table></figure>
-<p>安装完成，镜像到时候再 pull 吧：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">root@Aluvion:/home/aluvion/桌面/Docker# docker --version</span><br><span class="line">Docker version 18.09.6, build 481bc77</span><br></pre></td></tr></table></figure>
-<h5 id="安装-PHP"><a href="#安装-PHP" class="headerlink" title="安装 PHP"></a>安装 PHP</h5><p>比较常用的语言……node、go、java 就暂时不装了，需要再在 docker 里面用吧……节省空间。</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">add-apt-repository -y ppa:ondrej/php</span><br><span class="line">apt-get update</span><br><span class="line">apt-get install php</span><br></pre></td></tr></table></figure>
-<p>我这里网络有点问题，运行了几次才装好，其他什么什么包就暂时不装了：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">root@Aluvion:/home/aluvion/桌面/Docker# php -v</span><br><span class="line">PHP 7.3.5-1+ubuntu16.04.1+deb.sury.org+1 (cli) (built: May  3 2019 10:00:05) ( NTS )</span><br><span class="line">Copyright (c) 1997-2018 The PHP Group</span><br><span class="line">Zend Engine v3.3.5, Copyright (c) 1998-2018 Zend Technologies</span><br><span class="line">    with Zend OPcache v7.3.5-1+ubuntu16.04.1+deb.sury.org+1, Copyright (c) 1999-2018, by Zend Technologies</span><br></pre></td></tr></table></figure>
-<h5 id="安装-pwntools"><a href="#安装-pwntools" class="headerlink" title="安装 pwntools"></a>安装 pwntools</h5><p>做密码做 pwn 都能用，赞。</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">apt-get install python-pip python-dev git libssl-dev libffi-dev build-essential</span><br><span class="line">sudo pip install --upgrade pip</span><br><span class="line">sudo pip install --upgrade pwntools</span><br></pre></td></tr></table></figure>
-<h5 id="安装-Pwngdb"><a href="#安装-Pwngdb" class="headerlink" title="安装 Pwngdb"></a>安装 Pwngdb</h5><p>看堆很方便，赞。</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git clone https://github.com/pwndbg/pwndbg</span><br><span class="line">cd pwndbg</span><br><span class="line">./setup.sh</span><br></pre></td></tr></table></figure>
-<p>暂时用到的就这些了，其他东西等之后做 ROP 或者别的要用到再装。</p>
-<hr>
-<p>参考文章：</p>
-<p><a href="https://www.jianshu.com/p/1476f38e3aa3" target="_blank" rel="noopener">https://www.jianshu.com/p/1476f38e3aa3</a></p>
-<p><a href="https://ch4r1l3.github.io/2018/06/21/pwn%E4%BB%8E%E5%85%A5%E9%97%A8%E5%88%B0%E6%94%BE%E5%BC%83%E7%AC%AC%E4%B8%80%E7%AB%A0%E2%80%94%E2%80%94%E7%8E%AF%E5%A2%83%E5%AE%89%E8%A3%85/" target="_blank" rel="noopener">https://ch4r1l3.github.io/2018/06/21/pwn%E4%BB%8E%E5%85%A5%E9%97%A8%E5%88%B0%E6%94%BE%E5%BC%83%E7%AC%AC%E4%B8%80%E7%AB%A0%E2%80%94%E2%80%94%E7%8E%AF%E5%A2%83%E5%AE%89%E8%A3%85/</a></p>
-
+        
+          <p class="article-more-link">
+            <a href="/2019/05/09/虚拟机环境搭建/#more">Read More</a>
+          </p>
+        
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/05/09/虚拟机环境搭建/" data-id="cjvg623el002bp4v6pt0g9lve" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/05/09/虚拟机环境搭建/" data-id="cjvg6mkuj001y3cv6n0wz47o9" class="article-share-link">分享</a>
       
       
     </footer>
@@ -184,7 +163,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/05/06/FastCGI浅析/" data-id="cjvg623d2000fp4v6dvwgbt9v" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/05/06/FastCGI浅析/" data-id="cjvg6mksv000d3cv6c1fsmf1h" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTF/">CTF</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
@@ -241,7 +220,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/05/05/CTF2019-996game复现-nodejs-mongodb使用/" data-id="cjvg623cu0008p4v62zty9s2p" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/05/05/CTF2019-996game复现-nodejs-mongodb使用/" data-id="cjvg6mksh00043cv66b6szhlh" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTF/">CTF</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
@@ -297,7 +276,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/05/02/Python黑魔法-绕过空格实现变量覆盖/" data-id="cjvg623dt001dp4v6l7r7tm4m" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/05/02/Python黑魔法-绕过空格实现变量覆盖/" data-id="cjvg6mkti00123cv6skcmwlkn" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTF/">CTF</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
@@ -352,7 +331,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/04/25/Java特色-表达式注入漏洞从入门到放弃/" data-id="cjvg623dk0010p4v6ioqs4bad" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/04/25/Java特色-表达式注入漏洞从入门到放弃/" data-id="cjvg6mktf000x3cv6zuzf8kf8" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTF/">CTF</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复现/">复现</a></li></ul>
@@ -408,7 +387,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/04/25/反射/" data-id="cjvg623ef0024p4v6jvlb6csw" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/04/25/反射/" data-id="cjvg6mku9001o3cv6nb7m39kx" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
@@ -464,7 +443,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/04/23/2019国赛部分题解简略版/" data-id="cjvg623cw0009p4v6i2m1z17g" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/04/23/2019国赛部分题解简略版/" data-id="cjvg6mksd00023cv6kpz0ai24" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTF/">CTF</a></li></ul>
@@ -519,7 +498,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/04/23/DDCTF2019-Pwn-strike/" data-id="cjvg623d5000kp4v61nglarbk" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/04/23/DDCTF2019-Pwn-strike/" data-id="cjvg6mksl00083cv6wbajm0hb" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTF/">CTF</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Pwn/">Pwn</a></li></ul>
@@ -575,7 +554,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/04/19/DDCTF2019-Web题解/" data-id="cjvg623d0000dp4v6x50hhjmo" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/04/19/DDCTF2019-Web题解/" data-id="cjvg6mksm00093cv6u5h42ahy" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTF/">CTF</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
@@ -633,7 +612,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/04/18/Spring-Cloud-Config-Server-路径穿越与任意文件读取漏洞CVE-2019-3799复现/" data-id="cjvg623dn0014p4v6rwm6rko7" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/04/18/Spring-Cloud-Config-Server-路径穿越与任意文件读取漏洞CVE-2019-3799复现/" data-id="cjvg6mktp00173cv6or9orc8a" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复现/">复现</a></li></ul>

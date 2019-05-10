@@ -6,14 +6,14 @@
   <title>虚拟机环境搭建 | Twings</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="description" content="前言最近打 pwn，发现环境很诡异， 所以干脆重装一遍虚拟机，顺便记录一下自己虚拟机的环境，以后方便玩坏了又重装。">
-<meta name="keywords" content="Web,Pwn,Crypto">
+<meta name="keywords" content="Crypto,Web,Pwn">
 <meta property="og:type" content="article">
 <meta property="og:title" content="虚拟机环境搭建">
 <meta property="og:url" content="http://yoursite.com/2019/05/09/虚拟机环境搭建/index.html">
 <meta property="og:site_name" content="Twings">
 <meta property="og:description" content="前言最近打 pwn，发现环境很诡异， 所以干脆重装一遍虚拟机，顺便记录一下自己虚拟机的环境，以后方便玩坏了又重装。">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2019-05-09T10:59:39.808Z">
+<meta property="og:updated_time" content="2019-05-10T04:45:48.429Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="虚拟机环境搭建">
 <meta name="twitter:description" content="前言最近打 pwn，发现环境很诡异， 所以干脆重装一遍虚拟机，顺便记录一下自己虚拟机的环境，以后方便玩坏了又重装。">
@@ -103,7 +103,7 @@
       
         <!-- <div id="toc" class="toc-article">
     <div class="toc-title">目录</div>
-    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#前言"><span class="toc-text">前言</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#sudo-不需要密码"><span class="toc-text">sudo 不需要密码</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#安装-docker"><span class="toc-text">安装 docker</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#安装-PHP"><span class="toc-text">安装 PHP</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#安装-pwntools"><span class="toc-text">安装 pwntools</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#安装-Pwndbg"><span class="toc-text">安装 Pwndbg</span></a></li></ol></li></ol>
+    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#前言"><span class="toc-text">前言</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#sudo-不需要密码"><span class="toc-text">sudo 不需要密码</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#安装-docker"><span class="toc-text">安装 docker</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#安装-PHP"><span class="toc-text">安装 PHP</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#安装-pwntools"><span class="toc-text">安装 pwntools</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#安装-Pwndbg"><span class="toc-text">安装 Pwndbg</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#安装-32-位程序运行依赖环境"><span class="toc-text">安装 32 位程序运行依赖环境</span></a></li></ol></li></ol>
 </div> -->
         <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>最近打 pwn，发现环境很诡异， 所以干脆重装一遍虚拟机，顺便记录一下自己虚拟机的环境，以后方便玩坏了又重装。</p>
 <a id="more"></a>
@@ -123,6 +123,9 @@
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">apt-get install python-pip python-dev git libssl-dev libffi-dev build-essential</span><br><span class="line">sudo pip install --upgrade pip</span><br><span class="line">sudo pip install --upgrade pwntools</span><br></pre></td></tr></table></figure>
 <h5 id="安装-Pwndbg"><a href="#安装-Pwndbg" class="headerlink" title="安装 Pwndbg"></a>安装 Pwndbg</h5><p>看堆很方便，赞。</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git clone https://github.com/pwndbg/pwndbg</span><br><span class="line">cd pwndbg</span><br><span class="line">./setup.sh</span><br></pre></td></tr></table></figure>
+<h5 id="安装-32-位程序运行依赖环境"><a href="#安装-32-位程序运行依赖环境" class="headerlink" title="安装 32 位程序运行依赖环境"></a>安装 32 位程序运行依赖环境</h5><p>做完 64 位的题目，做做 32 位的题目。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">dpkg --add-architecture i386</span><br><span class="line">sudo apt-get -y install lib32z1 lib32ncurses5</span><br></pre></td></tr></table></figure>
+<p>不过我还没 apt 安装就能运行 32 位程序了？</p>
 <p>暂时用到的就这些了，其他东西等之后做 ROP 或者别的要用到再装。</p>
 <hr>
 <p>参考文章：</p>
@@ -132,7 +135,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/05/09/虚拟机环境搭建/" data-id="cjvgph7sx002fkov6gwhwvjyp" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/05/09/虚拟机环境搭建/" data-id="cjvhpwq8300225sv6w3hwtg3f" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Crypto/">Crypto</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Pwn/">Pwn</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
@@ -147,7 +150,7 @@
       <strong class="article-nav-caption">上一篇</strong>
       <div class="article-nav-title">
         
-          堆入门-JarvisOJ-Level6_x64
+          堆入门-JarvisOJ-Level6
         
       </div>
     </a>

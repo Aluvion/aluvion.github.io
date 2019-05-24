@@ -6,7 +6,7 @@
   <title>RCTF2019-Web-rblog/ez4cr引发的思考和学习 | Twings</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="description" content="前言这一篇是 rblog/ez4cr 这两道 XSS 题目的学习。">
-<meta name="keywords" content="Web,CTF">
+<meta name="keywords" content="CTF,Web">
 <meta property="og:type" content="article">
 <meta property="og:title" content="RCTF2019-Web-rblog&#x2F;ez4cr引发的思考和学习">
 <meta property="og:url" content="http://yoursite.com/2019/05/24/RCTF2019-Web-rblog-ez4cr引发的思考和学习/index.html">
@@ -19,7 +19,7 @@
 <meta property="og:image" content="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/rctf2019/2019052402.png">
 <meta property="og:image" content="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/rctf2019/2019052405.png">
 <meta property="og:image" content="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/rctf2019/2019052406.png">
-<meta property="og:updated_time" content="2019-05-24T14:28:40.919Z">
+<meta property="og:updated_time" content="2019-05-24T14:31:19.159Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="RCTF2019-Web-rblog&#x2F;ez4cr引发的思考和学习">
 <meta name="twitter:description" content="前言这一篇是 rblog/ez4cr 这两道 XSS 题目的学习。">
@@ -122,16 +122,20 @@
 <figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">X-XSS-Protection</span>: 1; mode=block</span><br></pre></td></tr></table></figure>
 <p>这样子的 HTTP 返回头来设置 Chrome 的拦截模式。</p>
 <p>一个拦截的栗子：</p>
-<p>解析器解析\<iframe src="x" onerror="alert(1)">\</iframe></p>
+<p>解析器解析：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">iframe</span> <span class="attr">src</span>=<span class="string">"x"</span> <span class="attr">onerror</span>=<span class="string">"alert(1)"</span>&gt;</span><span class="tag">&lt;/<span class="name">iframe</span>&gt;</span></span><br></pre></td></tr></table></figure>
 <ol>
-<li>依次检查标签 iframe 是否包含恶意属性，src/onerror</li>
+<li><p>依次检查标签 iframe 是否包含恶意属性，src/onerror</p>
+</li>
 <li><p>如果 src 不是以 javascript: 开头，则安全，放行</p>
 </li>
 <li><p>onerror 中含有脚本，检查 URL 是否包含</p>
 </li>
-<li><p>如果出现在 URL 中，认为存在安全问题，将过滤 \<iframe src="x" onerror="void(0)">\</iframe></p>
+<li><p>如果出现在 URL 中，认为存在安全问题，将过滤：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">iframe</span> <span class="attr">src</span>=<span class="string">"x"</span> <span class="attr">onerror</span>=<span class="string">"alert(1)"</span>&gt;</span><span class="tag">&lt;/<span class="name">iframe</span>&gt;</span></span><br></pre></td></tr></table></figure>
 </li>
-<li>中止 iframe 标签检查</li>
+<li><p>中止 iframe 标签检查</p>
+</li>
 </ol>
 <p>而实际上，XSS Auditor 的检查要更加简单粗暴一点，一个简单粗暴的例子如下：</p>
 <p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/rctf2019/2019052401.png" alt=""></p>
@@ -168,7 +172,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/05/24/RCTF2019-Web-rblog-ez4cr引发的思考和学习/" data-id="cjw26kqbm00178sv6wd2fadur" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/05/24/RCTF2019-Web-rblog-ez4cr引发的思考和学习/" data-id="cjw26nyk8001bjov69qg2uwmq" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTF/">CTF</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>

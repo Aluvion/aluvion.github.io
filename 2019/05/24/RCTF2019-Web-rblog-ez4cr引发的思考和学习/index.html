@@ -19,7 +19,7 @@
 <meta property="og:image" content="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/rctf2019/2019052404.png">
 <meta property="og:image" content="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/rctf2019/2019052405.png">
 <meta property="og:image" content="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/rctf2019/2019052406.png">
-<meta property="og:updated_time" content="2019-05-24T14:23:27.477Z">
+<meta property="og:updated_time" content="2019-05-24T14:26:13.956Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="RCTF2019-Web-rblog&#x2F;ez4cr引发的思考和学习">
 <meta name="twitter:description" content="前言这一篇是 rblog/ez4cr 这两道 XSS 题目的学习。">
@@ -122,14 +122,14 @@
 <figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">X-XSS-Protection</span>: 1; mode=block</span><br></pre></td></tr></table></figure>
 <p>这样子的 HTTP 返回头来设置 Chrome 的拦截模式。</p>
 <p>一个拦截的栗子：</p>
-<p>解析器解析<iframe src="x" onerror="alert(1)"></iframe></p>
+<p>解析器解析\<iframe src="x" onerror="alert(1)">\</iframe></p>
 <ol>
 <li>依次检查标签 iframe 是否包含恶意属性，src/onerror</li>
 <li><p>如果 src 不是以 javascript: 开头，则安全，放行</p>
 </li>
 <li><p>onerror 中含有脚本，检查 URL 是否包含</p>
 </li>
-<li><p>如果出现在 URL 中，认为存在安全问题，将过滤 <iframe src="x" onerror="void(0)"></iframe></p>
+<li><p>如果出现在 URL 中，认为存在安全问题，将过滤 \<iframe src="x" onerror="void(0)">\</iframe></p>
 </li>
 <li>中止 iframe 标签检查</li>
 </ol>
@@ -167,7 +167,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/05/24/RCTF2019-Web-rblog-ez4cr引发的思考和学习/" data-id="cjw26e3g7001awsv6l6ojtvqz" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/05/24/RCTF2019-Web-rblog-ez4cr引发的思考和学习/" data-id="cjw26hmuq001txkv6b8phwqsf" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTF/">CTF</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>

@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="utf-8">
+  
+  <title>RCTF2019-Web-rblog/ez4cr引发的思考和学习 | Twings</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="前言这一篇是 rblog/ez4cr 这两道 XSS 题目的学习。">
+<meta name="keywords" content="CTF,Web">
+<meta property="og:type" content="article">
+<meta property="og:title" content="RCTF2019-Web-rblog&#x2F;ez4cr引发的思考和学习">
+<meta property="og:url" content="http://yoursite.com/2019/05/24/RCTF2019-Web-rblog-ez4cr引发的思考和学习/index.html">
+<meta property="og:site_name" content="Twings">
+<meta property="og:description" content="前言这一篇是 rblog/ez4cr 这两道 XSS 题目的学习。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/rctf2019/2019052401.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/rctf2019/2019052402.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/rctf2019/2019052403.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/rctf2019/2019052404.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/rctf2019/2019052405.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/rctf2019/2019052406.png">
+<meta property="og:updated_time" content="2019-05-24T14:23:27.477Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="RCTF2019-Web-rblog&#x2F;ez4cr引发的思考和学习">
+<meta name="twitter:description" content="前言这一篇是 rblog/ez4cr 这两道 XSS 题目的学习。">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/rctf2019/2019052401.png">
+  
+    <link rel="alternate" href="/atom.xml" title="Twings" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/plugin/bganimation/bg.css">
+  
+
+</head>
+</html>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <div class="widget-wrap mobile-header">
+  <h3 class="widget-title"></h3>
+  <div class="widget">
+    <img class="avatar" src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/31733328.jfif?raw=true">
+    <h2 class="author">Aluvion</h2>
+    <h3 class="description">摸鱼</h3>
+    <div class="count-box">
+      <a href="/archives"><div><strong>37</strong><br>文章</div></a>
+      <a href="/categories"><div><strong>0</strong><br>分类</div></a>
+      <a href="/tags"><div><strong>6</strong><br>标签</div></a>
+    </div>
+    <ul class="blog-link">
+     
+          <a href="/" title="Home">
+            <li>主页</li>
+          </a>
+        
+          <a href="/archives" title="Archives">
+            <li>归档</li>
+          </a>
+        
+          <a href="/categories" title="Categories">
+            <li>分类</li>
+          </a>
+        
+          <a href="/tags" title="Tags">
+            <li>标签</li>
+          </a>
+        
+    </ul>
+  </div>
+</div>
+
+        <section id="main"><article id="post-RCTF2019-Web-rblog-ez4cr引发的思考和学习" class="wow slideInRight article article-type-post" itemscope="" itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/05/24/RCTF2019-Web-rblog-ez4cr引发的思考和学习/" class="article-date">
+  <time class="post-time" datetime="2019-05-24T12:44:50.000Z" itemprop="datePublished">
+    <span class="post-month">5月</span><br>
+    <span class="post-day">24</span>
+  </time>
+</a>
+   
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      RCTF2019-Web-rblog/ez4cr引发的思考和学习
+    </h1>
+  
+
+        <div>
+          
+          
+              
+
+          
+        </div>
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <!-- <div id="toc" class="toc-article">
+    <div class="toc-title">目录</div>
+    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#前言"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Chrome-XSS-Auditor"><span class="toc-text">Chrome XSS Auditor</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#编码"><span class="toc-text">编码</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#赛题复现"><span class="toc-text">赛题复现</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#rblog"><span class="toc-text">rblog</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#ez4cr"><span class="toc-text">ez4cr</span></a></li></ol></li></ol>
+</div> -->
+        <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>这一篇是 rblog/ez4cr 这两道 XSS 题目的学习。</p>
+<a id="more"></a>
+<p>搭 nextphp 的环境的时候踩了一些坑，有点难受。</p>
+<hr>
+<h3 id="Chrome-XSS-Auditor"><a href="#Chrome-XSS-Auditor" class="headerlink" title="Chrome XSS Auditor"></a>Chrome XSS Auditor</h3><p>XSS Auditor 是 Chrome 用来防范反射型 XSS 的一种机制，主要工作原理就是字符串匹配，在语法解析阶段，Chrome 会逐一扫描文档中的标签，然后检查这些标签中的属性，如果检查到危险的属性就会跟 URL 进行比较，如果 URL 中含有同样的危险数据，XSS Auditor 就会认为这是一个反射型 XSS，并加以拦截。</p>
+<p>XSS Auditor 有两种模式，block 和 filter，block 模式下拦截会丢给你一个异常页面，filter 模式则会将它觉得恶意的代码替换掉。</p>
+<p>Chrome 在 57 版本的时候将默认模式设置为了 block，在 74 版本又将默认模式设置回了 filter。开发者也可以通过：</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">X-XSS-Protection</span>: 1; mode=block</span><br></pre></td></tr></table></figure>
+<p>这样子的 HTTP 返回头来设置 Chrome 的拦截模式。</p>
+<p>一个拦截的栗子：</p>
+<p>解析器解析<iframe src="x" onerror="alert(1)"></iframe></p>
+<ol>
+<li>依次检查标签 iframe 是否包含恶意属性，src/onerror</li>
+<li><p>如果 src 不是以 javascript: 开头，则安全，放行</p>
+</li>
+<li><p>onerror 中含有脚本，检查 URL 是否包含</p>
+</li>
+<li><p>如果出现在 URL 中，认为存在安全问题，将过滤 <iframe src="x" onerror="void(0)"></iframe></p>
+</li>
+<li>中止 iframe 标签检查</li>
+</ol>
+<p>而实际上，XSS Auditor 的检查要更加简单粗暴一点，一个简单粗暴的例子如下：</p>
+<p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/rctf2019/2019052401.png" alt=""></p>
+<p>看起来它并不在意你的标签是什么，也不在意你的事件是什么，这匹配也是很简单粗暴……</p>
+<p>iframe 标签的 srcdoc 属性也很粗暴：</p>
+<p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/rctf2019/2019052402.png" alt=""></p>
+<p>src 属性一样粗暴，不能是 javascript: 打头，在 script 标签里面的时候也不能有 GET 参数：</p>
+<p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/rctf2019/2019052403.png" alt=""></p>
+<p>还有更简单粗暴的：</p>
+<p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/rctf2019/2019052404.png" alt=""></p>
+<p>我说的肯定不够详细，大家可以自行探索。由于浏览器无法区分 URL 中的数据是不是真的填充到了页面中，所以甚至会把静态页面中的 JavaScript 代码给一刀切了，而在 filter 模式下，有时候就可以利用这一点来吃掉页面中本来有的 JavaScript 代码。</p>
+<p>block 模式也有利用方式，比如之前 35C3 的题目，我们可以利用 XSS Auditor 来泄露用户的数据。</p>
+<hr>
+<h3 id="编码"><a href="#编码" class="headerlink" title="编码"></a>编码</h3><p>在 Web 应用的交互中，最主要的是两个地方的编码，URL 和 HTML 页面。</p>
+<p>原来 script 标签也可以设置加载的 js 文件的编码。</p>
+<p>浏览器对请求 URL 的编码有如下规则：</p>
+<p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/rctf2019/2019052405.png" alt=""></p>
+<p>浏览器会按照编码对请求的 URL 进行编码。</p>
+<p>HTML 页面的编码有三种设置方式：</p>
+<p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/rctf2019/2019052406.png" alt=""></p>
+<p>HTML 会按照设置的编码对服务器的响应进行解码。</p>
+<p>通过设置 Conteny-type 为 gbk 的方式好像绕不过 XSS Auditor，预期解究竟是什么呢？</p>
+<hr>
+<h3 id="赛题复现"><a href="#赛题复现" class="headerlink" title="赛题复现"></a>赛题复现</h3><h4 id="rblog"><a href="#rblog" class="headerlink" title="rblog"></a>rblog</h4><p>因为后端进行了 JSON 编码，所以使用非 ascii 字符就可以绕过 XSS Auditor，所以给 iframe 加点中文句号绕过 XSS Auditor，再用 HTML 实体编码绕过 JSON 编码来闭合 script 标签。</p>
+<p>因为使用的是 iframe，所以跳转需要使用 parent.location.href。</p>
+<h4 id="ez4cr"><a href="#ez4cr" class="headerlink" title="ez4cr"></a>ez4cr</h4><p>这题的非预期是因为 Cloudflare CDN 对 HTTP 协议进行了 upgrade，http 变成了 https 导致了页面和 URL 不一致，从而绕过了 XSS Auditor。腾讯云的 CDN 好像没有这种功能。</p>
+<hr>
+<p>参考文章：</p>
+<p><a href="https://www.cnblogs.com/sevck/p/8868605.html" target="_blank" rel="noopener">https://www.cnblogs.com/sevck/p/8868605.html</a></p>
+<p><a href="https://yanhaijing.com/web/2014/12/20/web-charset/" target="_blank" rel="noopener">https://yanhaijing.com/web/2014/12/20/web-charset/</a></p>
+<p><a href="https://www.ibm.com/developerworks/cn/web/wa-lo-ecoding-response-problem/index.html" target="_blank" rel="noopener">https://www.ibm.com/developerworks/cn/web/wa-lo-ecoding-response-problem/index.html</a></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2019/05/24/RCTF2019-Web-rblog-ez4cr引发的思考和学习/" data-id="cjw26e3g7001awsv6l6ojtvqz" class="article-share-link">分享</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTF/">CTF</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2019/05/23/RCTF2019-Web-jail-password引发的思考和学习/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">下一篇</strong>
+      <div class="article-nav-title">RCTF2019-Web-jail/password引发的思考和学习</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    <div class="widget-wrap">
+  <h3 class="widget-title"></h3>
+  <div class="widget">
+    <h1 class="blog-title">Twings</h1>
+    <h2 class="blog-subtitle"></h2>
+    <ul class="blog-link">
+     
+          <a href="/" title="Home">
+            <li>主页</li>
+          </a>
+        
+          <a href="/archives" title="Archives">
+            <li>归档</li>
+          </a>
+        
+          <a href="/categories" title="Categories">
+            <li>分类</li>
+          </a>
+        
+          <a href="/tags" title="Tags">
+            <li>标签</li>
+          </a>
+        
+    </ul>
+  </div>
+</div>
+
+  
+    <div class="widget-wrap">
+  <h3 class="widget-title"></h3>
+  <div class="widget">
+    <img class="avatar" src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/31733328.jfif?raw=true">
+    <h2 class="author">Aluvion</h2>
+    <h3 class="description">摸鱼</h3>
+    <div class="count-box">
+      <a href="/archives"><div><strong>37</strong><br>文章</div></a>
+      <a href="/categories"><div><strong>0</strong><br>分类</div></a>
+      <a href="/tags"><div><strong>6</strong><br>标签</div></a>
+    </div>
+
+
+
+    <div class="social-link">
+      
+        <a class="hvr-bounce-in" href="https://github.com/Aluvion" target="_blank" title="Github">
+          Github
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://www.jianshu.com/u/4cdc8b6d5436" target="_blank" title="简书">
+          简书
+        </a>
+      
+    </div>
+
+    <div class="friend-link">
+      <h2>友情链接</h2>
+      
+        <a class="hvr-bounce-in" href="https://github.com/Pr0phet" target="_blank" title="pr0phet">
+          pr0phet
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://coomrade.github.io" target="_blank" title="C0mRaDe">
+          C0mRaDe
+        </a>
+      
+        <a class="hvr-bounce-in" href="http://blog.y2pj.tw/wordpress/" target="_blank" title="y2pj">
+          y2pj
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://zszcr.github.io/" target="_blank" title="zszcr">
+          zszcr
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://23r3f.github.io/" target="_blank" title="23r3f">
+          23r3f
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://xi4or0uji.github.io/" target="_blank" title="xi4or0uji">
+          xi4or0uji
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://hack4.fun/" target="_blank" title="tokyocolq">
+          tokyocolq
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://glarcy.github.io/" target="_blank" title="glarcy">
+          glarcy
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://wulidecade.cn" target="_blank" title="小白">
+          小白
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://littleredlie.github.io/" target="_blank" title="LittleRed">
+          LittleRed
+        </a>
+      
+        <a class="hvr-bounce-in" href="http://blog.shanamaid.top/" target="_blank" title="ShanaMaid">
+          ShanaMaid
+        </a>
+      
+    </div>
+  </div>
+</div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy;2018 - 2019 Aluvion<br>
+      由<a href="http://hexo.io/" target="_blank">Hexo</a>强力驱动 | 
+      主题-<a href="https://github.com/ShanaMaid/hexo-theme-shana">Shana</a>
+      
+    </div>
+    
+  </div>
+</footer>
+    </div>
+    
+
+<script src="//apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
+<script src="//apps.bdimg.com/libs/wow/0.1.6/wow.min.js"></script>
+<script>
+new WOW().init();
+</script>   
+
+
+  <link rel="stylesheet" href="/plugin/fancybox/jquery.fancybox.css">
+  <script src="/plugin/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+  <link rel="stylesheet" href="/plugin/galmenu/GalMenu.css">
+  <script src="/plugin/galmenu/GalMenu.js"></script>
+  <div class="GalMenu GalDropDown">
+      <div class="circle" id="gal">
+        <div class="ring">
+          
+            <a href="/" title="" class="menuItem">首页</a>
+          
+            <a href="/tags" title="" class="menuItem">标签</a>
+          
+            <a href="/categories" title="" class="menuItem">分类</a>
+          
+            <a href="/archives" title="" class="menuItem">归档</a>
+          
+            <a href="/???" title="" class="menuItem">None</a>
+          
+            <a href="/???" title="" class="menuItem">None</a>
+          
+        </div>
+        
+          <audio id="audio" src="#"></audio>
+        
+      </div> 
+</div>
+<div id="overlay" style="opacity: 1; cursor: pointer;"></div>
+  <script type="text/javascript">var items = document.querySelectorAll('.menuItem');
+    for (var i = 0,
+    l = items.length; i < l; i++) {
+      items[i].style.left = (50 - 35 * Math.cos( - 0.5 * Math.PI - 2 * (1 / l) * i * Math.PI)).toFixed(4) + "%";
+      items[i].style.top = (50 + 35 * Math.sin( - 0.5 * Math.PI - 2 * (1 / l) * i * Math.PI)).toFixed(4) + "%"
+    }</script>
+<script type="text/javascript">
+  $(document).ready(function() {
+    $('body').GalMenu({
+      'menu': 'GalDropDown'
+    })
+  });
+</script>
+
+  <section class="hidden-xs"> 
+  <ul class="cb-slideshow"> 
+    <li><span>苟利</span></li> 
+    <li><span>国家</span></li> 
+    <li><span>生死以</span></li> 
+    <li><span>岂能</span></li> 
+    <li><span>祸福</span></li> 
+    <li><span>趋避之</span></li> 
+  </ul>
+</section>
+<script src="/js/script.js"></script>
+
+
+
+  </div>
+</body>
+</html>

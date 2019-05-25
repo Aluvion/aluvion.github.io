@@ -41,7 +41,7 @@
     <h2 class="author">Aluvion</h2>
     <h3 class="description">摸鱼</h3>
     <div class="count-box">
-      <a href="/archives"><div><strong>37</strong><br>文章</div></a>
+      <a href="/archives"><div><strong>38</strong><br>文章</div></a>
       <a href="/categories"><div><strong>0</strong><br>分类</div></a>
       <a href="/tags"><div><strong>6</strong><br>标签</div></a>
     </div>
@@ -68,6 +68,68 @@
 </div>
 
         <section id="main">
+  
+    <article id="post-Wordpress5-0-RCE-CVE-2019-8942复现" class="wow slideInRight article article-type-post" itemscope="" itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/03/10/Wordpress5-0-RCE-CVE-2019-8942复现/" class="article-date">
+  <time class="post-time" datetime="2019-03-10T15:27:19.000Z" itemprop="datePublished">
+    <span class="post-month">3月</span><br>
+    <span class="post-day">10</span>
+  </time>
+</a>
+   
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/03/10/Wordpress5-0-RCE-CVE-2019-8942复现/">Wordpress5.0 RCE CVE-2019-8942复现</a>
+    </h1>
+  
+
+        <div>
+          
+          
+              
+
+          
+        </div>
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>2月份的时候，RIPS团队发布了一篇文章，公开了一个Wordpress的RCE漏洞，该漏洞由变量覆盖修改数据库、目录穿越写文件和模板包含三个漏洞构成，而且漏洞环境并不需要修改什么配置，质量相当的高。</p>
+<h3 id="漏洞要求"><a href="#漏洞要求" class="headerlink" title="漏洞要求"></a>漏洞要求</h3><ul>
+<li><a href="https://github.com/WordPress/WordPress/commit/43bdb0e193955145a5ab1137890bb798bce5f0d2" target="_blank" rel="noopener">WordPress commit &lt;= 43bdb0e193955145a5ab1137890bb798bce5f0d2 （WordPress 5.1-alpha-44280）</a></li>
+<li>拥有一个author权限的账号</li>
+</ul>
+<p>影响包括windows、linux、mac在内的服务端，后端图片处理库为gd/imagick都受到影响，只不过利用难度有所差异。</p>
+<p>官网上可以下载的5.0.0已经修复该漏洞。实际在WordPress 5.1-alpha-44280更新后未更新的4.9.9~5.0.0的WordPress都受到该漏洞影响。</p>
+<p>修复主要是新增了<strong>_wp_get_allowed_postdata</strong>函数对输入变量进行了黑名单过滤，防止变量覆盖，也可以通过这一点查看该wordpress版本是否已经修复漏洞。</p>
+        
+          <p class="article-more-link">
+            <a href="/2019/03/10/Wordpress5-0-RCE-CVE-2019-8942复现/#more">Read More</a>
+          </p>
+        
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2019/03/10/Wordpress5-0-RCE-CVE-2019-8942复现/" data-id="cjw3msop90036hgv6924o1mgw" class="article-share-link">分享</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复现/">复现</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+
   
     <article id="post-cve-2019-5736-复现失败" class="wow slideInRight article article-type-post" itemscope="" itemprop="blogPost">
   <div class="article-meta">
@@ -111,7 +173,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/09/cve-2019-5736-复现失败/" data-id="cjw26nykl001njov6jc7dy9up" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/03/09/cve-2019-5736-复现失败/" data-id="cjw3msomg001xhgv66mh0h3vu" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/二进制/">二进制</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复现/">复现</a></li></ul>
@@ -168,7 +230,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/04/Nexus-Repository-Manager-3-CVE-2019-7238-IDEA远程调试/" data-id="cjw26nyjx000yjov68v6rsbvm" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/03/04/Nexus-Repository-Manager-3-CVE-2019-7238-IDEA远程调试/" data-id="cjw3msom9001mhgv6hw5ku4eb" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复现/">复现</a></li></ul>
@@ -225,7 +287,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/01/Winrar远程代码执行漏洞复现/" data-id="cjw26nykg001kjov60ni50ona" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/03/01/Winrar远程代码执行漏洞复现/" data-id="cjw3msoma001ohgv6j4i1drp7" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/二进制/">二进制</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复现/">复现</a></li></ul>
@@ -283,7 +345,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/02/27/GoogleCTF2018-beginners-js_safe_1/" data-id="cjw26nyjq000mjov6xebh139a" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/02/27/GoogleCTF2018-beginners-js_safe_1/" data-id="cjw3msom0001chgv6fxfhlfky" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTF/">CTF</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
@@ -343,7 +405,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/02/26/CVE-2019-1003000复现/" data-id="cjw26nyjc0007jov64zrc0igt" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/02/26/CVE-2019-1003000复现/" data-id="cjw3msog50001hgv6ama8lb8o" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复现/">复现</a></li></ul>
@@ -399,7 +461,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/02/07/基于报错的盲注/" data-id="cjw26nykt001zjov6ixjruwq2" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/02/07/基于报错的盲注/" data-id="cjw3msomj0025hgv62iwxlhix" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
@@ -454,7 +516,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/02/06/hello-world/" data-id="cjw26nykm001pjov6x3qhfulu" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/02/06/hello-world/" data-id="cjw3msomf001vhgv663hruez9" class="article-share-link">分享</a>
       
       
     </footer>
@@ -510,7 +572,7 @@
     <h2 class="author">Aluvion</h2>
     <h3 class="description">摸鱼</h3>
     <div class="count-box">
-      <a href="/archives"><div><strong>37</strong><br>文章</div></a>
+      <a href="/archives"><div><strong>38</strong><br>文章</div></a>
       <a href="/categories"><div><strong>0</strong><br>分类</div></a>
       <a href="/tags"><div><strong>6</strong><br>标签</div></a>
     </div>

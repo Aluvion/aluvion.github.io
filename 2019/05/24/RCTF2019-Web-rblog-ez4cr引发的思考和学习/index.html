@@ -19,7 +19,7 @@
 <meta property="og:image" content="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/rctf2019/2019052402.png">
 <meta property="og:image" content="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/rctf2019/2019052405.png">
 <meta property="og:image" content="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/rctf2019/2019052406.png">
-<meta property="og:updated_time" content="2019-05-24T14:31:19.159Z">
+<meta property="og:updated_time" content="2019-05-25T11:38:27.832Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="RCTF2019-Web-rblog&#x2F;ez4cr引发的思考和学习">
 <meta name="twitter:description" content="前言这一篇是 rblog/ez4cr 这两道 XSS 题目的学习。">
@@ -50,7 +50,7 @@
     <h2 class="author">Aluvion</h2>
     <h3 class="description">摸鱼</h3>
     <div class="count-box">
-      <a href="/archives"><div><strong>37</strong><br>文章</div></a>
+      <a href="/archives"><div><strong>38</strong><br>文章</div></a>
       <a href="/categories"><div><strong>0</strong><br>分类</div></a>
       <a href="/tags"><div><strong>6</strong><br>标签</div></a>
     </div>
@@ -160,7 +160,8 @@
 <p>HTML 会按照设置的编码对服务器的响应进行解码。</p>
 <p>通过设置 Conteny-type 为 gbk 的方式好像绕不过 XSS Auditor，预期解究竟是什么呢？</p>
 <hr>
-<h3 id="赛题复现"><a href="#赛题复现" class="headerlink" title="赛题复现"></a>赛题复现</h3><h4 id="rblog"><a href="#rblog" class="headerlink" title="rblog"></a>rblog</h4><p>因为后端进行了 JSON 编码，所以使用非 ascii 字符就可以绕过 XSS Auditor，所以给 iframe 加点中文句号绕过 XSS Auditor，再用 HTML 实体编码绕过 JSON 编码来闭合 script 标签。</p>
+<h3 id="赛题复现"><a href="#赛题复现" class="headerlink" title="赛题复现"></a>赛题复现</h3><p>bot 好像关了，我提交自己的 IP 都没有反应，所以这里只写下简单的思路。</p>
+<h4 id="rblog"><a href="#rblog" class="headerlink" title="rblog"></a>rblog</h4><p>因为后端进行了 JSON 编码，所以使用非 ascii 字符就可以绕过 XSS Auditor，所以给 iframe 加点中文句号绕过 XSS Auditor，再用 HTML 实体编码绕过 JSON 编码来闭合 script 标签。</p>
 <p>因为使用的是 iframe，所以跳转需要使用 parent.location.href。</p>
 <h4 id="ez4cr"><a href="#ez4cr" class="headerlink" title="ez4cr"></a>ez4cr</h4><p>这题的非预期是因为 Cloudflare CDN 对 HTTP 协议进行了 upgrade，http 变成了 https 导致了页面和 URL 不一致，从而绕过了 XSS Auditor。腾讯云的 CDN 好像没有这种功能。</p>
 <hr>
@@ -172,7 +173,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/05/24/RCTF2019-Web-rblog-ez4cr引发的思考和学习/" data-id="cjw26nyk8001bjov69qg2uwmq" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/05/24/RCTF2019-Web-rblog-ez4cr引发的思考和学习/" data-id="cjw3msom1001ehgv6e9e5c36i" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTF/">CTF</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
@@ -182,6 +183,15 @@
   
     
 <nav id="article-nav">
+  
+    <a href="/2019/05/25/RCTF2019-Web-nextphp引发的思考和学习/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">上一篇</strong>
+      <div class="article-nav-title">
+        
+          RCTF2019-Web-nextphp引发的思考和学习
+        
+      </div>
+    </a>
   
   
     <a href="/2019/05/23/RCTF2019-Web-jail-password引发的思考和学习/" id="article-nav-older" class="article-nav-link-wrap">
@@ -235,7 +245,7 @@
     <h2 class="author">Aluvion</h2>
     <h3 class="description">摸鱼</h3>
     <div class="count-box">
-      <a href="/archives"><div><strong>37</strong><br>文章</div></a>
+      <a href="/archives"><div><strong>38</strong><br>文章</div></a>
       <a href="/categories"><div><strong>0</strong><br>分类</div></a>
       <a href="/tags"><div><strong>6</strong><br>标签</div></a>
     </div>

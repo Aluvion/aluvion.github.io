@@ -41,7 +41,7 @@
     <h2 class="author">Aluvion</h2>
     <h3 class="description">摸鱼</h3>
     <div class="count-box">
-      <a href="/archives"><div><strong>39</strong><br>文章</div></a>
+      <a href="/archives"><div><strong>40</strong><br>文章</div></a>
       <a href="/categories"><div><strong>0</strong><br>分类</div></a>
       <a href="/tags"><div><strong>6</strong><br>标签</div></a>
     </div>
@@ -68,6 +68,67 @@
 </div>
 
         <section id="main">
+  
+    <article id="post-DNS-Rebinding" class="wow slideInRight article article-type-post" itemscope="" itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/03/14/DNS-Rebinding/" class="article-date">
+  <time class="post-time" datetime="2019-03-14T15:04:21.000Z" itemprop="datePublished">
+    <span class="post-month">3月</span><br>
+    <span class="post-day">14</span>
+  </time>
+</a>
+   
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/03/14/DNS-Rebinding/">DNS-Rebinding</a>
+    </h1>
+  
+
+        <div>
+          
+          
+              
+
+          
+        </div>
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <hr>
+<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>在SSRF漏洞的利用中，经常能看到后端对输入域名或者IP的各种检验过滤，那我们就需要用各种方式来进行绕过了，而其中有一种叫做DNS Rebinding（DNS重绑定）的绕过方式有别于其他的绕过方式，很有趣。</p>
+<h6 id="DNS、TTL"><a href="#DNS、TTL" class="headerlink" title="DNS、TTL"></a>DNS、TTL</h6><p>访问域名的时候，服务器会先向DNS服务器发出解析请求，DNS服务器再向域名指定的授权DNS服务器发出解析请求，得到该域名对应的IP，然后去访问该IP地址。</p>
+<p>TTL指DNS缓存的存活时间。在第一次DNS请求后，请求结果会被DNS服务器缓存下来，在缓存存活时间内不再请求，而是直接将结果返回。</p>
+<h6 id="后端检验"><a href="#后端检验" class="headerlink" title="后端检验"></a>后端检验</h6><p>一般来说后端检验并执行会向DNS服务器发出两次请求，第一次询问对应IP是否合法（在内网），第二次获取对应IP进行访问。有时候可以通过302跳转来绕过。</p>
+<h6 id="DNS-Rebinding"><a href="#DNS-Rebinding" class="headerlink" title="DNS Rebinding"></a>DNS Rebinding</h6><p>通过各种手段，让后端第一次DNS请求得到的IP为外网，第二次为内网。</p>
+<h6 id="防御方法"><a href="#防御方法" class="headerlink" title="防御方法"></a>防御方法</h6><p>缓存第一次DNS解析结果。</p>
+        
+          <p class="article-more-link">
+            <a href="/2019/03/14/DNS-Rebinding/#more">Read More</a>
+          </p>
+        
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2019/03/14/DNS-Rebinding/" data-id="cjw98a0vw000i8ov6j5curzw8" class="article-share-link">分享</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+
   
     <article id="post-在连接MySQL服务端时读取客户端文件" class="wow slideInRight article article-type-post" itemscope="" itemprop="blogPost">
   <div class="article-meta">
@@ -114,7 +175,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/14/在连接MySQL服务端时读取客户端文件/" data-id="cjw6hzvb4001xdcv6szhjbhm1" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/03/14/在连接MySQL服务端时读取客户端文件/" data-id="cjw98a0wy00238ov69bnaplxy" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
@@ -176,7 +237,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/10/Wordpress5-0-RCE-CVE-2019-8942复现/" data-id="cjw6hzvb0001rdcv6rrxlhhtp" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/03/10/Wordpress5-0-RCE-CVE-2019-8942复现/" data-id="cjw98a0wn001n8ov6j0ubaivk" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复现/">复现</a></li></ul>
@@ -232,7 +293,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/09/cve-2019-5736-复现失败/" data-id="cjw6hzve70039dcv6712b1bm0" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/03/09/cve-2019-5736-复现失败/" data-id="cjw98a0wo001p8ov68hojkrzb" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/二进制/">二进制</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复现/">复现</a></li></ul>
@@ -289,7 +350,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/04/Nexus-Repository-Manager-3-CVE-2019-7238-IDEA远程调试/" data-id="cjw6hzvaq001bdcv6yp39ijh3" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/03/04/Nexus-Repository-Manager-3-CVE-2019-7238-IDEA远程调试/" data-id="cjw98a0wa00128ov636oyteoy" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复现/">复现</a></li></ul>
@@ -346,7 +407,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/01/Winrar远程代码执行漏洞复现/" data-id="cjw6hzvat001edcv60r196x01" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/03/01/Winrar远程代码执行漏洞复现/" data-id="cjw98a0wl001i8ov6x7opbi0q" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/二进制/">二进制</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复现/">复现</a></li></ul>
@@ -404,7 +465,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/02/27/GoogleCTF2018-beginners-js_safe_1/" data-id="cjw6hzva8000kdcv6s794m61m" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/02/27/GoogleCTF2018-beginners-js_safe_1/" data-id="cjw98a0w0000l8ov6v7k5mfxr" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTF/">CTF</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
@@ -464,7 +525,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/02/26/CVE-2019-1003000复现/" data-id="cjw6hzv9s0002dcv61mdfyg34" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/02/26/CVE-2019-1003000复现/" data-id="cjw98a0vq000c8ov64e0bgst3" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复现/">复现</a></li></ul>
@@ -520,7 +581,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/02/07/基于报错的盲注/" data-id="cjw6hzvb3001vdcv6ud2gk4ne" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/02/07/基于报错的盲注/" data-id="cjw98a0wz00258ov6f194i022" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
@@ -575,7 +636,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/02/06/hello-world/" data-id="cjw6hzvax001ldcv6723tq2vj" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/02/06/hello-world/" data-id="cjw98a0wq001t8ov68sfxseo7" class="article-share-link">分享</a>
       
       
     </footer>
@@ -631,7 +692,7 @@
     <h2 class="author">Aluvion</h2>
     <h3 class="description">摸鱼</h3>
     <div class="count-box">
-      <a href="/archives"><div><strong>39</strong><br>文章</div></a>
+      <a href="/archives"><div><strong>40</strong><br>文章</div></a>
       <a href="/categories"><div><strong>0</strong><br>分类</div></a>
       <a href="/tags"><div><strong>6</strong><br>标签</div></a>
     </div>

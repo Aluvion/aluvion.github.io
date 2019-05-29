@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="utf-8">
+  
+  <title>内网端口转发 | Twings</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="前言之前看了 docker-compose 的文档，今天想着用它搭建一个多级内网的环境，顺便动手试一试内网端口转发的各种工具。">
+<meta name="keywords" content="Web">
+<meta property="og:type" content="article">
+<meta property="og:title" content="内网端口转发">
+<meta property="og:url" content="http://yoursite.com/2019/05/29/内网端口转发/index.html">
+<meta property="og:site_name" content="Twings">
+<meta property="og:description" content="前言之前看了 docker-compose 的文档，今天想着用它搭建一个多级内网的环境，顺便动手试一试内网端口转发的各种工具。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/intranet/2019052901.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/intranet/2019052902.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/intranet/2019052903.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/intranet/2019052904.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/intranet/2019052905.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/intranet/2019052906.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/intranet/2019052907.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/intranet/2019052908.png">
+<meta property="og:updated_time" content="2019-05-29T12:49:26.128Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="内网端口转发">
+<meta name="twitter:description" content="前言之前看了 docker-compose 的文档，今天想着用它搭建一个多级内网的环境，顺便动手试一试内网端口转发的各种工具。">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/intranet/2019052901.png">
+  
+    <link rel="alternate" href="/atom.xml" title="Twings" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/plugin/bganimation/bg.css">
+  
+
+</head>
+</html>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <div class="widget-wrap mobile-header">
+  <h3 class="widget-title"></h3>
+  <div class="widget">
+    <img class="avatar" src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/31733328.jfif?raw=true">
+    <h2 class="author">Aluvion</h2>
+    <h3 class="description">摸鱼</h3>
+    <div class="count-box">
+      <a href="/archives"><div><strong>40</strong><br>文章</div></a>
+      <a href="/categories"><div><strong>0</strong><br>分类</div></a>
+      <a href="/tags"><div><strong>6</strong><br>标签</div></a>
+    </div>
+    <ul class="blog-link">
+     
+          <a href="/" title="Home">
+            <li>主页</li>
+          </a>
+        
+          <a href="/archives" title="Archives">
+            <li>归档</li>
+          </a>
+        
+          <a href="/categories" title="Categories">
+            <li>分类</li>
+          </a>
+        
+          <a href="/tags" title="Tags">
+            <li>标签</li>
+          </a>
+        
+    </ul>
+  </div>
+</div>
+
+        <section id="main"><article id="post-内网端口转发" class="wow slideInRight article article-type-post" itemscope="" itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/05/29/内网端口转发/" class="article-date">
+  <time class="post-time" datetime="2019-05-29T05:21:27.000Z" itemprop="datePublished">
+    <span class="post-month">5月</span><br>
+    <span class="post-day">29</span>
+  </time>
+</a>
+   
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      内网端口转发
+    </h1>
+  
+
+        <div>
+          
+          
+              
+
+          
+        </div>
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <!-- <div id="toc" class="toc-article">
+    <div class="toc-title">目录</div>
+    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#前言"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#环境搭建"><span class="toc-text">环境搭建</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#reGeorg"><span class="toc-text">reGeorg</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ssh隧道"><span class="toc-text">ssh隧道</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ew"><span class="toc-text">ew</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#本地代理"><span class="toc-text">本地代理</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Linux"><span class="toc-text">Linux</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Windows"><span class="toc-text">Windows</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#MAC"><span class="toc-text">MAC</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#浏览器"><span class="toc-text">浏览器</span></a></li></ol></li></ol>
+</div> -->
+        <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>之前看了 docker-compose 的文档，今天想着用它搭建一个多级内网的环境，顺便动手试一试内网端口转发的各种工具。</p>
+<a id="more"></a>
+<hr>
+<h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>用 docker-compose 部署了 4 个 PHP7.3-Apache 环境：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">version:</span> <span class="string">'2.4'</span></span><br><span class="line"><span class="attr">services:</span></span><br><span class="line"><span class="attr">  machineA:</span></span><br><span class="line"><span class="attr">    image:</span> <span class="attr">php:7.3-apache</span></span><br><span class="line"><span class="attr">    ports:</span> </span><br><span class="line"><span class="bullet">      -</span> <span class="string">"0.0.0.0:23333:23333"</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">"0.0.0.0:12314:22"</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">"0.0.0.0:12315:80"</span></span><br><span class="line"><span class="attr">    mem_limit:</span> <span class="number">200</span><span class="string">m</span></span><br><span class="line"><span class="attr">    volumes:</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">./index.php:/var/www/html/index.php</span></span><br><span class="line"><span class="attr">    restart:</span> <span class="string">always</span></span><br><span class="line"><span class="attr">    networks:</span> </span><br><span class="line"><span class="attr">      out_network:</span></span><br><span class="line"><span class="attr">        ipv4_address:</span> <span class="number">10.0</span><span class="number">.20</span><span class="number">.10</span></span><br><span class="line"><span class="attr">      innerA_network:</span></span><br><span class="line"><span class="attr">        ipv4_address:</span> <span class="number">10.0</span><span class="number">.30</span><span class="number">.10</span></span><br><span class="line"><span class="attr">  machineB:</span></span><br><span class="line"><span class="attr">    image:</span> <span class="attr">php:7.3-apache</span></span><br><span class="line"><span class="attr">    mem_limit:</span> <span class="number">200</span><span class="string">m</span></span><br><span class="line"><span class="attr">    volumes:</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">./index.php:/var/www/html/index.php</span></span><br><span class="line"><span class="attr">    restart:</span> <span class="string">always</span></span><br><span class="line"><span class="attr">    networks:</span> </span><br><span class="line"><span class="attr">      innerA_network:</span></span><br><span class="line"><span class="attr">        ipv4_address:</span> <span class="number">10.0</span><span class="number">.30</span><span class="number">.11</span></span><br><span class="line"><span class="attr">      innerB_network:</span></span><br><span class="line"><span class="attr">        ipv4_address:</span> <span class="number">10.0</span><span class="number">.40</span><span class="number">.10</span></span><br><span class="line"><span class="attr">  machineC:</span></span><br><span class="line"><span class="attr">    image:</span> <span class="attr">php:7.3-apache</span></span><br><span class="line"><span class="attr">    mem_limit:</span> <span class="number">200</span><span class="string">m</span></span><br><span class="line"><span class="attr">    volumes:</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">./index.php:/var/www/html/index.php</span></span><br><span class="line"><span class="attr">    restart:</span> <span class="string">always</span></span><br><span class="line"><span class="attr">    networks:</span> </span><br><span class="line"><span class="attr">      innerB_network:</span></span><br><span class="line"><span class="attr">        ipv4_address:</span> <span class="number">10.0</span><span class="number">.40</span><span class="number">.11</span></span><br><span class="line"><span class="attr">      innerC_network:</span></span><br><span class="line"><span class="attr">        ipv4_address:</span> <span class="number">10.0</span><span class="number">.50</span><span class="number">.10</span></span><br><span class="line"><span class="attr">  machineD:</span></span><br><span class="line"><span class="attr">    image:</span> <span class="attr">php:7.3-apache</span></span><br><span class="line"><span class="attr">    mem_limit:</span> <span class="number">200</span><span class="string">m</span></span><br><span class="line"><span class="attr">    volumes:</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">./index.php:/var/www/html/index.php</span></span><br><span class="line"><span class="attr">    restart:</span> <span class="string">always</span></span><br><span class="line"><span class="attr">    networks:</span> </span><br><span class="line"><span class="attr">      innerC_network:</span></span><br><span class="line"><span class="attr">        ipv4_address:</span> <span class="number">10.0</span><span class="number">.50</span><span class="number">.11</span></span><br><span class="line"><span class="attr">      innerD_network:</span></span><br><span class="line"><span class="attr">        ipv4_address:</span> <span class="number">10.0</span><span class="number">.60</span><span class="number">.10</span></span><br><span class="line"><span class="attr">networks:</span> </span><br><span class="line"><span class="attr">  out_network:</span></span><br><span class="line"><span class="attr">    ipam:</span></span><br><span class="line"><span class="attr">      driver:</span> <span class="string">default</span></span><br><span class="line"><span class="attr">      config:</span></span><br><span class="line"><span class="attr">        - subnet:</span> <span class="number">10.0</span><span class="number">.20</span><span class="number">.0</span><span class="string">/24</span></span><br><span class="line"><span class="attr">  innerA_network:</span></span><br><span class="line"><span class="attr">    internal:</span> <span class="literal">true</span></span><br><span class="line"><span class="attr">    ipam:</span></span><br><span class="line"><span class="attr">      driver:</span> <span class="string">default</span></span><br><span class="line"><span class="attr">      config:</span></span><br><span class="line"><span class="attr">        - subnet:</span> <span class="number">10.0</span><span class="number">.30</span><span class="number">.0</span><span class="string">/24</span></span><br><span class="line"><span class="attr">  innerB_network:</span></span><br><span class="line"><span class="attr">    internal:</span> <span class="literal">true</span></span><br><span class="line"><span class="attr">    ipam:</span></span><br><span class="line"><span class="attr">      driver:</span> <span class="string">default</span></span><br><span class="line"><span class="attr">      config:</span></span><br><span class="line"><span class="attr">        - subnet:</span> <span class="number">10.0</span><span class="number">.40</span><span class="number">.0</span><span class="string">/24</span></span><br><span class="line"><span class="attr">  innerC_network:</span></span><br><span class="line"><span class="attr">    internal:</span> <span class="literal">true</span></span><br><span class="line"><span class="attr">    ipam:</span></span><br><span class="line"><span class="attr">      driver:</span> <span class="string">default</span></span><br><span class="line"><span class="attr">      config:</span></span><br><span class="line"><span class="attr">        - subnet:</span> <span class="number">10.0</span><span class="number">.50</span><span class="number">.0</span><span class="string">/24</span></span><br><span class="line"><span class="attr">  innerD_network:</span></span><br><span class="line"><span class="attr">    internal:</span> <span class="literal">true</span></span><br><span class="line"><span class="attr">    ipam:</span></span><br><span class="line"><span class="attr">      driver:</span> <span class="string">default</span></span><br><span class="line"><span class="attr">      config:</span></span><br><span class="line"><span class="attr">        - subnet:</span> <span class="number">10.0</span><span class="number">.60</span><span class="number">.0</span><span class="string">/24</span></span><br></pre></td></tr></table></figure>
+<p>index.php 是个一句话木马。</p>
+<hr>
+<h4 id="reGeorg"><a href="#reGeorg" class="headerlink" title="reGeorg"></a>reGeorg</h4><p>下载地址：<a href="https://github.com/sensepost/reGeorg" target="_blank" rel="noopener">https://github.com/sensepost/reGeorg</a> 、<a href="https://sensepost.com/discover/tools/reGeorg/" target="_blank" rel="noopener">https://sensepost.com/discover/tools/reGeorg/</a> 。</p>
+<p>不怎么好用，总是容易出各种各样的问题。</p>
+<hr>
+<h3 id="ssh隧道"><a href="#ssh隧道" class="headerlink" title="ssh隧道"></a>ssh隧道</h3><p>这种方式要求我们知道跳板机上的 ssh 账号密码。</p>
+<p>首先我们要给 machineA 装一个 openssh-server，然后配置好账号密码：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">adduser twings --gid 1000 --home /home/twings</span><br></pre></td></tr></table></figure>
+<p>然后测试可以从主机上连接到 docker 里面：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">root@iZwz988rg4xz5mu4e7fyo2Z:~/Docker/learning# ssh twings@localhost -p 12314</span><br><span class="line">twings@localhost's password:</span><br><span class="line">...</span><br><span class="line">twings@8ef540bd2b74:~$</span><br></pre></td></tr></table></figure>
+<p>然后我们用 ssh 将本地的 2333 端口和 docker 容器连接起来：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">PS C:\Users\19807&gt; ssh -D 2333 twings@*.*.*.* -p 12314</span><br><span class="line">twings@*.*.*.*'s password:</span><br><span class="line">...</span><br><span class="line">twings@8ef540bd2b74:~$</span><br></pre></td></tr></table></figure>
+<p>然后修改 FireFox 的代理，就可以看到我们能够访问内网的 Web 服务了：</p>
+<p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/intranet/2019052901.png" alt=""></p>
+<p>要注意的是 ssh 只能作为 socks 代理，所以配置浏览器代理的时候要将本地代理配置为 socks 主机：</p>
+<p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/intranet/2019052902.png" alt=""></p>
+<p>ssh 还可以做本地和远程的端口转发，本地端口转发：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">PS C:\Users\19807&gt; ssh -L 2333:10.0.30.11:80 twings@*.*.*.* -p 12314</span><br><span class="line">twings@*.*.*.*'s password:</span><br><span class="line">...</span><br><span class="line">twings@8ef540bd2b74:~$</span><br></pre></td></tr></table></figure>
+<p>这时候我们通过 ssh，用 machineA 当作跳板，将 machineB 的 80 端口转发到了我们本地的 2333 端口，我们只要访问本地的 2333 端口，就可以访问到 machineB 的 Web 服务，记得关掉浏览器代理：</p>
+<p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/intranet/2019052903.png" alt=""></p>
+<p>远程端口转发不怎么用到，不提了。</p>
+<hr>
+<h3 id="ew"><a href="#ew" class="headerlink" title="ew"></a>ew</h3><p>墙裂推荐！</p>
+<p>旧版：<a href="http://rootkiter.com/EarthWorm/" target="_blank" rel="noopener">http://rootkiter.com/EarthWorm/</a> 。</p>
+<p>新版：<a href="http://rootkiter.com/Termite/" target="_blank" rel="noopener">http://rootkiter.com/Termite/</a> 。</p>
+<p>我们先把文件放进 machine 里面。</p>
+<p>正向代理：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">root@8ef540bd2b74:/tmp# chmod +x ew_linux_x64</span><br><span class="line">root@8ef540bd2b74:/tmp# ./ew_linux_x64 -s ssocksd -l 23333</span><br></pre></td></tr></table></figure>
+<p>我们监听 23333 端口，就是 docker-compose 映射出去的那个端口。然后我们配置好代理：</p>
+<p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/intranet/2019052904.png" alt=""></p>
+<p>就可以访问到 machineB 的 Web 服务了：</p>
+<p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/intranet/2019052905.png" alt=""></p>
+<p>然后是反向代理，我们可以把 machineA 当作一台公网服务器，现在我们要去访问 machineC：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./ew_linux_x64 -s rcsocks -l 23333 -e 2333</span><br></pre></td></tr></table></figure>
+<p>在 machineA 上监听 23333 端口，然后用 2333 端口等待下一级代理的回连，在 machineB 上：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./ew_linux_x64 -s rssocks -d 10.0.30.10 -e 2333</span><br></pre></td></tr></table></figure>
+<p>反向连接 machineA 的 2333 端口，然后我们访问 machineC：</p>
+<p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/intranet/2019052906.png" alt=""></p>
+<p>再加一级代理，我们尝试去访问 machineD，关掉 machineB 上的 ew，重新启动：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./ew_linux_x64 -s rcsocks -l 23333 -e 2333</span><br></pre></td></tr></table></figure>
+<p>监听 23333 端口，然后用 2333 端口等待下一级代理的回连，然后在 C 上运行：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./ew_linux_x64 -s rssocks -d 10.0.40.10 -e 2333</span><br></pre></td></tr></table></figure>
+<p>反向连接 machineB 的 2333 端口，然后再在 machineB 上执行：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./ew_linux_x64 -s lcx_slave -d 10.0.30.10 -e 2333 -f 127.0.0.1 -g 23333</span><br></pre></td></tr></table></figure>
+<p>反向连接 machineA 的 2333 端口，并将流量转发到本地的 23333 端口。</p>
+<p>然后我们尝试访问 machineD：</p>
+<p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/intranet/2019052907.png" alt=""></p>
+<p>最后再说一遍，ew 我吹爆！</p>
+<hr>
+<h3 id="本地代理"><a href="#本地代理" class="headerlink" title="本地代理"></a>本地代理</h3><h4 id="Linux"><a href="#Linux" class="headerlink" title="Linux"></a>Linux</h4><p>Linux 可以使用 proxychains。</p>
+<h4 id="Windows"><a href="#Windows" class="headerlink" title="Windows"></a>Windows</h4><p>Windows 可以使用系统配置的代理（应该可以用？）</p>
+<p>墙裂推荐全局代理 Proxifier，简单配置一下让我们的 nmap 和 Chrome 可以连接上代理，像这样，先添加一个代理服务器，然后配置代理规则：</p>
+<p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/intranet/2019052908.png" alt=""></p>
+<p>接着我们尝试 nmap：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">PS C:\Users\19807&gt; nmap 10.0.50.11 -Pn -sT</span><br><span class="line">Starting Nmap 7.70 ( https://nmap.org ) at 2019-05-29 20:37 ?D1ú±ê×?ê±??</span><br><span class="line">Nmap scan report for 10.0.50.11</span><br><span class="line">Host is up (1.0s latency).</span><br><span class="line">Not shown: 999 closed ports</span><br><span class="line">PORT   STATE SERVICE</span><br><span class="line">80/tcp open  http</span><br><span class="line"></span><br><span class="line">Nmap done: 1 IP address (1 host up) scanned in 232.82 seconds</span><br></pre></td></tr></table></figure>
+<p>一切正常，墙裂推荐！</p>
+<h4 id="MAC"><a href="#MAC" class="headerlink" title="MAC"></a>MAC</h4><p>没有 MAC，不懂。</p>
+<h4 id="浏览器"><a href="#浏览器" class="headerlink" title="浏览器"></a>浏览器</h4><p>浏览器可以直接配置代理，FireFox 就很方便了。</p>
+<hr>
+<p>参考文章：</p>
+<p><a href="https://www.jianshu.com/p/735e8f1746f0" target="_blank" rel="noopener">https://www.jianshu.com/p/735e8f1746f0</a></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2019/05/29/内网端口转发/" data-id="cjw98a0wv001z8ov6kfqk7s7b" class="article-share-link">分享</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2019/05/27/docker-compose/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">下一篇</strong>
+      <div class="article-nav-title">docker-compose</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    <div class="widget-wrap">
+  <h3 class="widget-title"></h3>
+  <div class="widget">
+    <h1 class="blog-title">Twings</h1>
+    <h2 class="blog-subtitle"></h2>
+    <ul class="blog-link">
+     
+          <a href="/" title="Home">
+            <li>主页</li>
+          </a>
+        
+          <a href="/archives" title="Archives">
+            <li>归档</li>
+          </a>
+        
+          <a href="/categories" title="Categories">
+            <li>分类</li>
+          </a>
+        
+          <a href="/tags" title="Tags">
+            <li>标签</li>
+          </a>
+        
+    </ul>
+  </div>
+</div>
+
+  
+    <div class="widget-wrap">
+  <h3 class="widget-title"></h3>
+  <div class="widget">
+    <img class="avatar" src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/31733328.jfif?raw=true">
+    <h2 class="author">Aluvion</h2>
+    <h3 class="description">摸鱼</h3>
+    <div class="count-box">
+      <a href="/archives"><div><strong>40</strong><br>文章</div></a>
+      <a href="/categories"><div><strong>0</strong><br>分类</div></a>
+      <a href="/tags"><div><strong>6</strong><br>标签</div></a>
+    </div>
+
+
+
+    <div class="social-link">
+      
+        <a class="hvr-bounce-in" href="https://github.com/Aluvion" target="_blank" title="Github">
+          Github
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://www.jianshu.com/u/4cdc8b6d5436" target="_blank" title="简书">
+          简书
+        </a>
+      
+    </div>
+
+    <div class="friend-link">
+      <h2>友情链接</h2>
+      
+        <a class="hvr-bounce-in" href="https://github.com/Pr0phet" target="_blank" title="pr0phet">
+          pr0phet
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://coomrade.github.io" target="_blank" title="C0mRaDe">
+          C0mRaDe
+        </a>
+      
+        <a class="hvr-bounce-in" href="http://blog.y2pj.tw/wordpress/" target="_blank" title="y2pj">
+          y2pj
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://zszcr.github.io/" target="_blank" title="zszcr">
+          zszcr
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://23r3f.github.io/" target="_blank" title="23r3f">
+          23r3f
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://xi4or0uji.github.io/" target="_blank" title="xi4or0uji">
+          xi4or0uji
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://hack4.fun/" target="_blank" title="tokyocolq">
+          tokyocolq
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://glarcy.github.io/" target="_blank" title="glarcy">
+          glarcy
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://wulidecade.cn" target="_blank" title="小白">
+          小白
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://littleredlie.github.io/" target="_blank" title="LittleRed">
+          LittleRed
+        </a>
+      
+        <a class="hvr-bounce-in" href="http://blog.shanamaid.top/" target="_blank" title="ShanaMaid">
+          ShanaMaid
+        </a>
+      
+    </div>
+  </div>
+</div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy;2018 - 2019 Aluvion<br>
+      由<a href="http://hexo.io/" target="_blank">Hexo</a>强力驱动 | 
+      主题-<a href="https://github.com/ShanaMaid/hexo-theme-shana">Shana</a>
+      
+    </div>
+    
+  </div>
+</footer>
+    </div>
+    
+
+<script src="//apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
+<script src="//apps.bdimg.com/libs/wow/0.1.6/wow.min.js"></script>
+<script>
+new WOW().init();
+</script>   
+
+
+  <link rel="stylesheet" href="/plugin/fancybox/jquery.fancybox.css">
+  <script src="/plugin/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+  <link rel="stylesheet" href="/plugin/galmenu/GalMenu.css">
+  <script src="/plugin/galmenu/GalMenu.js"></script>
+  <div class="GalMenu GalDropDown">
+      <div class="circle" id="gal">
+        <div class="ring">
+          
+            <a href="/" title="" class="menuItem">首页</a>
+          
+            <a href="/tags" title="" class="menuItem">标签</a>
+          
+            <a href="/categories" title="" class="menuItem">分类</a>
+          
+            <a href="/archives" title="" class="menuItem">归档</a>
+          
+            <a href="/???" title="" class="menuItem">None</a>
+          
+            <a href="/???" title="" class="menuItem">None</a>
+          
+        </div>
+        
+          <audio id="audio" src="#"></audio>
+        
+      </div> 
+</div>
+<div id="overlay" style="opacity: 1; cursor: pointer;"></div>
+  <script type="text/javascript">var items = document.querySelectorAll('.menuItem');
+    for (var i = 0,
+    l = items.length; i < l; i++) {
+      items[i].style.left = (50 - 35 * Math.cos( - 0.5 * Math.PI - 2 * (1 / l) * i * Math.PI)).toFixed(4) + "%";
+      items[i].style.top = (50 + 35 * Math.sin( - 0.5 * Math.PI - 2 * (1 / l) * i * Math.PI)).toFixed(4) + "%"
+    }</script>
+<script type="text/javascript">
+  $(document).ready(function() {
+    $('body').GalMenu({
+      'menu': 'GalDropDown'
+    })
+  });
+</script>
+
+  <section class="hidden-xs"> 
+  <ul class="cb-slideshow"> 
+    <li><span>苟利</span></li> 
+    <li><span>国家</span></li> 
+    <li><span>生死以</span></li> 
+    <li><span>岂能</span></li> 
+    <li><span>祸福</span></li> 
+    <li><span>趋避之</span></li> 
+  </ul>
+</section>
+<script src="/js/script.js"></script>
+
+
+
+  </div>
+</body>
+</html>

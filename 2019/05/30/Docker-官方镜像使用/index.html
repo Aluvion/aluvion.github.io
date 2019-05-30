@@ -13,7 +13,7 @@
 <meta property="og:site_name" content="Twings">
 <meta property="og:description" content="前言本来一直使用 Ubuntu 镜像搭建环境的，后来发现好像还是使用官方的镜像更加简单快捷一点。 来整几个官方镜像试试，好像官方镜像以 Debian 系统居多。">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2019-05-30T11:39:20.143Z">
+<meta property="og:updated_time" content="2019-05-30T11:41:55.690Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Docker-官方镜像使用">
 <meta name="twitter:description" content="前言本来一直使用 Ubuntu 镜像搭建环境的，后来发现好像还是使用官方的镜像更加简单快捷一点。 来整几个官方镜像试试，好像官方镜像以 Debian 系统居多。">
@@ -112,7 +112,7 @@
 <h3 id="MySQL"><a href="#MySQL" class="headerlink" title="MySQL"></a>MySQL</h3><p>官方镜像说明：<a href="https://hub.docker.com/_/mysql" target="_blank" rel="noopener">https://hub.docker.com/_/mysql</a></p>
 <p>可以看到一个简单的例子如下：</p>
 <figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Use root/example as user/password credentials</span></span><br><span class="line"><span class="attr">version:</span> <span class="string">'3.1'</span></span><br><span class="line"><span class="attr">services:</span></span><br><span class="line"><span class="attr">  db:</span></span><br><span class="line"><span class="attr">    image:</span> <span class="string">mysql</span></span><br><span class="line"><span class="attr">    command:</span> <span class="bullet">--default-authentication-plugin=mysql_native_password</span></span><br><span class="line"><span class="attr">    restart:</span> <span class="string">always</span></span><br><span class="line"><span class="attr">    environment:</span></span><br><span class="line"><span class="attr">      MYSQL_ROOT_PASSWORD:</span> <span class="string">example</span></span><br></pre></td></tr></table></figure>
-<p>这里配置了 root 账号的密码，也修改了认证插件让我们的 MySQL Client 可以进行登录：</p>
+<p>这里配置了 root 账号的密码，也修改了认证插件让我们的 MySQL Client 可以进行登录。</p>
 <p>除了这些，我们还需要什么？</p>
 <p>新建数据库、导入 SQL 文件、配置 IP。</p>
 <p>查看手册，我们可以看到 MYSQL_DATABASE 环境变量：</p>
@@ -154,7 +154,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/05/30/Docker-官方镜像使用/" data-id="cjwal7f75000lxcv617jkz3tj" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/05/30/Docker-官方镜像使用/" data-id="cjwal9ast000iegv6w0bcv2dw" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>

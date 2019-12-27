@@ -41,7 +41,7 @@
     <h2 class="author">Aluvion</h2>
     <h3 class="description">摸鱼</h3>
     <div class="count-box">
-      <a href="/archives"><div><strong>42</strong><br>文章</div></a>
+      <a href="/archives"><div><strong>43</strong><br>文章</div></a>
       <a href="/categories"><div><strong>0</strong><br>分类</div></a>
       <a href="/tags"><div><strong>6</strong><br>标签</div></a>
     </div>
@@ -68,6 +68,64 @@
 </div>
 
         <section id="main">
+  
+    <article id="post-划水CVE-2019-9194复现" class="wow slideInRight article article-type-post" itemscope="" itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/03/22/划水CVE-2019-9194复现/" class="article-date">
+  <time class="post-time" datetime="2019-03-22T10:47:42.000Z" itemprop="datePublished">
+    <span class="post-month">3月</span><br>
+    <span class="post-day">22</span>
+  </time>
+</a>
+   
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/03/22/划水CVE-2019-9194复现/">划水CVE-2019-9194复现</a>
+    </h1>
+  
+
+        <div>
+          
+          
+              
+
+          
+        </div>
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>elFinder是一个Web文件管理平台，能够上传文件和对文件进行一些操作，其中在对图片进行旋转操作的时候，会拼接命令后执行，来调用Linux下的工具exiftran。而在这个过程中，作者一个失误导致了拼接命令的时候，没有使用在前几行进行过过滤的变量，而是使用了纯净未过滤的变量，这就导致了一个命令注入的漏洞。</p>
+<p>19、20、21这三天疯狂摸鱼，研究了一下PHP7.2通过写mem的方式绕过disabled functions，结果发现payload只有php-cli能用（也许php-cgi也可以？），php-fpm和mod_php都没有读取和写入mem的权限。然后又研究了一下Fastjson的绕过，结果踩进了Java的坑里，半天都爬不上来。</p>
+<p>今天看到这个漏洞，漏洞原理和复现都很简单，所以复现一下，继续第四天划水的学习生活……</p>
+<p>GitHub更新详情：<a href="https://github.com/Studio-42/elFinder/compare/2.1.47...2.1" target="_blank" rel="noopener">https://github.com/Studio-42/elFinder/compare/2.1.47...2.1</a></p>
+        
+          <p class="article-more-link">
+            <a href="/2019/03/22/划水CVE-2019-9194复现/#more">Read More</a>
+          </p>
+        
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2019/03/22/划水CVE-2019-9194复现/" data-id="ck4nm4bfw0023p8v6auaojjnp" class="article-share-link">分享</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复现/">复现</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+
   
     <article id="post-Java反序列化漏洞-Fastjson" class="wow slideInRight article article-type-post" itemscope="" itemprop="blogPost">
   <div class="article-meta">
@@ -116,7 +174,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/17/Java反序列化漏洞-Fastjson/" data-id="cjwbrcayh0012esv6jniyz760" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/03/17/Java反序列化漏洞-Fastjson/" data-id="ck4nm4bdt000vp8v68tzz4lpg" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
@@ -175,7 +233,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/16/wordpress5-1-CSRF-to-XSS-to-RCE复现/" data-id="cjwbrcaz40021esv6ac8n8yti" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/03/16/wordpress5-1-CSRF-to-XSS-to-RCE复现/" data-id="ck4nm4bfs0021p8v6fih8re5w" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复现/">复现</a></li></ul>
@@ -236,7 +294,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/14/DNS-Rebinding/" data-id="cjwbrcaxz000iesv66yvlhq8n" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/03/14/DNS-Rebinding/" data-id="ck4nm4bcn000bp8v6umk8q720" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
@@ -295,7 +353,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/14/在连接MySQL服务端时读取客户端文件/" data-id="cjwbrcaz80025esv6j2v7vzk3" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/03/14/在连接MySQL服务端时读取客户端文件/" data-id="ck4nm4bgf002bp8v6pdvlnq8l" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
@@ -357,7 +415,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/10/Wordpress5-0-RCE-CVE-2019-8942复现/" data-id="cjwbrcayw001resv6v2l2ip9l" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/03/10/Wordpress5-0-RCE-CVE-2019-8942复现/" data-id="ck4nm4bfe001rp8v6iof235yj" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复现/">复现</a></li></ul>
@@ -413,7 +471,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/09/cve-2019-5736-复现失败/" data-id="cjwbrcayx001tesv6niy5w2nm" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/03/09/cve-2019-5736-复现失败/" data-id="ck4nm4bfp001yp8v6a31ci4gz" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/二进制/">二进制</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复现/">复现</a></li></ul>
@@ -470,7 +528,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/04/Nexus-Repository-Manager-3-CVE-2019-7238-IDEA远程调试/" data-id="cjwbrcayj0016esv6sn4ivfvp" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/03/04/Nexus-Repository-Manager-3-CVE-2019-7238-IDEA远程调试/" data-id="ck4nm4be80010p8v6nm3jlzre" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复现/">复现</a></li></ul>
@@ -527,7 +585,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/01/Winrar远程代码执行漏洞复现/" data-id="cjwbrcayu001mesv6d7vpaqfu" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/03/01/Winrar远程代码执行漏洞复现/" data-id="ck4nm4bfa001op8v61k20hlk2" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/二进制/">二进制</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复现/">复现</a></li></ul>
@@ -585,70 +643,10 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/02/27/GoogleCTF2018-beginners-js_safe_1/" data-id="cjwbrcayc000uesv6p71tup2z" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/02/27/GoogleCTF2018-beginners-js_safe_1/" data-id="ck4nm4bd8000lp8v67dcirmvl" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTF/">CTF</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-
-
-  
-    <article id="post-CVE-2019-1003000复现" class="wow slideInRight article article-type-post" itemscope="" itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2019/02/26/CVE-2019-1003000复现/" class="article-date">
-  <time class="post-time" datetime="2019-02-26T10:56:00.000Z" itemprop="datePublished">
-    <span class="post-month">2月</span><br>
-    <span class="post-day">26</span>
-  </time>
-</a>
-   
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/02/26/CVE-2019-1003000复现/">CVE-2019-1003000复现</a>
-    </h1>
-  
-
-        <div>
-          
-          
-              
-
-          
-        </div>
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h3 id="漏洞详情"><a href="#漏洞详情" class="headerlink" title="漏洞详情"></a>漏洞详情</h3><p><a href="https://devco.re/blog/2019/01/16/hacking-Jenkins-part1-play-with-dynamic-routing/" target="_blank" rel="noopener">https://devco.re/blog/2019/01/16/hacking-Jenkins-part1-play-with-dynamic-routing/</a></p>
-<p><a href="https://devco.re/blog/2019/02/19/hacking-Jenkins-part2-abusing-meta-programming-for-unauthenticated-RCE/" target="_blank" rel="noopener">https://devco.re/blog/2019/02/19/hacking-Jenkins-part2-abusing-meta-programming-for-unauthenticated-RCE/</a></p>
-<hr>
-<h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>因为docker部署的 Jenkins 会自行安装插件，这里可能会有一些插件版本上面的问题，所以我们的漏洞环境采用GitHub项目+docker进行搭建，GitHub地址：<a href="https://github.com/adamyordan/cve-2019-1003000-jenkins-rce-poc.git。" target="_blank" rel="noopener">https://github.com/adamyordan/cve-2019-1003000-jenkins-rce-poc.git。</a></p>
-<p>下载到的项目有EXP和环境源码，我们主要用的是sample-vuln目录下的代码，这里可以直接运行他的run.sh进行docker的搭建，docker会自行下载需要的images。（PS：我的虚拟机下载images有点慢，所以我用VPS下载然后再导出导入）</p>
-<p>这个环境跟Orange大佬的环境稍有不同，Orange大佬的环境采用的是Read-only Mode的权限模式，而这个环境用的是Authenticated Mode，同时还给了一个user1/user1的用户，就我们复现漏洞而言并没有什么关系。</p>
-        
-          <p class="article-more-link">
-            <a href="/2019/02/26/CVE-2019-1003000复现/#more">Read More</a>
-          </p>
-        
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/02/26/CVE-2019-1003000复现/" data-id="cjwbrcaxv000desv6o2fsfm0o" class="article-share-link">分享</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复现/">复现</a></li></ul>
 
     </footer>
   </div>
@@ -703,7 +701,7 @@
     <h2 class="author">Aluvion</h2>
     <h3 class="description">摸鱼</h3>
     <div class="count-box">
-      <a href="/archives"><div><strong>42</strong><br>文章</div></a>
+      <a href="/archives"><div><strong>43</strong><br>文章</div></a>
       <a href="/categories"><div><strong>0</strong><br>分类</div></a>
       <a href="/tags"><div><strong>6</strong><br>标签</div></a>
     </div>

@@ -41,7 +41,7 @@
     <h2 class="author">Aluvion</h2>
     <h3 class="description">摸鱼</h3>
     <div class="count-box">
-      <a href="/archives"><div><strong>42</strong><br>文章</div></a>
+      <a href="/archives"><div><strong>43</strong><br>文章</div></a>
       <a href="/categories"><div><strong>0</strong><br>分类</div></a>
       <a href="/tags"><div><strong>6</strong><br>标签</div></a>
     </div>
@@ -68,6 +68,88 @@
 </div>
 
         <section id="main">
+  
+    <article id="post-code-break2018-picklecode-Django远程调试" class="wow slideInRight article article-type-post" itemscope="" itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/12/26/code-break2018-picklecode-Django远程调试/" class="article-date">
+  <time class="post-time" datetime="2019-12-26T09:32:52.000Z" itemprop="datePublished">
+    <span class="post-month">12月</span><br>
+    <span class="post-day">26</span>
+  </time>
+</a>
+   
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/12/26/code-break2018-picklecode-Django远程调试/">code-break2018-picklecode+Django远程调试</a>
+    </h1>
+  
+
+        <div>
+          
+          
+              
+
+          
+        </div>
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <!-- <div id="toc" class="toc-article">
+    <div class="toc-title">目录</div>
+    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#前言"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Django-远程调试"><span class="toc-text">Django 远程调试</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#模板注入"><span class="toc-text">模板注入</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Pickle"><span class="toc-text">Pickle</span></a></li></ol>
+</div> -->
+        <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>考完研了，复活了，虽然不知道能不能上岸就是了。</p>
+<p>年后又快要开始做毕设了，然而我并不会做。</p>
+<p>首先先把之前一直不会出了 wp 也没学习的 ph 牛的题目复现了，顺便学习一下 Python 的远程调试方式。</p>
+<p>ph 牛的官方 wp：<a href="https://www.leavesongs.com/PENETRATION/code-breaking-2018-python-sandbox.html" target="_blank" rel="noopener">https://www.leavesongs.com/PENETRATION/code-breaking-2018-python-sandbox.html</a> 。</p>
+<hr>
+<h3 id="Django-远程调试"><a href="#Django-远程调试" class="headerlink" title="Django 远程调试"></a>Django 远程调试</h3><p>因为我本地环境是 Windows，所以跑 Python 总会有各种包上面的不方便，调试起来就很麻烦，因此就采用远程调试的方法。</p>
+<p>题目环境在 ph 牛的 GitHub 上面：<a href="https://github.com/phith0n/code-breaking" target="_blank" rel="noopener">https://github.com/phith0n/code-breaking</a> ，我修改了 docker-compose.yml，把 Nginx 的部分去掉了，把容器的 22 端口映射了出来。</p>
+<p>要进行远程调试，就要装上 SSH，然后修改配置允许 root 用户登录，再修改 root 用户的密码。</p>
+<p>然后就是配置 PyCharm，我用的是 2019.3.1 的版本。</p>
+<p>首先是配置 Deployment，还有 mapping 那里的路径映射也要配置一下：</p>
+<p><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/picklecode/2019122601.png?raw=true" alt=""></p>
+<p>然后配置项目解释器，注意配置远程 Python 解释器的时候要选对，在这个环境下是 /usr/local/bin/python，配置正确后能看到服务器的 Python 包：</p>
+<p><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/picklecode/2019122602.png?raw=true" alt=""></p>
+<p>最后配置 debug：</p>
+<p><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/picklecode/2019122603.png?raw=true" alt=""></p>
+<p>至此，Django 远程调试的配置就完成了，接下里就开始我们的题目复现吧。</p>
+<hr>
+<h3 id="模板注入"><a href="#模板注入" class="headerlink" title="模板注入"></a>模板注入</h3><p>ph 牛以前写过的关于格式化字符串漏洞的文章：<a href="https://www.leavesongs.com/PENETRATION/python-string-format-vulnerability.html" target="_blank" rel="noopener">https://www.leavesongs.com/PENETRATION/python-string-format-vulnerability.html</a> 。</p>
+<p>就如 ph 牛在文章里所说的，_meta 的利用方式在 Django 中不可用，我们可以通过调试来找到其他的利用方式。</p>
+<p>我们在模板渲染处下个断点：</p>
+<p><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/picklecode/2019122604.png?raw=true" alt=""></p>
+<p>可以发现一个类似的利用：request.user.groups.target_field.opts.app_config.module.admin.settings.SECRET_KEY</p>
+<p>即可获得密钥。</p>
+<hr>
+<h3 id="Pickle"><a href="#Pickle" class="headerlink" title="Pickle"></a>Pickle</h3><p>ph 牛写得很详细。</p>
+<p>其他 opcode 的使用就留个坑，以后再来学习吧。</p>
+<hr>
+<p>Orz</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2019/12/26/code-break2018-picklecode-Django远程调试/" data-id="ck4nm4bfi001tp8v6yav432hn" class="article-share-link">分享</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTF/">CTF</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+
   
     <article id="post-Go-2" class="wow slideInRight article article-type-post" itemscope="" itemprop="blogPost">
   <div class="article-meta">
@@ -111,7 +193,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/05/30/Go-2/" data-id="cjwbrcaya000sesv61x8g1kq2" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/05/30/Go-2/" data-id="ck4nm4bdn000qp8v62jpfueyl" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
@@ -167,7 +249,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/05/30/Docker-官方镜像使用/" data-id="cjwbrcay1000lesv6qu14375l" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/05/30/Docker-官方镜像使用/" data-id="ck4nm4bcy000gp8v6sdwq748d" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
@@ -222,7 +304,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/05/29/内网端口转发/" data-id="cjwbrcaz90027esv6t4yfa1je" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/05/29/内网端口转发/" data-id="ck4nm4bgc0028p8v6hjc96oaz" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
@@ -278,7 +360,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/05/27/docker-compose/" data-id="cjwbrcayz001xesv64rsbdqg7" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/05/27/docker-compose/" data-id="ck4nm4bfm001wp8v6yrd1y18a" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Crypto/">Crypto</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Pwn/">Pwn</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
@@ -334,7 +416,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/05/25/RCTF2019-Web-nextphp引发的思考和学习/" data-id="cjwbrcays001iesv68xpt9bhk" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/05/25/RCTF2019-Web-nextphp引发的思考和学习/" data-id="ck4nm4ber001fp8v6fwbjpqpg" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTF/">CTF</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
@@ -389,7 +471,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/05/24/RCTF2019-Web-rblog-ez4cr引发的思考和学习/" data-id="cjwbrcayq001gesv63h9005rq" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/05/24/RCTF2019-Web-rblog-ez4cr引发的思考和学习/" data-id="ck4nm4bex001jp8v6iddmop93" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTF/">CTF</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
@@ -446,7 +528,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/05/23/RCTF2019-Web-jail-password引发的思考和学习/" data-id="cjwbrcayk0018esv60pdakrv0" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/05/23/RCTF2019-Web-jail-password引发的思考和学习/" data-id="ck4nm4beo001cp8v6z04liiz2" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTF/">CTF</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
@@ -502,7 +584,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/05/14/HCTF2016-fheap学习/" data-id="cjwbrcayd000wesv633uzdiss" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/05/14/HCTF2016-fheap学习/" data-id="ck4nm4bdq000sp8v6msh3poys" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTF/">CTF</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Pwn/">Pwn</a></li></ul>
@@ -557,65 +639,10 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/05/09/堆入门-JarvisOJ-Level6-x64/" data-id="cjwbrcazb002besv6exeqctjj" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/05/09/堆入门-JarvisOJ-Level6-x64/" data-id="ck4nm4bgn002hp8v6ics4c0a2" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTF/">CTF</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Pwn/">Pwn</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-
-
-  
-    <article id="post-虚拟机环境搭建" class="wow slideInRight article article-type-post" itemscope="" itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2019/05/09/虚拟机环境搭建/" class="article-date">
-  <time class="post-time" datetime="2019-05-09T00:56:04.000Z" itemprop="datePublished">
-    <span class="post-month">5月</span><br>
-    <span class="post-day">09</span>
-  </time>
-</a>
-   
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/05/09/虚拟机环境搭建/">虚拟机环境搭建</a>
-    </h1>
-  
-
-        <div>
-          
-          
-              
-
-          
-        </div>
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>最近打 pwn，发现环境很诡异， 所以干脆重装一遍虚拟机，顺便记录一下自己虚拟机的环境，以后方便玩坏了又重装。</p>
-        
-          <p class="article-more-link">
-            <a href="/2019/05/09/虚拟机环境搭建/#more">Read More</a>
-          </p>
-        
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/05/09/虚拟机环境搭建/" data-id="cjwbrcazd002fesv67tmuw07q" class="article-share-link">分享</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Crypto/">Crypto</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Pwn/">Pwn</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
 
     </footer>
   </div>
@@ -670,7 +697,7 @@
     <h2 class="author">Aluvion</h2>
     <h3 class="description">摸鱼</h3>
     <div class="count-box">
-      <a href="/archives"><div><strong>42</strong><br>文章</div></a>
+      <a href="/archives"><div><strong>43</strong><br>文章</div></a>
       <a href="/categories"><div><strong>0</strong><br>分类</div></a>
       <a href="/tags"><div><strong>6</strong><br>标签</div></a>
     </div>

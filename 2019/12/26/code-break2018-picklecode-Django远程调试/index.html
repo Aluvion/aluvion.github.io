@@ -5,22 +5,22 @@
   
   <title>code-break2018-picklecode+Django远程调试 | Twings</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="前言考完研了，复活了，虽然不知道能不能上岸就是了。 年后又快要开始做毕设了，然而我并不会做。 首先先把之前一直不会出了 wp 也没学习的 ph 牛的题目复现了，顺便学习一下 Python 的远程调试方式。 ph 牛的官方 wp：https://www.leavesongs.com/PENETRATION/code-breaking-2018-python-sandbox.html 。  Djang">
+  <meta name="description" content="前言考完研了，复活了，虽然不知道能不能上岸就是了。 年后又快要开始做毕设了，然而我并不会做。 首先先把之前一直不会出了 wp 也没学习的 ph 牛的题目复现了，顺便学习一下 Python 的远程调试方式。 ph 牛的官方 wp：https://www.leavesongs.com/PENETRATION/code-breaking-2018-python-sandbox.html 。">
 <meta name="keywords" content="CTF,Web">
 <meta property="og:type" content="article">
 <meta property="og:title" content="code-break2018-picklecode+Django远程调试">
 <meta property="og:url" content="http://yoursite.com/2019/12/26/code-break2018-picklecode-Django远程调试/index.html">
 <meta property="og:site_name" content="Twings">
-<meta property="og:description" content="前言考完研了，复活了，虽然不知道能不能上岸就是了。 年后又快要开始做毕设了，然而我并不会做。 首先先把之前一直不会出了 wp 也没学习的 ph 牛的题目复现了，顺便学习一下 Python 的远程调试方式。 ph 牛的官方 wp：https://www.leavesongs.com/PENETRATION/code-breaking-2018-python-sandbox.html 。  Djang">
+<meta property="og:description" content="前言考完研了，复活了，虽然不知道能不能上岸就是了。 年后又快要开始做毕设了，然而我并不会做。 首先先把之前一直不会出了 wp 也没学习的 ph 牛的题目复现了，顺便学习一下 Python 的远程调试方式。 ph 牛的官方 wp：https://www.leavesongs.com/PENETRATION/code-breaking-2018-python-sandbox.html 。">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/picklecode/2019122601.png?raw=true">
 <meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/picklecode/2019122602.png?raw=true">
 <meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/picklecode/2019122603.png?raw=true">
 <meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/picklecode/2019122604.png?raw=true">
-<meta property="og:updated_time" content="2019-12-27T03:44:08.754Z">
+<meta property="og:updated_time" content="2019-12-27T03:48:27.646Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="code-break2018-picklecode+Django远程调试">
-<meta name="twitter:description" content="前言考完研了，复活了，虽然不知道能不能上岸就是了。 年后又快要开始做毕设了，然而我并不会做。 首先先把之前一直不会出了 wp 也没学习的 ph 牛的题目复现了，顺便学习一下 Python 的远程调试方式。 ph 牛的官方 wp：https://www.leavesongs.com/PENETRATION/code-breaking-2018-python-sandbox.html 。  Djang">
+<meta name="twitter:description" content="前言考完研了，复活了，虽然不知道能不能上岸就是了。 年后又快要开始做毕设了，然而我并不会做。 首先先把之前一直不会出了 wp 也没学习的 ph 牛的题目复现了，顺便学习一下 Python 的远程调试方式。 ph 牛的官方 wp：https://www.leavesongs.com/PENETRATION/code-breaking-2018-python-sandbox.html 。">
 <meta name="twitter:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/picklecode/2019122601.png?raw=true">
   
     <link rel="alternate" href="/atom.xml" title="Twings" type="application/atom+xml">
@@ -114,6 +114,7 @@
 <p>年后又快要开始做毕设了，然而我并不会做。</p>
 <p>首先先把之前一直不会出了 wp 也没学习的 ph 牛的题目复现了，顺便学习一下 Python 的远程调试方式。</p>
 <p>ph 牛的官方 wp：<a href="https://www.leavesongs.com/PENETRATION/code-breaking-2018-python-sandbox.html" target="_blank" rel="noopener">https://www.leavesongs.com/PENETRATION/code-breaking-2018-python-sandbox.html</a> 。</p>
+<a id="more"></a>
 <hr>
 <h3 id="Django-远程调试"><a href="#Django-远程调试" class="headerlink" title="Django 远程调试"></a>Django 远程调试</h3><p>因为我本地环境是 Windows，所以跑 Python 总会有各种包上面的不方便，调试起来就很麻烦，因此就采用远程调试的方法。</p>
 <p>题目环境在 ph 牛的 GitHub 上面：<a href="https://github.com/phith0n/code-breaking" target="_blank" rel="noopener">https://github.com/phith0n/code-breaking</a> ，我修改了 docker-compose.yml，把 Nginx 的部分去掉了，把容器的 22 端口映射了出来。</p>
@@ -142,7 +143,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/12/26/code-break2018-picklecode-Django远程调试/" data-id="ck4nm4bfi001tp8v6yav432hn" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/12/26/code-break2018-picklecode-Django远程调试/" data-id="ck4nm9eg3001pw8v6q9w3tcpa" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTF/">CTF</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>

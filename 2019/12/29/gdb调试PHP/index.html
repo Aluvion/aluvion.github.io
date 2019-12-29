@@ -3,18 +3,23 @@
 <head><meta name="generator" content="Hexo 3.8.0">
   <meta charset="utf-8">
   
-  <title>归档: 2019/5 | Twings</title>
+  <title>gdb调试PHP | Twings</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="摸鱼">
-<meta property="og:type" content="website">
-<meta property="og:title" content="Twings">
-<meta property="og:url" content="http://yoursite.com/archives/2019/05/page/2/index.html">
+  <meta name="description" content="前言最近研究了一下 phar 的解析流程，想知道什么样子的文件能触发 phar 反序列化，最后发现 phar 验证文件签名是从后往前取的，所以得要能控制文件末尾才行(或者关闭 phar 的签名配置)，温习了一下 gdb 调试 php 的方法，顺手记录一下。">
+<meta name="keywords" content="Web">
+<meta property="og:type" content="article">
+<meta property="og:title" content="gdb调试PHP">
+<meta property="og:url" content="http://yoursite.com/2019/12/29/gdb调试PHP/index.html">
 <meta property="og:site_name" content="Twings">
-<meta property="og:description" content="摸鱼">
+<meta property="og:description" content="前言最近研究了一下 phar 的解析流程，想知道什么样子的文件能触发 phar 反序列化，最后发现 phar 验证文件签名是从后往前取的，所以得要能控制文件末尾才行(或者关闭 phar 的签名配置)，温习了一下 gdb 调试 php 的方法，顺手记录一下。">
 <meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/gdb_php/2019122901.png?raw=true">
+<meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/gdb_php/2019122902.png?raw=true">
+<meta property="og:updated_time" content="2019-12-29T05:59:09.539Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Twings">
-<meta name="twitter:description" content="摸鱼">
+<meta name="twitter:title" content="gdb调试PHP">
+<meta name="twitter:description" content="前言最近研究了一下 phar 的解析流程，想知道什么样子的文件能触发 phar 反序列化，最后发现 phar 验证文件签名是从后往前取的，所以得要能控制文件末尾才行(或者关闭 phar 的签名配置)，温习了一下 gdb 调试 php 的方法，顺手记录一下。">
+<meta name="twitter:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/gdb_php/2019122901.png?raw=true">
   
     <link rel="alternate" href="/atom.xml" title="Twings" type="application/atom+xml">
   
@@ -67,91 +72,88 @@
   </div>
 </div>
 
-        <section id="main">
-  
-  
+        <section id="main"><article id="post-gdb调试PHP" class="wow slideInRight article article-type-post" itemscope="" itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/12/29/gdb调试PHP/" class="article-date">
+  <time class="post-time" datetime="2019-12-29T05:41:15.000Z" itemprop="datePublished">
+    <span class="post-month">12月</span><br>
+    <span class="post-day">29</span>
+  </time>
+</a>
+   
+  </div>
+  <div class="article-inner">
     
     
-      
-      
-      <section class="archives-wrap animated rubberBand">
-        <div class="archive-year-wrap">
-          <a href="/archives/2019" class="archive-year">2019</a>
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      gdb调试PHP
+    </h1>
+  
+
+        <div>
+          
+          
+              
+
+          
         </div>
-        <div class="archives">
+      </header>
     
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/2019/05/06/FastCGI浅析/" class="archive-article-date">
-  <time class="post-time" datetime="2019-05-06T04:16:11.000Z" itemprop="datePublished">
-    <span class="post-month">5月</span><br>
-    <span class="post-day">06</span>
-  </time>
-</a>
+    <div class="article-entry" itemprop="articleBody">
       
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/05/06/FastCGI浅析/">FastCGI浅析</a>
-    </h1>
-  
+        <!-- <div id="toc" class="toc-article">
+    <div class="toc-title">目录</div>
+    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#前言"><span class="toc-text">前言</span></a></li></ol>
+</div> -->
+        <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>最近研究了一下 phar 的解析流程，想知道什么样子的文件能触发 phar 反序列化，最后发现 phar 验证文件签名是从后往前取的，所以得要能控制文件末尾才行(或者关闭 phar 的签名配置)，温习了一下 gdb 调试 php 的方法，顺手记录一下。 </p>
+<a id="more"></a>
+<hr>
+<ol>
+<li><p>在 php.net 上面下载源码包(当然 GitHub 也可以)。</p>
+</li>
+<li><p>./configure &amp;&amp; make (缺什么装什么，不用 make install)。</p>
+</li>
+<li><p>gdb ./sapi/cli/php：</p>
+<p><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/gdb_php/2019122901.png?raw=true" alt=""></p>
+</li>
+<li><p>b ext/phar/phar.c:2333 下断点</p>
+</li>
+<li><p>r 要调试的 php 开始调试：</p>
+<p><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/gdb_php/2019122902.png?raw=true" alt=""></p>
+</li>
+</ol>
+<hr>
+<p>Orz</p>
 
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/2019/05/05/CTF2019-996game复现-nodejs-mongodb使用/" class="archive-article-date">
-  <time class="post-time" datetime="2019-05-05T04:04:07.000Z" itemprop="datePublished">
-    <span class="post-month">5月</span><br>
-    <span class="post-day">05</span>
-  </time>
-</a>
       
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/05/05/CTF2019-996game复现-nodejs-mongodb使用/">*CTF2019-996game复现/nodejs+mongodb使用</a>
-    </h1>
-  
-
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/2019/05/02/Python黑魔法-绕过空格实现变量覆盖/" class="archive-article-date">
-  <time class="post-time" datetime="2019-05-02T13:07:16.000Z" itemprop="datePublished">
-    <span class="post-month">5月</span><br>
-    <span class="post-day">02</span>
-  </time>
-</a>
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2019/12/29/gdb调试PHP/" data-id="ck4qlt1wk0027u4v60fzxqyz4" class="article-share-link">分享</a>
       
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/05/02/Python黑魔法-绕过空格实现变量覆盖/">Python黑魔法-[]绕过空格实现变量覆盖</a>
-    </h1>
-  
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
 
-    </header>
+    </footer>
   </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2019/12/26/code-break2018-picklecode-Django远程调试/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">下一篇</strong>
+      <div class="article-nav-title">code-break2018-picklecode+Django远程调试</div>
+    </a>
+  
+</nav>
+
+  
 </article>
-  
-  
-    </div></section>
-  
 
 
-  <nav id="page-nav">
-    <a class="extend prev" rel="prev" href="/archives/2019/05/">&laquo; pre</a><a class="page-number" href="/archives/2019/05/">1</a><span class="page-number current">2</span>
-  </nav>
 
 </section>
         

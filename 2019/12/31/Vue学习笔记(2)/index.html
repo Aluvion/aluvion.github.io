@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="utf-8">
+  
+  <title>Vue学习笔记(2) | Twings</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="前言无。">
+<meta name="keywords" content="Web">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Vue学习笔记(2)">
+<meta property="og:url" content="http://yoursite.com/2019/12/31/Vue学习笔记(2)/index.html">
+<meta property="og:site_name" content="Twings">
+<meta property="og:description" content="前言无。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/vue/2019123101.png?raw=true">
+<meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/vue/2019123102.png?raw=true">
+<meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/vue/2019123103.png?raw=true">
+<meta property="og:updated_time" content="2019-12-31T13:47:36.873Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Vue学习笔记(2)">
+<meta name="twitter:description" content="前言无。">
+<meta name="twitter:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/vue/2019123101.png?raw=true">
+  
+    <link rel="alternate" href="/atom.xml" title="Twings" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/plugin/bganimation/bg.css">
+  
+
+</head>
+</html>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <div class="widget-wrap mobile-header">
+  <h3 class="widget-title"></h3>
+  <div class="widget">
+    <img class="avatar" src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/31733328.jfif?raw=true">
+    <h2 class="author">Aluvion</h2>
+    <h3 class="description">摸鱼</h3>
+    <div class="count-box">
+      <a href="/archives"><div><strong>46</strong><br>文章</div></a>
+      <a href="/categories"><div><strong>0</strong><br>分类</div></a>
+      <a href="/tags"><div><strong>6</strong><br>标签</div></a>
+    </div>
+    <ul class="blog-link">
+     
+          <a href="/" title="Home">
+            <li>主页</li>
+          </a>
+        
+          <a href="/archives" title="Archives">
+            <li>归档</li>
+          </a>
+        
+          <a href="/categories" title="Categories">
+            <li>分类</li>
+          </a>
+        
+          <a href="/tags" title="Tags">
+            <li>标签</li>
+          </a>
+        
+    </ul>
+  </div>
+</div>
+
+        <section id="main"><article id="post-Vue学习笔记(2)" class="wow slideInRight article article-type-post" itemscope="" itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/12/31/Vue学习笔记(2)/" class="article-date">
+  <time class="post-time" datetime="2019-12-31T02:29:49.000Z" itemprop="datePublished">
+    <span class="post-month">12月</span><br>
+    <span class="post-day">31</span>
+  </time>
+</a>
+   
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Vue学习笔记(2)
+    </h1>
+  
+
+        <div>
+          
+          
+              
+
+          
+        </div>
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <!-- <div id="toc" class="toc-article">
+    <div class="toc-title">目录</div>
+    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#前言"><span class="toc-text">前言</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#计算属性和侦听器"><span class="toc-text">计算属性和侦听器</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Class-和-Style-绑定"><span class="toc-text">Class 和 Style 绑定</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#条件渲染"><span class="toc-text">条件渲染</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#列表渲染"><span class="toc-text">列表渲染</span></a></li></ol></li></ol>
+</div> -->
+        <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>无。</p>
+<a id="more"></a>
+<hr>
+<h4 id="计算属性和侦听器"><a href="#计算属性和侦听器" class="headerlink" title="计算属性和侦听器"></a>计算属性和侦听器</h4><p>计算属性和函数都是用来处理逻辑的，其中函数每次重新渲染都会重新运行，计算属性则会缓存，只有依赖变化了才会变化，比如 App.vue ：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">h4</span> <span class="attr">v-on:click</span>=<span class="string">"log"</span>&gt;</span>click here!<span class="tag">&lt;/<span class="name">h4</span>&gt;</span><span class="tag">&lt;<span class="name">h4</span> <span class="attr">v-on:click</span>=<span class="string">"change"</span>&gt;</span>Change time!<span class="tag">&lt;/<span class="name">h4</span>&gt;</span></span><br><span class="line">&#123;&#123; count &#125;&#125;</span><br><span class="line"><span class="tag">&lt;<span class="name">span</span> <span class="attr">v-html</span>=<span class="string">"dead_time"</span>&gt;</span><span class="tag">&lt;/<span class="name">span</span>&gt;</span><span class="tag">&lt;<span class="name">br</span>/&gt;</span>&#123;&#123; active_time() &#125;&#125;</span><br></pre></td></tr></table></figure>
+<p>然后：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">computed: &#123;</span><br><span class="line">    <span class="string">"dead_time"</span>: <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">    	<span class="keyword">return</span> <span class="string">"&lt;hr/&gt;现在的时间是："</span> + <span class="keyword">this</span>.time</span><br><span class="line">    &#125;  </span><br><span class="line">&#125;,</span><br><span class="line">methods: &#123;</span><br><span class="line">    <span class="string">"log"</span>: <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.count += <span class="number">1</span>;</span><br><span class="line">        <span class="built_in">window</span>.console.log(<span class="string">'Twings'</span>)</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="string">"change"</span>: <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    	<span class="keyword">this</span>.time = <span class="string">"&lt;h3&gt;"</span> + <span class="built_in">Date</span>() + <span class="string">"&lt;/h3&gt;"</span></span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="string">"active_time"</span>: <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">    	<span class="keyword">return</span> <span class="built_in">Date</span>()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>log 函数用来改变模板中 count 的值，触发重新渲染；change 函数用来改变 time 的值，同时改变 dead_time；两个函数都会改变 active_time ：</p>
+<p><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/vue/2019123101.png?raw=true" alt=""></p>
+<p><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/vue/2019123102.png?raw=true" alt=""></p>
+<p><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/vue/2019123103.png?raw=true" alt=""></p>
+<p>watch 侦听好像可以用计算属性代替，不看了。</p>
+<p>setter 暂时用不到，pass 。</p>
+<p>侦听器的例子里包含了好多东西啊，先安装一下 lodash 和 axios，直接在 UI 界面的依赖栏里安装即可，然后引入：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> _ <span class="keyword">from</span> <span class="string">"lodash"</span></span><br><span class="line"><span class="keyword">import</span> axios <span class="keyword">from</span> <span class="string">"axios"</span></span><br></pre></td></tr></table></figure>
+<p>然后看实例代码，用的是 v-model 来绑定表单输入: <a href="https://cn.vuejs.org/v2/guide/forms.html" target="_blank" rel="noopener">https://cn.vuejs.org/v2/guide/forms.html</a> 。</p>
+<p>限制调用频率的函数：_.debounce 。</p>
+<p>axios 进行异步请求，跟 Ajax 挺像的。</p>
+<h4 id="Class-和-Style-绑定"><a href="#Class-和-Style-绑定" class="headerlink" title="Class 和 Style 绑定"></a>Class 和 Style 绑定</h4><p>样式方面的，不懂，pass。</p>
+<h4 id="条件渲染"><a href="#条件渲染" class="headerlink" title="条件渲染"></a>条件渲染</h4><p>简单好理解，pass。</p>
+<h4 id="列表渲染"><a href="#列表渲染" class="headerlink" title="列表渲染"></a>列表渲染</h4><p>v-for，就是框架里的循环属性，比如遍历数组：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">v-for</span>=<span class="string">"(msg, index) in msgs"</span> <span class="attr">v-bind:key</span>=<span class="string">"index"</span>&gt;</span>&#123;&#123; index &#125;&#125;-&#123;&#123; msg &#125;&#125;<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>顺序是值-索引，不加上 key 会报错，然后：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">msgs: [</span><br><span class="line">	<span class="string">"Twings"</span>,</span><br><span class="line">	<span class="string">"Aluvion"</span></span><br><span class="line">]</span><br></pre></td></tr></table></figure>
+<p>或者使用对象也可以：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">msgs: &#123;</span><br><span class="line">	<span class="string">"first_name"</span>: <span class="string">"Twings"</span>,</span><br><span class="line">	<span class="string">"last_name"</span>: <span class="string">"Aluvion"</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>不过 v-for 里面的顺序是值-键-索引，跟我们平时的读法反了过来。</p>
+<p>还有一点就是，使用 push()、pop()、shift()、unshift()、splice()、sort()、reverse() 等函数改变数组的成员会导致视图的变化。</p>
+<p>各种高级用法就不说了，前端菜鸡也用不上。</p>
+<hr>
+<p>Orz</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2019/12/31/Vue学习笔记(2)/" data-id="ck4txi4cu001n9sv6lxjfgzhe" class="article-share-link">分享</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2019/12/30/Vue学习笔记(1)/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">下一篇</strong>
+      <div class="article-nav-title">Vue学习笔记(1)</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    <div class="widget-wrap">
+  <h3 class="widget-title"></h3>
+  <div class="widget">
+    <h1 class="blog-title">Twings</h1>
+    <h2 class="blog-subtitle"></h2>
+    <ul class="blog-link">
+     
+          <a href="/" title="Home">
+            <li>主页</li>
+          </a>
+        
+          <a href="/archives" title="Archives">
+            <li>归档</li>
+          </a>
+        
+          <a href="/categories" title="Categories">
+            <li>分类</li>
+          </a>
+        
+          <a href="/tags" title="Tags">
+            <li>标签</li>
+          </a>
+        
+    </ul>
+  </div>
+</div>
+
+  
+    <div class="widget-wrap">
+  <h3 class="widget-title"></h3>
+  <div class="widget">
+    <img class="avatar" src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/31733328.jfif?raw=true">
+    <h2 class="author">Aluvion</h2>
+    <h3 class="description">摸鱼</h3>
+    <div class="count-box">
+      <a href="/archives"><div><strong>46</strong><br>文章</div></a>
+      <a href="/categories"><div><strong>0</strong><br>分类</div></a>
+      <a href="/tags"><div><strong>6</strong><br>标签</div></a>
+    </div>
+
+
+
+    <div class="social-link">
+      
+        <a class="hvr-bounce-in" href="https://github.com/Aluvion" target="_blank" title="Github">
+          Github
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://www.jianshu.com/u/4cdc8b6d5436" target="_blank" title="简书">
+          简书
+        </a>
+      
+    </div>
+
+    <div class="friend-link">
+      <h2>友情链接</h2>
+      
+        <a class="hvr-bounce-in" href="https://blog.pr0ph3t.com/" target="_blank" title="pr0phet">
+          pr0phet
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://coomrade.github.io" target="_blank" title="C0mRaDe">
+          C0mRaDe
+        </a>
+      
+        <a class="hvr-bounce-in" href="http://blog.y2pj.tw/wordpress/" target="_blank" title="y2pj">
+          y2pj
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://zszcr.github.io/" target="_blank" title="zszcr">
+          zszcr
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://23r3f.github.io/" target="_blank" title="23r3f">
+          23r3f
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://xi4or0uji.github.io/" target="_blank" title="xi4or0uji">
+          xi4or0uji
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://hack4.fun/" target="_blank" title="tokyocolq">
+          tokyocolq
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://glarcy.github.io/" target="_blank" title="glarcy">
+          glarcy
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://wulidecade.cn" target="_blank" title="小白">
+          小白
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://littleredlie.github.io/" target="_blank" title="LittleRed">
+          LittleRed
+        </a>
+      
+        <a class="hvr-bounce-in" href="http://blog.shanamaid.top/" target="_blank" title="ShanaMaid">
+          ShanaMaid
+        </a>
+      
+    </div>
+  </div>
+</div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy;2018 - 2019 Aluvion<br>
+      由<a href="http://hexo.io/" target="_blank">Hexo</a>强力驱动 | 
+      主题-<a href="https://github.com/ShanaMaid/hexo-theme-shana">Shana</a>
+      
+    </div>
+    
+  </div>
+</footer>
+    </div>
+    
+
+<script src="//apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
+<script src="//apps.bdimg.com/libs/wow/0.1.6/wow.min.js"></script>
+<script>
+new WOW().init();
+</script>   
+
+
+  <link rel="stylesheet" href="/plugin/fancybox/jquery.fancybox.css">
+  <script src="/plugin/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+  <link rel="stylesheet" href="/plugin/galmenu/GalMenu.css">
+  <script src="/plugin/galmenu/GalMenu.js"></script>
+  <div class="GalMenu GalDropDown">
+      <div class="circle" id="gal">
+        <div class="ring">
+          
+            <a href="/" title="" class="menuItem">首页</a>
+          
+            <a href="/tags" title="" class="menuItem">标签</a>
+          
+            <a href="/categories" title="" class="menuItem">分类</a>
+          
+            <a href="/archives" title="" class="menuItem">归档</a>
+          
+            <a href="/???" title="" class="menuItem">None</a>
+          
+            <a href="/???" title="" class="menuItem">None</a>
+          
+        </div>
+        
+          <audio id="audio" src="#"></audio>
+        
+      </div> 
+</div>
+<div id="overlay" style="opacity: 1; cursor: pointer;"></div>
+  <script type="text/javascript">var items = document.querySelectorAll('.menuItem');
+    for (var i = 0,
+    l = items.length; i < l; i++) {
+      items[i].style.left = (50 - 35 * Math.cos( - 0.5 * Math.PI - 2 * (1 / l) * i * Math.PI)).toFixed(4) + "%";
+      items[i].style.top = (50 + 35 * Math.sin( - 0.5 * Math.PI - 2 * (1 / l) * i * Math.PI)).toFixed(4) + "%"
+    }</script>
+<script type="text/javascript">
+  $(document).ready(function() {
+    $('body').GalMenu({
+      'menu': 'GalDropDown'
+    })
+  });
+</script>
+
+  <section class="hidden-xs"> 
+  <ul class="cb-slideshow"> 
+    <li><span>苟利</span></li> 
+    <li><span>国家</span></li> 
+    <li><span>生死以</span></li> 
+    <li><span>岂能</span></li> 
+    <li><span>祸福</span></li> 
+    <li><span>趋避之</span></li> 
+  </ul>
+</section>
+<script src="/js/script.js"></script>
+
+
+
+  </div>
+</body>
+</html>

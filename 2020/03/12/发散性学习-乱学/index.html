@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="utf-8">
+  
+  <title>发散性学习(乱学) | Twings</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="前言终于把毕设的第一部分完成了，过一段时间再去看老师的批注来修改吧。 做毕设的时候用的框架晚点再写。 因为最近对乱七八糟的东西感兴趣，所以一边看文章一边动手顺便一边写一写自己的学习过程。">
+<meta name="keywords" content="Web">
+<meta property="og:type" content="article">
+<meta property="og:title" content="发散性学习(乱学)">
+<meta property="og:url" content="http://yoursite.com/2020/03/12/发散性学习-乱学/index.html">
+<meta property="og:site_name" content="Twings">
+<meta property="og:description" content="前言终于把毕设的第一部分完成了，过一段时间再去看老师的批注来修改吧。 做毕设的时候用的框架晚点再写。 因为最近对乱七八糟的东西感兴趣，所以一边看文章一边动手顺便一边写一写自己的学习过程。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-03-12T12:23:21.393Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="发散性学习(乱学)">
+<meta name="twitter:description" content="前言终于把毕设的第一部分完成了，过一段时间再去看老师的批注来修改吧。 做毕设的时候用的框架晚点再写。 因为最近对乱七八糟的东西感兴趣，所以一边看文章一边动手顺便一边写一写自己的学习过程。">
+  
+    <link rel="alternate" href="/atom.xml" title="Twings" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/plugin/bganimation/bg.css">
+  
+
+</head>
+</html>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <div class="widget-wrap mobile-header">
+  <h3 class="widget-title"></h3>
+  <div class="widget">
+    <img class="avatar" src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/31733328.jfif?raw=true">
+    <h2 class="author">Aluvion</h2>
+    <h3 class="description">摸鱼</h3>
+    <div class="count-box">
+      <a href="/archives"><div><strong>47</strong><br>文章</div></a>
+      <a href="/categories"><div><strong>0</strong><br>分类</div></a>
+      <a href="/tags"><div><strong>6</strong><br>标签</div></a>
+    </div>
+    <ul class="blog-link">
+     
+          <a href="/" title="Home">
+            <li>主页</li>
+          </a>
+        
+          <a href="/archives" title="Archives">
+            <li>归档</li>
+          </a>
+        
+          <a href="/categories" title="Categories">
+            <li>分类</li>
+          </a>
+        
+          <a href="/tags" title="Tags">
+            <li>标签</li>
+          </a>
+        
+    </ul>
+  </div>
+</div>
+
+        <section id="main"><article id="post-发散性学习-乱学" class="wow slideInRight article article-type-post" itemscope="" itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2020/03/12/发散性学习-乱学/" class="article-date">
+  <time class="post-time" datetime="2020-03-12T08:43:49.000Z" itemprop="datePublished">
+    <span class="post-month">3月</span><br>
+    <span class="post-day">12</span>
+  </time>
+</a>
+   
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      发散性学习(乱学)
+    </h1>
+  
+
+        <div>
+          
+          
+              
+
+          
+        </div>
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <!-- <div id="toc" class="toc-article">
+    <div class="toc-title">目录</div>
+    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#前言"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#BiliBili-直播"><span class="toc-text">BiliBili 直播</span></a></li></ol>
+</div> -->
+        <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>终于把毕设的第一部分完成了，过一段时间再去看老师的批注来修改吧。</p>
+<p>做毕设的时候用的框架晚点再写。</p>
+<p>因为最近对乱七八糟的东西感兴趣，所以一边看文章一边动手顺便一边写一写自己的学习过程。</p>
+<a id="more"></a>
+<hr>
+<h3 id="BiliBili-直播"><a href="#BiliBili-直播" class="headerlink" title="BiliBili 直播"></a>BiliBili 直播</h3><p>F12 审查元素可以看到弹幕的实现方式是 div 的重叠，不过我完全不懂前端，就不提了。</p>
+<p>根据 F12 看到的 websocket、无限加载的 flv 文件以及网上的资料，BiliBili 的直播实现方式应该是 rtmp 推流 + httpflv 拉流，websocket 可能用来获取弹幕。貌似轮询加载的 data.bilibili.com/log/web 上面带了直播间相关的信息，不过比较复杂我看不懂作用。</p>
+<p>这时候如果观察 websocket 中的数据，就会发现基本都是一些开头类似，内容不同的数据，猜测前面是数据包的头，主要数据经过了加密处理，有人好像已经做过了解析：<a href="https://github.com/yangjunlong/barrager.js" target="_blank" rel="noopener">https://github.com/yangjunlong/barrager.js</a> 。</p>
+<p>不过他的 player.js 的版本跟现在网站上使用的已经不同了，说不准合不合用，所以我打算自行研究一番。</p>
+<p>一开始我从 websocket 相关的 onmessage 找起，结果一直找不到地方。后来我从弹幕处理的尾部（就是弹幕显示到我们屏幕上的时候）往前推，从 addDanmaku 到 _messageReply ，根据 onReceivedMessage 到 onMessageReply，就能找到 e.prototype.onMessage 了，最后的解析函数就是 convertToObject 这个函数。这函数链是真的复杂。</p>
+<p>后面想分析一下具体的处理的过程，但是他的不知名函数套娃分析起来实在是太麻烦了……</p>
+<p>不研究了，要研究光看这个文件还不够，这个文件里面的代码只是运行了函数，相关代码只是放在对象里面还没有运行。要解包可以下断点把它的对象拿来用。</p>
+<p>后来我观察了一下 Network 的流量，觉得可以尝试断点调试一下，但是它的 JS 文件没有经过美化的，直接下断点会把自己的浏览器卡死。所以我就打算把某个直播间的 HTML 文件和几个需要用到的 JS 文件下载下来，在本地搭个环境。</p>
+<p>接着我就发现，它的 JS 执行是一环一环的，前面的 XHR 没有成功后面的 WebSocket 就不会建立了。</p>
+<p>没办法，我就在本地用 Python 简单写了个后端，然后把本地的 DNS 解析指向了自己( WebSocket 那个域名我没改成功，不知道为什么，最后是直接改了 player 那个 JS 文件里面的域名)。如果不需要本地调试，也可以尝试覆写直接调试网站上的 JS，参考这篇文章：<a href="https://cloud.tencent.com/developer/article/1563717" target="_blank" rel="noopener">https://cloud.tencent.com/developer/article/1563717</a> 。</p>
+<p>按照这个思路，我就可以修改 JS 代码，实现弹幕的分离了(?)，比如只看同传 man 的弹幕，或者只把同传 man 的弹幕放到直播界面上。</p>
+<p>按照 addDanmaku 函数跟下去，可以发现弹幕的收集是使用队列来实现的，WebSocket 收到信息之后按长度分段入队：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> <span class="number">0</span> === t &amp;&amp; (t = !<span class="number">1</span>);</span><br><span class="line"><span class="keyword">var</span> i = <span class="keyword">this</span>._player.config.user;</span><br><span class="line"><span class="keyword">if</span> (e.text &amp;&amp; e.text.length &gt; <span class="number">30</span> &amp;&amp; a.default.DANMAKU_MODE_TOP === e.mode) &#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">var</span> n = e.text.split(<span class="string">""</span>), o = <span class="built_in">Math</span>.floor(n.length / <span class="number">30</span>) + <span class="number">1</span>, r = <span class="number">1</span>; r &lt; o; r++)</span><br><span class="line">        n.splice(<span class="number">30</span> * r, <span class="number">0</span>, <span class="string">"\n"</span>);</span><br><span class="line">    e.text = n.join(<span class="string">""</span>),</span><br><span class="line">        e.textAlign = <span class="string">"center"</span></span><br><span class="line">&#125;</span><br><span class="line">i.isSuperUser &amp;&amp; (e.color = i.superUserForceColor),</span><br><span class="line">    i.isSuperUser &amp;&amp; (e.mode = a.default.DANMAKU_MODE_REVERSE),</span><br><span class="line">    t ? <span class="keyword">this</span>._danmaku &amp;&amp; <span class="keyword">this</span>._danmaku.add(e) : <span class="keyword">this</span>._WAITING_QUEUE.push(e)</span><br></pre></td></tr></table></figure>
+<p>我好像没见过 t 为 true 的时候。接下来按照队列来寻找，就会发现弹幕的显示使用 setTimeout 套娃每 2 秒调用 _render 函数做的。</p>
+<p>然后就是 _render 调用 _add 来显示弹幕啦：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">e.prototype._add = <span class="function"><span class="keyword">function</span>(<span class="params">e, t</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> i = <span class="keyword">this</span>;</span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">void</span> <span class="number">0</span> === t &amp;&amp; (t = <span class="keyword">this</span>._RENDER_INTERVAL_TIME),</span><br><span class="line">    e.length) &#123;</span><br><span class="line">        <span class="keyword">var</span> n = e.splice(<span class="number">0</span>, <span class="number">1</span>)[<span class="number">0</span>];</span><br><span class="line">        <span class="keyword">this</span>._checkVideoIsPaused() &amp;&amp; <span class="keyword">this</span>._danmaku &amp;&amp; <span class="keyword">this</span>._danmaku.add(n),</span><br><span class="line">        n = <span class="literal">null</span>,</span><br><span class="line">        <span class="built_in">window</span>.clearTimeout(<span class="keyword">this</span>._TIMEOUT_ADD_DANMAKU),</span><br><span class="line">        <span class="keyword">this</span>._TIMEOUT_ADD_DANMAKU = <span class="built_in">window</span>.setTimeout(<span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">        	i._add(e, t)</span><br><span class="line">        &#125;, t)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里还是套娃，间隔时间在 _render 函数中按照弹幕数量来计算。</p>
+<p>其实仔细一看就会发现，弹幕是分成两部分来处理的，上面所说的部分有个 _checkVideoIsPaused() 函数的处理，换句话说就是这部分是显示在直播界面上的弹幕的部分。Block 几个加载的 JS 也可以发现，直播界面上的弹幕只需要 player 和 jq 两个 JS。</p>
+<p>那右边的滚动弹幕是怎么处理的呢？要看几十万行代码就太复杂了，所以我 block 了几个 JS，确定了最后生成滚动弹幕 div 的代码在 3.xxxx.js 文件中，关键代码如下：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> F = <span class="built_in">Object</span>(i.a)(<span class="string">"span"</span>, <span class="string">"user-name v-middle "</span> + (g ? <span class="string">"my-self"</span> : <span class="string">"pointer open-menu"</span>), (g ? <span class="string">"[自己]"</span> : t.userInfo.username) + <span class="string">" : "</span>, g ? <span class="literal">null</span> : t.activityInfo.usernameColor &amp;&amp; [[<span class="string">"style"</span>, <span class="string">"color:"</span> + t.activityInfo.usernameColor]]);</span><br><span class="line">R.appendChild(F);</span><br><span class="line"><span class="keyword">var</span> G = <span class="built_in">Object</span>(i.a)(<span class="string">"span"</span>, <span class="string">"danmaku-content v-middle pointer ts-dot-2"</span> + (g ? <span class="string">""</span> : <span class="string">" open-menu"</span>), w);</span><br><span class="line"><span class="keyword">return</span> R.appendChild(G),</span><br></pre></td></tr></table></figure>
+<p>然后根据调用链往上找就看到这部分弹幕的处理方法了，在 _messageReply 函数的最后一行，会根据是否屏蔽弹幕来调用 _addServerCallbackSmoothly 函数将弹幕放入另一个队列 _SERVER_CALLBACK_QUEUE 中，然后再通过类似的 _renderServerCallback 套娃 _callServerCallback 再调用 3.xxxx.js 中的 receiveMessage，即绑定在 receiveMessage 上面的 ae 函数处理到屏幕上。</p>
+<p>这前端代码真的是复杂……流程复杂函数名也复杂。</p>
+<p>脑洞一开想到了弹幕姬，思考一下如果要自己整一个要怎么做，WebSocket 是没有跨域也没有 Cookie 表示身份的，所以加入某个直播间肯定是通过客户端发送直播间相关信息，给 WebSocket 数据包加密函数加个 console.log，可以打印出身份验证包：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;<span class="attr">"uid"</span>:xxxxxxxxx,<span class="attr">"roomid"</span>:<span class="number">21641569</span>,<span class="attr">"protover"</span>:<span class="number">2</span>,<span class="attr">"platform"</span>:<span class="string">"web"</span>,<span class="attr">"clientver"</span>:<span class="string">"1.10.3"</span>,<span class="attr">"type"</span>:<span class="number">2</span>,<span class="attr">"key"</span>:<span class="string">"xxxxxxxxxxxxxxxxxxxxxx"</span>&#125;</span><br></pre></td></tr></table></figure>
+<p>uid 就是自己的 id，key 就是访问 getConf 接口拿到的 token。除此之外还有很多个空的 heartbeat 数据包，不提。那么理论上只要带上 cookie 访问这个接口，拿到 token 之后进行 WebSocket 身份验证，就可以在自己的客户端上看到弹幕了。</p>
+<p>接下来开始仔细研究一下 player.js 里面的代码，探究一下功能的具体实现方式，按三个 !function 的执行顺序来看，学习前端开发的同时顺便琢磨一下反代码审计。</p>
+<p>通过断点观察调用链，直播间的实现原理就差不多清晰了，player.js 将用来初始化直播间的 EmbedPlayer 函数挂到 window 上，然后在 HTML 里面加载调用。</p>
+<p>第一个函数的函数体：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">"object"</span> == <span class="keyword">typeof</span> exports &amp;&amp; <span class="string">"object"</span> == <span class="keyword">typeof</span> <span class="built_in">module</span> ? <span class="built_in">module</span>.exports = t() : <span class="string">"function"</span> == <span class="keyword">typeof</span> define &amp;&amp; define.amd ? define([], t) : <span class="string">"object"</span> == <span class="keyword">typeof</span> exports ? exports.EmbedPlayer = t() : e.EmbedPlayer = t()</span><br></pre></td></tr></table></figure>
+<p>这里似乎是对几种 JS 规范的判断，还是一个套娃三木判断，第一个部分似乎是 Node.JS 使用的 CommonJS 规范，第二个部分是浏览器的 AMD 规范，最后似乎还是 Node.JS，最后在浏览器上运行的就是最后一种：e.EmbedPlayer = t()，将第二个参数作为函数执行，然后将结果挂在第一个参数对象中的 EmbedPlayer 上。</p>
+<p>接下来看函数的参数部分，第一个参数是 window，第二个部分则是一个函数。该函数执行之后会套娃进行里面的函数，然后返回里面函数的执行结果，里面函数的参数部分是一个函数数组，函数体将参数和各种对象、函数放进 n 里面组装了一个对象 n，然后返回调用 n 函数后的结果：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (t[r])</span><br><span class="line">	<span class="keyword">return</span> t[r].exports;</span><br><span class="line"><span class="keyword">var</span> a = t[r] = &#123;</span><br><span class="line">    i: r,</span><br><span class="line">    l: !<span class="number">1</span>,</span><br><span class="line">    exports: &#123;&#125;</span><br><span class="line">&#125;;</span><br><span class="line"><span class="keyword">return</span> e[r].call(a.exports, a, a.exports, n),</span><br><span class="line">    a.l = !<span class="number">0</span>,</span><br><span class="line">    a.exports</span><br></pre></td></tr></table></figure>
+<p>n 函数会调用第四个函数，然后返回一个 a.exports 对象，函数大概是这样：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span>(<span class="params">e, t, n</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> r = n(<span class="number">5</span>).default;</span><br><span class="line">    e.exports = r,</span><br><span class="line">    <span class="built_in">window</span>.EmbedPlayer = r</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里又执行了一遍 n 函数，这次是调用第五个函数，函数太长我就不放了，主要逻辑就是执行了几个之前的函数数组里的函数，把结果存在变量里面，然后将各种函数和属性塞进一个对象 c 里面，并将 c 赋值给前面的 a.exports.default，所以第一个大函数执行完之后，window.EmbedPlayer 其实就是这个 c ，调用的时候执行的就是 541 行初的 e 函数。</p>
+<p>说一个题外话，前端程序员在代码里夹带了好多私货啊，我合理怀疑他是个海王星厨，还是个炮姐厨。</p>
+<p>其他几个大函数都跟上面讲的里面函数差不多，组合了一堆属性和函数，再把相关的入口函数挂到 window 上。</p>
+<p>接下来我继续断点调试，尝试理清整个流程，首先是事件的绑定：HTML new 一个 window.EmbedPlayer，也就是运行了 541 行的 e 函数 -&gt; initialize -&gt; new window.Player -&gt; 14742行的匿名函数 -&gt; 调用 addFirstPlayCallback 入队 _firstPlayingCallbackQueue 回调 -&gt; 绑定 loadedmetadata 事件 -&gt; 加载成功后调用 triggerFirstPlayCallback 处理回调。</p>
+<p>正常是这个流程，如果直播加载不出来呢？这时候会通过设定好定时的 triggerFirstPlayCallback 函数处理 _firstPlayingCallbackQueue，从队列里面取出回调函数，执行 i.components.socket.init 来建立 WebSocket 连接，除了触发回调的那一步，后面的步骤都是一样的。</p>
+<p>后来我花了点时间，把 player.js 里面的关于 WebSocket 数据包加解密的代码提取了出来，不过精简的不够彻底，还剩下1000+行的代码，看起来都跟加解密有关，我也就懒得继续删改了，能用就行。</p>
+<p>下一步的学习应该是用 JS 写一个自己的 B 站弹幕姬软件来玩玩。</p>
+<p>我在看别人写过的第三方 B 站弹幕软件的时候，抓包发现他的 WebSocket 数据包竟然是没有加密的，这是为什么呢？不清楚 B 站是什么样的机制，不管了。</p>
+<p>筛选出的加解密代码大概是这个样子：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">!<span class="function"><span class="keyword">function</span>(<span class="params">e</span>) </span>&#123;</span><br><span class="line">...</span><br><span class="line">&#125;</span><br><span class="line">(&#123;</span><br><span class="line">	<span class="number">22</span>: <span class="function"><span class="keyword">function</span>(<span class="params">e, t, n</span>) </span>&#123;</span><br><span class="line">		...</span><br><span class="line">	&#125;,</span><br><span class="line">	<span class="number">25</span>: <span class="function"><span class="keyword">function</span>(<span class="params">e, t</span>) </span>&#123;</span><br><span class="line">		<span class="keyword">var</span> n, i;</span><br><span class="line">		n = <span class="string">"undefined"</span> != <span class="keyword">typeof</span> self ? self : <span class="keyword">this</span>,</span><br><span class="line">		i = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">			<span class="keyword">return</span> <span class="function"><span class="keyword">function</span>(<span class="params">e</span>) </span>&#123;</span><br><span class="line">				...</span><br><span class="line">			&#125;([</span><br><span class="line">				...</span><br><span class="line">			])</span><br><span class="line">		&#125;</span><br><span class="line">		,</span><br><span class="line">		e.exports = i()</span><br><span class="line">	&#125;</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<hr>
+<p>Orz</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2020/03/12/发散性学习-乱学/" data-id="ck7oq4ftf002ghov6ghzweq08" class="article-share-link">分享</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2019/12/31/Vue学习笔记(2)/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">下一篇</strong>
+      <div class="article-nav-title">Vue学习笔记(2)</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    <div class="widget-wrap">
+  <h3 class="widget-title"></h3>
+  <div class="widget">
+    <h1 class="blog-title">Twings</h1>
+    <h2 class="blog-subtitle"></h2>
+    <ul class="blog-link">
+     
+          <a href="/" title="Home">
+            <li>主页</li>
+          </a>
+        
+          <a href="/archives" title="Archives">
+            <li>归档</li>
+          </a>
+        
+          <a href="/categories" title="Categories">
+            <li>分类</li>
+          </a>
+        
+          <a href="/tags" title="Tags">
+            <li>标签</li>
+          </a>
+        
+    </ul>
+  </div>
+</div>
+
+  
+    <div class="widget-wrap">
+  <h3 class="widget-title"></h3>
+  <div class="widget">
+    <img class="avatar" src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/31733328.jfif?raw=true">
+    <h2 class="author">Aluvion</h2>
+    <h3 class="description">摸鱼</h3>
+    <div class="count-box">
+      <a href="/archives"><div><strong>47</strong><br>文章</div></a>
+      <a href="/categories"><div><strong>0</strong><br>分类</div></a>
+      <a href="/tags"><div><strong>6</strong><br>标签</div></a>
+    </div>
+
+
+
+    <div class="social-link">
+      
+        <a class="hvr-bounce-in" href="https://github.com/Aluvion" target="_blank" title="Github">
+          Github
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://www.jianshu.com/u/4cdc8b6d5436" target="_blank" title="简书">
+          简书
+        </a>
+      
+    </div>
+
+    <div class="friend-link">
+      <h2>友情链接</h2>
+      
+        <a class="hvr-bounce-in" href="https://blog.pr0ph3t.com/" target="_blank" title="pr0phet">
+          pr0phet
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://coomrade.github.io" target="_blank" title="C0mRaDe">
+          C0mRaDe
+        </a>
+      
+        <a class="hvr-bounce-in" href="http://blog.y2pj.tw/wordpress/" target="_blank" title="y2pj">
+          y2pj
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://zszcr.github.io/" target="_blank" title="zszcr">
+          zszcr
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://23r3f.github.io/" target="_blank" title="23r3f">
+          23r3f
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://xi4or0uji.github.io/" target="_blank" title="xi4or0uji">
+          xi4or0uji
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://hack4.fun/" target="_blank" title="tokyocolq">
+          tokyocolq
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://glarcy.github.io/" target="_blank" title="glarcy">
+          glarcy
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://wulidecade.cn" target="_blank" title="小白">
+          小白
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://littleredlie.github.io/" target="_blank" title="LittleRed">
+          LittleRed
+        </a>
+      
+        <a class="hvr-bounce-in" href="http://blog.shanamaid.top/" target="_blank" title="ShanaMaid">
+          ShanaMaid
+        </a>
+      
+    </div>
+  </div>
+</div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy;2019 - 2020 Aluvion<br>
+      由<a href="http://hexo.io/" target="_blank">Hexo</a>强力驱动 | 
+      主题-<a href="https://github.com/ShanaMaid/hexo-theme-shana">Shana</a>
+      
+    </div>
+    
+  </div>
+</footer>
+    </div>
+    
+
+<script src="//apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
+<script src="//apps.bdimg.com/libs/wow/0.1.6/wow.min.js"></script>
+<script>
+new WOW().init();
+</script>   
+
+
+  <link rel="stylesheet" href="/plugin/fancybox/jquery.fancybox.css">
+  <script src="/plugin/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+  <link rel="stylesheet" href="/plugin/galmenu/GalMenu.css">
+  <script src="/plugin/galmenu/GalMenu.js"></script>
+  <div class="GalMenu GalDropDown">
+      <div class="circle" id="gal">
+        <div class="ring">
+          
+            <a href="/" title="" class="menuItem">首页</a>
+          
+            <a href="/tags" title="" class="menuItem">标签</a>
+          
+            <a href="/categories" title="" class="menuItem">分类</a>
+          
+            <a href="/archives" title="" class="menuItem">归档</a>
+          
+            <a href="/???" title="" class="menuItem">None</a>
+          
+            <a href="/???" title="" class="menuItem">None</a>
+          
+        </div>
+        
+          <audio id="audio" src="#"></audio>
+        
+      </div> 
+</div>
+<div id="overlay" style="opacity: 1; cursor: pointer;"></div>
+  <script type="text/javascript">var items = document.querySelectorAll('.menuItem');
+    for (var i = 0,
+    l = items.length; i < l; i++) {
+      items[i].style.left = (50 - 35 * Math.cos( - 0.5 * Math.PI - 2 * (1 / l) * i * Math.PI)).toFixed(4) + "%";
+      items[i].style.top = (50 + 35 * Math.sin( - 0.5 * Math.PI - 2 * (1 / l) * i * Math.PI)).toFixed(4) + "%"
+    }</script>
+<script type="text/javascript">
+  $(document).ready(function() {
+    $('body').GalMenu({
+      'menu': 'GalDropDown'
+    })
+  });
+</script>
+
+  <section class="hidden-xs"> 
+  <ul class="cb-slideshow"> 
+    <li><span>苟利</span></li> 
+    <li><span>国家</span></li> 
+    <li><span>生死以</span></li> 
+    <li><span>岂能</span></li> 
+    <li><span>祸福</span></li> 
+    <li><span>趋避之</span></li> 
+  </ul>
+</section>
+<script src="/js/script.js"></script>
+
+
+
+  </div>
+</body>
+</html>

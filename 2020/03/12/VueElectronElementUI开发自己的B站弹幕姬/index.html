@@ -6,7 +6,7 @@
   <title>VueElectronElementUI开发自己的B站弹幕姬 | Twings</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="description" content="前言兴趣，顺便学一学。 以后可能会学习的东西：系统的日语、打轴、剪辑、MMD、3D建模(?)。">
-<meta name="keywords" content="= Web">
+<meta name="keywords" content="Web">
 <meta property="og:type" content="article">
 <meta property="og:title" content="VueElectronElementUI开发自己的B站弹幕姬">
 <meta property="og:url" content="http://yoursite.com/2020/03/12/VueElectronElementUI开发自己的B站弹幕姬/index.html">
@@ -14,7 +14,7 @@
 <meta property="og:description" content="前言兴趣，顺便学一学。 以后可能会学习的东西：系统的日语、打轴、剪辑、MMD、3D建模(?)。">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/2020031301.png?raw=true">
-<meta property="og:updated_time" content="2020-03-13T14:39:07.347Z">
+<meta property="og:updated_time" content="2020-03-14T13:08:42.985Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="VueElectronElementUI开发自己的B站弹幕姬">
 <meta name="twitter:description" content="前言兴趣，顺便学一学。 以后可能会学习的东西：系统的日语、打轴、剪辑、MMD、3D建模(?)。">
@@ -47,7 +47,7 @@
     <div class="count-box">
       <a href="/archives"><div><strong>48</strong><br>文章</div></a>
       <a href="/categories"><div><strong>0</strong><br>分类</div></a>
-      <a href="/tags"><div><strong>7</strong><br>标签</div></a>
+      <a href="/tags"><div><strong>6</strong><br>标签</div></a>
     </div>
     <ul class="blog-link">
      
@@ -131,19 +131,29 @@
 <p>以上都是麻烦的做法，后面我发现引用第三方图片 403，发现只要加上一句：</p>
 <figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">meta</span> <span class="attr">name</span>=<span class="string">"referrer"</span> <span class="attr">content</span>=<span class="string">"no-referrer"</span>/&gt;</span></span><br></pre></td></tr></table></figure>
 <p>就可以 axios 了，用不着那么麻烦进程间通信了。</p>
+<p>直播间相关信息可以带上直播间 ID 访问 <a href="https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=" target="_blank" rel="noopener">https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=</a> 获得，包括 tags、直播间名称、封面图片路径等等信息。</p>
+<p>获取完直播间信息就可以开始准备连接 WebSocket 了，要注意的是在连接上 B 站的 WebSocket 服务器之后，必须发送一个验证数据包，不然就会断开连接，验证数据包大致是这个格式：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> authCode = &#123;</span><br><span class="line">    <span class="string">"uid"</span>: <span class="number">0</span>,</span><br><span class="line">    <span class="string">"roomid"</span>: <span class="built_in">Number</span>(<span class="keyword">this</span>.roomID),</span><br><span class="line">    <span class="string">"protover"</span>: <span class="number">2</span>,</span><br><span class="line">    <span class="string">"platform"</span>: <span class="string">"web"</span>,</span><br><span class="line">    <span class="string">"clientver"</span>: <span class="string">"1.10.3"</span>,</span><br><span class="line">    <span class="string">"type"</span>: <span class="number">2</span>,</span><br><span class="line">    <span class="string">"key"</span>: <span class="string">""</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>要注意数据类型，其中 key 可以通过访问接口获得，但是好像服务器根本不检测。</p>
+<p>之后每隔一段时间发送一个心跳检测数据包即可，简陋的代码大概是这个样子：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">this</span>.ws = <span class="keyword">new</span> WebSocket(<span class="string">"ws://broadcastlv.chat.bilibili.com:2244/sub"</span>);</span><br><span class="line"><span class="keyword">this</span>.ws.binaryType = <span class="string">"arraybuffer"</span>,</span><br><span class="line"><span class="keyword">this</span>.ws.myCoder = <span class="keyword">new</span> <span class="built_in">window</span>.coder();</span><br><span class="line"><span class="keyword">this</span>.ws.HEART_BEAT_INTERVA = <span class="literal">null</span>,</span><br><span class="line"><span class="keyword">this</span>.ws.heartBeat = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> e = <span class="keyword">this</span>;</span><br><span class="line">    clearTimeout(<span class="keyword">this</span>.HEART_BEAT_INTERVAL);</span><br><span class="line">    <span class="keyword">var</span> t = <span class="keyword">this</span>.myCoder.convertToArrayBuffer(&#123;&#125;, <span class="number">2</span>);</span><br><span class="line">    <span class="keyword">this</span>.send(t),</span><br><span class="line">    <span class="keyword">this</span>.HEART_BEAT_INTERVAL = setTimeout(<span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    	e.heartBeat();</span><br><span class="line">    &#125;, <span class="number">1e3</span> * <span class="number">30</span>)</span><br><span class="line">&#125;;</span><br><span class="line"><span class="keyword">this</span>.ws.onopen = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">this</span>.send(<span class="keyword">this</span>.myCoder.convertToArrayBuffer(<span class="built_in">JSON</span>.stringify(authCode), <span class="number">7</span>));</span><br><span class="line">    <span class="keyword">this</span>.heartBeat();</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">this</span>.ws.onmessage = <span class="keyword">this</span>.getMessage;</span><br></pre></td></tr></table></figure>
+<p>authCode 是验证数据，getMessage 是自己写的处理弹幕的函数。</p>
+<p>最后牌子的样式代码是用 Vue 动态绑定的，大概是这个样子：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">:style</span>=<span class="string">"&#123;'display': 'inline', 'border': '1px solid ' + danma.color, 'border-radius': '2px'&#125;"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">span</span> <span class="attr">:style</span>=<span class="string">"&#123;'background': danma.color, 'color': '#fff'&#125;"</span>&gt;</span>&#123;&#123; danma.medal &#125;&#125;<span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">span</span> <span class="attr">:style</span>=<span class="string">"&#123;'margin-left': '5px', 'color': danma.color, 'margin-right': '5px'&#125;"</span>&gt;</span>&#123;&#123; danma.level &#125;&#125;<span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">style</span>=<span class="string">"display: inline;"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">span</span> <span class="attr">style</span>=<span class="string">"margin-left: 10px; color: #23ade5;"</span>&gt;</span>&#123;&#123; danma.uname &#125;&#125;:<span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">span</span> <span class="attr">style</span>=<span class="string">"margin-left: 5px;"</span>&gt;</span>&#123;&#123; danma.danma &#125;&#125;<span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
 <p>最后做好的低配版本：</p>
 <p><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/2020031301.png?raw=true" alt=""></p>
 <p>这部分学习就暂告一段落了，明天开始学习其他东西。</p>
+<p>注：后来发现 Electron 可以直接在 Vue 里面引用 node 的模块，比如 request 之类的，也可以引用 child_process，所以如果存在 XSS 漏洞危害还是蛮大的。</p>
 <hr>
 <p>Orz</p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2020/03/12/VueElectronElementUI开发自己的B站弹幕姬/" data-id="ck7qafvq1001nmkv6zvhvil8y" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2020/03/12/VueElectronElementUI开发自己的B站弹幕姬/" data-id="ck7sij7l7001wh8v6hjocdbc0" class="article-share-link">分享</a>
       
       
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">= Web</a></li></ul>
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
 
     </footer>
   </div>
@@ -205,7 +215,7 @@
     <div class="count-box">
       <a href="/archives"><div><strong>48</strong><br>文章</div></a>
       <a href="/categories"><div><strong>0</strong><br>分类</div></a>
-      <a href="/tags"><div><strong>7</strong><br>标签</div></a>
+      <a href="/tags"><div><strong>6</strong><br>标签</div></a>
     </div>
 
 

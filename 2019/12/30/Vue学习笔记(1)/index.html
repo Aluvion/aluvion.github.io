@@ -13,14 +13,14 @@
 <meta property="og:site_name" content="Twings">
 <meta property="og:description" content="前言为了毕设开始学点前端。 绚丽的样式是不敢想的了。">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/vue/2019123001.png?raw=true">
-<meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/vue/2019123002.png?raw=true">
-<meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/vue/2019123003.png?raw=true">
-<meta property="og:updated_time" content="2019-12-30T14:40:04.842Z">
+<meta property="og:image" content="https://gitee.com/Aluvion/Aluvion/raw/master/css/images/vue/2019123001.png?raw=true">
+<meta property="og:image" content="https://gitee.com/Aluvion/Aluvion/raw/master/css/images/vue/2019123002.png?raw=true">
+<meta property="og:image" content="https://gitee.com/Aluvion/Aluvion/raw/master/css/images/vue/2019123003.png?raw=true">
+<meta property="og:updated_time" content="2020-03-15T11:33:48.497Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Vue学习笔记(1)">
 <meta name="twitter:description" content="前言为了毕设开始学点前端。 绚丽的样式是不敢想的了。">
-<meta name="twitter:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/vue/2019123001.png?raw=true">
+<meta name="twitter:image" content="https://gitee.com/Aluvion/Aluvion/raw/master/css/images/vue/2019123001.png?raw=true">
   
     <link rel="alternate" href="/atom.xml" title="Twings" type="application/atom+xml">
   
@@ -43,7 +43,7 @@
         <div class="widget-wrap mobile-header">
   <h3 class="widget-title"></h3>
   <div class="widget">
-    <img class="avatar" src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/31733328.jfif?raw=true">
+    <img class="avatar" src="https://gitee.com/Aluvion/Aluvion/raw/master/css/images/avatar.png">
     <h2 class="author">Aluvion</h2>
     <h3 class="description">摸鱼</h3>
     <div class="count-box">
@@ -121,13 +121,13 @@
 <p>也可以输入</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vue ui</span><br></pre></td></tr></table></figure>
 <p>打开可视化管理界面(实际上是个 web )然后创建新项目：</p>
-<p><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/vue/2019123001.png?raw=true" alt=""></p>
+<p><img src="https://gitee.com/Aluvion/Aluvion/raw/master/css/images/vue/2019123001.png?raw=true" alt=""></p>
 <p>为了方便我用 UI 界面创建了一个，放在 E 盘根目录，任务处可以直接运行项目，其他功能不清楚，继续看文档吧。</p>
 <p>项目最好放在一个小写字母的路径下，用 vue cli 运行的时候总会看到这么一句：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Couldn&apos;t parse bundle asset &quot;E:\vue\graduate\dist\js\chunk-vendors.js&quot;.</span><br><span class="line">Analyzer will use module sizes from stats file.</span><br></pre></td></tr></table></figure>
 <p>暂时不知道怎么解决，命令行运行也不会出现，好像也不碍事，先不管了。 </p>
 <h3 id="继续学习"><a href="#继续学习" class="headerlink" title="继续学习"></a>继续学习</h3><p>vue 项目的路径大概是这样的：</p>
-<p><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/vue/2019123002.png?raw=true" alt=""></p>
+<p><img src="https://gitee.com/Aluvion/Aluvion/raw/master/css/images/vue/2019123002.png?raw=true" alt=""></p>
 <p>dist 是 build 后的用于生产环境的代码，public 存放着图标和入口文件，而 src 则是开发的主要位置。</p>
 <p>仔细观察一下默认生成的项目，我们可以整理出这么一个逻辑：</p>
 <ol>
@@ -155,7 +155,7 @@
 <p>然后在 App.vue 的 template 里面：</p>
 <figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">hello-world</span> <span class="attr">msg</span>=<span class="string">"Welcome to ACTF"</span> <span class="attr">v-bind:time</span>=<span class="string">"time"</span> <span class="attr">v-bind:data</span>=<span class="string">"data"</span> <span class="attr">v-bind:style</span>=<span class="string">"style"</span>&gt;</span><span class="tag">&lt;/<span class="name">hello-world</span>&gt;</span></span><br></pre></td></tr></table></figure>
 <p>其中 time 和 data 是传递给复用组件的数据，其中 time 中包含了 HTML 标签需要 v-html 来进行表示，style 则是绑定为 hello-world 标签的样式，效果如下：</p>
-<p><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/vue/2019123003.png?raw=true" alt=""></p>
+<p><img src="https://gitee.com/Aluvion/Aluvion/raw/master/css/images/vue/2019123003.png?raw=true" alt=""></p>
 <p>disabled 等属性的值如果是 null、undefined 或 false，则 disabled 特性甚至不会被渲染出来。</p>
 <h4 id="表达式"><a href="#表达式" class="headerlink" title="表达式"></a>表达式</h4><p>跟 Java 表达式、模板注入那些一样的感觉，不太需要，跳过了。</p>
 <h4 id="指令"><a href="#指令" class="headerlink" title="指令"></a>指令</h4><h5 id="v-if"><a href="#v-if" class="headerlink" title="v-if"></a>v-if</h5><p>根据某个数据的 true/false 来插入/移除某个元素。</p>
@@ -171,7 +171,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/12/30/Vue学习笔记(1)/" data-id="ck7sij7l0001lh8v63775wz3d" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/12/30/Vue学习笔记(1)/" data-id="ck7syqpzi001si0v636mzorp5" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
@@ -239,7 +239,7 @@
     <div class="widget-wrap">
   <h3 class="widget-title"></h3>
   <div class="widget">
-    <img class="avatar" src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/31733328.jfif?raw=true">
+    <img class="avatar" src="https://gitee.com/Aluvion/Aluvion/raw/master/css/images/avatar.png">
     <h2 class="author">Aluvion</h2>
     <h3 class="description">摸鱼</h3>
     <div class="count-box">
@@ -251,6 +251,10 @@
 
 
     <div class="social-link">
+      
+        <a class="hvr-bounce-in" href="https://gitee.com/Aluvion" target="_blank" title="Gitee">
+          Gitee
+        </a>
       
         <a class="hvr-bounce-in" href="https://github.com/Aluvion" target="_blank" title="Github">
           Github

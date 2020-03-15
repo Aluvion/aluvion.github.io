@@ -6,7 +6,7 @@
   <title>DDCTF2019-Web题解 | Twings</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="description" content="前言最近举办的比赛 DDCTF2019 ，菜鸡 Web 手第二次打这个比赛，题目相比去年整体质量有所下降，有质量的题目只有三题左右，不过也是个能学到东西的好比赛。 比赛最后两天没有肝 Java 题，被hint弄昏了，辣鸡选手分不清命令执行和代码执行，当然也有对 ysoserial 不熟悉等各种原因在内，所以到最后还是没有能够 AK Web 题目，算是一个遗憾吧，希望明年能变得更强。">
-<meta name="keywords" content="Web,CTF">
+<meta name="keywords" content="CTF,Web">
 <meta property="og:type" content="article">
 <meta property="og:title" content="DDCTF2019-Web题解">
 <meta property="og:url" content="http://yoursite.com/2019/04/19/DDCTF2019-Web题解/index.html">
@@ -14,7 +14,7 @@
 <meta property="og:description" content="前言最近举办的比赛 DDCTF2019 ，菜鸡 Web 手第二次打这个比赛，题目相比去年整体质量有所下降，有质量的题目只有三题左右，不过也是个能学到东西的好比赛。 比赛最后两天没有肝 Java 题，被hint弄昏了，辣鸡选手分不清命令执行和代码执行，当然也有对 ysoserial 不熟悉等各种原因在内，所以到最后还是没有能够 AK Web 题目，算是一个遗憾吧，希望明年能变得更强。">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/DDCTF2019/2019041999.png">
-<meta property="og:updated_time" content="2019-04-19T12:32:42.671Z">
+<meta property="og:updated_time" content="2020-03-15T11:29:15.440Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="DDCTF2019-Web题解">
 <meta name="twitter:description" content="前言最近举办的比赛 DDCTF2019 ，菜鸡 Web 手第二次打这个比赛，题目相比去年整体质量有所下降，有质量的题目只有三题左右，不过也是个能学到东西的好比赛。 比赛最后两天没有肝 Java 题，被hint弄昏了，辣鸡选手分不清命令执行和代码执行，当然也有对 ysoserial 不熟悉等各种原因在内，所以到最后还是没有能够 AK Web 题目，算是一个遗憾吧，希望明年能变得更强。">
@@ -41,7 +41,7 @@
         <div class="widget-wrap mobile-header">
   <h3 class="widget-title"></h3>
   <div class="widget">
-    <img class="avatar" src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/31733328.jfif?raw=true">
+    <img class="avatar" src="https://gitee.com/Aluvion/Aluvion/raw/master/css/images/avatar.png">
     <h2 class="author">Aluvion</h2>
     <h3 class="description">摸鱼</h3>
     <div class="count-box">
@@ -139,7 +139,7 @@
 <h2 id="mysql弱口令"><a href="#mysql弱口令" class="headerlink" title="mysql弱口令"></a>mysql弱口令</h2><p>比较有意思的题目，考点是 MySQL LOAD DATA INFILE 的利用。</p>
 <p>工具： <a href="https://github.com/Gifts/Rogue-MySql-Server" target="_blank" rel="noopener">https://github.com/Gifts/Rogue-MySql-Server</a> 。</p>
 <p>不停读文件就完事了，在 root 的 .bash_history 文件里发现源码文件，在源码文件中发现 flag 的路径，直接读取 /var/lib/mysql/security/flag.ibd 即可，或者也可以读取 root 目录下的 .mysql_history （非预期？）。</p>
-<h2 id="再来1杯Java"><a href="#再来1杯Java" class="headerlink" title="再来1杯Java"></a>再来1杯Java</h2><p>源码包：<a href="https://github.com/Aluvion/aluvion.github.io/blob/master/file/DDCTF2019/Java.zip" target="_blank" rel="noopener">https://github.com/Aluvion/aluvion.github.io/blob/master/file/DDCTF2019/Java.zip</a></p>
+<h2 id="再来1杯Java"><a href="#再来1杯Java" class="headerlink" title="再来1杯Java"></a>再来1杯Java</h2><p>源码包：<a href="https://gitee.com/Aluvion/Aluvion/tree/master/file/DDCTF2019/Java.zip" target="_blank" rel="noopener">https://gitee.com/Aluvion/Aluvion/tree/master/file/DDCTF2019/Java.zip</a></p>
 <p>本地搭建环境也很简单，题目是个 Spring-Boot 的项目，把 class 反编译一下，然后再配置运行 Application.java 即可。</p>
 <p>题目分为三个部分，密码、文件读取和反序列化。</p>
 <h4 id="Padding-Oracle"><a href="#Padding-Oracle" class="headerlink" title="Padding Oracle"></a>Padding Oracle</h4><p>根据提示，需要我们成为 admin ，观察 HTTP 请求，可以得知我们需要伪造一个 cookie ，脚本如下（写得有点乱）：</p>
@@ -167,7 +167,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/04/19/DDCTF2019-Web题解/" data-id="ck7sij7jv000ah8v6s0xmngqd" class="article-share-link">分享</a>
+      <a data-url="http://yoursite.com/2019/04/19/DDCTF2019-Web题解/" data-id="ck7syqpym000ei0v6nvxatujb" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTF/">CTF</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Web/">Web</a></li></ul>
@@ -235,7 +235,7 @@
     <div class="widget-wrap">
   <h3 class="widget-title"></h3>
   <div class="widget">
-    <img class="avatar" src="https://github.com/Aluvion/aluvion.github.io/blob/master/css/images/31733328.jfif?raw=true">
+    <img class="avatar" src="https://gitee.com/Aluvion/Aluvion/raw/master/css/images/avatar.png">
     <h2 class="author">Aluvion</h2>
     <h3 class="description">摸鱼</h3>
     <div class="count-box">
@@ -247,6 +247,10 @@
 
 
     <div class="social-link">
+      
+        <a class="hvr-bounce-in" href="https://gitee.com/Aluvion" target="_blank" title="Gitee">
+          Gitee
+        </a>
       
         <a class="hvr-bounce-in" href="https://github.com/Aluvion" target="_blank" title="Github">
           Github

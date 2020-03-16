@@ -191,14 +191,14 @@
 </li>
 </ol>
 <p>而实际上，XSS Auditor 的检查要更加简单粗暴一点，一个简单粗暴的例子如下：</p>
-<p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/rctf2019/2019052401.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/rctf2019/2019052401.png" srcset="/img/loading.gif" alt=""></p>
 <p>看起来它并不在意你的标签是什么，也不在意你的事件是什么，这匹配也是很简单粗暴……</p>
 <p>iframe 标签的 srcdoc 属性也很粗暴：</p>
-<p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/rctf2019/2019052403.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/rctf2019/2019052403.png" srcset="/img/loading.gif" alt=""></p>
 <p>src 属性一样粗暴，不能是 javascript: 打头，在 script 标签里面的时候也不能有 GET 参数：</p>
-<p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/rctf2019/2019052404.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/rctf2019/2019052404.png" srcset="/img/loading.gif" alt=""></p>
 <p>还有更简单粗暴的：</p>
-<p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/rctf2019/2019052402.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/rctf2019/2019052402.png" srcset="/img/loading.gif" alt=""></p>
 <p>由于浏览器无法区分 URL 中的数据是不是真的填充到了页面中，所以甚至会把静态页面中的 JavaScript 代码给一刀切了，而在 filter 模式下，有时候就可以利用这一点来吃掉页面中本来有的 JavaScript 代码。</p>
 <p>block 模式也有利用方式，比如之前 35C3 的题目，我们可以利用 XSS Auditor 来泄露用户的数据。</p>
 <p>我说的肯定不够详细，大家可以自行探索。</p>
@@ -206,10 +206,10 @@
 <h3 id="编码"><a href="#编码" class="headerlink" title="编码"></a>编码</h3><p>在 Web 应用的交互中，最主要的是两个地方的编码，URL 和 HTML 页面。</p>
 <p>原来 script 标签也可以设置加载的 js 文件的编码。</p>
 <p>浏览器对请求 URL 的编码有如下规则：</p>
-<p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/rctf2019/2019052405.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/rctf2019/2019052405.png" srcset="/img/loading.gif" alt=""></p>
 <p>浏览器会按照编码对请求的 URL 进行编码。</p>
 <p>HTML 页面的编码有三种设置方式：</p>
-<p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/rctf2019/2019052406.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/rctf2019/2019052406.png" srcset="/img/loading.gif" alt=""></p>
 <p>HTML 会按照设置的编码对服务器的响应进行解码。</p>
 <p>通过设置 Conteny-type 为 gbk 的方式好像绕不过 XSS Auditor，预期解究竟是什么呢？</p>
 <hr>

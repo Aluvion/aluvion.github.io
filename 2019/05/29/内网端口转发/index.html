@@ -269,9 +269,9 @@ twings@*.*.*.*&#39;s password:
 twings@8ef540bd2b74:~$
 </code></pre>
 <p>然后修改 FireFox 的代理，就可以看到我们能够访问内网的 Web 服务了：</p>
-<p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/intranet/2019052901.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/intranet/2019052901.png" srcset="/img/loading.gif" alt=""></p>
 <p>要注意的是 ssh 只能作为 socks 代理，所以配置浏览器代理的时候要将本地代理配置为 socks 主机：</p>
-<p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/intranet/2019052902.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/intranet/2019052902.png" srcset="/img/loading.gif" alt=""></p>
 <p>ssh 还可以做本地和远程的端口转发，本地端口转发：</p>
 <pre><code class="shell">PS C:\Users\19807&gt; ssh -L 2333:10.0.30.11:80 twings@*.*.*.* -p 12314
 twings@*.*.*.*&#39;s password:
@@ -279,7 +279,7 @@ twings@*.*.*.*&#39;s password:
 twings@8ef540bd2b74:~$
 </code></pre>
 <p>这时候我们通过 ssh，用 machineA 当作跳板，将 machineB 的 80 端口转发到了我们本地的 2333 端口，我们只要访问本地的 2333 端口，就可以访问到 machineB 的 Web 服务，记得关掉浏览器代理：</p>
-<p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/intranet/2019052903.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/intranet/2019052903.png" srcset="/img/loading.gif" alt=""></p>
 <p>远程端口转发不怎么用到，不提了。</p>
 <hr>
 <h3 id="ew"><a href="#ew" class="headerlink" title="ew"></a>ew</h3><p>墙裂推荐！</p>
@@ -291,9 +291,9 @@ twings@8ef540bd2b74:~$
 root@8ef540bd2b74:/tmp# ./ew_linux_x64 -s ssocksd -l 23333
 </code></pre>
 <p>我们监听 23333 端口，就是 docker-compose 映射出去的那个端口。然后我们配置好代理：</p>
-<p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/intranet/2019052904.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/intranet/2019052904.png" srcset="/img/loading.gif" alt=""></p>
 <p>就可以访问到 machineB 的 Web 服务了：</p>
-<p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/intranet/2019052905.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/intranet/2019052905.png" srcset="/img/loading.gif" alt=""></p>
 <p>然后是反向代理，我们可以把 machineA 当作一台公网服务器，现在我们要去访问 machineC：</p>
 <pre><code class="shell">./ew_linux_x64 -s rcsocks -l 23333 -e 2333
 </code></pre>
@@ -301,7 +301,7 @@ root@8ef540bd2b74:/tmp# ./ew_linux_x64 -s ssocksd -l 23333
 <pre><code class="shell">./ew_linux_x64 -s rssocks -d 10.0.30.10 -e 2333
 </code></pre>
 <p>反向连接 machineA 的 2333 端口，然后我们访问 machineC：</p>
-<p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/intranet/2019052906.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/intranet/2019052906.png" srcset="/img/loading.gif" alt=""></p>
 <p>再加一级代理，我们尝试去访问 machineD，关掉 machineB 上的 ew，重新启动：</p>
 <pre><code class="shell">./ew_linux_x64 -s rcsocks -l 23333 -e 2333
 </code></pre>
@@ -313,13 +313,13 @@ root@8ef540bd2b74:/tmp# ./ew_linux_x64 -s ssocksd -l 23333
 </code></pre>
 <p>反向连接 machineA 的 2333 端口，并将流量转发到本地的 23333 端口。</p>
 <p>然后我们尝试访问 machineD：</p>
-<p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/intranet/2019052907.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/intranet/2019052907.png" srcset="/img/loading.gif" alt=""></p>
 <p>最后再说一遍，ew 我吹爆！</p>
 <hr>
 <h3 id="本地代理"><a href="#本地代理" class="headerlink" title="本地代理"></a>本地代理</h3><h4 id="Linux"><a href="#Linux" class="headerlink" title="Linux"></a>Linux</h4><p>Linux 可以使用 proxychains。</p>
 <h4 id="Windows"><a href="#Windows" class="headerlink" title="Windows"></a>Windows</h4><p>Windows 可以使用系统配置的代理（应该可以用？）</p>
 <p>墙裂推荐全局代理 Proxifier，简单配置一下让我们的 nmap 和 Chrome 可以连接上代理，像这样，先添加一个代理服务器，然后配置代理规则：</p>
-<p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/intranet/2019052908.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/intranet/2019052908.png" srcset="/img/loading.gif" alt=""></p>
 <p>接着我们尝试 nmap：</p>
 <pre><code class="shell">PS C:\Users\19807&gt; nmap 10.0.50.11 -Pn -sT
 Starting Nmap 7.70 ( https://nmap.org ) at 2019-05-29 20:37 ?D1ú±ê×?ê±??

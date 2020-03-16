@@ -176,7 +176,7 @@
 <pre><code class="bash">vue ui
 </code></pre>
 <p>打开可视化管理界面(实际上是个 web )然后创建新项目：</p>
-<p><img src="https://aluvion.gitee.io/css/images/vue/2019123001.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/vue/2019123001.png" srcset="/img/loading.gif" alt=""></p>
 <p>为了方便我用 UI 界面创建了一个，放在 E 盘根目录，任务处可以直接运行项目，其他功能不清楚，继续看文档吧。</p>
 <p>项目最好放在一个小写字母的路径下，用 vue cli 运行的时候总会看到这么一句：</p>
 <pre><code class="English">Couldn&#39;t parse bundle asset &quot;E:\vue\graduate\dist\js\chunk-vendors.js&quot;.
@@ -184,7 +184,7 @@ Analyzer will use module sizes from stats file.
 </code></pre>
 <p>暂时不知道怎么解决，命令行运行也不会出现，好像也不碍事，先不管了。 </p>
 <h3 id="继续学习"><a href="#继续学习" class="headerlink" title="继续学习"></a>继续学习</h3><p>vue 项目的路径大概是这样的：</p>
-<p><img src="https://aluvion.gitee.io/css/images/vue/2019123002.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/vue/2019123002.png" srcset="/img/loading.gif" alt=""></p>
 <p>dist 是 build 后的用于生产环境的代码，public 存放着图标和入口文件，而 src 则是开发的主要位置。</p>
 <p>仔细观察一下默认生成的项目，我们可以整理出这么一个逻辑：</p>
 <ol>
@@ -228,7 +228,7 @@ Analyzer will use module sizes from stats file.
 <pre><code class="html">&lt;hello-world msg=&quot;Welcome to ACTF&quot; v-bind:time=&quot;time&quot; v-bind:data=&quot;data&quot; v-bind:style=&quot;style&quot;&gt;&lt;/hello-world&gt;
 </code></pre>
 <p>其中 time 和 data 是传递给复用组件的数据，其中 time 中包含了 HTML 标签需要 v-html 来进行表示，style 则是绑定为 hello-world 标签的样式，效果如下：</p>
-<p><img src="https://aluvion.gitee.io/css/images/vue/2019123003.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/vue/2019123003.png" srcset="/img/loading.gif" alt=""></p>
 <p>disabled 等属性的值如果是 null、undefined 或 false，则 disabled 特性甚至不会被渲染出来。</p>
 <h4 id="表达式"><a href="#表达式" class="headerlink" title="表达式"></a>表达式</h4><p>跟 Java 表达式、模板注入那些一样的感觉，不太需要，跳过了。</p>
 <h4 id="指令"><a href="#指令" class="headerlink" title="指令"></a>指令</h4><h5 id="v-if"><a href="#v-if" class="headerlink" title="v-if"></a>v-if</h5><p>根据某个数据的 true/false 来插入/移除某个元素。</p>

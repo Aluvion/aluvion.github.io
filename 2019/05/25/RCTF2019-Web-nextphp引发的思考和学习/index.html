@@ -169,12 +169,12 @@
 <h3 id="序列化接口"><a href="#序列化接口" class="headerlink" title="序列化接口"></a>序列化接口</h3><p>序列化接口（ Serializable ）在 PHP7.4 之前的版本就已经存在了：<a href="https://www.php.net/manual/zh/class.serializable.php" target="_blank" rel="noopener">https://www.php.net/manual/zh/class.serializable.php</a></p>
 <p>简单来说就是接口中定义了两个方法 serialize 和 unserialize，这两个方法代替了 PHP 魔术方法中的 __sleep 和 __wakeup。</p>
 <p>原本的魔术方法主要用于选择要进行序列化的成员变量以及在反序列化时执行各种初始化操作：</p>
-<p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/rctf2019/2019052501.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/rctf2019/2019052501.png" srcset="/img/loading.gif" alt=""></p>
 <p>而序列化接口则给了用户更多的自由，通过序列化接口用户可以自己定义自己的序列化操作：</p>
-<p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/rctf2019/2019052502.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/rctf2019/2019052502.png" srcset="/img/loading.gif" alt=""></p>
 <p>而 PHP7.4 版本对序列化接口进行了修改：<a href="https://wiki.php.net/rfc/custom_object_serialization" target="_blank" rel="noopener">https://wiki.php.net/rfc/custom_object_serialization</a></p>
 <p>PHP7.4 提出了两个新的序列化接口：<code>__serialize()</code>/ <code>__unserialize()</code>：</p>
-<p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/rctf2019/2019052503.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/rctf2019/2019052503.png" srcset="/img/loading.gif" alt=""></p>
 <p>在同时拥有两种序列化接口的时候，PHP7.4 会优先使用新版本的接口。</p>
 <hr>
 <h3 id="预加载"><a href="#预加载" class="headerlink" title="预加载"></a>预加载</h3><p>在 PHP7.4 中，php.ini 有一个新指令 opcache.preload，这个指令可以用来预加载一个 PHP 文件，被预加载的 PHP 文件将被执行，并永远缓存在 opcache 内存中。通过在该 PHP 文件中包含，或者使用 opcache_compile_file 函数的方式，我们可以将其他 PHP 文件或者整个框架都预加载到 opcache 内存中。</p>
@@ -182,10 +182,10 @@
 <hr>
 <h3 id="外部函数接口FFI"><a href="#外部函数接口FFI" class="headerlink" title="外部函数接口FFI"></a>外部函数接口FFI</h3><p>PHP7.4 的有趣的新特性，它允许开发者在 PHP 中调用 C 函数和使用 C 数据类型：<a href="https://wiki.php.net/rfc/ffi" target="_blank" rel="noopener">https://wiki.php.net/rfc/ffi</a></p>
 <p>我们可以通过 FFI 调用很多危险的函数，比如 system，比如 php_exec：</p>
-<p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/rctf2019/2019052504.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/rctf2019/2019052504.png" srcset="/img/loading.gif" alt=""></p>
 <p>更有趣的一点是，FFI 可以绕过 php.ini 中 open_basedir 和 disable_functions 的限制。</p>
 <p>当然，这么强大的功能自然也是有一些限制的：</p>
-<p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/rctf2019/2019052505.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/rctf2019/2019052505.png" srcset="/img/loading.gif" alt=""></p>
 <p>在默认配置下，我们只能在预加载的 PHP 文件中使用 FFI，同时要注意的一点是，我们可以通过在预加载的 PHP 文件中生成一些 FFI\CData 对象，再交给我们的一般代码中使用的方式，来实现一般代码对 FFI 的使用，这也是 RCTF 的 Web 签到题的主要考点。</p>
 <p>如果我们第二个参数，也就是 lib 的文件名空着，他还能加载到 libc 中的 system函数吗？</p>
 <p>官方手册上这么说：</p>

@@ -341,7 +341,7 @@ if __name__ == &#39;__main__&#39;:
 <h2 id="mysql弱口令"><a href="#mysql弱口令" class="headerlink" title="mysql弱口令"></a>mysql弱口令</h2><p>比较有意思的题目，考点是 MySQL LOAD DATA INFILE 的利用。</p>
 <p>工具： <a href="https://github.com/Gifts/Rogue-MySql-Server" target="_blank" rel="noopener">https://github.com/Gifts/Rogue-MySql-Server</a> 。</p>
 <p>不停读文件就完事了，在 root 的 .bash_history 文件里发现源码文件，在源码文件中发现 flag 的路径，直接读取 /var/lib/mysql/security/flag.ibd 即可，或者也可以读取 root 目录下的 .mysql_history （非预期？）。</p>
-<h2 id="再来1杯Java"><a href="#再来1杯Java" class="headerlink" title="再来1杯Java"></a>再来1杯Java</h2><p>源码包：<a href="https://aluvion.gitee.io/file/DDCTF2019/Java.zip" target="_blank" rel="noopener">https://aluvion.gitee.io/file/DDCTF2019/Java.zip</a></p>
+<h2 id="再来1杯Java"><a href="#再来1杯Java" class="headerlink" title="再来1杯Java"></a>再来1杯Java</h2><p>源码包：<a href="/file/DDCTF2019/Java.zip"></a></p>
 <p>本地搭建环境也很简单，题目是个 Spring-Boot 的项目，把 class 反编译一下，然后再配置运行 Application.java 即可。</p>
 <p>题目分为三个部分，密码、文件读取和反序列化。</p>
 <h4 id="Padding-Oracle"><a href="#Padding-Oracle" class="headerlink" title="Padding Oracle"></a>Padding Oracle</h4><p>根据提示，需要我们成为 admin ，观察 HTTP 请求，可以得知我们需要伪造一个 cookie ，脚本如下（写得有点乱）：</p>
@@ -423,7 +423,7 @@ Hint:
 <p>参考文章：<a href="https://xz.aliyun.com/t/2479" target="_blank" rel="noopener">https://xz.aliyun.com/t/2479</a> ，找个方式，修改 ysoserial 中的 JRMPClient ，重新编译再输出 payload 即可。</p>
 <p>现在我们就可以通过 JRMP 的方式来反序列化任意类了，关注项目依赖中的 commons-collections:3.1 ，我们通过这个低版本的组件实现代码执行，参考文章：<a href="https://blog.csdn.net/fnmsd/article/details/79534877" target="_blank" rel="noopener">https://blog.csdn.net/fnmsd/article/details/79534877</a></p>
 <p>效果：</p>
-<p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/DDCTF2019/2019041999.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/DDCTF2019/2019041999.png" srcset="/img/loading.gif" alt=""></p>
 <hr>
 <p>参考文章：</p>
 <p><a href="https://github.com/frohoff/ysoserial" target="_blank" rel="noopener">https://github.com/frohoff/ysoserial</a></p>

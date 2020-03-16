@@ -169,7 +169,7 @@
 <p>如果nonce错误则与无unfiltered_html权限的用户接受相同的评论过滤。</p>
 <a id="more"></a>
 <hr>
-<h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>参考：<a href="https://aluvion.github.io/2019/03/10/Wordpress5-0-RCE-CVE-2019-8942%E5%A4%8D%E7%8E%B0/" target="_blank" rel="noopener">https://aluvion.github.io/2019/03/10/Wordpress5-0-RCE-CVE-2019-8942%E5%A4%8D%E7%8E%B0/</a></p>
+<h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>参考：<a href="/2019/03/10/Wordpress5-0-RCE-CVE-2019-8942%E5%A4%8D%E7%8E%B0/"></a></p>
 <h3 id="漏洞复现"><a href="#漏洞复现" class="headerlink" title="漏洞复现"></a>漏洞复现</h3><p>在自己的服务器上部署一个HTML：</p>
 <pre><code>&lt;!DOCTYPE html&gt;
 &lt;html lang=&quot;en&quot;&gt;
@@ -193,31 +193,31 @@
 &lt;/body&gt;
 &lt;/html&gt;
 </code></pre><p>受害人登录wordpress之后访问这个HTML页面，就会向postID为1的文章中插入一条评论，之后将鼠标移到payload上方即可触发XSS漏洞，向默认插件写入一个webshell：</p>
-<p><img src="https://aluvion.gitee.io/css/images/wordpress5.1cxr/2019031601.png" srcset="/img/loading.gif" alt=""></p>
-<p><img src="https://aluvion.gitee.io/css/images/wordpress5.1cxr/2019031602.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/wordpress5.1cxr/2019031601.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/wordpress5.1cxr/2019031602.png" srcset="/img/loading.gif" alt=""></p>
 <hr>
 <h3 id="调试分析"><a href="#调试分析" class="headerlink" title="调试分析"></a>调试分析</h3><p>我们先去数据库里看一波：</p>
-<p><img src="https://aluvion.gitee.io/css/images/wordpress5.1cxr/2019031603.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/wordpress5.1cxr/2019031603.png" srcset="/img/loading.gif" alt=""></p>
 <p>可以看到数据库里面存储的数据已经是可以执行的恶意payload（字段名为comment_content），所以漏洞的触发点在代码对评论插入时的处理上面，结合披露的文章，我们直接从评论函数入手，定位到comment.php的wp_handle_comment_submission函数，然后下断点调试，需要注意一下的是这里我是通过CSRF跳转来进入的，因为正常的流程wp_verify_nonce检验会通过：</p>
-<p><img src="https://aluvion.gitee.io/css/images/wordpress5.1cxr/2019031604.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/wordpress5.1cxr/2019031604.png" srcset="/img/loading.gif" alt=""></p>
 <p>这里很明显是设置过滤器的地方，我们进入函数看看：</p>
-<p><img src="https://aluvion.gitee.io/css/images/wordpress5.1cxr/2019031605.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/wordpress5.1cxr/2019031605.png" srcset="/img/loading.gif" alt=""></p>
 <p>可以看到这里根据用户权限添加了两种不同的过滤器，对于拥有unfiltered_html权限的用户添加的是wp_filter_post_kses过滤器，我们可以分别调用一下两个函数看一看他们有什么区别：</p>
-<p><img src="https://aluvion.gitee.io/css/images/wordpress5.1cxr/2019031606.png" srcset="/img/loading.gif" alt=""></p>
-<p><img src="https://aluvion.gitee.io/css/images/wordpress5.1cxr/2019031607.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/wordpress5.1cxr/2019031606.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/wordpress5.1cxr/2019031607.png" srcset="/img/loading.gif" alt=""></p>
 <p>可以看到wp_filter_post_kses函数只是简单地转义一下引号，而wp_filter_kses基本把a标签的属性都给吃掉了。我们继续往下走从kses_init_filters函数出来。可以看到最后调用了get_comment函数，到这里已经将数据插入数据库并进行刷新了，所以我猜测漏洞出发点在上面的wp_new_comment函数，我们进去看一看，主要看wp_new_comment函数，在2071行附近：</p>
-<p><img src="https://aluvion.gitee.io/css/images/wordpress5.1cxr/2019031608.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/wordpress5.1cxr/2019031608.png" srcset="/img/loading.gif" alt=""></p>
 <p>可以看到代码调用了wp_filter_comment函数对评论进行了过滤，然后调用wp_insert_comment进行了入库，我们跟入wp_filter_comment函数，找到对评论内容comment_content的处理：</p>
-<p><img src="https://aluvion.gitee.io/css/images/wordpress5.1cxr/2019031609.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/wordpress5.1cxr/2019031609.png" srcset="/img/loading.gif" alt=""></p>
 <p>继续跟入apply_filters函数：</p>
-<p><img src="https://aluvion.gitee.io/css/images/wordpress5.1cxr/2019031610.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/wordpress5.1cxr/2019031610.png" srcset="/img/loading.gif" alt=""></p>
 <p>看到他又调用了WP_Hook的apply_filters，这个函数对payload做了很多处理，我们一直调试，最后来到formatting.php的wp_rel_nofollow函数，这个函数将payload中a标签的属性作为参数，调用了wp_rel_nofollow_callback函数：</p>
-<p><img src="https://aluvion.gitee.io/css/images/wordpress5.1cxr/2019031611.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/wordpress5.1cxr/2019031611.png" srcset="/img/loading.gif" alt=""></p>
 <p>可以看到在a标签有rel属性且不符合这样子的正则表达式的时候（IP端口不定）：</p>
 <pre><code>%href=[&quot;&#39;](http\://192\.168\.111\.128\:32770)%i
 %href=[&quot;&#39;](https\://192\.168\.111\.128\:32770)%i
 </code></pre><p>会做这样的处理：</p>
-<p><img src="https://aluvion.gitee.io/css/images/wordpress5.1cxr/2019031612.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/wordpress5.1cxr/2019031612.png" srcset="/img/loading.gif" alt=""></p>
 <p>在没有任何过滤处理的情况，直接将属性的值用双引号括起，再跟键拼接在一起，这就导致了XSS漏洞。</p>
 <hr>
 <p>参考文章：</p>
@@ -247,9 +247,9 @@
                 <div class="post-prevnext row">
                   <div class="post-prev col-12 col-md-6">
                     
-                      <a href="/2019/03/17/Java反序列化漏洞-Fastjson/">
+                      <a href="/2019/03/22/划水CVE-2019-9194复现/">
                         <i class="fa fa-chevron-left"></i>
-                        <span>Java反序列化漏洞-Fastjson</span>
+                        <span>划水CVE-2019-9194复现</span>
                       </a>
                     
                   </div>

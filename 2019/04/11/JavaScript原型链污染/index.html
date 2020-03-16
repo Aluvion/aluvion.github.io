@@ -765,9 +765,9 @@ if(inp.name === undefined || !r.test(inp.name)) {
 <pre><code class="javascript">newObj[key] = this.clone(obj[key]);
 </code></pre>
 <p>我们可以使用vscode来断点调试一下：</p>
-<p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/js_prototype_pollution/2019041101.png" srcset="/img/loading.gif" alt=""></p>
-<p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/js_prototype_pollution/2019041102.png" srcset="/img/loading.gif" alt=""></p>
-<p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/js_prototype_pollution/2019041103.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/js_prototype_pollution/2019041101.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/js_prototype_pollution/2019041102.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/js_prototype_pollution/2019041103.png" srcset="/img/loading.gif" alt=""></p>
 <p>成功覆盖了原型对象，这样一来我们就可以注入命令了。</p>
 <p>payload：</p>
 <pre><code class="javascript">const io = require(&#39;socket.io-client&#39;)
@@ -818,7 +818,7 @@ if (req.method == &#39;POST&#39;) {
 })
 </code></pre>
 <p>merge是一个容易发生原型链污染的函数：</p>
-<p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/js_prototype_pollution/2019041104.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/js_prototype_pollution/2019041104.png" srcset="/img/loading.gif" alt=""></p>
 <p>我们可以通过这个函数来污染某个属性，那我们应该对谁下手呢？我们同样可以断点调试，然后跟入函数中看看，比如代码调用的lodash的另一个函数lodash.template：</p>
 <pre><code class="javascript">var sourceURL = &#39;//# sourceURL=&#39; +
     (&#39;sourceURL&#39; in options

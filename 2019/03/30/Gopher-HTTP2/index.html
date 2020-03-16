@@ -169,7 +169,7 @@
 <pre><code>listen 443 ssl http2 default_server;
 listen [::]:443 ssl http2 default_server;
 </code></pre><p>因为操作环境的需要，所以我也给HTTP的配置文件开启了http2支持。之后重启Nginx即可看到它支持了HTTP2：</p>
-<p><img src="https://aluvion.gitee.io/css/images/http2/2019033001.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/http2/2019033001.png" srcset="/img/loading.gif" alt=""></p>
 <h3 id="配置抓包HTTPS"><a href="#配置抓包HTTPS" class="headerlink" title="配置抓包HTTPS"></a>配置抓包HTTPS</h3><p>因为浏览器只支持建立在HTTPS上的HTTP2的缘故，如果用浏览器访问建立在HTTP上的HTTP2，就会变成下载一个服务端发来的HTTP2的升级要求包了，十六进制如下：</p>
 <pre><code>000012040000000000000300000080000400010000000500FFFFFF0000040800000000007FFF00000000080700000000000000000000000001
 </code></pre><p>所以为了更好地研究HTTP2的一些交互流程，我们就需要从HTTPS来进行抓包了。</p>
@@ -181,11 +181,11 @@ listen [::]:443 ssl http2 default_server;
 <li>启动抓包和浏览器</li>
 </ul>
 <p>抓包结果：</p>
-<p><img src="https://aluvion.gitee.io/css/images/http2/2019033002.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/http2/2019033002.png" srcset="/img/loading.gif" alt=""></p>
 <p>这个抓包流程其实有点坑，有时候抓到的包会无法解密，如果遇到这种情况就可以尝试从第一步重新来过了……</p>
 <p>不想麻烦的话，也可以利用curl+nc的方式来获取HTTP2的请求包，详情见参考文章4。</p>
 <h3 id="发送请求"><a href="#发送请求" class="headerlink" title="发送请求"></a>发送请求</h3><p>后一半的包是属于第二个HTTP2请求的，我们主要看前一半的包。从抓到的包可以看到，我们只需要发送两个包就可以了。我们模拟客户端有两种方式，一种是使用curl+gopher，另一种是使用pwntools，我们先把数据取出来（追踪SSL流，然后复制原始数据），然后加工成能够使用的样子：</p>
-<p><img src="https://aluvion.gitee.io/css/images/http2/2019033003.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/http2/2019033003.png" srcset="/img/loading.gif" alt=""></p>
 <p>然后将服务端的返回包保存起来，等下一包进行解包查看数据。curl也是差不多的处理方式，只要将请求包URL编码一下就好了：</p>
 <pre><code>curl -vv gopher://laohulaohuhu.cn:80/_PRI%20%2A%20HTTP/2.0%0D%0A%0D%0ASM%0D%0A%0D%0A%00%00%12%04%00%00%00%00%00%00%01%00%01%00%00%00%03%00%00%03%E8%00%04%00%60%00%00%00%00%04%08%00%00%00%00%00%00%EF%00%01%00%01%06%01%25%00%00%00%01%80%00%00%00m%82A%8B%A0g%9E%DA%06y%ED%9E%D5%C9W%87%84%40%85%AE%DB%2B%3A%0B%86%AE%C2%CAT%92%7F%40%92%B6%B9%AC%1C%85X%D5%20%A4%B6%C2%ADa%7BZT%25%1F%011z%D4%D0%7Ff%A2%81%B0%DA%E0S%FA%E4j%A4%3F%84%29%A7z%81%02%E0%FBS%96%AEN5%FD%A9%0Du%D0%5EE%8F1%92%C3l%BA%BB.%29%FDf%C7%BFF%7F%A5%287R%A9%88%A4%EA%7F%EDK%D3%D8zJ%C3%AC%AE%05%D9q%E6Wy%C57%0EQ%D8f%1Be%D5%D9sS%D8I%7C%A5%89%D3M%1FC%AE%BA%0CA%A4%C7%A9%8F3%A6%9A%3F%DF%9Ah%FA%1Du%D0b%0D%26%3DLy%A6%8F%BE%D0%01w%FE%8DH%E6%2B%1E%0B%1D%7FF%A4s%15%81%D7T%DF_%2C%7C%FD%F6%80%0B%BD%F4%3A%EB%A0%C4%1ALz%98A%A6%A8%B2%2C_%24%9CuL_%BE%F0F%CFP%8D%9B%D9%AB%FARB%CB%40%D2_%A5%23%B3Q%8C%F7%3A%D7%B4%FD%7B%9F%EF%B4%00%5D%FF --output data
 </code></pre><h3 id="解包"><a href="#解包" class="headerlink" title="解包"></a>解包</h3><p>解包可以使用writeup中的方式，即伪造一个HTTP2服务器，将保存的返回包发送给CURL，我们就可以看到解包的结果了，伪造服务器：</p>
@@ -205,7 +205,7 @@ while True:
 </code></pre><p>curl访问：</p>
 <pre><code>curl --http2-prior-knowledge -v http://127.0.0.1:2333 --output -
 </code></pre><p>结果如下：</p>
-<p><img src="https://aluvion.gitee.io/css/images/http2/2019033004.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/http2/2019033004.png" srcset="/img/loading.gif" alt=""></p>
 <p>可以看到服务端的响应头和gzip编码后的响应主体，我们直接gzip解压，即可看到HTML：</p>
 <pre><code>root@05b1494e5951:~# mv data2 data2.gz
 root@05b1494e5951:~# gzip -d data2.gz 

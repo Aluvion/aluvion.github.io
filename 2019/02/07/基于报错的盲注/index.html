@@ -175,7 +175,7 @@
 <pre><code class="sql">select * from flag.flag where fid=1 and (database()=&#39;flag&#39;)*999*pow(999,102)
 </code></pre>
 <p>对’flag’字符串进行修改，可以看到不同的结果：</p>
-<p><img src="https://aluvion.gitee.io/css/images/2019272246.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/2019272246.png" srcset="/img/loading.gif" alt=""></p>
 <p>思路很简单，就是利用MySQL的double类型溢出报错，而pow函数会返回double类型的数据。</p>
 <hr>
 <p>这只是一个简单的思路和用法，如果有更多的骚操作和骚思路，欢迎跟我一起交流~</p>

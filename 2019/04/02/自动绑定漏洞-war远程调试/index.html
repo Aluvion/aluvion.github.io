@@ -126,7 +126,7 @@
                   
                   <span class="post-meta">
                     <i class="far fa-chart-bar"></i>
-                    2k 字
+                    2.1k 字
                   </span>
                 
 
@@ -165,8 +165,8 @@
               <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>这些天看了看volgactf2019的题目，里面有一道100分的web题shop，因为是少见的Java Web代码审计题目，源码以war包的形式给出，而且考点是我没有怎么了解过的Spring自动绑定漏洞，所以现在写一篇文章研究总结一下这个漏洞。</p>
 <p>漏洞的发生和利用在下面的参考链接里都写得很清楚了，所以我主要对非预期解的大小写绕过和预期解的传递对象成员变量两种情况做一下分析，分析的方式是本地环境+IDEA远程调试war。</p>
 <a id="more"></a>
-<p>源码shop v.1：<a href="/file/volgactf2019/shop-1.0.0.war"></a></p>
-<p>源码shop v.2：<a href="/file/volgactf2019/shop-1.0.1.war"></a></p>
+<p>源码shop v.1：<a href="/file/volgactf2019/shop-1.0.0.war">附件</a></p>
+<p>源码shop v.2：<a href="/file/volgactf2019/shop-1.0.1.war">附件</a></p>
 <p>不过其实只用v.1就可以了，除了buy路由之外其他地方改动不大。</p>
 <hr>
 <h3 id="本地环境搭建"><a href="#本地环境搭建" class="headerlink" title="本地环境搭建"></a>本地环境搭建</h3><h4 id="IDEA配置"><a href="#IDEA配置" class="headerlink" title="IDEA配置"></a>IDEA配置</h4><p>首先将war包解压，然后按照class的package构造Java源代码目录，并将它标识为源代码目录，方便我们对源代码下断点进行调试：</p>
@@ -285,9 +285,9 @@ tar zxvf apache-tomcat-9.0.17.tar.gz
                   <span>
                 <i class="iconfont icon-tag"></i>
                     
-                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
-                    
                       <a class="hover-with-bg" href="/tags/CTF/">CTF</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
                     
                   </span>
                 

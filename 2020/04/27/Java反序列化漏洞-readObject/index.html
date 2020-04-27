@@ -780,7 +780,7 @@ return &quot;serialize&quot;;
 final O value2 = this.transformer.transform(obj2);
 </code></pre>
 <p>的时候，同样会因为另一个成员没有 newTransformer 方法而报错。</p>
-<h4 id="高版本-JDK-中的-BadAttributeValueExpException-类"><a href="#高版本-JDK-中的-BadAttributeValueExpException-类" class="headerlink" title="高版本 JDK 中的 BadAttributeValueExpException 类"></a>高版本 JDK 中的 BadAttributeValueExpException 类</h4><p>readObject 在 System.getSecurityManager() == null 条件下会调用 toString：</p>
+<h4 id="高版本-JDK-中的-BadAttributeValueExpException-类（readObject-gt-toString）"><a href="#高版本-JDK-中的-BadAttributeValueExpException-类（readObject-gt-toString）" class="headerlink" title="高版本 JDK 中的 BadAttributeValueExpException 类（readObject -&gt; toString）"></a>高版本 JDK 中的 BadAttributeValueExpException 类（readObject -&gt; toString）</h4><p>readObject 在 System.getSecurityManager() == null 条件下会调用 toString：</p>
 <pre><code class="java">private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
     ObjectInputStream.GetField gf = ois.readFields();
     Object valObj = gf.get(&quot;val&quot;, null);

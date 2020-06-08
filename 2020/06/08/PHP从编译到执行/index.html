@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>PHP从编译到执行 - Twings</title>
+
+  <link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css">
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+  <link rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css">
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+</head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期一, 六月 8日 2020, 10:30 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    2.4k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      10 分钟
+                  </span>
+                
+
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>读了读编译原理，用一句简单的 PHP 代码来理一遍 PHP 的编译执行过程。</p>
+<a id="more"></a>
+<hr>
+<h3 id="简单的测试脚本"><a href="#简单的测试脚本" class="headerlink" title="简单的测试脚本"></a>简单的测试脚本</h3><pre><code class="php">&lt;?php
+$Twings = 2333;
+</code></pre>
+<h3 id="总览"><a href="#总览" class="headerlink" title="总览"></a>总览</h3><p>PHP 的编译执行大概是这么一个流程：</p>
+<ol>
+<li>读入代码字符串，词法分析得到 token 和 value。</li>
+<li>语法分析 token，建立 AST 树。</li>
+<li>遍历分析 AST 树，将数据写入内存，并生成 op_array。</li>
+<li>遍历 op_array，根据 opcode 调用不同的 handler 执行操作。</li>
+</ol>
+<h3 id="入口"><a href="#入口" class="headerlink" title="入口"></a>入口</h3><p>直接从 zend.c 的 zend_execute_scripts 函数开始看：</p>
+<pre><code class="c">ZEND_API int zend_execute_scripts(int type, zval *retval, int file_count, ...) /* {{{ */
+{
+    ...
+    for (i = 0; i &lt; file_count; i++) {
+        file_handle = va_arg(files, zend_file_handle *);
+        if (!file_handle) {
+            continue;
+        }
+
+        op_array = zend_compile_file(file_handle, type);
+        ...
+        if (op_array) {
+            zend_execute(op_array, retval);
+            zend_exception_restore();
+            ...
+            destroy_op_array(op_array);
+            efree_size(op_array, sizeof(zend_op_array));
+        }
+        ...
+    }
+    ...
+}
+</code></pre>
+<p>一般来说这里会编译执行 3 个文件，分别是 auto_prepend_file、要执行的 PHP 文件 和 auto_append_file。</p>
+<p>这里的 zend_compile_file 是个全局函数，指向的是 compile_file 函数：</p>
+<pre><code class="c">zend_compile_file = compile_file;
+</code></pre>
+<p>compile_file 先调用 open_file_for_scanning 做好词法分析前的准备（比如设置词法分析的 state 为 INITIAL），再调用 zend_compile 开始编译：</p>
+<pre><code class="c">ZEND_API zend_op_array *compile_file(zend_file_handle *file_handle, int type)
+{
+    zend_lex_state original_lex_state;
+    zend_op_array *op_array = NULL;
+    zend_save_lexical_state(&amp;original_lex_state);
+
+    if (open_file_for_scanning(file_handle)==FAILURE) {
+        ...
+    } else {
+        op_array = zend_compile(ZEND_USER_FUNCTION);
+    }
+
+    zend_restore_lexical_state(&amp;original_lex_state);
+    return op_array;
+}
+</code></pre>
+<p>zend_compile 函数里面就是总览里面提到的 1-3 的处理过程了，首先是调用 zendparse 开始词法分析。</p>
+<h3 id="词法分析"><a href="#词法分析" class="headerlink" title="词法分析"></a>词法分析</h3><p>PHP 的编译采用的是 re2c 词法分析 + Bison 语法分析。在默认情况下，调用 yyparse 开始语法分析，而 yyparse 则不断调用 yylex 从代码字符串中获取 token 和 value 再加以分析，而在 PHP 中这两个函数则分别被替换成了 zendparse 和 zendlex。所以在调用 zendparse 开始语法分析之后，Bison 会调用 zendlex 开始词法分析：</p>
+<pre><code class="c">int ZEND_FASTCALL zendlex(zend_parser_stack_elem *elem) /* {{{ */
+{
+    zval zv;
+    int ret;
+
+    if (CG(increment_lineno)) {
+        CG(zend_lineno)++;
+        CG(increment_lineno) = 0;
+    }
+
+    ret = lex_scan(&amp;zv, elem);
+    ZEND_ASSERT(!EG(exception) || ret == T_ERROR);
+    return ret;
+
+}
+</code></pre>
+<p>这里的 zend_parser_stack_elem 结构体实际上是用来存放 value 的，因为后面语法分析才会用到所以这里暂且不提。</p>
+<p>zendlex 调用 lex_scan，后面就是词法分析的语法了，很长这里就不贴了，如果想要自己看最好看 .l 的 re2c 规则文件（匹配规则使用正则表达式，还是挺好看的，简单来说规则就是：\&lt;state> 正则表达式 { 匹配后返回 token 的处理代码 } ），如果看 re2c 编译后的 c 文件，里面的代码逻辑简直不能看的。</p>
+<p>结合测试代码和词法规则，我们可以得出分析的过程：</p>
+<pre><code class="c">/*!re2c
+LNUM    [0-9]+(_[0-9]+)*
+LABEL    [a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*
+TOKENS [;:,.\[\]()|^&amp;+-/*=%!~$&lt;&gt;?@]
+NEWLINE (&quot;\r&quot;|&quot;\n&quot;|&quot;\r\n&quot;)
+*/
+// &lt;?php\n
+&lt;INITIAL&gt;&quot;&lt;?php&quot;([ \t]|{NEWLINE}) {
+    HANDLE_NEWLINE(yytext[yyleng-1]);
+    BEGIN(ST_IN_SCRIPTING);
+    RETURN_OR_SKIP_TOKEN(T_OPEN_TAG);
+}
+// $Twings
+&lt;ST_IN_SCRIPTING,ST_DOUBLE_QUOTES,ST_HEREDOC,ST_BACKQUOTE,ST_VAR_OFFSET&gt;&quot;$&quot;{LABEL} {
+    RETURN_TOKEN_WITH_STR(T_VARIABLE, 1);
+}
+// = 
+&lt;ST_IN_SCRIPTING&gt;{TOKENS} {
+    RETURN_TOKEN(yytext[0]);
+}
+// 2333
+&lt;ST_IN_SCRIPTING&gt;{LNUM} {
+    ...
+    RETURN_TOKEN_WITH_VAL(T_LNUMBER);
+}
+// ;
+&lt;ST_IN_SCRIPTING&gt;{TOKENS} {
+    RETURN_TOKEN(yytext[0]);
+}
+</code></pre>
+<p>匹配到 = 和 ; 会直接返回字符的，没有什么其他操作。</p>
+<p>在匹配到 &lt;?php\n 的 open tag 之后，会将 state 改写为 ST_IN_SCRIPTING 用于下一次的匹配，然后返回一个代表 open tag 的 token（一般是一个整型数）。</p>
+<p>然后开始匹配变量 $Twings，这里符合的匹配规则是 “$”{LABEL}（LABEL 其实就是 PHP 的合法变量名构成），这个规则除了返回 token，还会用变量名生成一个 AST 节点存储在前面提到的 zend_parser_stack_elem 里面，在后面的语法分析部分会作为子节点组装成一个完整的操作节点：</p>
+<pre><code class="c">#define RETURN_TOKEN_WITH_STR(_token, _offset) do { \
+        token = _token; \
+        offset = _offset; \
+        goto emit_token_with_str; \
+    } while (0)
+...
+emit_token_with_str:
+    zend_copy_value(zendlval, (yytext + offset), (yyleng - offset));
+
+emit_token_with_val:
+    if (PARSER_MODE()) {
+        ZEND_ASSERT(Z_TYPE_P(zendlval) != IS_UNDEF);
+        elem-&gt;ast = zend_ast_create_zval_with_lineno(zendlval, start_line);
+    }
+</code></pre>
+<p>elem -&gt; ast 的生成代码如下：</p>
+<pre><code class="c">ZEND_API zend_ast * ZEND_FASTCALL zend_ast_create_zval_with_lineno(zval *zv, uint32_t lineno) {
+    return zend_ast_create_zval_int(zv, 0, lineno);
+}
+
+static zend_always_inline zend_ast * zend_ast_create_zval_int(zval *zv, uint32_t attr, uint32_t lineno) {
+    zend_ast_zval *ast;
+
+    ast = zend_ast_alloc(sizeof(zend_ast_zval));
+    ast-&gt;kind = ZEND_AST_ZVAL;
+    ast-&gt;attr = attr;
+    ZVAL_COPY_VALUE(&amp;ast-&gt;val, zv);
+    Z_LINENO(ast-&gt;val) = lineno;
+    return (zend_ast *) ast;
+}
+</code></pre>
+<p>可以看到本来是个存放着 zval 的 zend_ast_zval 结构体，返回的时候为了适应 AST 树节点结构体而转换为了 zend_ast 类型的指针。</p>
+<p>后半 LNUM 的操作里面有八进制和下划线的一些处理，想知道的可以自行阅读源码。</p>
+<p>词法分析的过程大致如上，获取到 token 之后，接下来就是语法分析了。</p>
+<h3 id="语法分析"><a href="#语法分析" class="headerlink" title="语法分析"></a>语法分析</h3><p>同样地，想要阅读源码建议看 zend_language_parser.y 里面 Bison 编译前的代码，更加人类可读一点。</p>
+<p>在开头部分可以看到很多用 %token 声明的 token，比如说前面解析出的 T_VARIABLE：</p>
+<pre><code class="c">%token &lt;ast&gt; T_VARIABLE  &quot;variable (T_VARIABLE)&quot;
+</code></pre>
+<p>\&lt;ast> 指 T_VARIABLE 的类型为 ast，其实就是前面提到的用 union 声明的 _zend_parser_stack_elem 结构体里面的 ast 成员，这个结构体里面声明的就是语法分析里面 token 要用的类型：</p>
+<pre><code class="c">typedef union _zend_parser_stack_elem {
+    zend_ast *ast;
+    zend_string *str;
+    zend_ulong num;
+    unsigned char *ptr;
+} zend_parser_stack_elem;
+</code></pre>
+<p>zend_ast 的定义如下，主要的就是操作码和子节点两个成员：</p>
+<pre><code class="c">struct _zend_ast {
+    zend_ast_kind kind; /* Type of the node (ZEND_AST_* enum constant) */
+    zend_ast_attr attr; /* Additional attribute, use depending on node type */
+    uint32_t lineno;    /* Line number */
+    zend_ast *child[1]; /* Array of children (using struct hack) */
+};
+</code></pre>
+<p>双引号里面的是这个 token 人类可读的字面表示。</p>
+<p>语法规则跟词法分析里面的相似，同样是匹配 + 处理，不同的是语法分析里面还有套娃匹配。</p>
+<p>阅读规则，我们可以得出分析的过程：</p>
+<pre><code class="c">start:
+    top_statement_list    { CG(ast) = $1; }
+;
+
+top_statement_list:
+        top_statement_list top_statement { $$ = zend_ast_list_add($1, $2); }
+    |    /* empty */ { $$ = zend_ast_create_list(0, ZEND_AST_STMT_LIST); }
+;
+
+top_statement:
+        statement                            { $$ = $1; }
+    |    ...
+;
+
+statement:
+        ...
+    |    expr &#39;;&#39; { $$ = $1; }
+    |    ...
+;
+
+expr:
+        ...
+    |    variable &#39;=&#39; expr
+            { $$ = zend_ast_create(ZEND_AST_ASSIGN, $1, $3); }
+    |    scalar { $$ = $1; }
+    |    ...
+;
+
+variable:
+        callable_variable
+            { $$ = $1; }
+    |    ...
+;
+
+callable_variable:
+        simple_variable
+            { $$ = zend_ast_create(ZEND_AST_VAR, $1); }
+    |    ...
+;
+
+simple_variable:
+        T_VARIABLE            { $$ = $1; }
+    |    ....
+;
+
+scalar:
+        T_LNUMBER     { $$ = $1; }
+    |
+;
+</code></pre>
+<p>$$ 代表本次处理完成后返回给上一级的值，$1 代表匹配规则中第一个符号的值。</p>
+<p>这样看来就比较直观了，递归套娃，expr 中调用 zend_ast_create_list，用之前词法分析生成的两个 AST 节点组装成一个 ASSIGN 操作的节点，因为 ASSIGN 操作需要 2 个操作数，所以最后调用的其实是 zend_ast_create_2 函数：</p>
+<pre><code class="c">ZEND_API zend_ast * ZEND_FASTCALL zend_ast_create_2(zend_ast_kind kind, zend_ast *child1, zend_ast *child2) {
+    zend_ast *ast;
+    uint32_t lineno;
+
+    ZEND_ASSERT(kind &gt;&gt; ZEND_AST_NUM_CHILDREN_SHIFT == 2);
+    ast = zend_ast_alloc(zend_ast_size(2));
+    ast-&gt;kind = kind;
+    ast-&gt;attr = 0;
+    ast-&gt;child[0] = child1;
+    ast-&gt;child[1] = child2;
+    if (child1) {
+        lineno = zend_ast_get_lineno(child1);
+    } else if (child2) {
+        lineno = zend_ast_get_lineno(child2);
+    } else {
+        lineno = CG(zend_lineno);
+    }
+    ast-&gt;lineno = lineno;
+
+    return ast;
+}
+</code></pre>
+<p>简单来说就是将操作码和两个子节点放进一个新的节点里。完成一整部分代码（top_statement）的分析之后，会将这一部分生成的节点挂到前面（top_statement_list）生成的 AST 树的子节点上，后面通过遍历这棵树来依次处理这些 AST 节点。</p>
+<h3 id="遍历-AST-树"><a href="#遍历-AST-树" class="headerlink" title="遍历 AST 树"></a>遍历 AST 树</h3><p>zend_compile 在调用 zendparse 完成语法分析之后，会调用 zend_compile_top_stmt 开始处理 AST 树：</p>
+<pre><code class="c">void zend_compile_top_stmt(zend_ast *ast) /* {{{ */
+{
+    if (!ast) {
+        return;
+    }
+
+    if (ast-&gt;kind == ZEND_AST_STMT_LIST) {
+        zend_ast_list *list = zend_ast_get_list(ast);
+        uint32_t i;
+        for (i = 0; i &lt; list-&gt;children; ++i) {
+            zend_compile_top_stmt(list-&gt;child[i]);
+        }
+        return;
+    }
+
+    if (ast-&gt;kind == ZEND_AST_FUNC_DECL) {
+        ...
+    } else if (ast-&gt;kind == ZEND_AST_CLASS) {
+        ...
+    } else {
+        zend_compile_stmt(ast);
+    }
+    if (ast-&gt;kind != ZEND_AST_NAMESPACE &amp;&amp; ast-&gt;kind != ZEND_AST_HALT_COMPILER) {
+        zend_verify_namespace();
+    }
+}
+</code></pre>
+<p>如果是根节点，则遍历它的子节点重新调用本函数。</p>
+<p>如果是 ASSIGN 类型的节点，则经过 zend_compile_stmt 和 zend_compile_expr 函数的 switch 之后会调用 zend_compile_assign：</p>
+<pre><code class="c">void zend_compile_assign(znode *result, zend_ast *ast) /* {{{ */
+{
+    zend_ast *var_ast = ast-&gt;child[0];
+    zend_ast *expr_ast = ast-&gt;child[1];
+
+    znode var_node, expr_node;
+    zend_op *opline;
+    uint32_t offset;
+
+    if (is_this_fetch(var_ast)) {
+        zend_error_noreturn(E_COMPILE_ERROR, &quot;Cannot re-assign $this&quot;);
+    }
+
+    zend_ensure_writable_variable(var_ast);
+
+    switch (var_ast-&gt;kind) {
+        case ZEND_AST_VAR:
+            offset = zend_delayed_compile_begin();
+            zend_delayed_compile_var(&amp;var_node, var_ast, BP_VAR_W, 0);
+            zend_compile_expr(&amp;expr_node, expr_ast);
+            zend_delayed_compile_end(offset);
+            zend_emit_op(result, ZEND_ASSIGN, &amp;var_node, &amp;expr_node);
+            return;
+        case ZEND_AST_STATIC_PROP:
+            ...
+        case ZEND_AST_DIM:
+            ...
+        case ZEND_AST_PROP:
+            ...
+        case ZEND_AST_ARRAY:
+            ...
+        EMPTY_SWITCH_DEFAULT_CASE();
+    }
+}
+</code></pre>
+<p>主要看 case ZEND_AST_VAR 里面的处理，这里调用 zend_emit_op 将 AST 节点处理成了 opcode，其结构体为 zend_op，里面存放了该 opcode 的处理函数（用于最后执行相应的操作）、操作码、操作数的值和类型等数据：</p>
+<pre><code class="c">struct _zend_op {
+    const void *handler;
+    znode_op op1;
+    znode_op op2;
+    znode_op result;
+    uint32_t extended_value;
+    uint32_t lineno;
+    zend_uchar opcode;
+    zend_uchar op1_type;
+    zend_uchar op2_type;
+    zend_uchar result_type;
+};
+
+</code></pre>
+<p>顺带一提的是这里 var_node 的类型，即 op1_type 表示的是 cv（编译期缓存），还有就是这个时候，opcode 中的处理函数还是空的，赋值操作还在后面。然后将这个 opcode 放入 opcode 数组中：</p>
+<pre><code class="c">static zend_op *zend_emit_op(znode *result, zend_uchar opcode, znode *op1, znode *op2) /* {{{ */
+{
+    zend_op *opline = get_next_op();
+    opline-&gt;opcode = opcode;
+
+    if (op1 != NULL) {
+        SET_NODE(opline-&gt;op1, op1);
+    }
+
+    if (op2 != NULL) {
+        SET_NODE(opline-&gt;op2, op2);
+    }
+
+    if (result) {
+        zend_make_var_result(result, opline);
+    }
+    return opline;
+}
+</code></pre>
+<p>opcode 数组的结构体比较长，这里就不贴了。</p>
+<p>zend_compile_top_stmt 遍历完 AST 树生成 opcode 之后，会调用 pass_two 函数为每个 opcode 加上处理函数，因为查找的方式比较复杂，这里就不提了，想要研究的可以自行阅读 zend_vm_execute.h 的 zend_vm_get_opcode_handler_ex 函数。</p>
+<h3 id="执行"><a href="#执行" class="headerlink" title="执行"></a>执行</h3><p>这时回到 zend_execute_scripts 函数中，生成 op_array，即 opcode 数组之后，会调用 zend_execute 开始执行，因为这个函数代码量过大，这里只简单叙述一下。</p>
+<p>opcode 的执行过程是一个死循环，每次调用该 opcode 的处理函数之后会对返回值 ret 进行判断，如果  &lt;= 0 就会终止循环，而 zend_compile 函数在调用 zend_compile_top_stmt 处理完 AST 树之后，还会调用 zend_emit_final_return 在末尾加上一个 opcode 用于终止循环。</p>
+<p>在测试脚本中只有一个 opcode，相应的处理函数是 ZEND_ASSIGN_SPEC_CV_CONST_RETVAL_UNUSED_HANDLER：</p>
+<pre><code class="c">static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ASSIGN_SPEC_CV_CONST_RETVAL_UNUSED_HANDLER(ZEND_OPCODE_HANDLER_ARGS)
+{
+    USE_OPLINE
+
+    zval *value;
+    zval *variable_ptr;
+
+    SAVE_OPLINE();
+    value = RT_CONSTANT(opline, opline-&gt;op2);
+    variable_ptr = EX_VAR(opline-&gt;op1.var);
+
+    if (IS_CV == IS_VAR &amp;&amp; UNEXPECTED(Z_ISERROR_P(variable_ptr))) {
+
+        if (UNEXPECTED(0)) {
+            ZVAL_NULL(EX_VAR(opline-&gt;result.var));
+        }
+    } else {
+        value = zend_assign_to_variable(variable_ptr, value, IS_CONST, EX_USES_STRICT_TYPES());
+        if (UNEXPECTED(0)) {
+            ZVAL_COPY(EX_VAR(opline-&gt;result.var), value);
+        }
+
+        /* zend_assign_to_variable() always takes care of op2, never free it! */
+    }
+
+    ZEND_VM_NEXT_OPCODE_CHECK_EXCEPTION();
+}
+</code></pre>
+<p>在执行结束之后，会调用 ZEND_VM_NEXT_OPCODE_EX 移动 opcode 指针指向下一条 opcode。</p>
+<hr>
+<h3 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h3><p>简单理了一遍过程，以后有时间再看看其他感兴趣的东西，比如变量哈希表如何存放，函数定义与执行，函数递归等等。</p>
+<hr>
+<p>参考：</p>
+<p><a href="https://www.php.cn/php-weizijiaocheng-357239.html" target="_blank" rel="noopener">https://www.php.cn/php-weizijiaocheng-357239.html</a></p>
+<p><a href="https://www.kancloud.cn/nickbai/php7/363255" target="_blank" rel="noopener">https://www.kancloud.cn/nickbai/php7/363255</a></p>
+<p><a href="https://www.bookstack.cn/read/php-internals/0.md" target="_blank" rel="noopener">https://www.bookstack.cn/read/php-internals/0.md</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2020/05/20/unserialize时PHP干了什么/">
+                        <span>unserialize时PHP干了什么</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js"></script>
+<script src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js"></script>
+<script src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js"></script>
+<script src="/js/main.js"></script>
+
+
+  <script src="/js/lazyload.js"></script>
+
+
+
+  
+  <script src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js"></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "PHP从编译到执行&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js"></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script src="/js/local-search.js"></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js"></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

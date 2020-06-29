@@ -4,6 +4,27 @@
   
   
   <entry>
+    <title>逆向花指令入门</title>
+    <link href="/2020/06/29/%E9%80%86%E5%90%91%E8%8A%B1%E6%8C%87%E4%BB%A4%E5%85%A5%E9%97%A8/"/>
+    <url>/2020/06/29/%E9%80%86%E5%90%91%E8%8A%B1%E6%8C%87%E4%BB%A4%E5%85%A5%E9%97%A8/</url>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>之前 De1CTF 的 web 扩展题，当时下载扩展 IDA 打开，然后看着反编译代码就懵了，不知道是个什么逻辑。</p><p>后来才知道题目是加入了简单的花指令来干扰 IDA 的分析，看了 writeup 之后打算自己动手解一下。</p><a id="more"></a><hr><h3 id="分析"><a href="#分析" class="headerlink" title="分析"></a>分析</h3><p>分析工具：IDA 7.0</p><p>下载扩展：<a href="https://raw.githubusercontent.com/De1ta-team/De1CTF2020/master/writeup/web/mixtrue/docker.zip" target="_blank" rel="noopener">https://raw.githubusercontent.com/De1ta-team/De1CTF2020/master/writeup/web/mixtrue/docker.zip</a></p><p>用 IDA 打开，按照开发 PHP 扩展的经验直接定位到 zif_Minclude 函数，F5 反编译一下，结果看到：</p><pre><code class="c">void __fastcall zif_Minclude(zend_execute_data *execute_data, zval *return_value){  ((void (__fastcall *)(zend_execute_data *, zval *, zend_execute_data *))l2)(execute_data, return_value, execute_data);  JUMPOUT(*(_QWORD *)&amp;byte_1245);}</code></pre><p>这反编译出来的代码跟印象中的 PHP 扩展代码完全不一样，回去看反编译前的指令，看到一个红色错误：</p><pre><code>zif_Minclude    endp ; sp-analysis failed</code></pre><p>说明这里可能存在花指令或者其他东西影响了 IDA 的分析，可以看到 IDA 看到 call l2，将 l2 当作了一个函数，然后认为函数返回之后的下一条指令是：</p><pre><code class="assembly">db 0EAh</code></pre><p>这样一来反编译出来的代码就完全错误了，而机器执行的代码还是正常的，所以这里的花指令可以自己看汇编代码理清流程来去除，像我这样对汇编、栈和函数调用不是很熟悉的人就只能用 gdb 调试 php 扩展来看了。</p><p>修改 php.ini 加载扩展，然后 gdb 调试，要提一点的是 php 加载 so 扩展是运行时加载，所以给扩展里的函数要下断点需要在调用该函数之前让 php 停下来，比如在前面加个 var_dump 然后给 php_var_dump 下个断点，再在运行触发断点的时候给该函数下断点。</p><p>看一遍就会发现，根源就在于 call 之后的地方：</p><pre><code class="assembly">pop     raxadd     rax, 8push    rax</code></pre><p>这里 pop 出来的其实是 call l2 之后的返回地址，即 0x245，而修改之后再入栈则相当于将返回地址改为了 0x24D，而 IDA 静态分析不会发现返回地址被更改了，所以还是 0x245 的错误地址。</p><p>所以要去除这里的花指令，就是将 0x22E 到 0x24D 的指令都 nop 掉，然后 undefined，重新创建函数。</p><p>这时会发现另一个问题：</p><pre><code>.text:00000000000012E2: The function has undefined instruction/data at the specified address.</code></pre><p>定位过去看看，是一段无法识别的跳转指令，因为它的操作数需要四个字节的数据作为跳转的地址，而后面的数据已经被识别为了 next 标签的指令，这里我们将它直接 nop 掉，然后再创建。</p><p>然后发现，另外一个地址出现了同样的错误，阅读汇编代码之后会发现是个相同的花指令，去除之后再创建，可以发现创建成功了，再 F5 反编译：</p><pre><code class="c">void __fastcall zif_Minclude(zend_execute_data *execute_data, zval *return_value){  zval *v2; // r12  unsigned __int64 v3; // rsi  FILE *v4; // rbx  __int64 v5; // rax  void *src; // [rsp+0h] [rbp-98h]  size_t n; // [rsp+8h] [rbp-90h]  char dest; // [rsp+10h] [rbp-88h]  int v9; // [rsp+70h] [rbp-28h]  char *v10; // [rsp+74h] [rbp-24h]  v2 = return_value;  memset(&amp;dest, 0, 0x60uLL);  v9 = 0;  v10 = &amp;dest;  if ( (unsigned int)zend_parse_parameters(execute_data-&gt;This.u2.next, &quot;s&quot;, &amp;src, &amp;n) != -1 )  {    memcpy(&amp;dest, src, n);    php_printf(&quot;%s&quot;, &amp;dest);    php_printf(&quot;&lt;br&gt;&quot;, &amp;dest);    v3 = (unsigned __int64)&quot;rb&quot;;    v4 = fopen(&amp;dest, &quot;rb&quot;);    if ( v4 )    {      while ( !feof(v4) )      {        v3 = (unsigned int)fgetc(v4);        php_printf(&quot;%c&quot;, v3);      }      php_printf(&quot;\n&quot;, v3);    }    else    {      php_printf(&quot;no file\n&quot;, &quot;rb&quot;);    }    v5 = zend_strpprintf(0LL, &quot;True&quot;);    v2-&gt;value.lval = v5;    v2-&gt;u1.type_info = (*(_BYTE *)(v5 + 5) &amp; 2u) &lt; 1 ? 5126 : 6;  }}</code></pre><p>可以看到已经是正常的代码了。</p><hr><p>参考文章：</p><p><a href="https://wizardforcel.gitbooks.io/re-for-beginners/content/Part-III/Chapter-50.html" target="_blank" rel="noopener">https://wizardforcel.gitbooks.io/re-for-beginners/content/Part-III/Chapter-50.html</a></p><p><a href="https://www.52pojie.cn/thread-1068444-1-1.html" target="_blank" rel="noopener">https://www.52pojie.cn/thread-1068444-1-1.html</a></p><p><a href="https://www.anquanke.com/post/id/208682" target="_blank" rel="noopener">https://www.anquanke.com/post/id/208682</a></p><p><a href="https://xuanxuanblingbling.github.io/ctf/pwn/2020/05/05/mixture/" target="_blank" rel="noopener">https://xuanxuanblingbling.github.io/ctf/pwn/2020/05/05/mixture/</a></p>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>CTF</tag>
+      
+      <tag>Re</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>安装vld扩展查看opcode</title>
     <link href="/2020/06/23/%E5%AE%89%E8%A3%85vld%E6%89%A9%E5%B1%95%E6%9F%A5%E7%9C%8Bopcode/"/>
     <url>/2020/06/23/%E5%AE%89%E8%A3%85vld%E6%89%A9%E5%B1%95%E6%9F%A5%E7%9C%8Bopcode/</url>
@@ -170,9 +191,9 @@
       
       <tag>Web</tag>
       
-      <tag>复现</tag>
-      
       <tag>二进制</tag>
+      
+      <tag>复现</tag>
       
     </tags>
     
@@ -305,9 +326,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -383,9 +404,9 @@
     
     <tags>
       
-      <tag>Crypto</tag>
-      
       <tag>Web</tag>
+      
+      <tag>Crypto</tag>
       
       <tag>Pwn</tag>
       
@@ -406,9 +427,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -427,9 +448,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -448,9 +469,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -511,9 +532,9 @@
     
     <tags>
       
-      <tag>Crypto</tag>
-      
       <tag>Web</tag>
+      
+      <tag>Crypto</tag>
       
       <tag>Pwn</tag>
       
@@ -534,9 +555,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -555,9 +576,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -576,9 +597,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -597,9 +618,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>复现</tag>
       
@@ -679,9 +700,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -740,9 +761,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>复现</tag>
       
@@ -763,9 +784,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -784,9 +805,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -824,9 +845,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -845,9 +866,9 @@
     
     <tags>
       
-      <tag>Crypto</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Crypto</tag>
       
     </tags>
     
@@ -885,9 +906,9 @@
     
     <tags>
       
-      <tag>Crypto</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Crypto</tag>
       
     </tags>
     
@@ -906,9 +927,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -1047,9 +1068,9 @@
     
     <tags>
       
-      <tag>复现</tag>
-      
       <tag>二进制</tag>
+      
+      <tag>复现</tag>
       
     </tags>
     
@@ -1089,9 +1110,9 @@
     
     <tags>
       
-      <tag>复现</tag>
-      
       <tag>二进制</tag>
+      
+      <tag>复现</tag>
       
     </tags>
     
@@ -1110,9 +1131,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     

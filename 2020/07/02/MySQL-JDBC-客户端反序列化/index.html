@@ -126,7 +126,7 @@
                   
                   <span class="post-meta">
                     <i class="far fa-chart-bar"></i>
-                    1k 字
+                    1.1k 字
                   </span>
                 
 
@@ -134,7 +134,7 @@
                   
                   <span class="post-meta">
                       <i class="far fa-clock"></i>
-                      4 分钟
+                      5 分钟
                   </span>
                 
 
@@ -217,6 +217,13 @@ Class.forName(driver);
         mappedValues.put(rs.getObject(1), rs.getObject(2));
     }
 }
+</code></pre>
+<p>顺带一提在 8.0.20 版本下，获取放入 Map 中的数据时调用的不是 getObject，而是 getString：</p>
+<pre><code class="java"> try (ResultSet rs = stmt.executeQuery(&quot;SHOW SESSION STATUS&quot;)) {
+     while (rs.next()) {
+         toPopulate.put(rs.getString(1), rs.getString(2));
+     }
+ }
 </code></pre>
 <p>这里调用的是 ResultSetImpl 类的 getObject，当字段类型为 BIT 或者  BLOB 的时候，会进行反序列化：</p>
 <pre><code class="java">case BLOB:

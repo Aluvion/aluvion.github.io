@@ -16,7 +16,7 @@
   <meta name="description" content="摸鱼">
   <meta name="author" content="Aluvion">
   <meta name="keywords" content="">
-  <title>归档 - Twings</title>
+  <title>标签 - Web - Twings</title>
 
   <link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css">
 <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
@@ -104,7 +104,7 @@
 </nav>
 
     <div class="view intro-2" id="background" parallax=true
-         style="background: url('/css/images/bg/bg1.png') no-repeat center center;
+         style="background: url('/css/images/bg/bg4.png') no-repeat center center;
            background-size: cover;">
       <div class="full-bg-img">
         <div class="mask rgba-black-light flex-center">
@@ -134,37 +134,31 @@
                 
 
 <div class="list-group">
-  <p class="h4">共计 61 篇文章</p>
+<!--  <p class="h4">共计 1 篇文章</p>-->
   <hr>
   
     
       
       <p class="h5">2019</p>
     
-    <a href="/2019/12/31/Vue学习笔记(2)/" class="list-group-item list-group-item-action">
-      <span class="archive-post-title">Vue学习笔记(2)</span>
-      <span style="float: right;">12-31</span>
-    </a>
-  
-    
-    <a href="/2019/12/30/Vue学习笔记(1)/" class="list-group-item list-group-item-action">
-      <span class="archive-post-title">Vue学习笔记(1)</span>
-      <span style="float: right;">12-30</span>
-    </a>
-  
-    
-    <a href="/2019/12/29/gdb调试PHP/" class="list-group-item list-group-item-action">
-      <span class="archive-post-title">gdb调试PHP</span>
-      <span style="float: right;">12-29</span>
-    </a>
-  
-    
-    <a href="/2019/12/26/code-break2018-picklecode-Django远程调试/" class="list-group-item list-group-item-action">
-      <span class="archive-post-title">code-break2018-picklecode+Django远程调试</span>
-      <span style="float: right;">12-26</span>
+    <a href="/2019/02/07/基于报错的盲注/" class="list-group-item list-group-item-action">
+      <span class="archive-post-title">基于报错的盲注</span>
+      <span style="float: right;">02-07</span>
     </a>
   
 </div>
+
+  <nav aria-label="index posts navigation">
+    <span class="pagination pg-blue justify-content-center mt-5" id="pagination">
+      <a class="extend prev" rel="prev" href="/tags/Web/page/5/"><i class="fas fa-angle-double-left"></i></a><a class="page-number" href="/tags/Web/">1</a><span class="space">&hellip;</span><a class="page-number" href="/tags/Web/page/4/">4</a><a class="page-number" href="/tags/Web/page/5/">5</a><span class="page-number current">6</span>
+    </span>
+  </nav>
+  
+  <script>
+    for (ele of document.getElementById("pagination").getElementsByClassName("page-number")) {
+      ele.href += '#board';
+    }
+  </script>
 
 
 
@@ -261,7 +255,7 @@
     var typed = new Typed('#subtitle', {
       strings: [
         '  ',
-        "归档&nbsp;",
+        "标签 - Web&nbsp;",
       ],
       cursorChar: "_",
       typeSpeed: 70,

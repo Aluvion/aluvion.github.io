@@ -4,6 +4,25 @@
   
   
   <entry>
+    <title>struts2系列漏洞 S2-010</title>
+    <link href="/2020/07/21/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-010/"/>
+    <url>/2020/07/21/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-010/</url>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>  经典 Java 软件漏洞 struts 系列，准备一个个看过去。</p><a id="more"></a><hr><h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>Action 的 execute 方法加上一句（其他成员变量也可以）：</p><pre><code class="java">ActionContext.getContext().getSession().put(&quot;username&quot;, this.username);</code></pre><p>jsp 的 form 表单里面加上：</p><pre><code class="html">&lt;s:token /&gt;</code></pre><p>struts.xml 的 action 标签里面加上（两个拦截器得顺序可以翻过来，但是不加 default 那个拦截器就无法触发 setter）：</p><pre><code class="xml">&lt;interceptor-ref name=&quot;defaultStack&quot; /&gt;&lt;interceptor-ref name=&quot;token&quot; /&gt;&lt;result name=&quot;invalid.token&quot;&gt;/error.jsp&lt;/result&gt;</code></pre><p>测试访问 Action，看看会不会正常触发 token 校验。</p><h3 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h3><p>CSRF 漏洞，可以先正常流程传一个 username 触发 execute 中的 session 赋值，然后用这个 payload 绕过 token 校验：</p><pre><code>username=Twings&amp;struts.token.name=username&amp;struts.token=Twings</code></pre><h3 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h3><p>调试 TokenInterceptor 跟一遍就明白了，主要问题在于 token 校验函数 validToken 中：</p><pre><code class="java">public static boolean validToken() {    String tokenName = getTokenName();    if (tokenName == null) {        ...        return false;    }    String token = getToken(tokenName);    if (token == null) {        ...        return false;    }    Map session = ActionContext.getContext().getSession();    String sessionToken = (String) session.get(tokenName);    if (!token.equals(sessionToken)) {        ...        return false;    }    // remove the token so it won&#39;t be used again    session.remove(tokenName);    return true;}</code></pre><p>struts2 将 token 存放在 session 中，但是存放用的键可以由用户自行设定，所以用户就可以通过将键设置为一个已知值的键（比如 username），从而绕过 token 验证。</p><h3 id="漏洞修复"><a href="#漏洞修复" class="headerlink" title="漏洞修复"></a>漏洞修复</h3><p>2.3.4.1 版本的修复，validToken 方法里面从 session 取 token 的方式改变了：</p><pre><code class="java">Map session = ActionContext.getContext().getSession();String tokenSessionName = buildTokenSessionAttributeName(tokenName);String sessionToken = (String) session.get(tokenSessionName);</code></pre><p>多了一个 buildTokenSessionAttributeName 方法：</p><pre><code class="java">public static String buildTokenSessionAttributeName( String tokenName ) {    return TOKEN_NAMESPACE + &quot;.&quot; + tokenName;}</code></pre><p>现在存放 token 的键都会以：</p><pre><code>struts.tokens.</code></pre><p>开头了，所以一般就无法用其他键来伪装 token 了。</p><hr><p>Orz</p>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>Web</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>struts2系列漏洞 S2-009</title>
     <link href="/2020/07/20/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-009/"/>
     <url>/2020/07/20/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-009/</url>
@@ -381,9 +400,9 @@
       
       <tag>Web</tag>
       
-      <tag>复现</tag>
-      
       <tag>二进制</tag>
+      
+      <tag>复现</tag>
       
     </tags>
     
@@ -516,9 +535,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -594,9 +613,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>Crypto</tag>
+      
+      <tag>Web</tag>
       
       <tag>Pwn</tag>
       
@@ -617,9 +636,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -638,9 +657,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -659,9 +678,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -722,9 +741,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>Crypto</tag>
+      
+      <tag>Web</tag>
       
       <tag>Pwn</tag>
       
@@ -745,9 +764,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -766,9 +785,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -787,9 +806,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -808,9 +827,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>复现</tag>
       
@@ -890,9 +909,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -951,9 +970,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>复现</tag>
       
@@ -974,9 +993,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -995,9 +1014,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1035,9 +1054,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1056,9 +1075,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Crypto</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -1096,9 +1115,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Crypto</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -1117,9 +1136,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1258,9 +1277,9 @@
     
     <tags>
       
-      <tag>复现</tag>
-      
       <tag>二进制</tag>
+      
+      <tag>复现</tag>
       
     </tags>
     
@@ -1300,9 +1319,9 @@
     
     <tags>
       
-      <tag>复现</tag>
-      
       <tag>二进制</tag>
+      
+      <tag>复现</tag>
       
     </tags>
     
@@ -1321,9 +1340,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     

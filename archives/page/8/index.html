@@ -141,30 +141,24 @@
       
       <p class="h5">2019</p>
     
-    <a href="/2019/02/27/GoogleCTF2018-beginners-js_safe_1/" class="list-group-item list-group-item-action">
-      <span class="archive-post-title">GoogleCTF2018-beginners-js_safe_1</span>
-      <span style="float: right;">02-27</span>
-    </a>
-  
-    
-    <a href="/2019/02/26/CVE-2019-1003000复现/" class="list-group-item list-group-item-action">
-      <span class="archive-post-title">CVE-2019-1003000复现</span>
-      <span style="float: right;">02-26</span>
-    </a>
-  
-    
-    <a href="/2019/02/07/基于报错的盲注/" class="list-group-item list-group-item-action">
-      <span class="archive-post-title">基于报错的盲注</span>
-      <span style="float: right;">02-07</span>
-    </a>
-  
-    
     <a href="/2019/02/06/hello-world/" class="list-group-item list-group-item-action">
       <span class="archive-post-title">Hello World</span>
       <span style="float: right;">02-06</span>
     </a>
   
 </div>
+
+  <nav aria-label="index posts navigation">
+    <span class="pagination pg-blue justify-content-center mt-5" id="pagination">
+      <a class="extend prev" rel="prev" href="/archives/page/7/"><i class="fas fa-angle-double-left"></i></a><a class="page-number" href="/archives/">1</a><span class="space">&hellip;</span><a class="page-number" href="/archives/page/6/">6</a><a class="page-number" href="/archives/page/7/">7</a><span class="page-number current">8</span>
+    </span>
+  </nav>
+  
+  <script>
+    for (ele of document.getElementById("pagination").getElementsByClassName("page-number")) {
+      ele.href += '#board';
+    }
+  </script>
 
 
 

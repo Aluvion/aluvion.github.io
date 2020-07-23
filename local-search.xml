@@ -4,6 +4,44 @@
   
   
   <entry>
+    <title>struts2系列漏洞 S2-013</title>
+    <link href="/2020/07/23/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-013/"/>
+    <url>/2020/07/23/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-013/</url>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>  经典 Java 软件漏洞 struts 系列，准备一个个看过去。</p><a id="more"></a><hr><h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>2.3.14.1 版本的 struts2 + Tomcat 9。</p><p>修改 jsp 文件，加上一句：</p><pre><code class="html">&lt;s:url id=&quot;url&quot; action=&quot;login&quot; includeParams=&quot;all&quot; /&gt;</code></pre><h3 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h3><p>阅读<a href="https://cwiki.apache.org/confluence/display/WW/S2-013" target="_blank" rel="noopener">漏洞通告</a>，问题发生在 s:url/s:a 标签的 includeParams 属性，他们在根据这个属性处理 HTTP 参数的时候会进行表达式解析，payload 如下：</p><pre><code>data=%25{#_memberAccess[&#39;allowStaticMethodAccess&#39;]=true,#context[&#39;xwork.MethodAccessor.denyMethodExecution&#39;]=false,@java.lang.Runtime@getRuntime().exec(&quot;calc&quot;)}</code></pre><h3 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h3><p>看到 s:url 标签生成 URL 时会调用的 DefaultUrlHelper 类的 buildParametersString 方法：</p><pre><code class="java">Iterator iter = params.entrySet().iterator();while(iter.hasNext()) {    Entry&lt;String, Object&gt; entry = (Entry)iter.next();    String name = (String)entry.getKey();    Object value = entry.getValue();    if (value instanceof Iterable) {        ...    } else if (value instanceof Object[]) {        Object[] array = (Object[])((Object[])value);        for(int i = 0; i &lt; array.length; ++i) {            Object paramValue = array[i];            link.append(this.buildParameterSubstring(name, paramValue.toString()));            if (i &lt; array.length - 1) {                   link.append(paramSeparator);            }        }    } else {        ...    }    if (iter.hasNext()) {        link.append(paramSeparator);    }}</code></pre><p>遍历了传递的参数，然后调用了 buildParameterSubstring 方法：</p><pre><code class="java">private String buildParameterSubstring(String name, String value) {    StringBuilder builder = new StringBuilder();    builder.append(translateAndEncode(name));    builder.append(&#39;=&#39;);    builder.append(translateAndEncode(value));    return builder.toString();}public String translateAndEncode(String input) {    String translatedInput = translateVariable(input);    try {        return URLEncoder.encode(translatedInput, encoding);    } catch (UnsupportedEncodingException e) {        if (LOG.isWarnEnabled()) {            LOG.warn(&quot;Could not encode URL parameter &#39;#0&#39;, returning value un-encoded&quot;, input);        }        return translatedInput;    }}</code></pre><p>translateVariable 方法最后会来到之前看到过的 OgnlTextParser 方法的 evaluate 方法进行了解析。</p><h3 id="漏洞修复"><a href="#漏洞修复" class="headerlink" title="漏洞修复"></a>漏洞修复</h3><p>在 2.3.14.3 版本中，buildParameterSubstring 方法中去掉了表达式解析的部分，只剩下 URL 编码：</p><pre><code class="java">private String buildParameterSubstring(String name, String value) {    StringBuilder builder = new StringBuilder();    builder.append(encode(name));    builder.append(&#39;=&#39;);    builder.append(encode(value));    return builder.toString();}public String encode( String input ) {    try {        return URLEncoder.encode(input, encoding);    } catch (UnsupportedEncodingException e) {        if (LOG.isWarnEnabled()) {            LOG.warn(&quot;Could not encode URL parameter &#39;#0&#39;, returning value un-encoded&quot;, input);    }        return input;    }}</code></pre><hr><p>Orz</p>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>Web</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>F5 BIG-IP观摩</title>
+    <link href="/2020/07/22/F5-BIG-IP%E8%A7%82%E6%91%A9/"/>
+    <url>/2020/07/22/F5-BIG-IP%E8%A7%82%E6%91%A9/</url>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> 无，最近老看到的名字很奇怪的软件，稍加学习。</p><a id="more"></a><hr><h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>对这款软件有过了解的师傅可以自行搭建，像我这样之前完全没听过这个名字的菜鸡，参考的是<a href="https://xz.aliyun.com/t/8008" target="_blank" rel="noopener">这篇文章</a>，因为我自己注册账号下载的时候被拒绝了，所以直接使用的是文章给出的账号密码去下载的虚拟机，然后将 ova 文件拖入 Vmware 启动虚拟机，修改密码完成环境搭建。</p><h3 id="漏洞利用-1"><a href="#漏洞利用-1" class="headerlink" title="漏洞利用 1"></a>漏洞利用 1</h3><h3 id="漏洞分析-1"><a href="#漏洞分析-1" class="headerlink" title="漏洞分析 1"></a>漏洞分析 1</h3><p>源码可以在 /usr/local/www/tmui 目录下找到。</p><hr><p>参考文章：</p>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>Web</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>struts2系列漏洞 S2-012</title>
     <link href="/2020/07/22/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-012/"/>
     <url>/2020/07/22/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-012/</url>
@@ -554,9 +592,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -632,9 +670,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>Crypto</tag>
+      
+      <tag>Web</tag>
       
       <tag>Pwn</tag>
       
@@ -655,9 +693,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -676,9 +714,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -697,9 +735,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -760,9 +798,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>Crypto</tag>
+      
+      <tag>Web</tag>
       
       <tag>Pwn</tag>
       
@@ -783,9 +821,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -804,9 +842,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -825,9 +863,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -846,11 +884,11 @@
     
     <tags>
       
+      <tag>CTF</tag>
+      
       <tag>Web</tag>
       
       <tag>复现</tag>
-      
-      <tag>CTF</tag>
       
     </tags>
     
@@ -928,9 +966,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -989,11 +1027,11 @@
     
     <tags>
       
+      <tag>CTF</tag>
+      
       <tag>Web</tag>
       
       <tag>复现</tag>
-      
-      <tag>CTF</tag>
       
     </tags>
     
@@ -1012,9 +1050,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1033,9 +1071,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1073,9 +1111,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1155,9 +1193,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1359,9 +1397,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     

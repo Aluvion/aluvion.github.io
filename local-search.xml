@@ -4,6 +4,25 @@
   
   
   <entry>
+    <title>SpringBoot Thymeleaf 模板注入</title>
+    <link href="/2020/09/07/SpringBoot-%C2%96Thymeleaf-%E6%A8%A1%E6%9D%BF%E6%B3%A8%E5%85%A5/"/>
+    <url>/2020/09/07/SpringBoot-%C2%96Thymeleaf-%E6%A8%A1%E6%9D%BF%E6%B3%A8%E5%85%A5/</url>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> 今天在 paper.seebug.org 上面看到的<a href="https://paper.seebug.org/1332/" target="_blank" rel="noopener">文章</a>，以前没关注过这个点，现在看一看。</p><a id="more"></a><hr><h3 id="模板注入"><a href="#模板注入" class="headerlink" title="模板注入"></a>模板注入</h3><p>写一个简单的 SprintBoot 程序，记得要加上 Thymeleaf 的依赖：</p><pre><code class="java">@Controllerpublic class MainController {    @GetMapping(&quot;/&quot;)    public String index(@RequestParam(value = &quot;page&quot;)String page) {        return page;    }}</code></pre><p>然后调试跟一下，SpringBoot 通过反射调用控制器函数构造一个 ModelAndView 对象，然后经过 processDispatchResult、render、view.render 的调用，来到 renderFragment：</p><pre><code class="java">if (!viewTemplateName.contains(&quot;::&quot;)) {    // No fragment specified at the template name    templateName = viewTemplateName;    markupSelectors = null;} else {    // Template name contains a fragment name, so we should parse it as such    final IStandardExpressionParser parser = StandardExpressions.getExpressionParser(configuration);    final FragmentExpression fragmentExpression;    try {        // By parsing it as a standard expression, we might profit from the expression cache        fragmentExpression = (FragmentExpression) parser.parseExpression(context, &quot;~{&quot; + viewTemplateName + &quot;}&quot;);    } catch (final TemplateProcessingException e) {        throw new IllegalArgumentException(&quot;Invalid template name specification: &#39;&quot; + viewTemplateName + &quot;&#39;&quot;);}</code></pre><p>如果返回值中包含 :: 字符，就代表这个模板名是一个引用，会对模板名进行一次表达式解析，payload 类似 Spel 表达式：</p><pre><code>${T(java.lang.Runtime).getRuntime().exec(&quot;calc&quot;)}::index</code></pre><p>表达式语法可以看<a href="https://www.jianshu.com/p/f6283f7a99c9" target="_blank" rel="noopener">这里</a>，简单来说就是用变量表达式在代码表达式中执行 Spel 表达式。</p><p>除了这种返回类型为 String 的写法，按照参考文章，还有其他写法，比如 void：</p><pre><code class="java">@GetMapping(&quot;/doc/{document}&quot;)public void getDocument(@PathVariable String document) {    log.info(&quot;Retrieving &quot; + document);}</code></pre><p>阅读<a href="https://docs.spring.io/spring/docs/current/spring-framework-reference/web.html#mvc-ann-return-types" target="_blank" rel="noopener">文档</a>，可以得知此时会将请求 URI 作为模块名，所以也可以进行表达式注入。</p><p>至于其他返回类型，View 或许也是可以的，不过就太罕见了。</p><hr><p>Orz</p>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>Web</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>Java RASP 防护技术</title>
     <link href="/2020/09/04/Java-RASP-%E9%98%B2%E6%8A%A4%E6%8A%80%E6%9C%AF/"/>
     <url>/2020/09/04/Java-RASP-%E9%98%B2%E6%8A%A4%E6%8A%80%E6%9C%AF/</url>
@@ -955,11 +974,11 @@
     
     <tags>
       
+      <tag>Crypto</tag>
+      
       <tag>Web</tag>
       
       <tag>Pwn</tag>
-      
-      <tag>Crypto</tag>
       
     </tags>
     
@@ -1083,11 +1102,11 @@
     
     <tags>
       
+      <tag>Crypto</tag>
+      
       <tag>Web</tag>
       
       <tag>Pwn</tag>
-      
-      <tag>Crypto</tag>
       
     </tags>
     
@@ -1417,9 +1436,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Crypto</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -1457,9 +1476,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Crypto</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     

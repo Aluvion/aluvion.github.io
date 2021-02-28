@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>php://filter过滤器的奇妙操作 - Twings</title>
+
+  <link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css">
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+  <link rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css">
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+</head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期五, 二月 19日 2021, 7:56 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    2.9k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      14 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> 在一个Laravel Debug RCE（CVE-2021-3129）利用中看到的奇妙操作，通过php://filter过滤器配合文件写入读取操作，去除文件中的多余字符，很有意思。</p>
+<a id="more"></a>
+<hr>
+<h3 id="phar"><a href="#phar" class="headerlink" title="phar"></a>phar</h3><p>一个phar文件要满足什么条件才能正常地触发反序列化？</p>
+<p>翻一翻php源码，在phar.c中找到phar解析函数phar_parse_pharfile，第一个条件：</p>
+<pre><code class="c">/* check for ?&gt;\n and increment accordingly */
+if (-1 == php_stream_seek(fp, halt_offset, SEEK_SET)) {
+    MAPPHAR_ALLOC_FAIL(&quot;cannot seek to __HALT_COMPILER(); location in phar \&quot;%s\&quot;&quot;)
+}
+</code></pre>
+<p>可以看到，php会搜索stub中的：</p>
+<pre><code>__HALT_COMPILER();
+</code></pre><p>标识作为phar文件的开头，在实际测试中如果存在多个标识，则会选择最后一个，所以phar文件前面部分有冗余数据并不影响，后面就是一个完整的phar文件。</p>
+<p>再看看phar文件后面部分存在冗余数据会不会影响，再看后面的代码：</p>
+<pre><code class="c">if (-1 == php_stream_seek(fp, -8, SEEK_END)
+    || (read_len = php_stream_tell(fp)) &lt; 20
+    || 8 != php_stream_read(fp, sig_buf, 8)
+    || memcmp(sig_buf+4, &quot;GBMB&quot;, 4)) {
+    efree(savebuf);
+    php_stream_close(fp);
+    if (error) {
+        spprintf(error, 0, &quot;phar \&quot;%s\&quot; has a broken signature&quot;, fname);
+    }
+    return FAILURE;
+}
+</code></pre>
+<p>这里会读取最后的8个字符，限制了必须以GBMB这个标识结束，所以后面就不能存在一些乱七八糟的冗余数据了。</p>
+<p>经过测试，在phar压缩包的内部文件数据部分加上些奇奇怪怪的数据并不会影响phar反序列化。</p>
+<h3 id="场景"><a href="#场景" class="headerlink" title="场景"></a>场景</h3><p>原场景中的处理代码如下：</p>
+<pre><code class="php">$output = file_get_contents($parameters[&#39;viewFile&#39;]);
+
+//省略xxx（对$output做一些处理）
+//xxx
+
+file_put_contents($parameters[&#39;viewFile&#39;], $output);
+</code></pre>
+<p>简单来说就是读取某个文件中的内容，处理之后又放了回去，期间就可以通过php://filter对文件内容进行编码方面的修改。</p>
+<h3 id="read-write"><a href="#read-write" class="headerlink" title="read/write"></a>read/write</h3><p>用于标识文件操作类型的标识，类似：</p>
+<pre><code>php://filter/write=convert.iconv.utf-8.utf-16le/resource=C:/twings.txt
+</code></pre><p>在标识为write的情况下，file_get_contents这种文件读操作就不会触发编码转换，所以就可以在不影响读出数据的情况下对写入的数据进行修改。</p>
+<h3 id="Base64编码"><a href="#Base64编码" class="headerlink" title="Base64编码"></a>Base64编码</h3><p>先看一眼php进行base64解码的相关代码，找到base64.c，这里首先设置了一张base64码表：</p>
+<pre><code class="c">$base64_reverse_table = [
+    -2, -2, -2, -2, -2, -2, -2, -2, -2, -1, -1, -2, -2, -1, -2, -2,
+    -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2,
+    -1, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, 62, -2, -2, -2, 63,
+    52, 53, 54, 55, 56, 57, 58, 59, 60, 61, -2, -2, -2, -2, -2, -2,
+    -2,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14,
+    15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, -2, -2, -2, -2, -2,
+    -2, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
+    41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, -2, -2, -2, -2, -2,
+    -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2,
+    -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2,
+    -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2,
+    -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2,
+    -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2,
+    -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2,
+    -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2,
+    -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2
+];
+</code></pre>
+<p>然后</p>
+<pre><code class="c">ch = base64_reverse_table[ch];
+if (!strict) {
+    /* skip unknown characters and whitespace */
+    if (ch &lt; 0) {
+        continue;
+    }
+} else {
+    /* skip whitespace */
+    if (ch == -1) {
+        continue;
+    }
+    /* fail on bad characters or if any data follows padding */
+    if (ch == -2 || padding) {
+        goto fail;
+    }
+}
+</code></pre>
+<p>解码时的第二个参数代表是否开启strict模式（默认不开启），此时会跳过空格和非法字符。</p>
+<p>而开启之后，解码过程中只会跳过空格，而遇到非法字符（或者=后面还有其他字符）则会终止解码。</p>
+<p>实际上php://filter会进行的base64解码却有些许不一样，找到filter.c，同样先是一个类似的码表：</p>
+<pre><code class="c">static unsigned int b64_tbl_dec[256] = {
+    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 62, 64, 64, 64, 63,
+    52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 64, 64, 64,128, 64, 64,
+    64,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14,
+    15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 64, 64, 64, 64, 64,
+    64, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
+    41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 64, 64, 64, 64, 64,
+    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64
+};
+</code></pre>
+<p>其中一段处理代码则如下：</p>
+<pre><code class="c">i = b64_tbl_dec[(unsigned int)*(ps++)];
+icnt--;
+ustat |= i &amp; 0x80;
+
+if (!(i &amp; 0xc0)) {
+    if (ustat) {
+        err = PHP_CONV_ERR_INVALID_SEQ;
+        break;
+    }
+    if (6 &lt;= pack_bcnt) {
+        pack_bcnt -= 6;
+        pack |= (i &lt;&lt; pack_bcnt);
+        urem = 0;
+    } else {
+        urem_nbits = 6 - pack_bcnt;
+        pack |= (i &gt;&gt; urem_nbits);
+        urem = i &amp; bmask(urem_nbits);
+        pack_bcnt = 0;
+    }
+} else if (ustat) {
+    if (pack_bcnt == 8 || pack_bcnt == 2) {
+        err = PHP_CONV_ERR_INVALID_SEQ;
+        break;
+    }
+    inst-&gt;eos = 1;
+}
+</code></pre>
+<p>这里的变量命名比较奇特，ustat看起来用于标识是否识别到了padding（即=），当识别到合法字符则会进入上面的判断，如果上个字符为=则会判断为解码失败而结束解码。</p>
+<p>一般情况下如果识别到了非法字符或者=，则会跳过。</p>
+<p>所以虽然可以通过多次解码跳过非法字符来清除冗余字符，但是其中还是存在问题的，如果多次解码中出现了=，而且=后面还存在合法字符则会发生错误。</p>
+<h3 id="UTF编码"><a href="#UTF编码" class="headerlink" title="UTF编码"></a>UTF编码</h3><p>既然base64不是很好用，那么就需要找到另一种更方便去除冗余字符的编码方式了，比如UTF-8和UTF-16le。</p>
+<p>UTF-8大家都知道是什么，UTF-16le用两个字节表示UTF-8中的一个字节（所以需要让冗余字符数为偶数），对我们常用的字母和符号来说就是在UTF-8的字符后面加多一个\x00。</p>
+<p>它们之间的转换一般不会发生错误（字符数为奇数时会发生错误），同时一般可写文件也不会存在\x00这种奇怪字符，所以通过这两种编码之间的编码转换就可以将文件中原本存在的字符转化为base64中的非法字符，再结合base64解码就可以去除冗余字符。</p>
+<h3 id="quoted-printable"><a href="#quoted-printable" class="headerlink" title="quoted-printable"></a>quoted-printable</h3><p>一种看起来不是很有用的转码，能够将不可见字符替换成=xx的形式，可以用来处理一些特殊字符。</p>
+<h3 id="CVE-2021-3129"><a href="#CVE-2021-3129" class="headerlink" title="CVE-2021-3129"></a>CVE-2021-3129</h3><p>总之先搭个环境，因为我只是对其中一部分感兴趣，所以根据参考文章简单弄一个，去下载一个别人搭建好的<a href="https://github.com/SNCKER/CVE-2021-3129" target="_blank" rel="noopener">环境</a>，然后用docker-compose启动。</p>
+<p>先简单看看它的报错日志，有点长：</p>
+<pre><code>[2021-02-28 11:43:31] local.ERROR: file_get_contents(abcdefghijklmnopqrstuvwxyz): failed to open stream: No such file or directory {&quot;exception&quot;:&quot;[object] (ErrorException(code: 0): file_get_contents(abcdefghijklmnopqrstuvwxyz): failed to open stream: No such file or directory at /src/vendor/facade/ignition/src/Solutions/MakeViewVariableOptionalSolution.php:75)
+[stacktrace]
+#0 [internal function]: Illuminate\\Foundation\\Bootstrap\\HandleExceptions-&gt;handleError(2, &#39;file_get_conten...&#39;, &#39;/src/vendor/fac...&#39;, 75, Array)
+#1 /src/vendor/facade/ignition/src/Solutions/MakeViewVariableOptionalSolution.php(75): file_get_contents(&#39;abcdefghijklmno...&#39;)
+#2 /src/vendor/facade/ignition/src/Solutions/MakeViewVariableOptionalSolution.php(67): Facade\\Ignition\\Solutions\\MakeViewVariableOptionalSolution-&gt;makeOptional(Array)
+#3 /src/vendor/facade/ignition/src/Http/Controllers/ExecuteSolutionController.php(19): Facade\\Ignition\\Solutions\\MakeViewVariableOptionalSolution-&gt;run(Array)
+#4 /src/vendor/laravel/framework/src/Illuminate/Routing/ControllerDispatcher.php(48): Facade\\Ignition\\Http\\Controllers\\ExecuteSolutionController-&gt;__invoke(Object(Facade\\Ignition\\Http\\Requests\\ExecuteSolutionRequest), Object(Facade\\Ignition\\SolutionProviders\\SolutionProviderRepository))
+#5 /src/vendor/laravel/framework/src/Illuminate/Routing/Route.php(254): Illuminate\\Routing\\ControllerDispatcher-&gt;dispatch(Object(Illuminate\\Routing\\Route), Object(Facade\\Ignition\\Http\\Controllers\\ExecuteSolutionController), &#39;__invoke&#39;)
+#6 /src/vendor/laravel/framework/src/Illuminate/Routing/Route.php(197): Illuminate\\Routing\\Route-&gt;runController()
+#7 /src/vendor/laravel/framework/src/Illuminate/Routing/Router.php(693): Illuminate\\Routing\\Route-&gt;run()
+#8 /src/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(128): Illuminate\\Routing\\Router-&gt;Illuminate\\Routing\\{closure}(Object(Illuminate\\Http\\Request))
+#9 /src/vendor/facade/ignition/src/Http/Middleware/IgnitionConfigValueEnabled.php(25): Illuminate\\Pipeline\\Pipeline-&gt;Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#10 /src/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(167): Facade\\Ignition\\Http\\Middleware\\IgnitionConfigValueEnabled-&gt;handle(Object(Illuminate\\Http\\Request), Object(Closure), &#39;enableRunnableS...&#39;)
+#11 /src/vendor/facade/ignition/src/Http/Middleware/IgnitionEnabled.php(23): Illuminate\\Pipeline\\Pipeline-&gt;Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#12 /src/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(167): Facade\\Ignition\\Http\\Middleware\\IgnitionEnabled-&gt;handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#13 /src/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(103): Illuminate\\Pipeline\\Pipeline-&gt;Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#14 /src/vendor/laravel/framework/src/Illuminate/Routing/Router.php(695): Illuminate\\Pipeline\\Pipeline-&gt;then(Object(Closure))
+#15 /src/vendor/laravel/framework/src/Illuminate/Routing/Router.php(670): Illuminate\\Routing\\Router-&gt;runRouteWithinStack(Object(Illuminate\\Routing\\Route), Object(Illuminate\\Http\\Request))
+#16 /src/vendor/laravel/framework/src/Illuminate/Routing/Router.php(636): Illuminate\\Routing\\Router-&gt;runRoute(Object(Illuminate\\Http\\Request), Object(Illuminate\\Routing\\Route))
+#17 /src/vendor/laravel/framework/src/Illuminate/Routing/Router.php(625): Illuminate\\Routing\\Router-&gt;dispatchToRoute(Object(Illuminate\\Http\\Request))
+#18 /src/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(166): Illuminate\\Routing\\Router-&gt;dispatch(Object(Illuminate\\Http\\Request))
+#19 /src/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(128): Illuminate\\Foundation\\Http\\Kernel-&gt;Illuminate\\Foundation\\Http\\{closure}(Object(Illuminate\\Http\\Request))
+#20 /src/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate\\Pipeline\\Pipeline-&gt;Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#21 /src/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(167): Illuminate\\Foundation\\Http\\Middleware\\TransformsRequest-&gt;handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#22 /src/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate\\Pipeline\\Pipeline-&gt;Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#23 /src/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(167): Illuminate\\Foundation\\Http\\Middleware\\TransformsRequest-&gt;handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#24 /src/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/ValidatePostSize.php(27): Illuminate\\Pipeline\\Pipeline-&gt;Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#25 /src/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(167): Illuminate\\Foundation\\Http\\Middleware\\ValidatePostSize-&gt;handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#26 /src/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/PreventRequestsDuringMaintenance.php(86): Illuminate\\Pipeline\\Pipeline-&gt;Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#27 /src/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(167): Illuminate\\Foundation\\Http\\Middleware\\PreventRequestsDuringMaintenance-&gt;handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#28 /src/vendor/fruitcake/laravel-cors/src/HandleCors.php(37): Illuminate\\Pipeline\\Pipeline-&gt;Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#29 /src/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(167): Fruitcake\\Cors\\HandleCors-&gt;handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#30 /src/vendor/fideloper/proxy/src/TrustProxies.php(57): Illuminate\\Pipeline\\Pipeline-&gt;Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#31 /src/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(167): Fideloper\\Proxy\\TrustProxies-&gt;handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#32 /src/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(103): Illuminate\\Pipeline\\Pipeline-&gt;Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#33 /src/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(141): Illuminate\\Pipeline\\Pipeline-&gt;then(Object(Closure))
+#34 /src/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(110): Illuminate\\Foundation\\Http\\Kernel-&gt;sendRequestThroughRouter(Object(Illuminate\\Http\\Request))
+#35 /src/public/index.php(52): Illuminate\\Foundation\\Http\\Kernel-&gt;handle(Object(Illuminate\\Http\\Request))
+#36 /src/server.php(21): require_once(&#39;/src/public/ind...&#39;)
+#37 {main}
+&quot;}
+</code></pre><p>调用file_get_contens读文件时，因不存在的文件名报错后会将文件名会写入日志中，一共会写入三处，因为第三处会将超出长度上限的内容省略，所以这里可以控制的内容为两处，它们前后都存在一些冗余字符。</p>
+<p>正确操作应该是运用前面提到的多种转码手段，quoted-printable用于解决文件名无法存在\x00的问题（UTF-16le需要用到），UTF-16le用于解决base64解码会因为=出现错误的问题，base64解码用于去除冗余字符。</p>
+<p>具体的操作流程应该如下：</p>
+<ol>
+<li>通过base64解码和write标识符，利用解码失败解码结果为空的特性清空整个log（可跳过），如果清空不了可以和convert.iconv.utf-16le.utf-8一起用</li>
+<li>加上15个字符的前缀发送poc</li>
+<li>发送一个数据包，用于保证UTF-16le转码时字符数为偶数</li>
+<li>按顺序解码去除冗余字符</li>
+<li>触发phar反序列化</li>
+</ol>
+<p>此时会解码出两段poc，可以通过添加后缀也可以通过修改phar数据的方式来完成反序列化。</p>
+<hr>
+<h3 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h3><p><a href="https://xz.aliyun.com/t/9165" target="_blank" rel="noopener">Laravel Debug RCE</a></p>
+<p><a href="https://blog.csdn.net/qq_45521281/article/details/112993957" target="_blank" rel="noopener">另一篇Laravel Debug RCE</a></p>
+<p><a href="https://www.cnblogs.com/JKding233/p/11572514.html" target="_blank" rel="noopener">phar相关知识</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2020/11/25/Jenkins相关漏洞学习（二）/">
+                        <span>Jenkins相关漏洞学习（二）</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js"></script>
+<script src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js"></script>
+<script src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js"></script>
+<script src="/js/main.js"></script>
+
+
+  <script src="/js/lazyload.js"></script>
+
+
+
+  
+  <script src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js"></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "php://filter过滤器的奇妙操作&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js"></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script src="/js/local-search.js"></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js"></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

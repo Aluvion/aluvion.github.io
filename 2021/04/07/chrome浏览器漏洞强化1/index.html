@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>chrome浏览器漏洞强化1 - Twings</title>
+
+  <link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css">
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+  <link rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css">
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+</head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期三, 四月 7日 2021, 12:12 凌晨
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    5k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      21 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> 强化学习，场景来自强网杯2020决赛的一道题。</p>
+<p>顺序奇乱，看到什么想到什么就写什么，回过头来估计就看不懂了。</p>
+<a id="more"></a>
+<hr>
+<h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>跟<a href="https://aluvion.gitee.io/2021/03/16/Chrome%E6%B5%8F%E8%A7%88%E5%99%A8%E6%BC%8F%E6%B4%9E%E5%85%A5%E9%97%A8/" target="_blank" rel="noopener">上一篇文章</a>差不多，不过这次不切换分支了（记得把diff打上去），期间还遇到一个一个问题：</p>
+<pre><code>/root/v8/v8/buildtools/linux64/gn: /lib64/libc.so.6: version `GLIBC_2.18&#39; not found (required by /root/v8/v8/buildtools/linux64/gn)
+</code></pre><p>看起来是Glibc版本过低，更新的时候出了点奇奇怪怪的问题，所以换个Centos8再来一遍（yum install python2就能装上python2.7了），为了编译得快点，顺便换个更高配的主机。</p>
+<p>然后就可以开始调试了，先用directory命令把源码目录配置进来。</p>
+<h3 id="diff分析"><a href="#diff分析" class="headerlink" title="diff分析"></a>diff分析</h3><p>diff文件如下：</p>
+<pre><code class="diff">diff --git a/src/compiler/load-elimination.cc b/src/compiler/load-elimination.cc
+index ff79da8c86..8effdd6e15 100644
+--- a/src/compiler/load-elimination.cc
++++ b/src/compiler/load-elimination.cc
+@@ -866,8 +866,8 @@ Reduction LoadElimination::ReduceTransitionElementsKind(Node* node) {
+     if (object_maps.contains(ZoneHandleSet&lt;Map&gt;(source_map))) {
+       object_maps.remove(source_map, zone());
+       object_maps.insert(target_map, zone());
+-      AliasStateInfo alias_info(state, object, source_map);
+-      state = state-&gt;KillMaps(alias_info, zone());
++      // AliasStateInfo alias_info(state, object, source_map);
++      // state = state-&gt;KillMaps(alias_info, zone());
+       state = state-&gt;SetMaps(object, object_maps, zone());
+     }
+   } else {
+@@ -892,7 +892,7 @@ Reduction LoadElimination::ReduceTransitionAndStoreElement(Node* node) {
+   if (state-&gt;LookupMaps(object, &amp;object_maps)) {
+     object_maps.insert(double_map, zone());
+     object_maps.insert(fast_map, zone());
+-    state = state-&gt;KillMaps(object, zone());
++    // state = state-&gt;KillMaps(object, zone());
+     state = state-&gt;SetMaps(object, object_maps, zone());
+   }
+   // Kill the elements as well.
+</code></pre>
+<p>diff文件的修改简单来说就是注释掉了两个函数中调用KillMaps的部分。</p>
+<h3 id="触发ReduceTransitionElementsKind"><a href="#触发ReduceTransitionElementsKind" class="headerlink" title="触发ReduceTransitionElementsKind"></a>触发ReduceTransitionElementsKind</h3><p>先看看ReduceTransitionElementsKind函数究竟是个什么，往上找找这个函数：</p>
+<pre><code class="c++">switch (node-&gt;opcode()) {
+    ...
+    case IrOpcode::kTransitionElementsKind:
+        return ReduceTransitionElementsKind(node);
+}
+</code></pre>
+<p>执行kTransitionElementsKind这个操作码的时候会调用这个函数，再看看这个操作码的名字kTransitionElementsKind，看起来是个用于转换数组成员类型的操作码，给ReduceTransitionElementsKind函数打上断点（需要先用d8运行一个JavaScript脚本后才会加载这个符号进来）然后简单测试一下：</p>
+<pre><code class="c++">var a = [];
+a[0] = 1;
+a[0] = 1.1;
+a[0] = {};
+</code></pre>
+<p>不会触发断点，看起来除了数组类型转换，还需要满足其他条件才行。</p>
+<p>继续阅读源码，看看这个操作码所属的类IrOpcode，其中一部分如下：</p>
+<pre><code class="c++">class V8_EXPORT_PRIVATE IrOpcode {
+ public:
+  enum Value {
+#define DECLARE_OPCODE(x, ...) k##x,
+    ALL_OP_LIST(DECLARE_OPCODE)
+#undef DECLARE_OPCODE
+        kLast = -1
+#define COUNT_OPCODE(...) +1
+                ALL_OP_LIST(COUNT_OPCODE)
+#undef COUNT_OPCODE
+  };
+}
+</code></pre>
+<p>看起来是给某个字符串加上个k然后定义操作码的地方，找找TransitionElementsKind：</p>
+<pre><code class="c++">#define SIMPLIFIED_OTHER_OP_LIST(V)     \
+  ...
+  V(TransitionElementsKind)             \
+  ...
+</code></pre>
+<p>看起来归属于SIMPLIFIED类操作码，在simplified-operator.cc中能找到生成该操作的函数：</p>
+<pre><code class="c++">const Operator* SimplifiedOperatorBuilder::TransitionElementsKind(
+    ElementsTransition transition) {
+  return zone()-&gt;New&lt;Operator1&lt;ElementsTransition&gt;&gt;(  // --
+      IrOpcode::kTransitionElementsKind,              // opcode
+      Operator::kNoThrow,                             // flags
+      &quot;TransitionElementsKind&quot;,                       // name
+      1, 1, 1, 0, 1, 0,                               // counts
+      transition);                                    // parameter
+}
+</code></pre>
+<p>可以看到返回类型是Operator，而前面switch的node结构体时相吻合：</p>
+<pre><code class="c++">class V8_EXPORT_PRIVATE Node final {
+ public:
+  ...
+  IrOpcode::Value opcode() const {
+    DCHECK_GE(IrOpcode::kLast, op_-&gt;opcode());
+    return static_cast&lt;IrOpcode::Value&gt;(op_-&gt;opcode());
+  }
+
+  ...
+  const Operator* op_;
+}
+</code></pre>
+<p>从TransitionElementsKind函数继续往上找，找到js-native-context-specialization.cc中的ReduceElementAccess函数，再结合前面的ReduceTransitionElementsKind函数，它们似乎都是用于减少某些操作（类型转换、成员访问）次数用的，那就试试用循环将前面的测试代码多跑上很多次：</p>
+<pre><code class="c++">var a;
+for (var i = 0;i &lt; 10000;i++) {
+   a = [];
+   a[0] = 233;
+   a[0] = 233.3;
+   a[0] = {};
+}
+</code></pre>
+<p>这次成功触发了ReduceElementAccess函数处的断点，但是没有触发ReduceTransitionElementsKind的断点，调试一下发现似乎是因为没有发生类型转换。</p>
+<p>这个时候我们观察一下调用栈：</p>
+<p><img src="/css/images/qwb2020_goo/2021040701.png" srcset="/img/loading.gif" alt=""></p>
+<p>注意到runtime-complier，运行时编译，也就是JIT，JavaScript的JIT机制会将某一段经常运行的代码（warm）编译成汇编代码以求加快代码的执行速度，而如果这段代码比预计中运行的还要多（hot），JIT就会把这段代码加以优化来再加快执行速度，所以这些reduce函数其实就是JIT对于hot代码的加速处理。</p>
+<p>所以我们可以通过打印优化代码的方式，看看JIT将这段代码变成了什么样子，用help参数看看d8程序的参数：</p>
+<p><img src="/css/images/qwb2020_goo/2021040702.png" srcset="/img/loading.gif" alt=""></p>
+<p>看起来–print-opt-code参数可以打印出优化代码，试一试：</p>
+<p><img src="/css/images/qwb2020_goo/2021040703.png" srcset="/img/loading.gif" alt=""></p>
+<p>上面是优化后的汇编代码的一部分，可以看到此时生成的数组是一个PACKED_ELEMENTS类型的数组，而这个类型是一个复合类型，里面可以放置整型、浮点、对象等各种类型的成员，所以我们改变它的成员类型时不会发生类型转换。</p>
+<p>改一下声明数组的方式：</p>
+<pre><code class="javascript">var a;
+for (var i = 0;i &lt; 10000;i++) {
+   a = Array(0);
+   a[0] = 233;
+   a[0] = 233.3;
+   a[0] = {};
+}
+</code></pre>
+<p>此时的汇编代码：</p>
+<p><img src="/css/images/qwb2020_goo/2021040704.png" srcset="/img/loading.gif" alt=""></p>
+<p>此时的数组类型为PACKED_SMI_ELEMENTS，是一个整型数组，所以我们修改成员类型时会发生类型转换，就会触发ReduceTransitionElementsKind函数处的断点。然后v8就会通过这些代码，将这段经常执行的JavaScript代码编译成汇编代码，下次要执行时就会直接去调用这些汇编代码。从另一个角度来看，如果经常执行的代码来自一个函数，那么通过大量调用它来触发JIT机制并将其编译成汇编代码后，下次调用这个函数也会直接执行这些汇编代码，再如果这些JIT机制的编译代码中存在问题，这些问题导致的后果就会被保存在这些汇编代码中，我们就可以通过写一个函数的方式触发这些问题。</p>
+<h3 id="ReduceTransitionElementsKind"><a href="#ReduceTransitionElementsKind" class="headerlink" title="ReduceTransitionElementsKind"></a>ReduceTransitionElementsKind</h3><p>简化一下测试代码：</p>
+<pre><code class="javascript">var a;
+for (var i = 0;i &lt; 10000;i++) {
+    a = Array(0);
+    a[1];
+    a[0] = 233.3;
+}
+</code></pre>
+<p>这个函数的流程还是很难理解的，先看看它的参数node：</p>
+<p><img src="/css/images/qwb2020_goo/2021040705.png" srcset="/img/loading.gif" alt=""></p>
+<p>可以看到这个node的操作类型为TransitionElementsKind，这种node应该是类似AST树节点的一个东西，那它上面应该还挂着操作对象等其他数据。继续往下看代码：</p>
+<pre><code class="c++">ElementsTransition transition = ElementsTransitionOf(node-&gt;op());
+</code></pre>
+<p>ElementsTransitionOf函数看来是从node的op（Operator即操作）中生成了一个用于后续转换的变量：</p>
+<pre><code class="c++">ElementsTransition const&amp; ElementsTransitionOf(const Operator* op) {
+    DCHECK_EQ(IrOpcode::kTransitionElementsKind, op-&gt;opcode());
+    return OpParameter&lt;ElementsTransition&gt;(op); // OpParameter看起来是在从op中取参
+}
+
+// Helper to extract parameters from Operator1&lt;*&gt; operator.
+template &lt;typename T&gt;
+inline T const&amp; OpParameter(const Operator* op) {
+    return reinterpret_cast&lt;const Operator1&lt;T, OpEqualTo&lt;T&gt;, OpHash&lt;T&gt;&gt;*&gt;(op) // 强制类型转换
+        -&gt;parameter();
+}
+</code></pre>
+<p>reinterpret_cast是C++中的强制类型转换，在这里他将Operator类型的op转换成了其子类Operator1类型，观察转换后的Operator1对象：</p>
+<p><img src="/css/images/qwb2020_goo/2021040706.png" srcset="/img/loading.gif" alt=""></p>
+<p>可以看到，此时reinterpret_cast做类之间的类型转换时，只是将一个类用另一个类的方式进行解析而已，它们的地址还是一样的。而Operator1是Operator的子类，所以转换为Operator1对象后，除了有Operator本身的一些成员外，它还会将后面地址的一些数据当作自己的成员，也就是：</p>
+<pre><code class="c++">private:
+    T const parameter_;
+    Pred const pred_;
+    Hash const hash_;
+</code></pre>
+<p>这里parameter_成员的T类型就是ElementsTransitionOf函数传入的ElementsTransition类型：</p>
+<pre><code class="c++">// A descriptor for elements kind transitions.
+class ElementsTransition final {
+    public:
+    enum Mode : uint8_t {
+        kFastTransition,  // simple transition, just updating the map.
+        kSlowTransition   // full transition, round-trip to the runtime.
+    };
+
+    ElementsTransition(Mode mode, Handle&lt;Map&gt; source, Handle&lt;Map&gt; target)
+        : mode_(mode), source_(source), target_(target) {}
+
+    Mode mode() const { return mode_; }
+    Handle&lt;Map&gt; source() const { return source_; }
+    Handle&lt;Map&gt; target() const { return target_; }
+
+    private:
+    Mode const mode_;
+    Handle&lt;Map&gt; const source_;
+    Handle&lt;Map&gt; const target_;
+};
+</code></pre>
+<p>看起来是个用于描述类型转换的类，包括mode、source、target等三个属性。parameter_的赋值要回到ReduceElementAccess函数：</p>
+<pre><code class="c++">ElementAccessInfo access_info = access_infos.front();
+
+// Perform possible elements kind transitions.
+MapRef transition_target(broker(),
+                         access_info.lookup_start_object_maps().front());
+for (auto source : access_info.transition_sources()) {
+    DCHECK_EQ(access_info.lookup_start_object_maps().size(), 1);
+    MapRef transition_source(broker(), source);
+    effect = graph()-&gt;NewNode(
+        simplified()-&gt;TransitionElementsKind(ElementsTransition(
+            IsSimpleMapChangeTransition(transition_source.elements_kind(),
+                                        transition_target.elements_kind())
+            ? ElementsTransition::kFastTransition
+            : ElementsTransition::kSlowTransition,
+            transition_source.object(), transition_target.object())),
+        receiver, effect, control);
+}
+</code></pre>
+<p>access_info是个ElementAccessInfo对象，这个类的注释如下：</p>
+<pre><code class="c++">// This class encapsulates all information required to access a certain element.
+</code></pre>
+<p>也就是说是个用于访问数组成员的类，打印一下看看（a[0]=233.3这一句时触发的断点）：</p>
+<p><img src="/css/images/qwb2020_goo/2021040707.png" srcset="/img/loading.gif" alt=""></p>
+<p>根据代码我们可以看到，转换的source来自access_info的transition_sources_属性，target来自lookup_start_object_maps_属性。这两个属性都是一个C++数组类型的数据，里面都只有一个成员，之后会包装进transition_souce和transition_target中。</p>
+<p>前面提到的parameter_属性的mode就是根据transition_source和transition_target的成员类型决定的，它们的成员类型如下：</p>
+<p><img src="/css/images/qwb2020_goo/2021040708.png" srcset="/img/loading.gif" alt=""></p>
+<p>很明显就是我们对数组a做的类型转换（从整型到浮点），parameter_属性的source_和target_属性分别来自transition_source和transition_target的object函数，transition_source和transition_target都是MapRef类型的对象，它们的object函数经过调试可以找到定义：</p>
+<pre><code class="c++">// js-heap-broker.cc
+#define DEF_OBJECT_GETTER(T)                                                 \
+  Handle&lt;T&gt; T##Ref::object() const {                                         \
+    return Handle&lt;T&gt;(reinterpret_cast&lt;Address*&gt;(data_-&gt;object().address())); \
+  }
+#endif  // DEBUG
+
+HEAP_BROKER_SERIALIZED_OBJECT_LIST(DEF_OBJECT_GETTER)
+HEAP_BROKER_POSSIBLY_BACKGROUND_SERIALIZED_OBJECT_LIST(DEF_OBJECT_GETTER)
+HEAP_BROKER_BACKGROUND_SERIALIZED_OBJECT_LIST(DEF_OBJECT_GETTER)
+HEAP_BROKER_NEVER_SERIALIZED_OBJECT_LIST(DEF_OBJECT_GETTER)
+#undef DEF_OBJECT_GETTER
+
+// heap-refs.h
+#define HEAP_BROKER_POSSIBLY_BACKGROUND_SERIALIZED_OBJECT_LIST(V) \
+  /* Subtypes of HeapObject */                                    \
+  V(BigInt)                                                       \
+  V(HeapNumber)                                                   \
+  V(Map)
+</code></pre>
+<p>所以调用object()就是连续调用data_-&gt;object().address()，简单来说就是transition_source.data_.object_（其实也是前面的source变量）：</p>
+<p><img src="/css/images/qwb2020_goo/2021040709.png" srcset="/img/loading.gif" alt=""></p>
+<p>里面是个指针，把transition_source和transition_target的object结果都打印一下看看：</p>
+<p><img src="/css/images/qwb2020_goo/2021040710.png" srcset="/img/loading.gif" alt=""></p>
+<p>可以看到它们指向两个紧挨在一起的地址单元，很可能它们是指向一个新的指针的指针，再打印一轮看看：</p>
+<p><img src="/css/images/qwb2020_goo/2021040711.png" srcset="/img/loading.gif" alt=""></p>
+<p>可以看到，它们指向的数据最低位都是1，恰好符合v8中的指针存储方式，用job命令验证一下：</p>
+<p><img src="/css/images/qwb2020_goo/2021040712.png" srcset="/img/loading.gif" alt=""></p>
+<p>可以看到，这就是代表数组类型的两个Map属性了。</p>
+<h3 id="object-maps-contains判断"><a href="#object-maps-contains判断" class="headerlink" title="object_maps.contains判断"></a>object_maps.contains判断</h3><p>要进入被diff修改的代码处还需要满足两个条件，第一个不提，如果我们将代码修改为：</p>
+<pre><code class="c++">var a;
+for (var i = 0;i &lt; 10000;i++) {
+    a = Array(0);
+    a[0] = 233.3;
+}
+</code></pre>
+<p>第二个条件：</p>
+<pre><code class="c++">if (object_maps.contains(ZoneHandleSet&lt;Map&gt;(source_map)))
+</code></pre>
+<p>就会无法通过。object_maps是一个对象Map属性的Set集合，里面存储了访问过的一些对象的Map属性，所以在进行类型转换之前，需要先访问一下这个数组内的成员，object_maps中才会存有这个数组的Map属性，即这里的source_map变量。</p>
+<h3 id="KillMaps"><a href="#KillMaps" class="headerlink" title="KillMaps"></a>KillMaps</h3><p>代码中还能看到一些zone类的使用，其注释如下：</p>
+<pre><code class="c++">// The Zone supports very fast allocation of small chunks of
+// memory. The chunks cannot be deallocated individually, but instead
+// the Zone supports deallocating all chunks in one fast
+// operation. The Zone is used to hold temporary data structures like
+// the abstract syntax tree, which is deallocated after compilation.
+//
+// Note: There is no need to initialize the Zone; the first time an
+// allocation is attempted, a segment of memory will be requested
+// through the allocator.
+//
+// Note: The implementation is inherently not thread safe. Do not use
+// from multi-threaded code.
+</code></pre>
+<p>看起来是用来分配内存的，从开开始看代码下来：</p>
+<pre><code class="c++">Node* const object = NodeProperties::GetValueInput(node, 0);
+Handle&lt;Map&gt; source_map(transition.source());
+Handle&lt;Map&gt; target_map(transition.target());
+Node* const effect = NodeProperties::GetEffectInput(node);
+AbstractState const* state = node_states_.Get(effect);
+</code></pre>
+<p>可以看到，object、effect两个node都来自参数的node（即操作类型为TransitionElementsKind的node），node类的注释如下：</p>
+<pre><code class="c++">// A Node is the basic primitive of graphs. Nodes are chained together by
+// input/use chains but by default otherwise contain only an identifying number
+// which specific applications of graphs and nodes can use to index auxiliary
+// out-of-line data, especially transient data.
+//
+// In addition Nodes only contain a mutable Operator that may change during
+// compilation, e.g. during lowering passes. Other information that needs to be
+// associated with Nodes during compilation must be stored out-of-line indexed
+// by the Node&#39;s id.
+</code></pre>
+<p>大概就是说节点（node）是图（graph）的基本构成，每个节点有一个用于区分的ID且只有一个操作，节点之间通过input/use来连接：</p>
+<pre><code class="c++">// ---------------------------------------------------------------------------
+// Input layout.
+// Inputs are always arranged in order as follows:
+//     0 [ values, context, frame state, effects, control ] node-&gt;InputCount()
+</code></pre>
+<p>可以看到，一共有五种输入（input），这里关注value（大概是该操作需要的操作对象/参数）和effect（动作/下一步操作）这两种输入，先看看value：</p>
+<p><img src="/css/images/qwb2020_goo/2021040713.png" srcset="/img/loading.gif" alt=""></p>
+<p>value_in和value_out就相当于进出节点的感觉。可以看到，这是个FinishRegion节点（调试可以发现跟在ReduceElementAccess函数中生成的不太一样，可能后面做了什么处理），代码中有一段关于FinishRegion节点的注释：</p>
+<pre><code class="c++">// If we previously recorded information about a const store on the given
+// &#39;object&#39;, we might not have done it on the same node; e.g. we might now
+// identify the object by a FinishRegion node, whereas the initial const
+// store was performed on the Allocate node. We therefore remove information
+// on all nodes that must alias with &#39;object&#39;.
+</code></pre>
+<p>看起来是跟常量存储相关的节点（调试其Value节点是个Allocate节点，再继续可以看到是个NumberConstant节点，里面放了个数16，不知道做什么用的），此外，既然他是TransitionElementsKind操作的Value节点，那它应该是个与我们要进行类型转换的数组a有关的节点。</p>
+<p>source_map和target_map就是前面提到过的两个Map属性，再看看effect变量：</p>
+<p><img src="/css/images/qwb2020_goo/2021040714.png" srcset="/img/loading.gif" alt=""></p>
+<p>是个CheckBounds节点，看起来是用来检查数组边界的，跟这次的主题没什么关系的样子。</p>
+<p>然后是state，它从node_states_变量而来，这是个AbstractStateForEffectNodes对象，从名字上看起来是根据Effect节点获取相应的状态（state），其定义如下：</p>
+<pre><code class="c++">LoadElimination::AbstractState const*
+    LoadElimination::AbstractStateForEffectNodes::Get(Node* node) const {
+    size_t const id = node-&gt;id();
+    if (id &lt; info_for_node_.size()) return info_for_node_[id];
+    return nullptr;
+}
+</code></pre>
+<p>看起来，每个节点都有一个相应的状态，此时获取了TransitionElementsKind节点的Effect节点（CheckBounds）对应的状态，这是一个AbstractState对象，里面有个Print函数可以打印出其中的数据：</p>
+<p><img src="/css/images/qwb2020_goo/2021040715.png" srcset="/img/loading.gif" alt=""></p>
+<p>Allocate节点应该就是那个与JavaScript中数组a相关的节点，可以看到状态由maps和fields两种成员组成，看起来都跟节点有关，查看它们在源码里的定义可以发现，它们都有一个重要的属性叫做info_for_node_，v8可以根据节点从中取出相关的数据，具体的后面再说。</p>
+<p>接下来就看关键的三行代码：</p>
+<pre><code class="c++">AliasStateInfo alias_info(state, object, source_map);
+state = state-&gt;KillMaps(alias_info, zone());
+state = state-&gt;SetMaps(object, object_maps, zone());
+</code></pre>
+<p>使用状态、对象和转换前Map属性制作了一个alias_info变量，看其名字可能是用于查找同名/同个节点的，具体用处还要往后看。此外我们还可以看到，在JIT中代表一个对象的节点跟其Map属性是分割开的，那么久可能存在一个情况，读写该对象时使用的类型不是放在该对象首个地址单元处的Map属性，而是保存在状态某个地方与该对象节点相关联的Map属性。</p>
+<p>再看看KillMaps函数：</p>
+<pre><code class="c++">LoadElimination::AbstractState const* LoadElimination::AbstractState::KillMaps(
+    const AliasStateInfo&amp; alias_info, Zone* zone) const {
+    if (this-&gt;maps_) {
+        AbstractMaps const* that_maps = this-&gt;maps_-&gt;Kill(alias_info, zone);
+        if (this-&gt;maps_ != that_maps) {
+            AbstractState* that = zone-&gt;New&lt;AbstractState&gt;(*this);
+            that-&gt;maps_ = that_maps;
+            return that;
+        }
+    }
+    return this;
+}
+</code></pre>
+<p>基本上可以认为就是调用了this-&gt;maps_-&gt;Kill，不然就跟没调用没什么区别，maps_属性是个AbstractMaps对象，其定义如下：</p>
+<pre><code class="c++">// Abstract state to approximate the current map of an object along the
+// effect paths through the graph.
+class AbstractMaps final : public ZoneObject {
+    public:
+    ...
+
+    private:
+    ZoneMap&lt;Node*, ZoneHandleSet&lt;Map&gt;&gt; info_for_node_;
+};
+</code></pre>
+<p>从注释来看，似乎是用于描述某个对象的Map属性的？可以看到里面只有一个属性info_for_node_，其是一个Map类型的对象，键为node值为Set，值的类型看起来很眼熟（ReduceTransitionElementsKind函数中的object_maps变量），我们回去看看：</p>
+<pre><code class="c++">ZoneHandleSet&lt;Map&gt; object_maps;
+if (state-&gt;LookupMaps(object, &amp;object_maps)) {
+    ...
+}
+</code></pre>
+<p>看起来它是从state中获得的，再跟一跟：</p>
+<pre><code class="c++">bool LoadElimination::AbstractState::LookupMaps(
+    Node* object, ZoneHandleSet&lt;Map&gt;* object_map) const {
+    return this-&gt;maps_ &amp;&amp; this-&gt;maps_-&gt;Lookup(object, object_map);
+}
+
+bool LoadElimination::AbstractMaps::Lookup(
+    Node* object, ZoneHandleSet&lt;Map&gt;* object_maps) const {
+    auto it = info_for_node_.find(ResolveRenames(object));
+    if (it == info_for_node_.end()) return false;
+    *object_maps = it-&gt;second;
+    return true;
+}
+</code></pre>
+<p>可以看到，它最后就是来自state的maps_属性的info_for_node_属性，那么就是说，在JIT代码中，一个对象由一个节点表示，状态中保存着与该节点相关联的Map属性，需要使用时可以根据节点取出。</p>
+<h3 id="Kill"><a href="#Kill" class="headerlink" title="Kill"></a>Kill</h3><p>回到KillMaps，进入Kill函数：</p>
+<pre><code class="c++">LoadElimination::AbstractMaps const* LoadElimination::AbstractMaps::Kill(
+    const AliasStateInfo&amp; alias_info, Zone* zone) const {
+    for (auto pair : this-&gt;info_for_node_) {
+        if (alias_info.MayAlias(pair.first)) {
+            AbstractMaps* that = zone-&gt;New&lt;AbstractMaps&gt;(zone);
+            for (auto pair : this-&gt;info_for_node_) {
+                if (!alias_info.MayAlias(pair.first)) that-&gt;info_for_node_.insert(pair);
+            }
+            return that;
+        }
+    }
+    return this;
+}
+</code></pre>
+<p>遍历了info_for_node_属性这个Map，pair.first代表键即节点，这里的关键在于MayAlias函数：</p>
+<pre><code class="c++">bool LoadElimination::AliasStateInfo::MayAlias(Node* other) const {
+    // If {object} is being initialized right here (indicated by {object} being
+    // an Allocate node instead of a FinishRegion node), we know that {other}
+    // can only alias with {object} if they refer to exactly the same node.
+    if (object_-&gt;opcode() == IrOpcode::kAllocate) {
+        return object_ == other;
+    }
+    // Decide aliasing based on the node kinds.
+    if (!compiler::MayAlias(object_, other)) {
+        return false;
+    }
+    // Decide aliasing based on maps (if available).
+    Handle&lt;Map&gt; map;
+    if (map_.ToHandle(&amp;map)) {
+        ZoneHandleSet&lt;Map&gt; other_maps;
+        if (state_-&gt;LookupMaps(other, &amp;other_maps) &amp;&amp; other_maps.size() == 1) {
+            if (map.address() != other_maps.at(0).address()) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+</code></pre>
+<p>用于判断两个节点是否是同一个，综合Kill和MayAlias函数起来看，意思就是，如果一个状态中有两个或更多节点关联着同一个Map属性，就会新建一个新的AbstractMaps对象（也就是跟状态中的maps_属性相同类型），然后将其他与此Map属性无关的节点-属性对应放进这个新的AbstractMaps对象中，简单来说就是把跟这个要被转换的Map属性从状态里面删掉了，最后将新的AbstractMaps对象返回。</p>
+<p>再结合起KillMaps函数，如果Kill函数返回了一个新的AbstractMaps对象，就会用其包装一个新的状态再返回。</p>
+<p>最后总结，KillMaps函数的作用就是将这个要被转换的Map属性从状态里面删掉，setMaps的作用就是将新的Map属性放入状态中并与此节点再次关联起来，这样就避免了当一个状态中有两个或更多节点关联着同一个Map属性时，前面一个节点发生了类型转换修改了其关联着的Map属性，后一个/一些节点还保留着旧的Map属性（这样不同节点就会以不同类型访问同个数组对象，造成类型混淆）。而题目中注释掉了这行代码，就会导致这个要被转换的Map属性被保留了下来，而setMaps只会修改该发生类型转换节点的Map属性，而其他节点没有修改，导致一个类型混淆漏洞。</p>
+<h3 id="类型混淆"><a href="#类型混淆" class="headerlink" title="类型混淆"></a>类型混淆</h3><p>要制造”一个状态中有两个或更多节点关联着同一个Map属性”这个情况，用函数传参来做是最方便的：</p>
+<pre><code class="javascript">function optCode(a, b) {
+    a[0];
+    a[0] = 1.1;
+    b[0];
+    b[0] = {};
+}
+
+var a;
+for (var i = 0;i &lt; 10000;i++) {
+    a = Array(0);
+    optCode(a, a);
+}
+</code></pre>
+<p>第一次类型转换的setMaps前：</p>
+<p><img src="/css/images/qwb2020_goo/2021040716.png" srcset="/img/loading.gif" alt=""></p>
+<p>第一次类型转换的setMaps后：</p>
+<p><img src="/css/images/qwb2020_goo/2021040717.png" srcset="/img/loading.gif" alt=""></p>
+<p>第二次类型转换的setMaps前：</p>
+<p><img src="/css/images/qwb2020_goo/2021040718.png" srcset="/img/loading.gif" alt=""></p>
+<p>第二次类型转换的setMaps后：</p>
+<p><img src="/css/images/qwb2020_goo/2021040719.png" srcset="/img/loading.gif" alt=""></p>
+<p>可以看到，两个节点相关联的Map属性已经产生了区别，a把它当作浮点数组，b把它当作对象数组，而它实际上已经是个对象数组，这样一来类型混淆就产生了。经过测试我们发现，这种Map属性不一致（对象数组和浮点数组）的情况下函数返回之后a会是一个对象数组，所以我们可以让a把它当作对象数组，b把它当作浮点数组，这样我们就可以通过写b将一个浮点数写入进去，后面访问的时候就会把这个浮点数当作一个指针。</p>
+<p>实际上这样利用还是无法成功，因为函数代码比较简单，所以JIT在编译阶段可以获得的信息比较充分，类型判断简单，我们可以通过添加条件判断的方式绕过：</p>
+<pre><code class="javascript">function optCode(a, b, f1, f2) {
+    a[0];
+    b[0];
+    if (f1) {
+        a[0] = {};
+    }
+    if (f2) {
+        b[0] = 1.1;
+    }
+
+}
+
+var a;
+for (var i = 0;i &lt; 10000;i++) {
+    a = Array(0);
+    optCode(a, a, true, false);
+    a = Array(0);
+    optCode(a, a, false, true);
+}
+
+a = Array(0);
+optCode(a, a, true, true);
+%DebugPrint(a);
+%SystemBreak();
+print(a[0]);
+</code></pre>
+<p>打印出来的数组a：</p>
+<p><img src="/css/images/qwb2020_goo/2021040720.png" srcset="/img/loading.gif" alt=""></p>
+<p>其element属性如下：</p>
+<p><img src="/css/images/qwb2020_goo/2021040721.png" srcset="/img/loading.gif" alt=""></p>
+<p>可以看到，写入的浮点数1.1已经被当做了一个指针。后面的做法就是利用v8的pointer compression机制，爆破/调试获得低32位地址再进行利用了，太麻烦就不提了。</p>
+<hr>
+<h3 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h3><p><a href="https://www.anquanke.com/post/id/224195" target="_blank" rel="noopener">writeup</a></p>
+<p><a href="https://mem2019.github.io/jekyll/update/2020/09/19/QWB-GooExec.html" target="_blank" rel="noopener">writeup2</a></p>
+<p><a href="https://segmentfault.com/a/1190000023193375" target="_blank" rel="noopener">JavaScript数组优化</a></p>
+<p><a href="https://zhuanlan.zhihu.com/p/25669120/" target="_blank" rel="noopener">JIT</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                      <a class="hover-with-bg" href="/tags/二进制/">二进制</a>
+                    
+                      <a class="hover-with-bg" href="/tags/浏览器/">浏览器</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2021/03/16/Chrome浏览器漏洞入门/">
+                        <span>Chrome浏览器漏洞入门</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js"></script>
+<script src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js"></script>
+<script src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js"></script>
+<script src="/js/main.js"></script>
+
+
+  <script src="/js/lazyload.js"></script>
+
+
+
+  
+  <script src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js"></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "chrome浏览器漏洞强化1&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js"></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script src="/js/local-search.js"></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js"></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

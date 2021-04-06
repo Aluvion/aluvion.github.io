@@ -142,6 +142,46 @@
     
     
     <div class="col-12 col-md-12 mx-auto index-info">
+      <a href="/2019/03/14/DNS-Rebinding/">
+        <p class="h4 index-header">DNS-Rebinding</p>
+      </a>
+
+      <a href="/2019/03/14/DNS-Rebinding/">
+        
+        
+          
+          
+        
+        <div class="index-excerpt" style="max-height: none;">
+          <div class="index-text mb-1">
+前言在SSRF漏洞的利用中，经常能看到后端对输入域名或者IP的各种检验过滤，那我们就需要用各种方式来进行绕过了，而其中有一种叫做DNS Rebinding（DNS重绑定）的绕过方式有别于其他的绕过方式，很有趣。
+DNS、TTL访问域名的时候，服务器会先向DNS服务器发出解析请求，DNS服务器再向域名指定的授权DNS服务器发出解析请求，得到该域名对应的IP，然后去访问该IP地址。
+TTL指DNS缓存的存活时间。在第一次DNS请求后，请求结果会被DNS服务器缓存下来，在缓存存活时间内不再请求，而是直接将结果返回。
+后端检验一般来说后端检验并执行会向DNS服务器发出两次请求，第一次询问对应IP是否合法（在内网），第二次获取对应IP进行访问。有时候可以通过302跳转来绕过。
+DNS Rebinding通过各种手段，让后端第一次DNS请求得到的IP为外网，第二次为内网。
+防御方法缓存第一次DNS解析结果。...</div>
+        </div>
+      </a>
+
+      <div class="index-btm">
+        
+          <i class="iconfont icon-riqi2"></i>&nbsp;2019-03-14&nbsp;&nbsp;
+        
+        
+        
+          <i class="iconfont icon-tag"></i>
+          
+            <a href="/tags/Web/">Web</a>&nbsp;
+          
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
       <a href="/2019/03/14/在连接MySQL服务端时读取客户端文件/">
         <p class="h4 index-header">在连接MySQL服务端时读取客户端文件</p>
       </a>
@@ -247,9 +287,9 @@ WordPress commit &lt;= 43bdb0e193955145a5ab1137890bb798bce5f0d2 （WordPress 5.1
         
           <i class="iconfont icon-tag"></i>
           
-            <a href="/tags/复现/">复现</a>&nbsp;
-          
             <a href="/tags/二进制/">二进制</a>&nbsp;
+          
+            <a href="/tags/复现/">复现</a>&nbsp;
           
         
       </div>
@@ -323,9 +363,9 @@ WordPress commit &lt;= 43bdb0e193955145a5ab1137890bb798bce5f0d2 （WordPress 5.1
         
           <i class="iconfont icon-tag"></i>
           
-            <a href="/tags/复现/">复现</a>&nbsp;
-          
             <a href="/tags/二进制/">二进制</a>&nbsp;
+          
+            <a href="/tags/复现/">复现</a>&nbsp;
           
         
       </div>

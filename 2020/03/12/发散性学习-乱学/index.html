@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>发散性学习(乱学) - Twings</title>
+
+  <link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css">
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+  <link rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css">
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+</head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期四, 三月 12日 2020, 4:43 下午
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    2.7k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      10 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>终于把毕设的第一部分完成了，过一段时间再去看老师的批注来修改吧。</p>
+<p>做毕设的时候用的框架晚点再写。</p>
+<p>因为最近对乱七八糟的东西感兴趣，所以一边看文章一边动手顺便一边写一写自己的学习过程。</p>
+<a id="more"></a>
+<hr>
+<h3 id="BiliBili-直播"><a href="#BiliBili-直播" class="headerlink" title="BiliBili 直播"></a>BiliBili 直播</h3><p>F12 审查元素可以看到弹幕的实现方式是 div 的重叠，不过我完全不懂前端，就不提了。</p>
+<p>根据 F12 看到的 websocket、无限加载的 flv 文件以及网上的资料，BiliBili 的直播实现方式应该是 rtmp 推流 + httpflv 拉流，websocket 可能用来获取弹幕。貌似轮询加载的 data.bilibili.com/log/web 上面带了直播间相关的信息，不过比较复杂我看不懂作用。</p>
+<p>这时候如果观察 websocket 中的数据，就会发现基本都是一些开头类似，内容不同的数据，猜测前面是数据包的头，主要数据经过了加密处理，有人好像已经做过了解析：<a href="https://github.com/yangjunlong/barrager.js" target="_blank" rel="noopener">https://github.com/yangjunlong/barrager.js</a> 。</p>
+<p>不过他的 player.js 的版本跟现在网站上使用的已经不同了，说不准合不合用，所以我打算自行研究一番。</p>
+<p>一开始我从 websocket 相关的 onmessage 找起，结果一直找不到地方。后来我从弹幕处理的尾部（就是弹幕显示到我们屏幕上的时候）往前推，从 addDanmaku 到 _messageReply ，根据 onReceivedMessage 到 onMessageReply，就能找到 e.prototype.onMessage 了，最后的解析函数就是 convertToObject 这个函数。这函数链是真的复杂。</p>
+<p>后面想分析一下具体的处理的过程，但是他的不知名函数套娃分析起来实在是太麻烦了……</p>
+<p>不研究了，要研究光看这个文件还不够，这个文件里面的代码只是运行了函数，相关代码只是放在对象里面还没有运行。要解包可以下断点把它的对象拿来用。</p>
+<p>后来我观察了一下 Network 的流量，觉得可以尝试断点调试一下，但是它的 JS 文件没有经过美化的，直接下断点会把自己的浏览器卡死。所以我就打算把某个直播间的 HTML 文件和几个需要用到的 JS 文件下载下来，在本地搭个环境。</p>
+<p>接着我就发现，它的 JS 执行是一环一环的，前面的 XHR 没有成功后面的 WebSocket 就不会建立了。</p>
+<p>没办法，我就在本地用 Python 简单写了个后端，然后把本地的 DNS 解析指向了自己( WebSocket 那个域名我没改成功，不知道为什么，最后是直接改了 player 那个 JS 文件里面的域名)。如果不需要本地调试，也可以尝试覆写直接调试网站上的 JS，参考这篇文章：<a href="https://cloud.tencent.com/developer/article/1563717" target="_blank" rel="noopener">https://cloud.tencent.com/developer/article/1563717</a> 。</p>
+<p>按照这个思路，我就可以修改 JS 代码，实现弹幕的分离了(?)，比如只看同传 man 的弹幕，或者只把同传 man 的弹幕放到直播界面上。</p>
+<p>按照 addDanmaku 函数跟下去，可以发现弹幕的收集是使用队列来实现的，WebSocket 收到信息之后按长度分段入队：</p>
+<pre><code class="javascript">void 0 === t &amp;&amp; (t = !1);
+var i = this._player.config.user;
+if (e.text &amp;&amp; e.text.length &gt; 30 &amp;&amp; a.default.DANMAKU_MODE_TOP === e.mode) {
+    for (var n = e.text.split(&quot;&quot;), o = Math.floor(n.length / 30) + 1, r = 1; r &lt; o; r++)
+        n.splice(30 * r, 0, &quot;\n&quot;);
+    e.text = n.join(&quot;&quot;),
+        e.textAlign = &quot;center&quot;
+}
+i.isSuperUser &amp;&amp; (e.color = i.superUserForceColor),
+    i.isSuperUser &amp;&amp; (e.mode = a.default.DANMAKU_MODE_REVERSE),
+    t ? this._danmaku &amp;&amp; this._danmaku.add(e) : this._WAITING_QUEUE.push(e)
+</code></pre>
+<p>我好像没见过 t 为 true 的时候。接下来按照队列来寻找，就会发现弹幕的显示使用 setTimeout 套娃每 2 秒调用 _render 函数做的。</p>
+<p>然后就是 _render 调用 _add 来显示弹幕啦：</p>
+<pre><code class="javascript">e.prototype._add = function(e, t) {
+    var i = this;
+    if (void 0 === t &amp;&amp; (t = this._RENDER_INTERVAL_TIME),
+    e.length) {
+        var n = e.splice(0, 1)[0];
+        this._checkVideoIsPaused() &amp;&amp; this._danmaku &amp;&amp; this._danmaku.add(n),
+        n = null,
+        window.clearTimeout(this._TIMEOUT_ADD_DANMAKU),
+        this._TIMEOUT_ADD_DANMAKU = window.setTimeout(function() {
+            i._add(e, t)
+        }, t)
+    }
+}
+</code></pre>
+<p>这里还是套娃，间隔时间在 _render 函数中按照弹幕数量来计算。</p>
+<p>其实仔细一看就会发现，弹幕是分成两部分来处理的，上面所说的部分有个 _checkVideoIsPaused() 函数的处理，换句话说就是这部分是显示在直播界面上的弹幕的部分。Block 几个加载的 JS 也可以发现，直播界面上的弹幕只需要 player 和 jq 两个 JS。</p>
+<p>那右边的滚动弹幕是怎么处理的呢？要看几十万行代码就太复杂了，所以我 block 了几个 JS，确定了最后生成滚动弹幕 div 的代码在 3.xxxx.js 文件中，关键代码如下：</p>
+<pre><code class="JavaScript">var F = Object(i.a)(&quot;span&quot;, &quot;user-name v-middle &quot; + (g ? &quot;my-self&quot; : &quot;pointer open-menu&quot;), (g ? &quot;[自己]&quot; : t.userInfo.username) + &quot; : &quot;, g ? null : t.activityInfo.usernameColor &amp;&amp; [[&quot;style&quot;, &quot;color:&quot; + t.activityInfo.usernameColor]]);
+R.appendChild(F);
+var G = Object(i.a)(&quot;span&quot;, &quot;danmaku-content v-middle pointer ts-dot-2&quot; + (g ? &quot;&quot; : &quot; open-menu&quot;), w);
+return R.appendChild(G),
+</code></pre>
+<p>然后根据调用链往上找就看到这部分弹幕的处理方法了，在 _messageReply 函数的最后一行，会根据是否屏蔽弹幕来调用 _addServerCallbackSmoothly 函数将弹幕放入另一个队列 _SERVER_CALLBACK_QUEUE 中，然后再通过类似的 _renderServerCallback 套娃 _callServerCallback 再调用 3.xxxx.js 中的 receiveMessage，即绑定在 receiveMessage 上面的 ae 函数处理到屏幕上。</p>
+<p>这前端代码真的是复杂……流程复杂函数名也复杂。</p>
+<p>脑洞一开想到了弹幕姬，思考一下如果要自己整一个要怎么做，WebSocket 是没有跨域也没有 Cookie 表示身份的，所以加入某个直播间肯定是通过客户端发送直播间相关信息，给 WebSocket 数据包加密函数加个 console.log，可以打印出身份验证包：</p>
+<pre><code class="json">{&quot;uid&quot;:xxxxxxxxx,&quot;roomid&quot;:21641569,&quot;protover&quot;:2,&quot;platform&quot;:&quot;web&quot;,&quot;clientver&quot;:&quot;1.10.3&quot;,&quot;type&quot;:2,&quot;key&quot;:&quot;xxxxxxxxxxxxxxxxxxxxxx&quot;}
+</code></pre>
+<p>uid 就是自己的 id，key 就是访问 getConf 接口拿到的 token。除此之外还有很多个空的 heartbeat 数据包，不提。那么理论上只要带上 cookie 访问这个接口，拿到 token 之后进行 WebSocket 身份验证，就可以在自己的客户端上看到弹幕了。</p>
+<p>接下来开始仔细研究一下 player.js 里面的代码，探究一下功能的具体实现方式，按三个 !function 的执行顺序来看，学习前端开发的同时顺便琢磨一下反代码审计。</p>
+<p>通过断点观察调用链，直播间的实现原理就差不多清晰了，player.js 将用来初始化直播间的 EmbedPlayer 函数挂到 window 上，然后在 HTML 里面加载调用。</p>
+<p>第一个函数的函数体：</p>
+<pre><code class="javascript">&quot;object&quot; == typeof exports &amp;&amp; &quot;object&quot; == typeof module ? module.exports = t() : &quot;function&quot; == typeof define &amp;&amp; define.amd ? define([], t) : &quot;object&quot; == typeof exports ? exports.EmbedPlayer = t() : e.EmbedPlayer = t()
+</code></pre>
+<p>这里似乎是对几种 JS 规范的判断，还是一个套娃三木判断，第一个部分似乎是 Node.JS 使用的 CommonJS 规范，第二个部分是浏览器的 AMD 规范，最后似乎还是 Node.JS，最后在浏览器上运行的就是最后一种：e.EmbedPlayer = t()，将第二个参数作为函数执行，然后将结果挂在第一个参数对象中的 EmbedPlayer 上。</p>
+<p>接下来看函数的参数部分，第一个参数是 window，第二个部分则是一个函数。该函数执行之后会套娃进行里面的函数，然后返回里面函数的执行结果，里面函数的参数部分是一个函数数组，函数体将参数和各种对象、函数放进 n 里面组装了一个对象 n，然后返回调用 n 函数后的结果：</p>
+<pre><code class="javascript"> if (t[r])
+     return t[r].exports;
+ var a = t[r] = {
+     i: r,
+     l: !1,
+     exports: {}
+ };
+ return e[r].call(a.exports, a, a.exports, n),
+     a.l = !0,
+     a.exports
+</code></pre>
+<p>n 函数会调用第四个函数，然后返回一个 a.exports 对象，函数大概是这样：</p>
+<pre><code class="javascript">function(e, t, n) {
+    var r = n(5).default;
+    e.exports = r,
+    window.EmbedPlayer = r
+}
+</code></pre>
+<p>这里又执行了一遍 n 函数，这次是调用第五个函数，函数太长我就不放了，主要逻辑就是执行了几个之前的函数数组里的函数，把结果存在变量里面，然后将各种函数和属性塞进一个对象 c 里面，并将 c 赋值给前面的 a.exports.default，所以第一个大函数执行完之后，window.EmbedPlayer 其实就是这个 c ，调用的时候执行的就是 541 行初的 e 函数。</p>
+<p>说一个题外话，前端程序员在代码里夹带了好多私货啊，我合理怀疑他是个海王星厨，还是个炮姐厨。</p>
+<p>其他几个大函数都跟上面讲的里面函数差不多，组合了一堆属性和函数，再把相关的入口函数挂到 window 上。</p>
+<p>接下来我继续断点调试，尝试理清整个流程，首先是事件的绑定：HTML new 一个 window.EmbedPlayer，也就是运行了 541 行的 e 函数 -&gt; initialize -&gt; new window.Player -&gt; 14742行的匿名函数 -&gt; 调用 addFirstPlayCallback 入队 _firstPlayingCallbackQueue 回调 -&gt; 绑定 loadedmetadata 事件 -&gt; 加载成功后调用 triggerFirstPlayCallback 处理回调。</p>
+<p>正常是这个流程，如果直播加载不出来呢？这时候会通过设定好定时的 triggerFirstPlayCallback 函数处理 _firstPlayingCallbackQueue，从队列里面取出回调函数，执行 i.components.socket.init 来建立 WebSocket 连接，除了触发回调的那一步，后面的步骤都是一样的。</p>
+<p>后来我花了点时间，把 player.js 里面的关于 WebSocket 数据包加解密的代码提取了出来，不过精简的不够彻底，还剩下1000+行的代码，看起来都跟加解密有关，我也就懒得继续删改了，能用就行。</p>
+<p>下一步的学习应该是用 JS 写一个自己的 B 站弹幕姬软件来玩玩。</p>
+<p>我在看别人写过的第三方 B 站弹幕软件的时候，抓包发现他的 WebSocket 数据包竟然是没有加密的，这是为什么呢？不清楚 B 站是什么样的机制，不管了。</p>
+<p>筛选出的加解密代码大概是这个样子：</p>
+<pre><code class="javascript">!function(e) {
+...
+}
+({
+    22: function(e, t, n) {
+        ...
+    },
+    25: function(e, t) {
+        var n, i;
+        n = &quot;undefined&quot; != typeof self ? self : this,
+        i = function() {
+            return function(e) {
+                ...
+            }([
+                ...
+            ])
+        }
+        ,
+        e.exports = i()
+    }
+})
+</code></pre>
+<hr>
+<p>Orz</p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2020/03/12/VueElectronElementUI开发自己的B站弹幕姬/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>VueElectronElementUI开发自己的B站弹幕姬</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2019/12/31/Vue学习笔记(2)/">
+                        <span>Vue学习笔记(2)</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js"></script>
+<script src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js"></script>
+<script src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js"></script>
+<script src="/js/main.js"></script>
+
+
+  <script src="/js/lazyload.js"></script>
+
+
+
+  
+  <script src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js"></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "发散性学习(乱学)&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js"></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script src="/js/local-search.js"></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js"></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

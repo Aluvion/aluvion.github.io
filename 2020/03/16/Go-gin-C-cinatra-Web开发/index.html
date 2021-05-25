@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>Go-gin/C++-cinatra Web开发 - Twings</title>
+
+  <link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css">
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+  <link rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css">
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+</head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期一, 三月 16日 2020, 10:46 上午
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    1.1k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      5 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>做毕设的时候用到了 Go 和 C++ 开发了两个 Web 后端，顺便简单记录一下。</p>
+<a id="more"></a>
+<hr>
+<h3 id="Go-gin"><a href="#Go-gin" class="headerlink" title="Go - gin"></a>Go - gin</h3><p>Go 的函数返回中数据和错误一般是分开的，方便错误处理。Web 开发选用的是比较轻量级的 gin 框架，这个框架的中文文档好像有点时日没有更新了，建议去看 GitHub 上的官方文档，在开发过程中用到了这些库：</p>
+<pre><code>&quot;net/http&quot;
+&quot;encoding/json&quot;
+&quot;github.com/gin-gonic/gin&quot;
+&quot;github.com/gomodule/redigo/redis&quot;
+_ &quot;github.com/go-sql-driver/mysql&quot;
+&quot;github.com/jmoiron/sqlx&quot;
+&quot;sort&quot;
+</code></pre><p>Go 的库安装也很简单，go get 就可以了，也可以自己去 GitHub 上下载。</p>
+<p>第一个 http 库是为了 set cookie 使用的，用来表示 cookie 的安全策略：</p>
+<pre><code class="go">c.SetCookie(&quot;SESSID&quot;, string(data)[:36], 3600 * 24 * 30, &quot;/api/&quot;, &quot;xxx.monster&quot;, http.SameSiteLaxMode, false, true)
+</code></pre>
+<p>第二个是 json 库，大概是这样用法：</p>
+<pre><code class="go">var session map[string]interface{}
+json.Unmarshal([]byte(data), &amp;session)
+...
+team = session[&quot;team&quot;].(string)
+</code></pre>
+<p>data 是 json 字符串，值得一提的是从这个 session 里面取值的时候，需要加上数据类型，还有则是在我的 docker 环境(也就是 go 官方镜像)下，反序列化之后，数字类型会默认用 float64 存放，所以取值也需要用 float64 来取值。</p>
+<p>第三个是 gin，不提。第四个是 redis 库，具体做法是初始化一个连接池，需要用的时候再取出使用：</p>
+<pre><code class="go">func newPool(addr string) *redis.Pool {
+    return &amp;redis.Pool{
+        MaxIdle: 3,
+        IdleTimeout: 240 * time.Second,
+        Dial: func () (redis.Conn, error) { return redis.Dial(&quot;tcp&quot;, addr) },
+    }
+}
+...
+conn := pool.Get()
+defer conn.Close()
+encodedSession, err := redis.String(conn.Do(&quot;get&quot;, cookie))
+</code></pre>
+<p>五、六都是 MySQL 库，前面加个 _ 的意思是我们不使用包里面的成员函数，只使用构造函数，同样也是连接池的做法：</p>
+<pre><code class="go">func newDb() *sqlx.DB {
+    Db, _ := sqlx.Open(&quot;mysql&quot;, &quot;root:root@tcp(172.17.0.4:3306)/ctf?charset=utf8&quot;)
+    return Db
+}
+...
+rows, _ := db.Query(&quot;select cid from challenge where challenge.mode=?;&quot;, mode)
+data := []map[string]interface{}{}
+for rows.Next() {
+    var cidstring
+    rows.Scan(&amp;cid)
+    data = append(data, row)
+}
+rows.Close()
+</code></pre>
+<p>最后 sort 可以实现二维数组的排序：</p>
+<pre><code class="go">sort.Slice(rank, func(i, j int) bool {
+    if rank[i][&quot;score&quot;].(float64) &gt; rank[j][&quot;score&quot;].(float64) {
+        return true
+    }
+    if rank[i][&quot;score&quot;].(float64) == rank[j][&quot;score&quot;].(float64) &amp;&amp; rank[i][&quot;time&quot;].(int64) &lt; rank[j][&quot;time&quot;].(int64) {
+        return true
+    }
+    return false
+})
+</code></pre>
+<hr>
+<h3 id="C-cinatra"><a href="#C-cinatra" class="headerlink" title="C++ - cinatra"></a>C++ - cinatra</h3><p>C++ 找不到什么合适的框架，最后选用了 Cinatra，但是这个框架还不成熟，文档也缺失得不行。没事还是不要用 C++ 写 Web 后端了。</p>
+<p>Redis 使用 hiredis：</p>
+<pre><code class="c++">struct timeval timeout = {1, 500000};
+redis = redisConnectWithTimeout(&quot;172.17.0.2&quot;, 6379, timeout);
+if (redis -&gt; err) {
+
+}
+...
+redisReply *reply;
+reply = (redisReply *)redisCommand(redis, &quot;GET %s&quot;, key.c_str());
+if (reply == NULL) {
+    redisFree(redis);
+    redis = NULL;
+    ...
+}else if (reply -&gt; len &lt;= 0) {
+    freeReplyObject(reply);
+    ...
+}
+.......
+    else if (strcmp(reply -&gt; str, &quot;OK&quot;) == 0) {
+    freeReplyObject(reply);
+    return &quot;OK&quot;;
+}
+std::string result = reply -&gt; str;
+freeReplyObject(reply);
+</code></pre>
+<p>MySQL 的写法跟 PHP 很类似，自行过滤要这么做：</p>
+<pre><code class="c++">char *escape_team = new char[team.length()];
+char *escape_password = new char[password.length()];
+mysql_real_escape_string(&amp;mysql, escape_team, team.data(), team.length());
+mysql_real_escape_string(&amp;mysql, escape_password, password.data(), password.length());
+std::string str_sql = &quot;&quot;;
+str_sql += &quot;select uid, mail from user where team=&#39;&quot;;
+str_sql += escape_team;
+str_sql += &quot;&#39; and password=&#39;&quot;;
+str_sql += escape_password;
+str_sql += &quot;&#39;;&quot;;
+</code></pre>
+<p>C++ 里面还有一种类型叫做 string_view，是 string 的一个只读视图，可以提高字符串处理性能，Cinatra 这个框架在解析 HTTP 的时候就大量用到了这个类型，从 string_view 变成 string 可以这么做：</p>
+<pre><code class="c++">std::string(cookies[&quot;SESSID&quot;].data(), cookies[&quot;SESSID&quot;].length())
+</code></pre>
+<p>C++ 里面的变长数组可以使用 vector：</p>
+<pre><code class="c++">std::vector&lt;Rank::Rank&gt; ranks;
+</code></pre>
+<p>C++ 里面没有 Go 那种可以用来表示任何数据类型的 interface，所以无法制作多种成员类型的 map。使用自定义 struct 可以解决，不过这样一来，json 就无法识别我们自己设定的结构体，所以需要给它加上序列化函数：</p>
+<pre><code class="C++">namespace Rank {
+    struct Rank {
+        int uid;
+        std::string team;
+        long long time;
+        double score;
+    };
+    void to_json(nlohmann::json&amp; j, const Rank&amp; p) {
+        j = nlohmann::json {
+            {&quot;uid&quot;, p.uid},
+            {&quot;time&quot;, p.time},
+            {&quot;team&quot;, p.team},
+            {&quot;score&quot;, p.score},
+        };
+    }
+}
+</code></pre>
+<p>自定义结构体数组的排序跟 Go 差不多，sort 调用自定义函数。</p>
+<p>编译：</p>
+<pre><code class="shell">g++ main.cpp -std=c++17 -lboost_system -lpthread -lstdc++fs -luuid -lhiredis -I/usr/include/mariadb -lmysqlclient -o web
+</code></pre>
+<hr>
+<p>Orz</p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2020/03/22/CVE-2019-11043-Nginx-php-fpm-RCE漏洞复现/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>CVE-2019-11043 Nginx+php-fpm RCE漏洞复现</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2020/03/12/VueElectronElementUI开发自己的B站弹幕姬/">
+                        <span>VueElectronElementUI开发自己的B站弹幕姬</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js"></script>
+<script src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js"></script>
+<script src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js"></script>
+<script src="/js/main.js"></script>
+
+
+  <script src="/js/lazyload.js"></script>
+
+
+
+  
+  <script src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js"></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "Go-gin/C++-cinatra Web开发&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js"></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script src="/js/local-search.js"></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js"></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

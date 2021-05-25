@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>*CTF2019-996game复现/nodejs+mongodb使用 - Twings</title>
+
+  <link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css">
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+  <link rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css">
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+</head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期日, 五月 5日 2019, 12:04 中午
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    1.5k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      7 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>上个周末打的 *CTF，密码实在是复现不动了，只能来搞搞 Web 这个样子…</p>
+<p>虽然 Web 题出的不算太好，不过还是能学到东西的，值得复现一波。</p>
+<p>根据题目的环境，先自己搭一个 nodejs + mongodb 来玩玩。</p>
+<a id="more"></a>
+<hr>
+<h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>老样子的 Docker，经过国赛的出题之后我暂时抛弃了 Ubuntu XD，现在我用的是 Alpine 的镜像：</p>
+<pre><code class="shell">docker pull node:12-alpine
+</code></pre>
+<p>然后：</p>
+<pre><code class="shell">docker run -id --name mongo -p 32770:27017 node:alpine-12
+docker exec -it mongo sh
+</code></pre>
+<p>接着把 mongodb 装上：</p>
+<pre><code class="shell">apk update
+apk add mongodb
+</code></pre>
+<p>现在运行 mongod 启动 mongodb，会得到报错：</p>
+<pre><code class="shell">exception in initAndListen: NonExistentPath: Data directory /data/db not found., terminating
+</code></pre>
+<p>所以先把目录建好：</p>
+<pre><code class="shell">mkdir -p /data/db
+</code></pre>
+<p>然后运行：</p>
+<pre><code class="shell">mongod &amp;
+</code></pre>
+<p>或者 Ctrl + z 然后 bg 运行，也可以加上 nohup 把日志重定向到文件里，此时即可打开 mongodb 的 shell：</p>
+<pre><code class="shell">/ # mongo
+MongoDB shell version v4.0.5
+connecting to: mongodb://127.0.0.1:27017/?gssapiServiceName=mongodb
+2019-05-05T04:28:52.574+0000 I NETWORK  [listener] connection accepted from 127.0.0.1:58228 #1 (1 connection now open)
+2019-05-05T04:28:52.575+0000 I NETWORK  [conn1] received client metadata from 127.0.0.1:58228 conn1: { application: { name: &quot;MongoDB Shell&quot; }, driver: { name: &quot;MongoDB Internal Client&quot;, version: &quot;4.0.5&quot; }, os: { type: &quot;Linux&quot;, name: &quot;NAME=&quot;Alpine Linux&quot;&quot;, architecture: &quot;x86_64&quot;, version: &quot;Kernel 4.4.0-91-generic&quot; } }
+Implicit session: session { &quot;id&quot; : UUID(&quot;b4340836-bd10-4434-ad95-1698a36e2cac&quot;) }
+MongoDB server version: 4.0.5
+...
+
+&gt;
+</code></pre>
+<p>mongodb shell 的官方手册看这里：<a href="https://docs.mongodb.com/manual/mongo/" target="_blank" rel="noopener">https://docs.mongodb.com/manual/mongo/</a></p>
+<p>然后我们就按照题目漏洞点那样建个 players 数据库：</p>
+<pre><code class="shell">&gt; use players
+switched to db players
+&gt; db.players.insertOne( {username: &#39;Twings&#39;} )
+2019-05-05T04:43:54.884+0000 I STORAGE  [conn2] createCollection: players.players with generated UUID: 72b73c04-59cd-49ee-bdb7-2914c7ffdcb9
+{
+        &quot;acknowledged&quot; : true,
+        &quot;insertedId&quot; : ObjectId(&quot;5cce6a0ae051d04aaa654a18&quot;)
+}
+&gt; db.players.find()
+{ &quot;_id&quot; : ObjectId(&quot;5cce6a0ae051d04aaa654a18&quot;), &quot;username&quot; : &quot;Twings&quot; }
+&gt;
+</code></pre>
+<p>然后开放 mongodb 远程连接，因为找不到配置文件，所以我查看了 mongod 的选项，然后运行 mongod –bind_ip_all 启动 mongodb，可以看到现在已经可以远程访问了：</p>
+<pre><code class="shell">/etc/conf.d # netstat -nltp
+Active Internet connections (only servers)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name
+tcp        0      0 0.0.0.0:27017           0.0.0.0:*               LISTEN      358/mongod
+</code></pre>
+<p>接下来我们写一个简易的 nodejs 服务 server.js（npm 把依赖装好）：</p>
+<pre><code class="javascript">const ObjectId = require(&#39;mongodb&#39;).ObjectID;
+const express = require(&#39;express&#39;);
+
+app = express();
+
+app.get(&quot;/&quot;, (req, res) =&gt; {
+    var id = JSON.parse(req.query.id); # 因为题目中id可以为对象，所以这里使用JSON来传递对象
+    var MongoClient = require(&#39;mongodb&#39;).MongoClient;
+    var url = &quot;mongodb://0.0.0.0:32770/&quot;;
+    MongoClient.connect(url, { useNewUrlParser: true }, function(err, db) {
+        if (err) {
+           res.send(err); 
+        }else {
+            var dbo = db.db(&quot;players&quot;);
+            var whereStr = {&quot;_id&quot;: new ObjectId(id)};
+            dbo.collection(&quot;players&quot;).find(whereStr).toArray(function(err, result) {
+                if(err) {
+                    res.send(err);
+                }else {
+                    res.send(result);
+                    db.close();
+                }
+            });
+        }
+    });
+})
+
+app.listen(3000, () =&gt; console.log(`App listening on port 3000!`));
+</code></pre>
+<p>运行 server.js，访问 <a href="http://localhost:3000/?id=%225cce6a0ae051d04aaa654a18%22" target="_blank" rel="noopener">http://localhost:3000/?id=%225cce6a0ae051d04aaa654a18%22</a> 即可看到成功查询：</p>
+<pre><code class="json">[{&quot;_id&quot;:&quot;5cce6a0ae051d04aaa654a18&quot;,&quot;username&quot;:&quot;Twings&quot;}]
+</code></pre>
+<h3 id="题目分析"><a href="#题目分析" class="headerlink" title="题目分析"></a>题目分析</h3><p>题目里有一句很明显的 eval 代码动态执行：</p>
+<pre><code class="javascript">GameServer.loadPlayer = function(socket,id){
+    GameServer.server.db.collection(&#39;players&#39;).findOne({_id: new ObjectId(id)},function(err,doc){
+        if(err) {
+        if(!doc) {
+        eval(err.message.split(&#39;:&#39;).pop()); # 很奇怪的处理语句
+        }
+        throw err;
+    }
+        if(!doc) {
+        return;
+        }
+        var player = new Player();
+        var mongoID = doc._id.toString();
+        player.setIDs(mongoID,socket.id);
+        player.getDataFromDb(doc);
+        GameServer.finalizePlayer(socket,player);
+    });
+};
+</code></pre>
+<p>所以我们的思路就是想办法控制报错信息，根据提示：</p>
+<pre><code>db.a.find({&quot;b&quot;:{&quot;$gt&quot;:1,&quot;c&quot;:&quot;d&quot;}})
+</code></pre><p>我们在 mongodb shell 试一试：</p>
+<pre><code class="shell">&gt; db.players.findOne({_id: {&quot;$gt&quot;:1,&quot;c&quot;:&quot;d&quot;}})
+2019-05-05T05:24:18.297+0000 E QUERY    [js] Error: error: {
+    &quot;ok&quot; : 0,
+    &quot;errmsg&quot; : &quot;unknown operator: c&quot;,
+    &quot;code&quot; : 2,
+    &quot;codeName&quot; : &quot;BadValue&quot;
+} :
+_getErrorWithCode@src/mongo/shell/utils.js:25:13
+DBCommandCursor@src/mongo/shell/query.js:708:1
+DBQuery.prototype._exec@src/mongo/shell/query.js:113:28
+DBQuery.prototype.hasNext@src/mongo/shell/query.js:288:5
+DBCollection.prototype.findOne@src/mongo/shell/collection.js:260:10
+@(shell):1:1
+</code></pre>
+<p>只要我们能控制 id，就可以控制 err.message.split(‘:’).pop()。然后我们就需要审计 new ObjectId(id)，看看如何控制 id，下断点把调试开起来，为了控制报错，我们要传入的数据类型为对象，我们先用 {“$gt”:”1”,”c”:”d”} 试一试：</p>
+<pre><code class="javascript">var ObjectID = function ObjectID(id) {
+  // Duck-typing to support ObjectId from different npm packages
+  if (id instanceof ObjectID) return id;
+  if (!(this instanceof ObjectID)) return new ObjectID(id);
+
+  this._bsontype = &#39;ObjectID&#39;;
+
+  // The most common usecase (blank id, new objectId instance)
+  if (id == null || typeof id === &#39;number&#39;) {
+    // Generate a new id
+    this.id = this.generate(id);
+    // If we are caching the hex string
+    if (ObjectID.cacheHexString) this.__id = this.toString(&#39;hex&#39;);
+    // Return the object
+    return;
+  }
+
+  // Check if the passed in id is valid
+  var valid = ObjectID.isValid(id);
+
+  // Throw an error if it&#39;s not a valid setup
+  if (!valid &amp;&amp; id != null) {
+    throw new Error(
+      &#39;Argument passed in must be a single String of 12 bytes or a string of 24 hex characters&#39;
+    );
+  } else if (valid &amp;&amp; typeof id === &#39;string&#39; &amp;&amp; id.length === 24 &amp;&amp; hasBufferType) {
+    return new ObjectID(utils.toBuffer(id, &#39;hex&#39;));
+  } else if (valid &amp;&amp; typeof id === &#39;string&#39; &amp;&amp; id.length === 24) {
+    return ObjectID.createFromHexString(id);
+  } else if (id != null &amp;&amp; id.length === 12) {
+    // assume 12 byte string
+    this.id = id;
+  } else if (id != null &amp;&amp; id.toHexString) {
+    // Duck-typing to support ObjectId from different npm packages
+    return id;
+  } else {
+    throw new Error(
+      &#39;Argument passed in must be a single String of 12 bytes or a string of 24 hex characters&#39;
+    );
+  }
+
+  if (ObjectID.cacheHexString) this.__id = this.toString(&#39;hex&#39;);
+};
+</code></pre>
+<p>首先要绕过的是 ObjectID.isValid：</p>
+<pre><code class="javascript">ObjectID.isValid = function isValid(id) {
+  if (id == null) return false;
+
+  if (typeof id === &#39;number&#39;) {
+    return true;
+  }
+
+  if (typeof id === &#39;string&#39;) {
+    return id.length === 12 || (id.length === 24 &amp;&amp; checkForHexRegExp.test(id));
+  }
+
+  if (id instanceof ObjectID) {
+    return true;
+  }
+
+  if (id instanceof _Buffer) {
+    return true;
+  }
+
+  // Duck-Typing detection of ObjectId like objects
+  if (id.toHexString) {
+    return id.id.length === 12 || (id.id.length === 24 &amp;&amp; checkForHexRegExp.test(id.id));
+  }
+
+  return false;
+};
+</code></pre>
+<p>很简单，只要给我们的对象加上 toHexString 和 id.length 即可轻松绕过，修改 payload 为 {“$gt”:”1”,”c”:”d”,”toHexString”:true,”id”:{“length”:12}}，即可看到回显报错可控：</p>
+<pre><code class="json">{&quot;ok&quot;:0,&quot;errmsg&quot;:&quot;unknown operator: c&quot;,&quot;code&quot;:2,&quot;codeName&quot;:&quot;BadValue&quot;,&quot;name&quot;:&quot;MongoError&quot;}
+</code></pre>
+<p>之后就是 RCE 跑个 perl 脚本 getflag 了。</p>
+<hr>
+<p>参考链接：</p>
+<p><a href="https://github.com/sixstars/starctf2019/tree/master/web-996game" target="_blank" rel="noopener">https://github.com/sixstars/starctf2019/tree/master/web-996game</a></p>
+<p><a href="https://xz.aliyun.com/t/5006#toc-2" target="_blank" rel="noopener">https://xz.aliyun.com/t/5006#toc-2</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                      <a class="hover-with-bg" href="/tags/CTF/">CTF</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2019/05/06/FastCGI浅析/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>FastCGI浅析</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2019/05/02/Python黑魔法-绕过空格实现变量覆盖/">
+                        <span>Python黑魔法-[]绕过空格实现变量覆盖</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js"></script>
+<script src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js"></script>
+<script src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js"></script>
+<script src="/js/main.js"></script>
+
+
+  <script src="/js/lazyload.js"></script>
+
+
+
+  
+  <script src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js"></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "*CTF2019-996game复现/nodejs+mongodb使用&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js"></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script src="/js/local-search.js"></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js"></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

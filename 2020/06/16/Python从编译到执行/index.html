@@ -1,0 +1,1305 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>Python从编译到执行 - Twings</title>
+
+  <link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css">
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+  <link rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css">
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+</head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期二, 六月 16日 2020, 5:00 下午
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    6.9k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      34 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>读了读编译原理，用一句简单的 Python 代码来理一遍 Python 的编译执行过程。</p>
+<p>因为 Python 不像 PHP 那样使用了 re2c 和 Bison 那些工具进行编译，所以看起来要麻烦很多。</p>
+<a id="more"></a>
+<hr>
+<h3 id="调试环境"><a href="#调试环境" class="headerlink" title="调试环境"></a>调试环境</h3><p>源码下载地址：<a href="https://github.com/python/cpython/tree/2.7" target="_blank" rel="noopener">https://github.com/python/cpython/tree/2.7</a></p>
+<p>编译安装跟 PHP 差不多，就不说了。</p>
+<p>测试脚本：</p>
+<pre><code class="python">print 1
+</code></pre>
+<p>研究语法分析的时候可以将 print 改成 prin 来观察分析过程，加上 -d 参数运行可以看到它的语法分析过程。</p>
+<h3 id="入口"><a href="#入口" class="headerlink" title="入口"></a>入口</h3><p>Py_Main(main.c) -&gt; PyRun_AnyFileExFlags(pythonrun.c) -&gt; PyRun_SimpleFileExFlags(pythonrun.c) -&gt; PyRun_FileExFlags(pythonrun.c)</p>
+<p>PyRun_FileExFlags 中将编译执行分为两个部分来进行：</p>
+<ol>
+<li>调用 PyParser_ASTFromFile 词法分析、语法分析生成 AST 树，解析 AST 树生成中间数据</li>
+<li>调用 run_mod 解析数据生成 PyCodeObject(里面包括字节码等执行数据)，再执行字节码。</li>
+</ol>
+<p>我们从 PyParser_ASTFromFile 往下看，经过 PyParser_ParseFileFlagsEx 会来到 parsetok 函数，这里就是语法分析的部分了。</p>
+<h3 id="词法分析"><a href="#词法分析" class="headerlink" title="词法分析"></a>词法分析</h3><p>语法分析是一个死循环，不停地调用 PyTokenizer_Get 从源码中读取 token 进行语法分析，PyTokenizer_Get 函数 则会调用 tok_get 函数，这个函数里面的就是主要的词法分析逻辑，因为代码很长所以就不全贴了。</p>
+<p>词法分析相关的数据(按行存放的源码、指向下一个要分析字符的指针等等)都存放在 tok 中，这是一个 tok_state 结构体：</p>
+<pre><code class="c">/* Tokenizer state */
+struct tok_state {
+    /* Input state; buf &lt;= cur &lt;= inp &lt;= end */
+    /* NB an entire line is held in the buffer */
+    char *buf;          /* Input buffer, or NULL; malloc&#39;ed if fp != NULL */
+    char *cur;          /* Next character in buffer */
+    char *inp;          /* End of data in buffer */
+    char *end;          /* End of input buffer if buf != NULL */
+    char *start;        /* Start of current token if not NULL */
+    int done;           /* E_OK normally, E_EOF at EOF, otherwise error code */
+    /* NB If done != E_OK, cur must be == inp!!! */
+    FILE *fp;           /* Rest of input; NULL if tokenizing a string */
+    int tabsize;        /* Tab spacing */
+    int indent;         /* Current indentation index */
+    int indstack[MAXINDENT];            /* Stack of indents */
+    int atbol;          /* Nonzero if at begin of new line */
+    int pendin;         /* Pending indents (if &gt; 0) or dedents (if &lt; 0) */
+    char *prompt, *nextprompt;          /* For interactive prompting */
+    int lineno;         /* Current line number */
+    int level;          /* () [] {} Parentheses nesting level */
+            /* Used to allow free continuations inside them */
+    /* Stuff for checking on different tab sizes */
+    const char *filename;       /* For error messages */
+    int altwarning;     /* Issue warning if alternate tabs don&#39;t match */
+    int alterror;       /* Issue error if alternate tabs don&#39;t match */
+    int alttabsize;     /* Alternate tab spacing */
+    int altindstack[MAXINDENT];         /* Stack of alternate indents */
+    /* Stuff for PEP 0263 */
+    int decoding_state;         /* -1:decoding, 0:init, 1:raw */
+    int decoding_erred;         /* whether erred in decoding  */
+    int read_coding_spec;       /* whether &#39;coding:...&#39; has been read  */
+    char *encoding;
+    int cont_line;          /* whether we are in a continuation line. */
+    const char* line_start;     /* pointer to start of current line */
+#ifndef PGEN
+    PyObject *decoding_readline; /* codecs.open(...).readline */
+    PyObject *decoding_buffer;
+#endif
+    const char* enc;
+    const char* str;
+    const char* input; /* Tokenizer&#39;s newline translated copy of the string. */
+};
+</code></pre>
+<p>成员的用途在注释里都标注得很清楚了，源码在 tok 中是按行存放的，tok_get 函数每次调用 tok_nextc 从中取出一个字符进行分析。而在第一次进入 tok_get 函数的时候，tok 里面是没有源码的，在调用 tok_nextc 的时候会调用 decoding_fgets 读入一行源码。tok_nextc 函数除了读入源码和返回字符还有一些其他的操作，不过与本文主题不太相关所以不提。</p>
+<p>在处理每行开头的时候会跳过空白字符，还有交互模式下缩进量的相关处理，略。</p>
+<p>缩进量设计自定义函数、递归和类等结构，跟本文主题无关，暂时也不是深入研究。</p>
+<p>之后就是很普通的了，扫描字符串然后返回 token，匹配方式比 PHP 难看一些，没有使用正则表达式来表示，而类型跟 PHP 的词法分析差不多，比较大的区别就是 Python 把关键词和变量名/函数名/类名等合一叫做 NAME，所以定义中的终结符 token 类型就少了很多，具体的定义可以看 token.h，里面有终结符 token 的定义，都是小于 256 的整型数。</p>
+<h3 id="语法分析"><a href="#语法分析" class="headerlink" title="语法分析"></a>语法分析</h3><p>语法部分可以看 Grammar 文件，里面有比较好看的语法规则。</p>
+<p>parsetok 函数在调用 PyTokenizer_Get 获取 token 之后，会传入 token 和 value 调用 PyParser_AddToken 开始语法分析，跟入这个函数之后就会发现，因为Python 的语法分析器是自己实现的，所以这里的逻辑显得比较难懂。</p>
+<p>我们一点点往下看，首先是获取 token 在标签数组里面的数组下标，获取到下标之后有什么用之后再说：</p>
+<pre><code class="c">ilabel = classify(ps, type, str);
+if (ilabel &lt; 0)
+    return E_SYNTAX;
+</code></pre>
+<p>classify 函数的具体实现如下：</p>
+<pre><code class="c">static int
+classify(parser_state *ps, int type, char *str)
+{
+    grammar *g = ps-&gt;p_grammar;
+    register int n = g-&gt;g_ll.ll_nlabels;
+
+    if (type == NAME) {
+        register char *s = str;
+        register label *l = g-&gt;g_ll.ll_label;
+        register int i;
+        for (i = n; i &gt; 0; i--, l++) {
+            if (l-&gt;lb_type != NAME || l-&gt;lb_str == NULL ||
+                l-&gt;lb_str[0] != s[0] ||
+                strcmp(l-&gt;lb_str, s) != 0)
+                continue;
+#ifdef PY_PARSER_REQUIRES_FUTURE_KEYWORD
+            if (ps-&gt;p_flags &amp; CO_FUTURE_PRINT_FUNCTION &amp;&amp;
+                s[0] == &#39;p&#39; &amp;&amp; strcmp(s, &quot;print&quot;) == 0) {
+                break; /* no longer a keyword */
+            }
+#endif
+            D(printf(&quot;It&#39;s a keyword\n&quot;));
+            return n - i;
+        }
+    }
+
+    {
+        register label *l = g-&gt;g_ll.ll_label;
+        register int i;
+        for (i = n; i &gt; 0; i--, l++) {
+            if (l-&gt;lb_type == type &amp;&amp; l-&gt;lb_str == NULL) {
+                D(printf(&quot;It&#39;s a token we know\n&quot;));
+                return n - i;
+            }
+        }
+    }
+
+    D(printf(&quot;Illegal token\n&quot;));
+    return -1;
+}
+</code></pre>
+<p>可以看到，如果 token 为 NAME，则尝试将 value 作为一个关键词进行搜索。而搜索失败，或者 value 不为关键词的情况下，则按照 token 进行搜索。</p>
+<p>搜索的数组是 g-&gt;g_ll.ll_nlabels，这是个什么东西？我们先看看 g 是个什么东西，在调用 PyParser_ParseFileFlagsEx 函数的时候：</p>
+<pre><code class="c">node *n = PyParser_ParseFileFlagsEx(fp, filename, &amp;_PyParser_Grammar, start, ps1, ps2, &amp;err, &amp;iflags);
+</code></pre>
+<p>而 _PyParser_Grammar 则在 graminit.c 里面定义：</p>
+<pre><code class="c">grammar _PyParser_Grammar = {
+    85,
+    dfas,
+    {169, labels},
+    256
+};
+...
+typedef struct {
+    int         g_ndfas;
+    dfa        *g_dfa;        /* Array of DFAs */
+    labellist     g_ll;
+    int         g_start;    /* Start symbol of the grammar */
+    int         g_accel;    /* Set if accelerators present */
+} grammar;
+...
+typedef struct {
+    int         ll_nlabels;
+    label    *ll_label;
+} labellist;
+</code></pre>
+<p>所以 g-&gt;g_ll.ll_nlabels 其实就是一个长度为 169 的 label 数组 labels，里面存放了所有的 token 和 关键词 NAME，大概是这样子的一个数组：</p>
+<pre><code class="c">static label labels[169] = {
+    {0, &quot;EMPTY&quot;},
+    {256, 0},
+    {4, 0},
+    {268, 0},
+    {292, 0},
+    {257, 0},
+    {267, 0},
+    {0, 0},
+    {258, 0},
+    {327, 0},
+    {259, 0},
+    {50, 0},
+    {288, 0},
+    {7, 0},
+    {330, 0},
+    {8, 0},
+    {260, 0},
+    {261, 0},
+    {329, 0},
+    {262, 0},
+    {1, &quot;def&quot;},
+    {1, 0},
+    ...
+};
+</code></pre>
+<p>因为太多就不全放了，每个 label 里面前面是 token，后面则是 value。Python 的语法分析是个栈形/树形的过程，其中 0 这个下标表示其中一个 dfa 匹配结束，具体的分析匹配过程后面再说；而 {1, “def”} 代表的就是 def 这个关键词，而 {1, 0} 则代表其他不是关键词的 NAME。</p>
+<p>仔细看这个数组会发现，除了 <256 的终结符="" token="" 外，还有一些="">256 的非终结符 token，这些非终结符我们后面再看。</256></p>
+<p>我们回到 PyParser_AddToken，在获取了数组下标之后就进入一个死循环，先看这两句：</p>
+<pre><code class="c">register dfa *d = ps-&gt;p_stack.s_top-&gt;s_dfa;
+register state *s = &amp;d-&gt;d_state[ps-&gt;p_stack.s_top-&gt;s_state];
+</code></pre>
+<p>ps-&gt;p_stack.s_top 很好理解，就是栈顶，栈的结构如下：</p>
+<pre><code class="c">#define MAXSTACK 1500
+
+typedef struct {
+    int         s_state;    /* State in current DFA */
+    dfa        *s_dfa;        /* Current DFA */
+    struct _node    *s_parent;    /* Where to add next node */
+} stackentry;
+
+typedef struct {
+    stackentry    *s_top;        /* Top entry */
+    stackentry     s_base[MAXSTACK];/* Array of stack entries */
+                    /* NB The stack grows down */
+} stack;
+</code></pre>
+<p>这两句就是从栈顶取出现在匹配状态和匹配中的 dfa，然后根据现在的状态获取 dfa 中的相应状态。dfa 中文名叫有限自动机，简单来说 1 个 dfa 就是语法分析中的一个匹配规则，dfa 的结构定义如下：</p>
+<pre><code class="c">typedef struct {
+    int         d_type;    /* Non-terminal this represents */
+    char    *d_name;    /* For printing */
+    int         d_initial;    /* Initial state */
+    int         d_nstates;
+    state    *d_state;    /* Array of states */
+    bitset     d_first;
+} dfa;
+</code></pre>
+<p>这些 dfa 也存放在 graminit.c 的一个数组里面：</p>
+<pre><code class="c">static dfa dfas[85] = {
+    {256, &quot;single_input&quot;, 0, 3, states_0,
+     &quot;\004\050\060\000\000\000\000\124\360\024\114\220\023\040\010\000\200\041\044\015\002\001&quot;},
+    {257, &quot;file_input&quot;, 0, 2, states_1,
+     &quot;\204\050\060\000\000\000\000\124\360\024\114\220\023\040\010\000\200\041\044\015\002\001&quot;},
+    ...
+    {267, &quot;stmt&quot;, 0, 2, states_11,
+     &quot;\000\050\060\000\000\000\000\124\360\024\114\220\023\040\010\000\200\041\044\015\002\001&quot;},
+    {268, &quot;simple_stmt&quot;, 0, 4, states_12,
+     &quot;\000\040\040\000\000\000\000\124\360\024\114\000\000\040\010\000\200\041\044\015\000\001&quot;},
+    {269, &quot;small_stmt&quot;, 0, 2, states_13,
+     &quot;\000\040\040\000\000\000\000\124\360\024\114\000\000\040\010\000\200\041\044\015\000\001&quot;},
+    {270, &quot;expr_stmt&quot;, 0, 6, states_14,
+     &quot;\000\040\040\000\000\000\000\000\000\000\000\000\000\040\010\000\200\041\044\015\000\000&quot;},
+    {271, &quot;augassign&quot;, 0, 2, states_15,
+     &quot;\000\000\000\000\000\300\377\003\000\000\000\000\000\000\000\000\000\000\000\000\000\000&quot;},
+    {272, &quot;print_stmt&quot;, 0, 9, states_16,
+     &quot;\000\000\000\000\000\000\000\004\000\000\000\000\000\000\000\000\000\000\000\000\000\000&quot;},
+    ...
+    {304, &quot;test&quot;, 0, 6, states_48,
+     &quot;\000\040\040\000\000\000\000\000\000\000\000\000\000\040\010\000\200\041\044\015\000\000&quot;},
+    {305, &quot;or_test&quot;, 0, 2, states_49,
+     &quot;\000\040\040\000\000\000\000\000\000\000\000\000\000\000\010\000\200\041\044\015\000\000&quot;},
+    {306, &quot;and_test&quot;, 0, 2, states_50,
+     &quot;\000\040\040\000\000\000\000\000\000\000\000\000\000\000\010\000\200\041\044\015\000\000&quot;},
+    {307, &quot;not_test&quot;, 0, 3, states_51,
+     &quot;\000\040\040\000\000\000\000\000\000\000\000\000\000\000\010\000\200\041\044\015\000\000&quot;},
+    {308, &quot;comparison&quot;, 0, 2, states_52,
+     &quot;\000\040\040\000\000\000\000\000\000\000\000\000\000\000\000\000\200\041\044\015\000\000&quot;},
+    {309, &quot;comp_op&quot;, 0, 4, states_53,
+     &quot;\000\000\000\000\000\000\000\000\000\000\040\000\000\000\310\077\000\000\000\000\000\000&quot;},
+    {310, &quot;expr&quot;, 0, 2, states_54,
+     &quot;\000\040\040\000\000\000\000\000\000\000\000\000\000\000\000\000\200\041\044\015\000\000&quot;},
+    {311, &quot;xor_expr&quot;, 0, 2, states_55,
+     &quot;\000\040\040\000\000\000\000\000\000\000\000\000\000\000\000\000\200\041\044\015\000\000&quot;},
+    {312, &quot;and_expr&quot;, 0, 2, states_56,
+     &quot;\000\040\040\000\000\000\000\000\000\000\000\000\000\000\000\000\200\041\044\015\000\000&quot;},
+    {313, &quot;shift_expr&quot;, 0, 2, states_57,
+     &quot;\000\040\040\000\000\000\000\000\000\000\000\000\000\000\000\000\200\041\044\015\000\000&quot;},
+    {314, &quot;arith_expr&quot;, 0, 2, states_58,
+     &quot;\000\040\040\000\000\000\000\000\000\000\000\000\000\000\000\000\200\041\044\015\000\000&quot;},
+    {315, &quot;term&quot;, 0, 2, states_59,
+     &quot;\000\040\040\000\000\000\000\000\000\000\000\000\000\000\000\000\200\041\044\015\000\000&quot;},
+    {316, &quot;factor&quot;, 0, 3, states_60,
+     &quot;\000\040\040\000\000\000\000\000\000\000\000\000\000\000\000\000\200\041\044\015\000\000&quot;},
+    {317, &quot;power&quot;, 0, 4, states_61,
+     &quot;\000\040\040\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\044\015\000\000&quot;},
+    {318, &quot;atom&quot;, 0, 11, states_62,
+     &quot;\000\040\040\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\044\015\000\000&quot;},
+    ...
+};
+</code></pre>
+<p>看过 Gammar 文件里面语法之后就会发现，这里的 dfa 其实就是非终结符 token，第一个数字就是他们的 token，第二个则是他们易读的书面形式。至于后面四个成员则涉及匹配中的状态转换，分别代表该 dfa 的初始状态、状态数量、状态定义/转换以及可接受的首个 token(这里接受与否使用八进制表示的，比如 print_stmt 的 \000\000\000\000\000\000\000\004，表示的就是数组下标 58，即可接受的首个 token 就是关键词 print)，详细的转换过程后面再说。</p>
+<p>继续往下看：</p>
+<pre><code class="c">if (s-&gt;s_lower &lt;= ilabel &amp;&amp; ilabel &lt; s-&gt;s_upper) {
+    register int x = s-&gt;s_accel[ilabel - s-&gt;s_lower];
+    ...
+}
+</code></pre>
+<p>s 就是前面获取的状态，结构如下：</p>
+<pre><code class="c">typedef struct {
+    short    a_lbl;        /* Label of this arc */
+    short    a_arrow;    /* State where this arc goes to */
+} arc;
+
+/* A state in a DFA */
+
+typedef struct {
+    int         s_narcs;
+    arc        *s_arc;        /* Array of arcs */
+
+    /* Optional accelerators */
+    int         s_lower;    /* Lowest label index */
+    int         s_upper;    /* Highest label index */
+    int        *s_accel;    /* Accelerator */
+    int         s_accept;    /* Nonzero for accepting state */
+} state;
+</code></pre>
+<p>其中 s_lower 代表能接受的最小数组下标，s_upper 则是最大数组下标，s_accel 下标代表可接受的首个 token、值代表接受后转换成的状态，s_accept 代表能否结束这个 dfa 的匹配。这些数据同样初始化在 graminit.c 中，比如 file_input 这个 dfa 的状态集及其转换规则就是：</p>
+<pre><code class="c">static arc arcs_1_0[3] = {
+    {2, 0},
+    {6, 0},
+    {7, 1},
+};
+static arc arcs_1_1[1] = {
+    {0, 1},
+};
+static state states_1[2] = {
+    {3, arcs_1_0},
+    {1, arcs_1_1},
+};
+</code></pre>
+<p>每个状态中的两个数据分别代表转换规则数、转换规则集，而每条转换规则中的两个数据代表可以匹配的 labels 中的数组下标、匹配后要转换成的状态。而每个 dfa 的初试状态都是 0，也就是说接受 token 后会按照 arcs_1_0 中的规则进行状态转换，如果 token 下标为 2、6 则会转换为 0，7则会转换为 1。</p>
+<p>这里就会发现，初始化定义里面是没有 s_lower 以及后面的数据的，而 dfa 和栈等分析所需的数据都来自 ps 这个 parser_state 结构体：</p>
+<pre><code class="c">typedef struct {
+    stack         p_stack;    /* Stack of parser states */
+    grammar        *p_grammar;    /* Grammar to use */
+    node        *p_tree;    /* Top of parse tree */
+#ifdef PY_PARSER_REQUIRES_FUTURE_KEYWORD
+    unsigned long    p_flags;    /* see co_flags in Include/code.h */
+#endif
+} parser_state;
+</code></pre>
+<p>可以看到里面有栈、语法规则、AST 树等成员，我们回去看看它的初始化，回到 parsetok 函数中，这里有个 PyParser_New 函数调用：</p>
+<pre><code class="c">parser_state *
+PyParser_New(grammar *g, int start)
+{
+    parser_state *ps;
+
+    if (!g-&gt;g_accel)
+        PyGrammar_AddAccelerators(g);
+    ps = (parser_state *)PyMem_MALLOC(sizeof(parser_state));
+    if (ps == NULL)
+        return NULL;
+    ps-&gt;p_grammar = g;
+#ifdef PY_PARSER_REQUIRES_FUTURE_KEYWORD
+    ps-&gt;p_flags = 0;
+#endif
+    ps-&gt;p_tree = PyNode_New(start);
+    if (ps-&gt;p_tree == NULL) {
+        PyMem_FREE(ps);
+        return NULL;
+    }
+    s_reset(&amp;ps-&gt;p_stack);
+    (void) s_push(&amp;ps-&gt;p_stack, PyGrammar_FindDFA(g, start), ps-&gt;p_tree);
+    return ps;
+}
+...
+static int
+s_push(register stack *s, dfa *d, node *parent)
+{
+    register stackentry *top;
+    if (s-&gt;s_top == s-&gt;s_base) {
+        fprintf(stderr, &quot;s_push: parser stack overflow\n&quot;);1
+        return E_NOMEM;
+    }
+    top = --s-&gt;s_top;
+    top-&gt;s_dfa = d;
+    top-&gt;s_parent = parent;
+    top-&gt;s_state = 0;
+    return 0;
+}
+</code></pre>
+<p>在命令行运行 python 文件的情况下，这里的 start 为 257，即代表 file_input 的 token，可以看到最后会将 file_input 的 dfa 压入栈中作为匹配的开始，并让 ps-&gt;p_tree 指向 AST 树的根。我们关注 PyGrammar_AddAccelerators 函数，状态转换中重要的 s_accel 等成员都是在这里生成的：</p>
+<pre><code class="c">void
+PyGrammar_AddAccelerators(grammar *g)
+{
+    dfa *d;
+    int i;
+    d = g-&gt;g_dfa;
+    for (i = g-&gt;g_ndfas; --i &gt;= 0; d++)
+        fixdfa(g, d);
+    g-&gt;g_accel = 1;
+}
+</code></pre>
+<p>遍历所有的 dfa，然后对每个 dfa 调用 fixdfa，继续看：</p>
+<pre><code class="c">static void
+fixdfa(grammar *g, dfa *d)
+{
+    state *s;
+    int j;
+    s = d-&gt;d_state;
+    for (j = 0; j &lt; d-&gt;d_nstates; j++, s++)
+        fixstate(g, s);
+}
+</code></pre>
+<p>再遍历 dfa 中的状态集，对每个状态调用 fixstate：</p>
+<pre><code class="c">static void
+fixstate(grammar *g, state *s)
+{
+    arc *a;
+    int k;
+    int *accel;
+    int nl = g-&gt;g_ll.ll_nlabels;
+    s-&gt;s_accept = 0;
+    accel = (int *) PyObject_MALLOC(nl * sizeof(int));
+    if (accel == NULL) {
+        fprintf(stderr, &quot;no mem to build parser accelerators\n&quot;);
+        exit(1);
+    }
+    for (k = 0; k &lt; nl; k++)
+        accel[k] = -1;
+    a = s-&gt;s_arc;
+    for (k = s-&gt;s_narcs; --k &gt;= 0; a++) {
+        int lbl = a-&gt;a_lbl;
+        label *l = &amp;g-&gt;g_ll.ll_label[lbl];
+        int type = l-&gt;lb_type;
+        if (a-&gt;a_arrow &gt;= (1 &lt;&lt; 7)) {
+            printf(&quot;XXX too many states!\n&quot;);
+            continue;
+        }
+        if (ISNONTERMINAL(type)) {
+            dfa *d1 = PyGrammar_FindDFA(g, type);
+            int ibit;
+            if (type - NT_OFFSET &gt;= (1 &lt;&lt; 7)) {
+                printf(&quot;XXX too high nonterminal number!\n&quot;);
+                continue;
+            }
+            for (ibit = 0; ibit &lt; g-&gt;g_ll.ll_nlabels; ibit++) {
+                if (testbit(d1-&gt;d_first, ibit)) {
+                    if (accel[ibit] != -1)
+                        printf(&quot;XXX ambiguity!\n&quot;);
+                    accel[ibit] = a-&gt;a_arrow | (1 &lt;&lt; 7) |
+                        ((type - NT_OFFSET) &lt;&lt; 8);
+                }
+            }
+        }
+        else if (lbl == EMPTY)
+            s-&gt;s_accept = 1;
+        else if (lbl &gt;= 0 &amp;&amp; lbl &lt; nl)
+            accel[lbl] = a-&gt;a_arrow;
+    }
+    while (nl &gt; 0 &amp;&amp; accel[nl-1] == -1)
+        nl--;
+    for (k = 0; k &lt; nl &amp;&amp; accel[k] == -1;)
+        k++;
+    if (k &lt; nl) {
+        int i;
+        s-&gt;s_accel = (int *) PyObject_MALLOC((nl-k) * sizeof(int));
+        if (s-&gt;s_accel == NULL) {
+            fprintf(stderr, &quot;no mem to add parser accelerators\n&quot;);
+            exit(1);
+        }
+        s-&gt;s_lower = k;
+        s-&gt;s_upper = nl;
+        for (i = 0; k &lt; nl; i++, k++)
+            s-&gt;s_accel[i] = accel[k];
+    }
+    PyObject_FREE(accel);
+}
+</code></pre>
+<p>总结一下过程，首先生成一个跟 labels 数组相同长度的 int 数组，全部赋值为 -1，代表不接受这个数组下标代表的 token。</p>
+<p>然后遍历该状态的转换规则计算可以接受的首个 token，根据该规则可以匹配的数组下标从 labels 中取出对应的 token，然后判断 token 的类型，如果是 0，代表这次转换可以结束这个 dfa 的匹配，然后将 s_accept 赋值为 1，代表这个状态可以转换到匹配结束的接受状态。如果是其他终结符，则将转换后的状态放入 accel 中。而如果是非终结符，则要取出该非终结符对应的 dfa，根据其八进制 biset 来确定能接受的首个 token：</p>
+<pre><code class="c">(((d1-&gt;d_first)[((ibit) / (8*sizeof(char)))] &amp; (1 &lt;&lt; ((ibit) % (8*sizeof(char))))) != 0)
+</code></pre>
+<p>再将转换后的状态、代表非终结符的 1、代表非终结符 token 的数字 - 256 之后组合起来放入 accel：</p>
+<pre><code class="c">accel[ibit] = a-&gt;a_arrow | (1 &lt;&lt; 7) | ((type - NT_OFFSET) &lt;&lt; 8);
+</code></pre>
+<p>后面就很简单了，从前遍历找到能接受的最小下标作为 s_lower，从后找到能接受的最大下标作为 s_upper，再将接受和转换的规则放入 s_accel 中。</p>
+<p>这时候回过头来继续看 PyParser_AddToken 函数里面的状态转换就很好懂了，用测试脚本举例，语法分析过程如下：</p>
+<pre><code>Token NAME/&#39;print&#39; ... It&#39;s a keyword
+ DFA &#39;file_input&#39;, state 0: Push ...
+ DFA &#39;stmt&#39;, state 0: Push ...
+ DFA &#39;simple_stmt&#39;, state 0: Push ...
+ DFA &#39;small_stmt&#39;, state 0: Push ...
+ DFA &#39;print_stmt&#39;, state 0: Shift.
+Token NUMBER/&#39;1&#39; ... It&#39;s a token we know
+ DFA &#39;print_stmt&#39;, state 1: Push ...
+ DFA &#39;test&#39;, state 0: Push ...
+ DFA &#39;or_test&#39;, state 0: Push ...
+ DFA &#39;and_test&#39;, state 0: Push ...
+ DFA &#39;not_test&#39;, state 0: Push ...
+ DFA &#39;comparison&#39;, state 0: Push ...
+ DFA &#39;expr&#39;, state 0: Push ...
+ DFA &#39;xor_expr&#39;, state 0: Push ...
+ DFA &#39;and_expr&#39;, state 0: Push ...
+ DFA &#39;shift_expr&#39;, state 0: Push ...
+ DFA &#39;arith_expr&#39;, state 0: Push ...
+ DFA &#39;term&#39;, state 0: Push ...
+ DFA &#39;factor&#39;, state 0: Push ...
+ DFA &#39;power&#39;, state 0: Push ...
+ DFA &#39;atom&#39;, state 0: Shift.
+  DFA &#39;atom&#39;, state 5: Direct pop.
+Token NEWLINE/&#39;&#39; ... It&#39;s a token we know
+ DFA &#39;power&#39;, state 1: Pop ...
+ DFA &#39;factor&#39;, state 2: Pop ...
+ DFA &#39;term&#39;, state 1: Pop ...
+ DFA &#39;arith_expr&#39;, state 1: Pop ...
+ DFA &#39;shift_expr&#39;, state 1: Pop ...
+ DFA &#39;and_expr&#39;, state 1: Pop ...
+ DFA &#39;xor_expr&#39;, state 1: Pop ...
+ DFA &#39;expr&#39;, state 1: Pop ...
+ DFA &#39;comparison&#39;, state 1: Pop ...
+ DFA &#39;not_test&#39;, state 2: Pop ...
+ DFA &#39;and_test&#39;, state 1: Pop ...
+ DFA &#39;or_test&#39;, state 1: Pop ...
+ DFA &#39;test&#39;, state 1: Pop ...
+ DFA &#39;print_stmt&#39;, state 2: Pop ...
+ DFA &#39;small_stmt&#39;, state 1: Pop ...
+ DFA &#39;simple_stmt&#39;, state 1: Shift.
+  DFA &#39;simple_stmt&#39;, state 3: Direct pop.
+  DFA &#39;stmt&#39;, state 1: Direct pop.
+Token NEWLINE/&#39;&#39; ... It&#39;s a token we know
+ DFA &#39;file_input&#39;, state 0: Shift.
+Token ENDMARKER/&#39;&#39; ... It&#39;s a token we know
+ DFA &#39;file_input&#39;, state 0: Shift.
+  DFA &#39;file_input&#39;, state 1: Direct pop.
+  ACCEPT.
+</code></pre><p>后面的两个 NEWLINE 和 ENDMARKER 是 python 添加上去的，源码里没有这几个标记。</p>
+<p>首先，词法分析返回一个 NAME，语法分析首先调用 classify 进行确认，发现这是个关键词，然后从栈上取出 file_input 的 dfa，查询 file_input 是否接受这个关键词：</p>
+<pre><code class="c">register int x = s-&gt;s_accel[ilabel - s-&gt;s_lower];
+if (x != -1) {
+    ...
+}
+</code></pre>
+<p>然后判断接受这个关键词的下一个 dfa 是否属于非终结符：</p>
+<pre><code class="c">if (x &amp; (1&lt;&lt;7)) {
+    /* Push non-terminal */
+    int nt = (x &gt;&gt; 8) + NT_OFFSET;
+    int arrow = x &amp; ((1&lt;&lt;7)-1);
+    dfa *d1 = PyGrammar_FindDFA(ps-&gt;p_grammar, nt);
+    if ((err = push(&amp;ps-&gt;p_stack, nt, d1,
+        arrow, lineno, col_offset)) &gt; 0) {
+        D(printf(&quot; MemError: push\n&quot;));
+        return err;
+    }
+    D(printf(&quot; Push ...\n&quot;));
+    continue;
+}
+</code></pre>
+<p>如果属于非终结符则取出该非终结符的 token 和接受并转换后的状态，这里是 stmt 和 1，并将该非终结符的 dfa 作为下一次匹配的规则压入栈中。实际上 push 函数里面除了入栈，还对 AST 树进行了操作：</p>
+<pre><code class="c">static int
+push(register stack *s, int type, dfa *d, int newstate, int lineno, int col_offset)
+{
+    int err;
+    register node *n;
+    n = s-&gt;s_top-&gt;s_parent;
+    assert(!s_empty(s));
+    err = PyNode_AddChild(n, type, (char *)NULL, lineno, col_offset);
+    if (err)
+        return err;
+    s-&gt;s_top-&gt;s_state = newstate;
+    return s_push(s, d, CHILD(n, NCH(n)-1));
+}
+</code></pre>
+<p>此时 s-&gt;s_top-&gt;s_parent 就是 AST 树的根节点，调用 PyNode_AddChild 会将非终结符 stmt 挂到根节点的子节点上面，s_push 则会将栈顶元素的 s_parent 修改为这个 stmt 的节点，也就是说下一次 push 形成的子节点就会挂在 stmt 节点的子节点上面，这样就构成了一棵 AST 树。</p>
+<p>就这样一遍遍重复将下一个 dfa 压入栈中，直到遇到非终结符 print_stmt，此时接受关键词的是值为 print 的终结符 NAME，所以会不会进入前面的判断，而是开始尝试出栈：</p>
+<pre><code class="c">/* Shift the token */
+if ((err = shift(&amp;ps-&gt;p_stack, type, str, x, lineno, col_offset)) &gt; 0) {
+    D(printf(&quot; MemError: shift.\n&quot;));
+    return err;
+}
+D(printf(&quot; Shift.\n&quot;));
+/* Pop while we are in an accept-only state */
+while (s = &amp;d-&gt;d_state[ps-&gt;p_stack.s_top-&gt;s_state], s-&gt;s_accept &amp;&amp; s-&gt;s_narcs == 1) {
+    D(printf(&quot;  DFA &#39;%s&#39;, state %d: &quot; &quot;Direct pop.\n&quot;, d-&gt;d_name, ps-&gt;p_stack.s_top-&gt;s_state));
+    #ifdef PY_PARSER_REQUIRES_FUTURE_KEYWORD
+    if (d-&gt;d_name[0] == &#39;i&#39; &amp;&amp; strcmp(d-&gt;d_name, &quot;import_stmt&quot;) == 0)
+        future_hack(ps);
+    #endif
+    s_pop(&amp;ps-&gt;p_stack);
+    if (s_empty(&amp;ps-&gt;p_stack)) {
+        D(printf(&quot;  ACCEPT.\n&quot;));
+        return E_DONE;
+    }
+    d = ps-&gt;p_stack.s_top-&gt;s_dfa;
+}
+return E_OK;
+</code></pre>
+<p>shift 的操作跟 push 相同，只是少了入栈。阅读 Grammar 中的语法，可以发现对于非终结符而言，可能会有跟现在的 atom 一样的情况，即接受完一个 token 之后不能再继续接受第二个 token 了，这个时候就需要直接将其出栈，否则会影响到下一个 token 的分析，而这种直接出栈的情况在代码中的实现就是将状态转换成一个只接受 0 这个下标的状态，即：</p>
+<pre><code class="c">s-&gt;s_accept &amp;&amp; s-&gt;s_narcs == 1
+</code></pre>
+<p>到这里，关键词 print 的分析就完成了，我们根据转换规则看下 print_stmt 的转换过程：</p>
+<pre><code class="c">// print_stmt 的状态 0 转换集，下标 58 代表关键词 print
+static arc arcs_16_0[1] = {
+    {58, 1}, // 终结符 print
+};
+static arc arcs_16_1[3] = {
+    {28, 2}, // 非终结符 test
+    {59, 3}, // 终结符 &gt;&gt;
+    {0, 1},
+};
+static arc arcs_16_2[2] = {
+    {29, 4}, // 终结符 ,
+    {0, 2},
+};
+static arc arcs_16_3[1] = {
+    {28, 5},
+};
+static arc arcs_16_4[2] = {
+    {28, 2},
+    {0, 4},
+};
+static arc arcs_16_5[2] = {
+    {29, 6},
+    {0, 5},
+};
+static arc arcs_16_6[1] = {
+    {28, 7},
+};
+static arc arcs_16_7[2] = {
+    {29, 8},
+    {0, 7},
+};
+static arc arcs_16_8[2] = {
+    {28, 7},
+    {0, 8},
+};
+</code></pre>
+<p>初始状态 0，接受 print 转换为 1，此时可以接受非终结符 test 或者终结符 &gt;&gt;。接受 test 之后会转换成 2，可以接受终结符 , 并转换为 4，然后就是一个不断的循环 , test , test , test …。注意看会发现状态 2 的转换规则里面还有一条 {0, 2}，这其实是这个状态可以作为结束状态的意思，因为这个状态的 s_accept 会是 1，后面的判断里面会依此判断该 dfa 是否匹配完全了，而放在现在这个情景中的意思就是 print 后面可以只有一个 test，而不需要后面更多的 , 和 test。这部分也就是 Grammar 里面写的规则：</p>
+<pre><code class="c">[ test (&#39;,&#39; test)* [&#39;,&#39;] ]
+</code></pre>
+<p>接下来会读入一个 token NUMBER 进行分析，此时的栈顶 dfa 为 print_stmt，状态为 1，所以下一个接受的 dfa 为 test，同样一路入栈，最后到非终结符 atom，它接受终结符 NUMBER 并转换为状态 5：</p>
+<pre><code class="c">static arc arcs_62_0[7] = {
+    {13, 1},
+    {146, 2},
+    {149, 3},
+    {152, 4},
+    {21, 5},
+    {154, 5},
+    {155, 6},
+};
+static arc arcs_62_5[1] = {
+    {0, 5},
+};
+</code></pre>
+<p>而因为状态 5 的转换规则只有一个 0，所以会直接出栈，栈顶 dfa 变为 power，此时 power 的状态为 1。</p>
+<p>接下来读入的 token 是 NEWLINE，而 power 状态 1 不接受这个 token，所以会直接来到最后的两部分处理：</p>
+<pre><code class="c">if (s-&gt;s_accept) {
+#ifdef PY_PARSER_REQUIRES_FUTURE_KEYWORD
+    if (d-&gt;d_name[0] == &#39;i&#39; &amp;&amp;
+        strcmp(d-&gt;d_name, &quot;import_stmt&quot;) == 0)
+        future_hack(ps);
+#endif
+    /* Pop this dfa and try again */
+    s_pop(&amp;ps-&gt;p_stack);
+    D(printf(&quot; Pop ...\n&quot;));
+    if (s_empty(&amp;ps-&gt;p_stack)) {
+        D(printf(&quot; Error: bottom of stack.\n&quot;));
+        return E_SYNTAX;
+    }
+    continue;
+}
+
+/* Stuck, report syntax error */
+D(printf(&quot; Error.\n&quot;));
+if (expected_ret) {
+    if (s-&gt;s_lower == s-&gt;s_upper - 1) {
+        /* Only one possible expected token */
+        *expected_ret = ps-&gt;p_grammar-&gt;
+            g_ll.ll_label[s-&gt;s_lower].lb_type;
+    }
+    else
+        *expected_ret = -1;
+}
+return E_SYNTAX;
+</code></pre>
+<p>如果该状态的 s_accept 为 1，代表这个状态已经匹配完全，可以结束该 dfa 的匹配了，则可以将该 dfa 出栈并返回继续上一个 dfa 的匹配。如果 s_accept  为 0 而 dfa 又不接受这个 token，则代表语法错误了。</p>
+<p>而 power 状态 1 的规则如下：</p>
+<pre><code class="c">static arc arcs_61_1[3] = {
+    {144, 1},
+    {31, 2},
+    {0, 1},
+};
+</code></pre>
+<p>所以可以出栈，继续 factor 的匹配，这样一路出栈入栈，最后一个 Direct pop 清空栈里面的 dfa 之后，语法分析就完成了。</p>
+<h3 id="解析-AST-树"><a href="#解析-AST-树" class="headerlink" title="解析 AST 树"></a>解析 AST 树</h3><p>AST 节点结构体：</p>
+<pre><code class="c">typedef struct _node {
+    short        n_type; // token
+    char        *n_str; // 书面表达
+    int            n_lineno; 
+    int            n_col_offset;
+    int            n_nchildren;
+    struct _node    *n_child;
+} node;
+</code></pre>
+<p>调用 PyParser_ParseFileFlagsEx 构建完 AST 树之后，会调用 PyAST_FromNode 将其解析为 mod：</p>
+<pre><code class="c">case file_input:
+    stmts = asdl_seq_new(num_stmts(n), arena);
+    if (!stmts)
+        return NULL;
+    for (i = 0; i &lt; NCH(n) - 1; i++) {
+        ch = CHILD(n, i);
+        if (TYPE(ch) == NEWLINE)
+            continue;
+        REQ(ch, stmt);
+        num = num_stmts(ch);
+        if (num == 1) {
+            s = ast_for_stmt(&amp;c, ch);
+            if (!s)
+                goto error;
+            asdl_seq_SET(stmts, k++, s);
+        }
+        else {
+            ch = CHILD(ch, 0);
+            REQ(ch, simple_stmt);
+            for (j = 0; j &lt; num; j++) {
+                s = ast_for_stmt(&amp;c, CHILD(ch, j * 2));
+                if (!s)
+                    goto error;
+                asdl_seq_SET(stmts, k++, s);
+            }
+        }
+    }
+    return Module(stmts, arena);
+</code></pre>
+<p>ast_for_stmt 是个 switch：</p>
+<pre><code class="c">if (TYPE(n) == stmt) {
+        assert(NCH(n) == 1);
+        n = CHILD(n, 0);
+    }
+    if (TYPE(n) == simple_stmt) {
+        assert(num_stmts(n) == 1);
+        n = CHILD(n, 0);
+    }
+    if (TYPE(n) == small_stmt) {
+        n = CHILD(n, 0);
+        /* small_stmt: expr_stmt | print_stmt  | del_stmt | pass_stmt
+                     | flow_stmt | import_stmt | global_stmt | exec_stmt
+                     | assert_stmt
+        */
+        switch (TYPE(n)) {
+            case expr_stmt:
+                return ast_for_expr_stmt(c, n);
+            case print_stmt:
+                return ast_for_print_stmt(c, n);
+            ...
+    }
+}
+</code></pre>
+<p>对各种语句调用专门的处理函数：</p>
+<pre><code class="c">static stmt_ty
+ast_for_print_stmt(struct compiling *c, const node *n)
+{
+    /* print_stmt: &#39;print&#39; ( [ test (&#39;,&#39; test)* [&#39;,&#39;] ]
+                             | &#39;&gt;&gt;&#39; test [ (&#39;,&#39; test)+ [&#39;,&#39;] ] )
+     */
+    expr_ty dest = NULL, expression;
+    asdl_seq *seq = NULL;
+    bool nl;
+    int i, j, values_count, start = 1;
+
+    REQ(n, print_stmt);
+    if (NCH(n) &gt;= 2 &amp;&amp; TYPE(CHILD(n, 1)) == RIGHTSHIFT) {
+        dest = ast_for_expr(c, CHILD(n, 2));
+        if (!dest)
+            return NULL;
+        start = 4;
+    }
+    values_count = (NCH(n) + 1 - start) / 2;
+    if (values_count) {
+        seq = asdl_seq_new(values_count, c-&gt;c_arena);
+        if (!seq)
+            return NULL;
+        for (i = start, j = 0; i &lt; NCH(n); i += 2, ++j) {
+            expression = ast_for_expr(c, CHILD(n, i));
+            if (!expression)
+                return NULL;
+            asdl_seq_SET(seq, j, expression);
+        }
+    }
+    nl = (TYPE(CHILD(n, NCH(n) - 1)) == COMMA) ? false : true;
+    return Print(dest, seq, nl, LINENO(n), n-&gt;n_col_offset, c-&gt;c_arena);
+}
+</code></pre>
+<p>简单来说就是对接受的每个 test 调用 ast_for_expr，将解析出的表达式放入 seq，表达式结构体太复杂就不放了，最后返回一个 stmt_ty：</p>
+<pre><code class="c">stmt_ty
+Print(expr_ty dest, asdl_seq * values, bool nl, int lineno, int col_offset,
+      PyArena *arena)
+{
+        stmt_ty p;
+        p = (stmt_ty)PyArena_Malloc(arena, sizeof(*p));
+        if (!p)
+                return NULL;
+        p-&gt;kind = Print_kind;
+        p-&gt;v.Print.dest = dest;
+        p-&gt;v.Print.values = values;
+        p-&gt;v.Print.nl = nl;
+        p-&gt;lineno = lineno;
+        p-&gt;col_offset = col_offset;
+        return p;
+}
+</code></pre>
+<p>再将这些 stmt 集合起来放入 mod_ty：</p>
+<pre><code class="c">mod_ty
+Module(asdl_seq * body, PyArena *arena)
+{
+        mod_ty p;
+        p = (mod_ty)PyArena_Malloc(arena, sizeof(*p));
+        if (!p)
+                return NULL;
+        p-&gt;kind = Module_kind;
+        p-&gt;v.Module.body = body;
+        return p;
+}
+</code></pre>
+<p>调用 run_mod 将 mod 编译为 PyCodeObject 并执行：</p>
+<pre><code class="c">static PyObject *
+run_mod(mod_ty mod, const char *filename, PyObject *globals, PyObject *locals,
+         PyCompilerFlags *flags, PyArena *arena)
+{
+    PyCodeObject *co;
+    PyObject *v;
+    co = PyAST_Compile(mod, filename, flags, arena);
+    if (co == NULL)
+        return NULL;
+    v = PyEval_EvalCode(co, globals, locals);
+    Py_DECREF(co);
+    return v;
+}
+</code></pre>
+<p>PyCodeObject 实际上是 python 字节码类，除了要执行的字节码还要很多其他信息，比如变量常量等：</p>
+<pre><code class="c">/* Bytecode object */
+typedef struct {
+    PyObject_HEAD
+    int co_argcount;        /* #arguments, except *args */
+    int co_nlocals;        /* #local variables */
+    int co_stacksize;        /* #entries needed for evaluation stack */
+    int co_flags;        /* CO_..., see below */
+    PyObject *co_code;        /* instruction opcodes */
+    PyObject *co_consts;    /* list (constants used) */
+    PyObject *co_names;        /* list of strings (names used) */
+    PyObject *co_varnames;    /* tuple of strings (local variable names) */
+    PyObject *co_freevars;    /* tuple of strings (free variable names) */
+    PyObject *co_cellvars;      /* tuple of strings (cell variable names) */
+    /* The rest doesn&#39;t count for hash/cmp */
+    PyObject *co_filename;    /* string (where it was loaded from) */
+    PyObject *co_name;        /* string (name, for reference) */
+    int co_firstlineno;        /* first source line number */
+    PyObject *co_lnotab;    /* string (encoding addr&lt;-&gt;lineno mapping) See
+                   Objects/lnotab_notes.txt for details. */
+    void *co_zombieframe;     /* for optimization only (see frameobject.c) */
+    PyObject *co_weakreflist;   /* to support weakrefs to code objects */
+} PyCodeObject;
+</code></pre>
+<p>编译 mod 的过程在 compiler_body 函数中，之后会调用 VISIT，展开后则是 compiler_visit_stmt，然后 switch 找到 print 的变异函数 compiler_print：</p>
+<pre><code class="c">compiler_print(struct compiler *c, stmt_ty s)
+{
+    int i, n;
+    bool dest;
+
+    assert(s-&gt;kind == Print_kind);
+    n = asdl_seq_LEN(s-&gt;v.Print.values);
+    dest = false;
+    if (s-&gt;v.Print.dest) {
+        VISIT(c, expr, s-&gt;v.Print.dest);
+        dest = true;
+    }
+    for (i = 0; i &lt; n; i++) {
+        expr_ty e = (expr_ty)asdl_seq_GET(s-&gt;v.Print.values, i);
+        if (dest) {
+            ADDOP(c, DUP_TOP);
+            VISIT(c, expr, e);
+            ADDOP(c, ROT_TWO);
+            ADDOP(c, PRINT_ITEM_TO);
+        }
+        else {
+            VISIT(c, expr, e);
+            ADDOP(c, PRINT_ITEM);
+        }
+    }
+    if (s-&gt;v.Print.nl) {
+        if (dest)
+            ADDOP(c, PRINT_NEWLINE_TO)
+        else
+            ADDOP(c, PRINT_NEWLINE)
+    }
+    else if (dest)
+        ADDOP(c, POP_TOP);
+    return 1;
+}
+</code></pre>
+<p>可以看到这里构造了字节码指令，VISIT(c, expr, e) 访问的是要打印的数字 1，这里会添加一个指令 LOAD_CONST，之后就是 PRINT_ITEM 和 PRINT_NEWLINE 以及结束指令。我们可以通过 python 的 dis 模块进行查看：</p>
+<pre><code>&gt;&gt;&gt; dis.dis(co)
+  1           0 LOAD_CONST               0 (1)
+              3 PRINT_ITEM          
+              4 PRINT_NEWLINE       
+              5 LOAD_CONST               1 (None)
+              8 RETURN_VALUE        
+</code></pre><h3 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h3><p>理了一遍 python 的编译分析，可以发现跟 PHP 大同小异。</p>
+<hr>
+<p>Orz</p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2020/06/23/安装vld扩展查看opcode/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>安装vld扩展查看opcode</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2020/06/08/PHP从编译到执行/">
+                        <span>PHP从编译到执行</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js"></script>
+<script src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js"></script>
+<script src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js"></script>
+<script src="/js/main.js"></script>
+
+
+  <script src="/js/lazyload.js"></script>
+
+
+
+  
+  <script src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js"></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "Python从编译到执行&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js"></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script src="/js/local-search.js"></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js"></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

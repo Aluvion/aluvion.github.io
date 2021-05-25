@@ -1,0 +1,1776 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>Tomcat源码观测 - Twings</title>
+
+  <link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css">
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+  <link rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css">
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+</head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期二, 十一月 10日 2020, 9:51 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    7k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      35 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> 说到 Java Web 就是 Tomcat，在后面学习 Java 无文件 WebShell 之前先来观摩一下 Tomcat 源码。</p>
+<p>主要看看 filter、servlet 等。</p>
+<a id="more"></a>
+<hr>
+<h3 id="catalina-sh"><a href="#catalina-sh" class="headerlink" title="catalina.sh"></a>catalina.sh</h3><p>启动 Tomcat 的方法之一：./catalina.sh start，在脚本中执行的启动如下：</p>
+<pre><code class="bash">eval exec &quot;\&quot;$_RUNJAVA\&quot;&quot; &quot;\&quot;$CATALINA_LOGGING_CONFIG\&quot;&quot; $LOGGING_MANAGER &quot;$JAVA_OPTS&quot; &quot;$CATALINA_OPTS&quot; \
+    -D$ENDORSED_PROP=&quot;\&quot;$JAVA_ENDORSED_DIRS\&quot;&quot; \
+    -classpath &quot;\&quot;$CLASSPATH\&quot;&quot; \
+    -Dcatalina.base=&quot;\&quot;$CATALINA_BASE\&quot;&quot; \
+    -Dcatalina.home=&quot;\&quot;$CATALINA_HOME\&quot;&quot; \
+    -Djava.io.tmpdir=&quot;\&quot;$CATALINA_TMPDIR\&quot;&quot; \
+    org.apache.catalina.startup.Bootstrap &quot;$@&quot; start
+</code></pre>
+<p>通过 ps 查看到的完整命令如下：</p>
+<pre><code class="basH">/usr/lib/jvm/jdk1.8.0_191/jre/bin/java 
+-Djava.util.logging.config.file=/opt/apache-tomcat-9.0.12/conf/logging.properties 
+-Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager 
+-Djdk.tls.ephemeralDHKeySize=2048 
+-Djava.protocol.handler.pkgs=org.apache.catalina.webresources 
+-Dorg.apache.catalina.security.SecurityListener.UMASK=0027 
+-Dignore.endorsed.dirs= 
+-classpath /opt/apache-tomcat-9.0.12/bin/bootstrap.jar:/opt/apache-tomcat-9.0.12/bin/tomcat-juli.jar 
+-Dcatalina.base=/opt/apache-tomcat-9.0.12 
+-Dcatalina.home=/opt/apache-tomcat-9.0.12 
+-Djava.io.tmpdir=/opt/apache-tomcat-9.0.12/temp 
+org.apache.catalina.startup.Bootstrap start
+</code></pre>
+<p>这里的 classpath 主要是两个 jar：</p>
+<pre><code class="bash">-classpath /opt/apache-tomcat-9.0.12/bin/bootstrap.jar:/opt/apache-tomcat-9.0.12/bin/tomcat-juli.jar 
+</code></pre>
+<p>以 start 为参数调用了 org.apache.catalina.startup.Bootstrap 类。</p>
+<h3 id="load-init"><a href="#load-init" class="headerlink" title="load/init"></a>load/init</h3><p>这个类在 bootstrap.jar 中，静态代码块主要是设置各种环境变量，就不提了，看下 main 函数，前一半代码如下：</p>
+<pre><code class="java">public static void main(String[] args) {
+    synchronized(daemonLock) {
+        if (daemon == null) {
+            Bootstrap bootstrap = new Bootstrap();
+
+            try {
+                bootstrap.init();
+            } catch (Throwable var5) {
+                ...
+            }
+
+            daemon = bootstrap;
+        } else {
+            Thread.currentThread().setContextClassLoader(daemon.catalinaLoader);
+        }
+    }
+    ...
+
+}
+</code></pre>
+<p>首先设置线程的环境，初始化环境的代码在 Bootstrap 的 init 函数中，前一半如下：</p>
+<pre><code class="java">public void init() throws Exception {
+    this.initClassLoaders();
+    Thread.currentThread().setContextClassLoader(this.catalinaLoader);
+    SecurityClassLoad.securityClassLoad(this.catalinaLoader);
+    if (log.isDebugEnabled()) {
+        log.debug(&quot;Loading startup class&quot;);
+    }
+
+    ...
+}
+</code></pre>
+<p>首先初始化了类加载器：</p>
+<pre><code class="java">private void initClassLoaders() {
+    try {
+        this.commonLoader = this.createClassLoader(&quot;common&quot;, (ClassLoader)null);
+        if (this.commonLoader == null) {
+            this.commonLoader = this.getClass().getClassLoader();
+        }
+
+        this.catalinaLoader = this.createClassLoader(&quot;server&quot;, this.commonLoader);
+        this.sharedLoader = this.createClassLoader(&quot;shared&quot;, this.commonLoader);
+    } catch (Throwable var2) {
+        handleThrowable(var2);
+        log.error(&quot;Class loader creation threw exception&quot;, var2);
+        System.exit(1);
+    }
+
+}
+</code></pre>
+<p>可以看到这里会创建三个类加载器，其中 catalinaLoader 和 sharedLoader 是 commonLoader 的子类加载器，createClassLoader 函数中的创建代码如下：</p>
+<pre><code class="java">private ClassLoader createClassLoader(String name, ClassLoader parent) throws Exception {
+    String value = CatalinaProperties.getProperty(name + &quot;.loader&quot;);
+    if (value != null &amp;&amp; !value.equals(&quot;&quot;)) {
+        value = this.replace(value);
+        List&lt;Repository&gt; repositories = new ArrayList();
+        String[] repositoryPaths = getPaths(value);
+        String[] var6 = repositoryPaths;
+        int var7 = repositoryPaths.length;
+
+        for(int var8 = 0; var8 &lt; var7; ++var8) {
+            String repository = var6[var8];
+
+            try {
+                new URL(repository);
+                repositories.add(new Repository(repository, RepositoryType.URL));
+            } catch (MalformedURLException var11) {
+                if (repository.endsWith(&quot;*.jar&quot;)) {
+                    repository = repository.substring(0, repository.length() - &quot;*.jar&quot;.length());
+                    repositories.add(new Repository(repository, RepositoryType.GLOB));
+                } else if (repository.endsWith(&quot;.jar&quot;)) {
+                    repositories.add(new Repository(repository, RepositoryType.JAR));
+                } else {
+                    repositories.add(new Repository(repository, RepositoryType.DIR));
+                }
+            }
+        }
+
+        return ClassLoaderFactory.createClassLoader(repositories, parent);
+    } else {
+        return parent;
+    }
+}
+</code></pre>
+<p>简单来说，就是从配置中获取加载类的路径然后创建类加载器，观察 CatalinaProperties 类的 getProperty 和 loadProperties 函数，可以看到配置来自 /org/apache/catalina/startup/catalina.properties：</p>
+<pre><code>common.loader=&quot;${catalina.base}/lib&quot;,&quot;${catalina.base}/lib/*.jar&quot;,&quot;${catalina.home}/lib&quot;,&quot;${catalina.home}/lib/*.jar&quot;
+server.loader=
+shared.loader=
+</code></pre><p>可以看到，commonLoader 类加载器的加载路径是 Tomcat 的 lib 目录，而 catalinaLoader 和 sharedLoader 的加载路径为空，也就是说他们的值都是 commonLoader。</p>
+<p>创建完类加载器后， 会加载一个 org.apache.catalina.startup.Catalina 类，实例化并将 sharedLoader，即 commonLoader 放入其中：</p>
+<pre><code class="java">Class&lt;?&gt; startupClass = this.catalinaLoader.loadClass(&quot;org.apache.catalina.startup.Catalina&quot;);
+Object startupInstance = startupClass.getConstructor().newInstance();
+if (log.isDebugEnabled()) {
+    log.debug(&quot;Setting startup class properties&quot;);
+}
+
+String methodName = &quot;setParentClassLoader&quot;;
+Class&lt;?&gt;[] paramTypes = new Class[]{Class.forName(&quot;java.lang.ClassLoader&quot;)};
+Object[] paramValues = new Object[]{this.sharedLoader};
+Method method = startupInstance.getClass().getMethod(methodName, paramTypes);
+method.invoke(startupInstance, paramValues);
+this.catalinaDaemon = startupInstance;
+</code></pre>
+<p>回到 main 函数，start 命令会执行的代码如下：</p>
+<pre><code class="java">else if (command.equals(&quot;start&quot;)) {
+    daemon.setAwait(true);
+    daemon.load(args);
+    daemon.start();
+    if (null == daemon.getServer()) {
+        System.exit(1);
+    }
+}
+</code></pre>
+<p>setAwait 只是给一个布尔属性赋值，跳过它看 load 函数。</p>
+<p>调用的 load 函数来自 org.apache.catalina.startup.Catalina 类：</p>
+<pre><code class="java">    public void load() {
+    if (!this.loaded) {
+        this.loaded = true;
+        long t1 = System.nanoTime();
+        this.initDirs();
+        this.initNaming();
+        this.parseServerXml(true);
+        ...
+    }
+}
+</code></pre>
+<p>此时还没有加载，所以 loaded 为 false，前面的环境变量设置（时间、目录等）跳过，后面的 parseServerXml 函数一看就是跟加载 web 配置文件相关的函数：</p>
+<pre><code class="java">protected void parseServerXml(boolean start) {
+    ConfigFileLoader.setSource(new CatalinaBaseConfigurationSource(Bootstrap.getCatalinaBaseFile(), this.getConfigFile()));
+    File file = this.configFile();
+    File serverXmlLocation = null;
+    if (this.generateCode) {
+        ...
+    }
+
+    Catalina.ServerXml serverXml = null;
+    if (this.useGeneratedCode) {
+        ...
+    }
+
+    if (serverXml != null) {
+        serverXml.load(this);
+    } else {
+        try {
+            Resource resource = ConfigFileLoader.getSource().getServerXml();
+            Throwable var6 = null;
+
+            try {
+                Digester digester = start ? this.createStartDigester() : this.createStopDigester();
+                InputStream inputStream = resource.getInputStream();
+                InputSource inputSource = new InputSource(resource.getURI().toURL().toString());
+                inputSource.setByteStream(inputStream);
+                digester.push(this);
+                if (this.generateCode) {
+                    ...
+                }
+
+                digester.parse(inputSource);
+                if (this.generateCode) {
+                    ...
+                }
+            } 
+            ...
+        } 
+        ...
+    }
+
+}
+</code></pre>
+<p>实例化了一个 Digester XML 解析器，并将自身 Catalina 对象放入栈中，用于后面保存解析过程中生成的对象。</p>
+<p>配置文件来自 CatalinaBaseConfigurationSource 类，使用 ConfigFileLoader.getSource().getServerXml() 获取配置文件资源：</p>
+<pre><code class="java">public Resource getServerXml() throws IOException {
+    IOException ioe = null;
+    Resource result = null;
+
+    try {
+        if (this.serverXmlPath != null &amp;&amp; !this.serverXmlPath.equals(&quot;conf/server.xml&quot;)) {
+            result = this.getResource(this.serverXmlPath);
+        } else {
+            result = super.getServerXml();
+        }
+    } catch (IOException var6) {
+        ioe = var6;
+    }
+
+    if (result == null) {
+        ...
+    }
+
+    if (result == null &amp;&amp; ioe != null) {
+        throw ioe;
+    } else {
+        return result;
+    }
+}
+</code></pre>
+<p>this.serverXmlPath 来自实例化时传入的 this.getConfigFile()，即 Catalina 类的 configFile 属性：</p>
+<pre><code class="java">protected String configFile = &quot;conf/server.xml&quot;;
+</code></pre>
+<p>获取配置文件资源后，然后开始使用 Digester 解析 xml（<a href="https://www.cnblogs.com/cenyu/p/11079144.html" target="_blank" rel="noopener">参考文章</a>），这是个匹配 -&gt; 回调感觉的解析器，详细的规则可以在 createStartDigester 函数中看到，比如这三句：</p>
+<pre><code class="java">digester.addObjectCreate(&quot;Server&quot;, &quot;org.apache.catalina.core.StandardServer&quot;, &quot;className&quot;);
+digester.addSetProperties(&quot;Server&quot;);
+digester.addSetNext(&quot;Server&quot;, &quot;setServer&quot;, &quot;org.apache.catalina.Server&quot;);
+</code></pre>
+<p>这里的规则匹配 Server 标签，addObjectCreate 规则在没有 className 属性的情况下默认实例化一个 org.apache.catalina.core.StandardServer 类并放入栈中：</p>
+<pre><code class="java">public void begin(String namespace, String name, Attributes attributes) throws Exception {
+    String realClassName = this.getRealClassName(attributes);
+    if (realClassName == null) {
+        throw new NullPointerException(sm.getString(&quot;rule.noClassName&quot;, new Object[]{namespace, name}));
+    } else {
+        Class&lt;?&gt; clazz = this.digester.getClassLoader().loadClass(realClassName);
+        Object instance = clazz.getConstructor().newInstance();
+        this.digester.push(instance);
+        ...
+
+    }
+}
+
+protected String getRealClassName(Attributes attributes) {
+    String realClassName = this.className;
+    if (this.attributeName != null) {
+        String value = attributes.getValue(this.attributeName);
+        if (value != null) {
+            realClassName = value;
+        }
+    }
+
+    return realClassName;
+}
+</code></pre>
+<p>addSetProperties 规则用其他属性给 StandardServer 类赋值，跳过。</p>
+<p>addSetNext 规则将 StandardServer 对象作为参数，调用 Catalina 对象的 setServer 函数将 StandardServer 保存起来。</p>
+<p>解析完 server.xml 之后，Tomcat 服务端对象已经创建好并按层次保存在 Catalina 对象的 server 属性中了，回到 load 函数，接下来的代码如下：</p>
+<pre><code class="java">Server s = this.getServer();
+if (s != null) {
+    this.getServer().setCatalina(this);
+    this.getServer().setCatalinaHome(Bootstrap.getCatalinaHomeFile());
+    this.getServer().setCatalinaBase(Bootstrap.getCatalinaBaseFile());
+    this.initStreams();
+
+    try {
+        this.getServer().init();
+    } catch (LifecycleException var5) {
+        ...
+    }
+
+    if (log.isInfoEnabled()) {
+        log.info(...);
+    }
+
+}
+</code></pre>
+<p>调用 this.getServer().init() 开始初始化服务端，看了一下各个模块类的 initInternal 函数，好像没什么特别的，那就直接回到 main 函数里面 daemon.start() 这一句吧。</p>
+<h3 id="start"><a href="#start" class="headerlink" title="start"></a>start</h3><p>观察 server.xml 中的配置，可以发现一个 Service 就是一个 Web 服务，所以我们关注 Service 的启动，Service 的配置如下：</p>
+<pre><code class="xml">&lt;Service name=&quot;Catalina&quot;&gt;
+    &lt;Connector port=&quot;8080&quot; protocol=&quot;HTTP/1.1&quot;
+               connectionTimeout=&quot;20000&quot;
+               redirectPort=&quot;8443&quot; /&gt;
+    &lt;Engine name=&quot;Catalina&quot; defaultHost=&quot;localhost&quot;&gt;
+        &lt;Realm className=&quot;org.apache.catalina.realm.LockOutRealm&quot;&gt;
+            &lt;Realm className=&quot;org.apache.catalina.realm.UserDatabaseRealm&quot;
+                   resourceName=&quot;UserDatabase&quot;/&gt;
+        &lt;/Realm&gt;
+        &lt;Host name=&quot;localhost&quot;  appBase=&quot;webapps&quot;
+              unpackWARs=&quot;true&quot; autoDeploy=&quot;true&quot;&gt;
+            &lt;Valve className=&quot;org.apache.catalina.valves.AccessLogValve&quot; directory=&quot;logs&quot;
+                   prefix=&quot;localhost_access_log&quot; suffix=&quot;.txt&quot;
+                   pattern=&quot;%h %l %u %t &amp;quot;%r&amp;quot; %s %b&quot; /&gt;
+        &lt;/Host&gt;
+    &lt;/Engine&gt;
+&lt;/Service&gt;
+</code></pre>
+<p>观察里面的配置项，可以看出 Connector 应该用于处理 HTTP 协议，而 Host 部分应该用于处理 HTTP 请求。</p>
+<p>跟 init 类似，start 主要调用的是 startInternal 函数，Service 的 startInternal 函数如下：</p>
+<pre><code class="java">protected void startInternal() throws LifecycleException {
+    if (log.isInfoEnabled()) {
+        log.info(sm.getString(&quot;standardService.start.name&quot;, new Object[]{this.name}));
+    }
+
+    this.setState(LifecycleState.STARTING);
+    if (this.engine != null) {
+        synchronized(this.engine) {
+            this.engine.start();
+        }
+    }
+
+    synchronized(this.executors) {
+        ...
+    }
+
+    this.mapperListener.start();
+    synchronized(this.connectorsLock) {
+        Connector[] var10 = this.connectors;
+        int var11 = var10.length;
+
+        for(int var4 = 0; var4 &lt; var11; ++var4) {
+            Connector connector = var10[var4];
+            if (connector.getState() != LifecycleState.FAILED) {
+                connector.start();
+            }
+        }
+
+    }
+}
+</code></pre>
+<p>因为配置文件中没有 executors，所以就跳过了，简单来说就是启动 engine、mapperListener 和 connector，我们先看看 engine：</p>
+<pre><code class="java">protected synchronized void startInternal() throws LifecycleException {
+    if (log.isInfoEnabled()) {
+        log.info(sm.getString(&quot;standardEngine.start&quot;, new Object[]{ServerInfo.getServerInfo()}));
+    }
+
+    super.startInternal();
+}
+</code></pre>
+<p>engine 的启动没什么特别的，再看看 mapperListener：</p>
+<pre><code class="java">public void startInternal() throws LifecycleException {
+    this.setState(LifecycleState.STARTING);
+    Engine engine = this.service.getContainer();
+    if (engine != null) {
+        this.findDefaultHost();
+        this.addListeners(engine);
+        Container[] conHosts = engine.findChildren();
+        Container[] var3 = conHosts;
+        int var4 = conHosts.length;
+
+        for(int var5 = 0; var5 &lt; var4; ++var5) {
+            Container conHost = var3[var5];
+            Host host = (Host)conHost;
+            if (!LifecycleState.NEW.equals(host.getState())) {
+                this.registerHost(host);
+            }
+        }
+
+    }
+}
+</code></pre>
+<p>看代码中的命名，engine 应该就是我们在 Tomcat 中常常看到的 container。</p>
+<p>mapperListener 启动时首先调用 findDefaultHost：</p>
+<pre><code class="java">private void findDefaultHost() {
+    Engine engine = this.service.getContainer();
+    String defaultHost = engine.getDefaultHost();
+    boolean found = false;
+    if (defaultHost != null &amp;&amp; defaultHost.length() &gt; 0) {
+        Container[] containers = engine.findChildren();
+        Container[] var5 = containers;
+        int var6 = containers.length;
+
+        for(int var7 = 0; var7 &lt; var6; ++var7) {
+            Container container = var5[var7];
+            Host host = (Host)container;
+            if (defaultHost.equalsIgnoreCase(host.getName())) {
+                found = true;
+                break;
+            }
+
+            String[] aliases = host.findAliases();
+            String[] var11 = aliases;
+            int var12 = aliases.length;
+
+            for(int var13 = 0; var13 &lt; var12; ++var13) {
+                String alias = var11[var13];
+                if (defaultHost.equalsIgnoreCase(alias)) {
+                    found = true;
+                    break;
+                }
+            }
+        }
+    }
+
+    if (found) {
+        this.mapper.setDefaultHostName(defaultHost);
+    } else {
+        log.error(sm.getString(&quot;mapperListener.unknownDefaultHost&quot;, new Object[]{defaultHost, this.service}));
+    }
+
+}
+</code></pre>
+<p>可以看到，只有在 engine 的 children 中找到一个其 name 和 defaultHost 相对应的，才会给 this.mapper 赋值。</p>
+<p>engine 的 children 是通过 addChild 添加的，具体的解析规则可以到 HostRuleSet 类中找到：</p>
+<pre><code class="java">digester.addObjectCreate(this.prefix + &quot;Host&quot;, &quot;org.apache.catalina.core.StandardHost&quot;, &quot;className&quot;);
+digester.addSetProperties(this.prefix + &quot;Host&quot;);
+...
+digester.addSetNext(this.prefix + &quot;Host&quot;, &quot;addChild&quot;, &quot;org.apache.catalina.Container&quot;);
+</code></pre>
+<p>简单来说它的 children 就是 Host，因为 Host 中配置的 name 和 engine 中的 defaultHost 相同，所以会将 defaultHost 赋给 mapper。 </p>
+<p>findDefaultHost 结束后，调用 addListeners 将自身这个 MapperListener 对象放入 Host 及 Host 的 children 中（默认配置时应该为空）。</p>
+<p>最后调用 registerHost，将 Host 注册进 mapper 中（感觉 MapperListener 跟 Host 互相套娃的）。</p>
+<p>回到 Service，下一步执行的是 connector 的 start：</p>
+<pre><code class="java">protected void startInternal() throws LifecycleException {
+    if (this.getPortWithOffset() &lt; 0) {
+        throw new LifecycleException(sm.getString(&quot;coyoteConnector.invalidPort&quot;, new Object[]{this.getPortWithOffset()}));
+    } else {
+        this.setState(LifecycleState.STARTING);
+
+        try {
+            this.protocolHandler.start();
+        } catch (Exception var2) {
+            throw new LifecycleException(sm.getString(&quot;coyoteConnector.protocolHandlerStartFailed&quot;), var2);
+        }
+    }
+}
+</code></pre>
+<p>这里启动了 protocolHandler，看名字就是用于处理协议的类，是在 connector 的构造函数中初始化的：</p>
+<pre><code class="java">ProtocolHandler p = null;
+
+try {
+    p = ProtocolHandler.create(protocol, apr);
+} catch (Exception var5) {
+    log.error(sm.getString(&quot;coyoteConnector.protocolHandlerInstantiationFailed&quot;), var5);
+}
+
+if (p != null) {
+    this.protocolHandler = p;
+    this.protocolHandlerClassName = this.protocolHandler.getClass().getName();
+} else {
+    this.protocolHandler = null;
+    this.protocolHandlerClassName = protocol;
+}
+</code></pre>
+<p>而配置的协议为 HTTP/1.1：</p>
+<pre><code class="java">static ProtocolHandler create(String protocol, boolean apr) throws ClassNotFoundException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
+    if (protocol == null || &quot;HTTP/1.1&quot;.equals(protocol) || !apr &amp;&amp; Http11NioProtocol.class.getName().equals(protocol) || apr &amp;&amp; Http11AprProtocol.class.getName().equals(protocol)) {
+        return (ProtocolHandler)(apr ? new Http11AprProtocol() : new Http11NioProtocol());
+    } else if (&quot;AJP/1.3&quot;.equals(protocol) || !apr &amp;&amp; AjpNioProtocol.class.getName().equals(protocol) || apr &amp;&amp; AjpAprProtocol.class.getName().equals(protocol)) {
+        return (ProtocolHandler)(apr ? new AjpAprProtocol() : new AjpNioProtocol());
+    } else {
+        Class&lt;?&gt; clazz = Class.forName(protocol);
+        return (ProtocolHandler)clazz.getConstructor().newInstance();
+    }
+}
+</code></pre>
+<p>默认没有开启 apr 的情况下，处理 HTTP 协议的类应该就是 Http11NioProtocol。</p>
+<h3 id="shutdown"><a href="#shutdown" class="headerlink" title="shutdown"></a>shutdown</h3><p>回到 Catalina 类的 start 函数，最后会执行 await 开始监听请求：</p>
+<pre><code class="java">if (this.await) {
+    this.await();
+    this.stop();
+}
+</code></pre>
+<p>this.await 在 Bootstrap 对象执行 daemon.setAwait(true) 时赋值为 true，await 函数会执行到 Server 的 await 函数，首先在 8005 端口创建了一个监听本地请求的 ServerSocket：</p>
+<pre><code class="java">this.awaitSocket = new ServerSocket(this.getPortWithOffset(), 1, InetAddress.getByName(this.address));
+</code></pre>
+<p>然后从 client 读取字符，如果收到的命令为 shutdown 就会中断监听并关闭 socket：</p>
+<pre><code class="java">boolean match = command.toString().equals(this.shutdown);
+if (match) {
+    log.info(sm.getString(&quot;standardServer.shutdownViaPort&quot;));
+    var32 = false;
+    break;
+}
+...
+serverSocket = this.awaitSocket;
+this.awaitThread = null;
+this.awaitSocket = null;
+if (serverSocket != null) {
+    try {
+        serverSocket.close();
+    } catch (IOException var65) {
+    }
+}
+</code></pre>
+<p>这里的死循环结束之后，就会结束 await 函数并调用 this.stop：</p>
+<pre><code class="java">public void stop() {
+    try {
+        if (this.useShutdownHook) {
+            Runtime.getRuntime().removeShutdownHook(this.shutdownHook);
+            LogManager logManager = LogManager.getLogManager();
+            if (logManager instanceof ClassLoaderLogManager) {
+                ((ClassLoaderLogManager)logManager).setUseShutdownHook(true);
+            }
+        }
+    } catch (Throwable var3) {
+        ExceptionUtils.handleThrowable(var3);
+    }
+
+    try {
+        Server s = this.getServer();
+        LifecycleState state = s.getState();
+        if (LifecycleState.STOPPING_PREP.compareTo(state) &gt; 0 || LifecycleState.DESTROYED.compareTo(state) &lt; 0) {
+            s.stop();
+            s.destroy();
+        }
+    } catch (LifecycleException var4) {
+        log.error(sm.getString(&quot;catalina.stopError&quot;), var4);
+    }
+
+}
+</code></pre>
+<p>调用 Server 的 stop 和 destroy，大体来说就是一级级下去分别调用了 Service、Engine 等模块类的停止函数，就把整个 Tomcat 服务关闭了。</p>
+<p>当我们使用 stop 命令关闭 Tomcat 时，Catalina 类会解析配置文件，获取 IP 端口等信息并传输 shutdown 命令：</p>
+<pre><code class="java">try {
+    Socket socket = new Socket(s.getAddress(), s.getPortWithOffset());
+    Throwable var4 = null;
+
+    try {
+        OutputStream stream = socket.getOutputStream();
+        Throwable var6 = null;
+
+        try {
+            String shutdown = s.getShutdown();
+
+            for(int i = 0; i &lt; shutdown.length(); ++i) {
+                stream.write(shutdown.charAt(i));
+            }
+
+            stream.flush();
+        } 
+        ...
+
+        }
+    } 
+    ...
+}
+</code></pre>
+<p>这样一来就实现了关闭 Tomcat。</p>
+<h3 id="await"><a href="#await" class="headerlink" title="await"></a>await</h3><p>回到 connector 中执行的这一句代码：</p>
+<pre><code class="java">this.protocolHandler.start();
+</code></pre>
+<p>这里就开始启动 web 部分的监听了，来到 Http11NioProtocol 父类 AbstractProtocol 的 start 函数：</p>
+<pre><code class="java">public void start() throws Exception {
+    if (this.getLog().isInfoEnabled()) {
+        this.getLog().info(sm.getString(&quot;abstractProtocolHandler.start&quot;, new Object[]{this.getName()}));
+        this.logPortOffset();
+    }
+
+    this.endpoint.start();
+    this.monitorFuture = this.getUtilityExecutor().scheduleWithFixedDelay(new Runnable() {
+        public void run() {
+            if (!AbstractProtocol.this.isPaused()) {
+                AbstractProtocol.this.startAsyncTimeout();
+            }
+
+        }
+    }, 0L, 60L, TimeUnit.SECONDS);
+}
+</code></pre>
+<p>首先调用了 endpoint.start，看下 endpoint 是个什么对象：</p>
+<pre><code class="java">public Http11NioProtocol() {
+    super(new NioEndpoint());
+}
+</code></pre>
+<p>然后来到 Http11NioProtocol 类的 startInternal 函数：</p>
+<pre><code class="java">public void startInternal() throws Exception {
+    if (!this.running) {
+        this.running = true;
+        this.paused = false;
+        if (this.socketProperties.getProcessorCache() != 0) {
+            this.processorCache = new SynchronizedStack(128, this.socketProperties.getProcessorCache());
+        }
+
+        if (this.socketProperties.getEventCache() != 0) {
+            this.eventCache = new SynchronizedStack(128, this.socketProperties.getEventCache());
+        }
+
+        if (this.socketProperties.getBufferPool() != 0) {
+            this.nioChannels = new SynchronizedStack(128, this.socketProperties.getBufferPool());
+        }
+
+        if (this.getExecutor() == null) {
+            this.createExecutor();
+        }
+
+        this.initializeConnectionLatch();
+        this.poller = new NioEndpoint.Poller();
+        Thread pollerThread = new Thread(this.poller, this.getName() + &quot;-ClientPoller&quot;);
+        pollerThread.setPriority(this.threadPriority);
+        pollerThread.setDaemon(true);
+        pollerThread.start();
+        this.startAcceptorThread();
+    }
+
+}
+</code></pre>
+<p>Tomcat 中的客户端请求处理是通过 Acceptor 和 Poller 两部分实现的，我们先看看 Acceptor：</p>
+<pre><code class="java">public void run() {
+    byte errorDelay = 0;
+
+    while(this.endpoint.isRunning()) {
+        ...
+
+        this.state = Acceptor.AcceptorState.RUNNING;
+
+        try {
+            this.endpoint.countUpOrAwaitConnection();
+            if (!this.endpoint.isPaused()) {
+                Object socket = null;
+
+                try {
+                    socket = this.endpoint.serverSocketAccept();
+                } catch (Exception var6) {
+                    this.endpoint.countDownConnection();
+                    if (!this.endpoint.isRunning()) {
+                        break;
+                    }
+
+                    this.handleExceptionWithDelay(errorDelay);
+                    throw var6;
+                }
+
+                errorDelay = 0;
+                if (this.endpoint.isRunning() &amp;&amp; !this.endpoint.isPaused()) {
+                    if (!this.endpoint.setSocketOptions(socket)) {
+                        this.endpoint.closeSocket(socket);
+                    }
+                } else {
+                    this.endpoint.destroySocket(socket);
+                }
+            }
+        } 
+        ...
+    }
+
+    this.state = Acceptor.AcceptorState.ENDED;
+}
+</code></pre>
+<p>调用 this.endpoint.serverSocketAccept 获取一个 SocketChannel：</p>
+<pre><code class="java">protected SocketChannel serverSocketAccept() throws Exception {
+    return this.serverSock.accept();
+}
+</code></pre>
+<p>accept 函数会一直阻塞直到新的请求到来。serverSock 的初始化在 initServerSocket 函数中（往上可以追溯到 Connector 的 this.protocolHandler.init() 这一句）：</p>
+<pre><code class="java">this.serverSock = ServerSocketChannel.open();
+this.socketProperties.setProperties(this.serverSock.socket());
+InetSocketAddress addr = new InetSocketAddress(this.getAddress(), this.getPortWithOffset());
+this.serverSock.socket().bind(addr, this.getAcceptCount());
+</code></pre>
+<p>可以看到监听的地址和端口来自自身的两个属性，他们的赋值方式要追溯到 connector 的创建去了，解析 XML 时：</p>
+<pre><code class="java">Connector con = new Connector(protocolName);
+...
+
+this.digester.push(con);
+</code></pre>
+<p>创建一个 Connector 并放入栈中（如上文所说，protocolHandler 就是在 connector 构造函数中创建的），然后下一条规则：</p>
+<pre><code class="java">digester.addSetProperties(&quot;Server/Service/Connector&quot;, new String[]{&quot;executor&quot;, &quot;sslImplementationName&quot;, &quot;protocol&quot;});
+</code></pre>
+<p>除了这三个属性，其他都会进行赋值，SetPropertiesRule 的赋值处理如下：</p>
+<pre><code class="java">if (!IntrospectionUtils.setProperty(top, name, value, true, actualMethod)) {
+    if (this.digester.getRulesValidation() &amp;&amp; !&quot;optional&quot;.equals(name)) {
+        this.digester.log.warn(sm.getString(&quot;rule.noProperty&quot;, new Object[]{this.digester.match, name, value}));
+    }
+}
+</code></pre>
+<p>IntrospectionUtils 的处理比较别致，找不到特定属性的 setter 时会调用 setProperty：</p>
+<pre><code class="java">if (&quot;setProperty&quot;.equals(method.getName())) {
+    if (method.getReturnType() == Boolean.TYPE) {
+        setPropertyMethodBool = method;
+    } else {
+        setPropertyMethodVoid = method;
+    }
+}
+</code></pre>
+<p>对于 connector 来说就是：</p>
+<pre><code class="java">public boolean setProperty(String name, String value) {
+    return this.protocolHandler == null ? false : IntrospectionUtils.setProperty(this.protocolHandler, name, value);
+}
+</code></pre>
+<p>对于 protocolHandler（Http11NioProtocol）来说就是：</p>
+<pre><code class="java">public void setAddress(InetAddress ia) {
+    this.endpoint.setAddress(ia);
+}
+</code></pre>
+<p>所以一层层反射下去就会给 endpoint 赋值。</p>
+<p>不过又有个问题，connector 反射的参数类型为 String，而 protocolHandler 却是 InetAddress，所以中间还存在一个类型转换的操作。再回到了 IntrospectionUtils，这里又有个对 InetAddress 类型参数的别致操作：</p>
+<pre><code class="java">if (&quot;java.net.InetAddress&quot;.equals(paramType.getName())) {
+    try {
+        params[0] = InetAddress.getByName(value);
+    } catch (UnknownHostException var20) {
+        if (log.isDebugEnabled()) {
+            log.debug(&quot;IntrospectionUtils: Unable to resolve host name:&quot; + value);
+        }
+
+        ok = false;
+    }
+
+    if (actualMethod != null) {
+        actualMethod.append(method.getName()).append(&quot;(InetAddress.getByName(\&quot;&quot;).append(value).append(&quot;\&quot;))&quot;);
+    }
+}
+</code></pre>
+<p>所以在 connector 中配置 address 可以设置 Tomcat 的监听地址。</p>
+<p>不过看 server.xml，里面是没有配置 address 的，所以就是默认的 0.0.0.0：</p>
+<pre><code class="java">public InetSocketAddress(InetAddress addr, int port) {
+    holder = new InetSocketAddressHolder(
+        null,
+        addr == null ? InetAddress.anyLocalAddress() : addr,
+        checkPort(port));
+}
+</code></pre>
+<p>回到 Acceptor，在接收到请求并获取到一个 SocketChannel 之后，会调用 setSocketOptions：</p>
+<pre><code class="java">protected boolean setSocketOptions(SocketChannel socket) {
+    Object socketWrapper = null;
+
+    try {
+        NioChannel channel = null;
+        if (this.nioChannels != null) {
+            channel = (NioChannel)this.nioChannels.pop();
+        }
+
+        if (channel == null) {
+            SocketBufferHandler bufhandler = new SocketBufferHandler(this.socketProperties.getAppReadBufSize(), this.socketProperties.getAppWriteBufSize(), this.socketProperties.getDirectBuffer());
+            if (this.isSSLEnabled()) {
+                channel = new SecureNioChannel(bufhandler, this.selectorPool, this);
+            } else {
+                channel = new NioChannel(bufhandler);
+            }
+        }
+
+        NioEndpoint.NioSocketWrapper newWrapper = new NioEndpoint.NioSocketWrapper((NioChannel)channel, this);
+        ((NioChannel)channel).reset(socket, newWrapper);
+        this.connections.put(socket, newWrapper);
+        socket.configureBlocking(false);
+        this.socketProperties.setProperties(socket.socket());
+        newWrapper.setReadTimeout((long)this.getConnectionTimeout());
+        newWrapper.setWriteTimeout((long)this.getConnectionTimeout());
+        newWrapper.setKeepAliveLeft(this.getMaxKeepAliveRequests());
+        this.poller.register((NioChannel)channel, newWrapper);
+        return true;
+    } 
+    ...
+}
+</code></pre>
+<p>新建一个 NioChannel，将 SocketChannel 和 NioSocketWrapper 放进去，再将新生成的 channel 和 wrapper 一起放入 connections Map 并注册进 Poller 中，注册进 Poller 中的代码如下：</p>
+<pre><code class="java">public void register(NioChannel socket, NioEndpoint.NioSocketWrapper socketWrapper) {
+    socketWrapper.interestOps(1);
+    NioEndpoint.PollerEvent event = null;
+    if (NioEndpoint.this.eventCache != null) {
+        event = (NioEndpoint.PollerEvent)NioEndpoint.this.eventCache.pop();
+    }
+
+    if (event == null) {
+        event = new NioEndpoint.PollerEvent(socket, 256);
+    } else {
+        event.reset(socket, 256);
+    }
+
+    this.addEvent(event);
+}
+</code></pre>
+<p>简单来说就是会添加进 events 这个队列中，Acceptor 的 run 函数大致结束了，接下来看看 Poller 的：</p>
+<pre><code class="java">public void run() {
+    while(true) {
+        boolean hasEvents = false;
+
+        label59: {
+            try {
+                if (!this.close) {
+                    hasEvents = this.events();
+                    ...
+                }
+
+                if (!this.close) {
+                    break label59;
+                }
+
+                ...
+            } 
+            ...
+        }
+
+        ...
+    }
+}
+</code></pre>
+<p>看看 events 函数：</p>
+<pre><code class="java">public boolean events() {
+    boolean result = false;
+    NioEndpoint.PollerEvent pe = null;
+    int i = 0;
+
+    for(int size = this.events.size(); i &lt; size &amp;&amp; (pe = (NioEndpoint.PollerEvent)this.events.poll()) != null; ++i) {
+        result = true;
+        NioChannel channel = pe.getSocket();
+        NioEndpoint.NioSocketWrapper socketWrapper = channel.getSocketWrapper();
+        int interestOps = pe.getInterestOps();
+        if (interestOps == 256) {
+            try {
+                channel.getIOChannel().register(this.getSelector(), 1, socketWrapper);
+            } catch (Exception var12) {
+                NioEndpoint.log.error(AbstractEndpoint.sm.getString(&quot;endpoint.nio.registerFail&quot;), var12);
+            }
+        } else {
+            ...
+        }
+
+        if (NioEndpoint.this.running &amp;&amp; !NioEndpoint.this.paused &amp;&amp; NioEndpoint.this.eventCache != null) {
+            pe.reset();
+            NioEndpoint.this.eventCache.push(pe);
+        }
+    }
+
+    return result;
+}
+</code></pre>
+<p>调用 poll 从中队列中取出一个 event（并从队列中删除），关注这一句：</p>
+<pre><code class="java">channel.getIOChannel().register(this.getSelector(), 1, socketWrapper);
+</code></pre>
+<p>这里将 channel 注册到了 selector 上，并监听 read 事件：</p>
+<pre><code class="java">public static final int OP_READ = 1 &lt;&lt; 0;
+</code></pre>
+<p>继续看 run 函数：</p>
+<pre><code class="java">if (this.wakeupCounter.getAndSet(-1L) &gt; 0L) {
+    this.keyCount = this.selector.selectNow();
+} else {
+    this.keyCount = this.selector.select(NioEndpoint.this.selectorTimeout);
+}
+
+this.wakeupCounter.set(0L);
+</code></pre>
+<p>wakeupCounter 是一个初始为 0 的计数器，每次 addEvent 就会 +1，没有 event 时就会为 0，从而进入 this.selector.select 的阻塞，超时时间为 1 秒。</p>
+<p>如果存在有效事件，keyCount 就是有效事件的数量，后面就开始处理这些事件：</p>
+<pre><code class="java">Iterator iterator = this.keyCount &gt; 0 ? this.selector.selectedKeys().iterator() : null;
+
+while(iterator != null &amp;&amp; iterator.hasNext()) {
+    SelectionKey sk = (SelectionKey)iterator.next();
+    NioEndpoint.NioSocketWrapper socketWrapper = (NioEndpoint.NioSocketWrapper)sk.attachment();
+    if (socketWrapper == null) {
+        iterator.remove();
+    } else {
+        iterator.remove();
+        this.processKey(sk, socketWrapper);
+    }
+}
+</code></pre>
+<p>看看 processKey 函数，关注 read 的部分：</p>
+<pre><code class="java">if (sk.isReadable()) {
+    if (socketWrapper.readOperation != null) {
+        if (!socketWrapper.readOperation.process()) {
+            closeSocket = true;
+        }
+    } else if (!NioEndpoint.this.processSocket(socketWrapper, SocketEvent.OPEN_READ, true)) {
+        closeSocket = true;
+    }
+}
+</code></pre>
+<p>下一步 processSocket：</p>
+<pre><code class="java">if (handshake == 0) {
+    AbstractEndpoint.Handler.SocketState state = AbstractEndpoint.Handler.SocketState.OPEN;
+    if (this.event == null) {
+        state = NioEndpoint.this.getHandler().process(this.socketWrapper, SocketEvent.OPEN_READ);
+    } else {
+        state = NioEndpoint.this.getHandler().process(this.socketWrapper, this.event);
+    }
+
+    if (state == AbstractEndpoint.Handler.SocketState.CLOSED) {
+        poller.cancelledKey(socket.getIOChannel().keyFor(poller.getSelector()), this.socketWrapper);
+    }
+}
+</code></pre>
+<p>handshake 为 0 代表 TCP 握手完成（大概），然后调用 handler 的 process 函数，这里的 handler 是个 ConnectionHandler 类，在 protocolHandler 实例化时赋值（AbstractHttp11Protocol 类构造函数）：</p>
+<pre><code class="java">AbstractProtocol.ConnectionHandler&lt;S&gt; cHandler = new AbstractProtocol.ConnectionHandler(this);
+this.setHandler(cHandler);
+this.getEndpoint().setHandler(cHandler);
+</code></pre>
+<p>process：</p>
+<pre><code class="java">if (processor == null) {
+    processor = this.getProtocol().createProcessor();
+    this.register(processor);
+    if (this.getLog().isDebugEnabled()) {
+        this.getLog().debug(AbstractProtocol.sm.getString(&quot;abstractConnectionHandler.processorCreate&quot;, new Object[]{processor}));
+    }
+}
+</code></pre>
+<p>第一次访问时没有 processor，所以会调用 createProcessor 生成一个，AbstractHttp11Protocol 类的 createProcessor  函数如下：</p>
+<pre><code class="java">protected Processor createProcessor() {
+    Http11Processor processor = new Http11Processor(this, this.adapter);
+    return processor;
+}
+</code></pre>
+<p>生成的是 Http11Processor，然后调用其 process 函数：</p>
+<pre><code class="java">state = processor.process(wrapper, status);
+</code></pre>
+<p>然后来到 AbstractProcessorLight 类的 process：</p>
+<pre><code class="java">else if (status == SocketEvent.OPEN_READ) {
+    state = this.service(socketWrapper);
+}
+</code></pre>
+<p>回到 Http11Processor 类的 service 函数：</p>
+<pre><code class="java">this.getAdapter().service(this.request, this.response);
+</code></pre>
+<p>可以看到，这里有 request 和 response 两个属性，都来自 org.apache.coyote 包，找一下他们的生成方式，在父类 AbstractProcessor 的构造函数中：</p>
+<pre><code class="java">public AbstractProcessor(Adapter adapter) {
+    this(adapter, new Request(), new Response());
+}
+
+protected AbstractProcessor(Adapter adapter, Request coyoteRequest, Response coyoteResponse) {
+    this.hostNameC = new char[0];
+    this.asyncTimeout = -1L;
+    this.asyncTimeoutGeneration = 0L;
+    this.socketWrapper = null;
+    this.errorState = ErrorState.NONE;
+    this.adapter = adapter;
+    this.asyncStateMachine = new AsyncStateMachine(this);
+    this.request = coyoteRequest;
+    this.response = coyoteResponse;
+    this.response.setHook(this);
+    this.request.setResponse(this.response);
+    this.request.setHook(this);
+    this.userDataHelper = new UserDataHelper(this.getLog());
+}
+</code></pre>
+<p>可以看到 response 就存放在 request 中，Http11Processor 放在 request 和 response 中。不过仔细观察这个 request 中的属性，会发现他们似乎并不是我们习惯的那个 request。</p>
+<p>而 Adapter 的赋值要追溯到 Connector 的 initInternal 函数：</p>
+<pre><code class="java">this.adapter = new CoyoteAdapter(this);
+</code></pre>
+<p>跟进 CoyoteAdapter 类的 service 函数：</p>
+<pre><code class="java">Request request = (Request)req.getNote(1);
+Response response = (Response)res.getNote(1);
+if (request == null) {
+    request = this.connector.createRequest();
+    request.setCoyoteRequest(req);
+    response = this.connector.createResponse();
+    response.setCoyoteResponse(res);
+    request.setResponse(response);
+    response.setRequest(request);
+    req.setNote(1, request);
+    res.setNote(1, response);
+    req.getParameters().setQueryStringCharset(this.connector.getURICharset());
+}
+</code></pre>
+<p>可以看到我们习惯的 request（org.apache.catalina.connector），第一次访问时 request（org.apache.coyote）是刚刚生成的，所以 note 属性里面没有保存 request（org.apache.catalina.connector），这时会调用 createRequest/createResponse 从 connector 生成并保存起来：</p>
+<pre><code class="java">public Request createRequest() {
+    return new Request(this);
+}
+
+public Response createResponse() {
+    int size = this.protocolHandler.getDesiredBufferSize();
+    return size &gt; 0 ? new Response(size) : new Response();
+}
+</code></pre>
+<p>request 和 response 互相嵌套，connector 套进了 request 中。</p>
+<p>然后开始处理 HTTP 请求：</p>
+<pre><code class="java">postParseSuccess = this.postParseRequest(req, request, res, response);
+if (postParseSuccess) {
+    request.setAsyncSupported(this.connector.getService().getContainer().getPipeline().isAsyncSupported());
+    this.connector.getService().getContainer().getPipeline().getFirst().invoke(request, response);
+}
+</code></pre>
+<p>调用 postParseRequest 解析请求，如果解析成功就会开始反射，看这一长串链式执行，可以简化成 engine.getPipeline().getFirst().invoke(request, response)，我们回到 engine 去看看：</p>
+<pre><code class="java">protected final Pipeline pipeline = new StandardPipeline(this);
+</code></pre>
+<p>StandardPipeline 类的 getFirst 函数如下：</p>
+<pre><code class="java">public Valve getFirst() {
+    return this.first != null ? this.first : this.basic;
+}
+</code></pre>
+<p>调试可以发现，这里的 first 为 null，basic 来自 engine 的构造函数：</p>
+<pre><code class="java">this.pipeline.setBasic(new StandardEngineValve());
+</code></pre>
+<p>所以最后的反射函数如下：</p>
+<pre><code class="java">public final void invoke(Request request, Response response) throws IOException, ServletException {
+    Host host = request.getHost();
+    if (host != null) {
+        if (request.isAsyncSupported()) {
+            request.setAsyncSupported(host.getPipeline().isAsyncSupported());
+        }
+
+        host.getPipeline().getFirst().invoke(request, response);
+    }
+}
+</code></pre>
+<p>看看这里的 host 是怎么生成的，回到 postParseRequest，里面有一句：</p>
+<pre><code class="java">this.connector.getService().getMapper().map(serverName, decodedURI, version, request.getMappingData());
+</code></pre>
+<p>会来到 Mapper 类的 internalMap 函数：</p>
+<pre><code class="java">Mapper.MappedHost[] hosts = this.hosts;
+Mapper.MappedHost mappedHost = (Mapper.MappedHost)exactFindIgnoreCase(hosts, host);
+...
+
+mappingData.host = (Host)mappedHost.object;
+</code></pre>
+<p>hosts 是一个数组，通过 addHost 函数进行添加，再往上回到 MapperListener 类的 registerHost 函数中，在前面 start 的时候会注册进去：</p>
+<pre><code class="java">public void startInternal() throws LifecycleException {
+    this.setState(LifecycleState.STARTING);
+    Engine engine = this.service.getContainer();
+    if (engine != null) {
+        this.findDefaultHost();
+        this.addListeners(engine);
+        Container[] conHosts = engine.findChildren();
+        Container[] var3 = conHosts;
+        int var4 = conHosts.length;
+
+        for(int var5 = 0; var5 &lt; var4; ++var5) {
+            Container conHost = var3[var5];
+            Host host = (Host)conHost;
+            if (!LifecycleState.NEW.equals(host.getState())) {
+                this.registerHost(host);
+            }
+        }
+
+    }
+}
+
+
+</code></pre>
+<p>可以看到源数据来自 engine，即 server.xml 中配置并解析生成的 standardHost 对象。然后再调用 exactFindIgnoreCase 从这些 hosts 中获取该次请求对应的 host：</p>
+<pre><code class="java">private static final &lt;T, E extends Mapper.MapElement&lt;T&gt;&gt; E exactFindIgnoreCase(E[] map, CharChunk name) {
+    int pos = findIgnoreCase(map, name);
+    if (pos &gt;= 0) {
+        E result = map[pos];
+        if (name.equalsIgnoreCase(result.name)) {
+            return result;
+        }
+    }
+
+    return null;
+}
+</code></pre>
+<p>简单来说就是将访问的 host 和 sever.xml 中配置的 host 匹配一下。</p>
+<p>除了 host，mappingData 中还存放了其他重要属性，比如说 context，我们继续往下看 internalMap 函数：</p>
+<pre><code class="java">Mapper.ContextList contextList = mappedHost.contextList;
+Mapper.MappedContext[] contexts = contextList.contexts;
+int pos = find(contexts, (CharChunk)uri);
+</code></pre>
+<p>这里出现了一个 host 中的属性 contextList，它是在 registerHost 的时候注册的：</p>
+<pre><code class="java">private void registerHost(Host host) {
+    String[] aliases = host.findAliases();
+    this.mapper.addHost(host.getName(), aliases, host);
+    Container[] var3 = host.findChildren();
+    int var4 = var3.length;
+
+    for(int var5 = 0; var5 &lt; var4; ++var5) {
+        Container container = var3[var5];
+        if (container.getState().isAvailable()) {
+            this.registerContext((Context)container);
+        }
+    }
+
+    this.findDefaultHost();
+    ...
+
+}
+</code></pre>
+<p>最后在 addContextVersion 函数中：</p>
+<pre><code class="java">Mapper.ContextVersion newContextVersion = new Mapper.ContextVersion(version, path, slashCount, context, resources, welcomeResources);
+if (wrappers != null) {
+    this.addWrappers(newContextVersion, wrappers);
+}
+
+Mapper.ContextList contextList = mappedHost.contextList;
+Mapper.MappedContext mappedContext = (Mapper.MappedContext)exactFind(contextList.contexts, (String)path);
+if (mappedContext == null) {
+    mappedContext = new Mapper.MappedContext(path, newContextVersion);
+    Mapper.ContextList newContextList = contextList.addContext(mappedContext, slashCount);
+    if (newContextList != null) {
+        this.updateContextList(mappedHost, newContextList);
+        this.contextObjectToContextVersionMap.put(context, newContextVersion);
+    }
+}
+</code></pre>
+<p>context 和 contextVersion 放入 MappedContext，再放入 contextList 中。</p>
+<p>context 配置在 server.xml 的 host 模块下面，代表一个 web 项目（war 包或其解压后的目录），而因为 Tomcat 开启了 autoDeploy 和 unpackWARs，所以文件中没有静态配置，而是由 Tomcat 进行动态加载。顺带一提的是 context 的 name 就是配置中的 path，在 setPath 函数中：</p>
+<pre><code class="java">if (this.getName() == null) {
+    this.setName(this.path);
+}
+</code></pre>
+<p>继续 internalMap，通过 uri 匹配到对应的 context 后，会将其放入 mappingData 中。（standardContext 就保存在 contextVersion 中）</p>
+<p>还有一个重要属性 wrapper，获取 context 之后，会调用 internalMapWrapper 获取相应的 wrapper，先来看看 wrapper 的生成方式，context 中的 wrapper 在 ContextConfig 类中生成，这个类会解析 web.xml 并做相应处理，其 configureContext 函数一部分如下：</p>
+<pre><code class="java">var35 = webxml.getServlets().values().iterator();
+
+Iterator var7;
+while(var35.hasNext()) {
+    ServletDef servlet = (ServletDef)var35.next();
+    Wrapper wrapper = this.context.createWrapper();
+    ...
+    this.context.addChild(wrapper);
+}
+</code></pre>
+<p>生成 wrapper 然后用 addChild 添加到 context 中，可以发现  wrapper 和 servlet 是对应的，中间有一大段将 servlet 相关数据存储在 wrapper 中的代码被我省略了，接下来回到 standardContext 类的 createWrapper 函数：</p>
+<pre><code class="java">wrapper = new StandardWrapper();
+</code></pre>
+<p>wrapper 是一个 StandardWrapper 类，其他的没有什么特别操作了。在注册 context 的时候（registerContext），这些 wrapper 会经过 prepareWrapperMappingInfo 函数处理，合成一个 List：</p>
+<pre><code class="java">private void prepareWrapperMappingInfo(Context context, Wrapper wrapper, List&lt;WrapperMappingInfo&gt; wrappers) {
+    String wrapperName = wrapper.getName();
+    boolean resourceOnly = context.isResourceOnlyServlet(wrapperName);
+    String[] mappings = wrapper.findMappings();
+    String[] var7 = mappings;
+    int var8 = mappings.length;
+
+    for(int var9 = 0; var9 &lt; var8; ++var9) {
+        String mapping = var7[var9];
+        boolean jspWildCard = wrapperName.equals(&quot;jsp&quot;) &amp;&amp; mapping.endsWith(&quot;/*&quot;);
+        wrappers.add(new WrapperMappingInfo(mapping, wrapper, jspWildCard, resourceOnly));
+    }
+
+}
+</code></pre>
+<p>然后通过 addWrappers 分门别类组装成 MappedWrapper 放入 contextVersion：</p>
+<pre><code class="java">private void addWrappers(Mapper.ContextVersion contextVersion, Collection&lt;WrapperMappingInfo&gt; wrappers) {
+    Iterator var3 = wrappers.iterator();
+
+    while(var3.hasNext()) {
+        WrapperMappingInfo wrapper = (WrapperMappingInfo)var3.next();
+        this.addWrapper(contextVersion, wrapper.getMapping(), wrapper.getWrapper(), wrapper.isJspWildCard(), wrapper.isResourceOnly());
+    }
+
+}
+
+protected void addWrapper(Mapper.ContextVersion context, String path, Wrapper wrapper, boolean jspWildCard, boolean resourceOnly) {
+    synchronized(context) {
+        String name;
+        Mapper.MappedWrapper newWrapper;
+        Mapper.MappedWrapper[] oldWrappers;
+        Mapper.MappedWrapper[] newWrappers;
+        if (path.endsWith(&quot;/*&quot;)) {
+            name = path.substring(0, path.length() - 2);
+            newWrapper = new Mapper.MappedWrapper(name, wrapper, jspWildCard, resourceOnly);
+            oldWrappers = context.wildcardWrappers;
+            newWrappers = new Mapper.MappedWrapper[oldWrappers.length + 1];
+            if (insertMap(oldWrappers, newWrappers, newWrapper)) {
+                context.Wrappers = newWrappers;
+                int slashCount = slashCount(newWrapper.name);
+                if (slashCount &gt; context.nesting) {
+                    context.nesting = slashCount;
+                }
+            }
+        } else if (path.startsWith(&quot;*.&quot;)) {
+            name = path.substring(2);
+            newWrapper = new Mapper.MappedWrapper(name, wrapper, jspWildCard, resourceOnly);
+            oldWrappers = context.extensionWrappers;
+            newWrappers = new Mapper.MappedWrapper[oldWrappers.length + 1];
+            if (insertMap(oldWrappers, newWrappers, newWrapper)) {
+                context.extensionWrappers = newWrappers;
+            }
+        } else if (path.equals(&quot;/&quot;)) {
+            Mapper.MappedWrapper newWrapper = new Mapper.MappedWrapper(&quot;&quot;, wrapper, jspWildCard, resourceOnly);
+            context.defaultWrapper = newWrapper;
+        } else {
+            if (path.length() == 0) {
+                name = &quot;/&quot;;
+            } else {
+                name = path;
+            }
+
+            newWrapper = new Mapper.MappedWrapper(name, wrapper, jspWildCard, resourceOnly);
+            oldWrappers = context.exactWrappers;
+            newWrappers = new Mapper.MappedWrapper[oldWrappers.length + 1];
+            if (insertMap(oldWrappers, newWrappers, newWrapper)) {
+                context.exactWrappers = newWrappers;
+            }
+        }
+
+    }
+}
+</code></pre>
+<p>主要有几个分类：</p>
+<ul>
+<li>wildcardWrappers：/* 通配符结尾的路径</li>
+<li>extensionWrappers：某一类后缀的路径</li>
+<li>defaultWrapper：/ 结尾的默认（首页?）路径</li>
+<li>exactWrappers：全匹配的详细路径</li>
+</ul>
+<p>现在回到 internalMapWrapper，可以看到匹配成功后，会将 wrapper 放入 mappingData 中。</p>
+<p>回到反射，下一步是 StandardHostValve 类，获取的 context 就是前面 internalMap 函数匹配到的那个：</p>
+<pre><code class="java">Context context = request.getContext();
+...
+context.getPipeline().getFirst().invoke(request, response);
+</code></pre>
+<p>然后是 StandardContextValve 类：</p>
+<pre><code class="java">public final void invoke(Request request, Response response) throws IOException, ServletException {
+    MessageBytes requestPathMB = request.getRequestPathMB();
+    if (!requestPathMB.startsWithIgnoreCase(&quot;/META-INF/&quot;, 0) &amp;&amp; !requestPathMB.equalsIgnoreCase(&quot;/META-INF&quot;) &amp;&amp; !requestPathMB.startsWithIgnoreCase(&quot;/WEB-INF/&quot;, 0) &amp;&amp; !requestPathMB.equalsIgnoreCase(&quot;/WEB-INF&quot;)) {
+        Wrapper wrapper = request.getWrapper();
+        if (wrapper != null &amp;&amp; !wrapper.isUnavailable()) {
+            try {
+                response.sendAcknowledgement();
+            } catch (IOException var6) {
+                this.container.getLogger().error(sm.getString(&quot;standardContextValve.acknowledgeException&quot;), var6);
+                request.setAttribute(&quot;javax.servlet.error.exception&quot;, var6);
+                response.sendError(500);
+                return;
+            }
+
+            if (request.isAsyncSupported()) {
+                request.setAsyncSupported(wrapper.getPipeline().isAsyncSupported());
+            }
+
+            wrapper.getPipeline().getFirst().invoke(request, response);
+        } else {
+            response.sendError(404);
+        }
+    } else {
+        response.sendError(404);
+    }
+}
+</code></pre>
+<p>然后是 StandardWrapperValve 类，首先会生成一个 Servlet 对象：</p>
+<pre><code class="java">try {
+    if (!unavailable) {
+        servlet = wrapper.allocate();
+    }
+}
+</code></pre>
+<p>wrapper 的 allocate 函数中，会先检查自身的 instance 属性中有没有加载好的 servlet，没有则会调用 loadServlet 进行加载：</p>
+<pre><code class="java">servlet = (Servlet)instanceManager.newInstance(this.servletClass);
+</code></pre>
+<p>这里的 servletClass 来自 web.xml 中配置的类。</p>
+<p>获取到 servlet 后，会调用 createFilterChain 创建 filterChain：</p>
+<pre><code class="java">ApplicationFilterChain filterChain = ApplicationFilterFactory.createFilterChain(request, wrapper, servlet);
+</code></pre>
+<p>createFilterChain：</p>
+<pre><code class="java">ApplicationFilterChain filterChain = null;
+if (request instanceof Request) {
+    Request req = (Request)request;
+    if (Globals.IS_SECURITY_ENABLED) {
+        filterChain = new ApplicationFilterChain();
+    } else {
+        filterChain = (ApplicationFilterChain)req.getFilterChain();
+        if (filterChain == null) {
+            filterChain = new ApplicationFilterChain();
+            req.setFilterChain(filterChain);
+        }
+    }
+} else {
+    filterChain = new ApplicationFilterChain();
+}
+</code></pre>
+<p>首先该 request 对象中有没有存放有 filterChain，如果没有（比如第一次访问）则生成一个 ApplicationFilterChain 对象。继续往下看：</p>
+<pre><code class="java">filterChain.setServlet(servlet);
+filterChain.setServletSupportsAsync(wrapper.isAsyncSupported());
+StandardContext context = (StandardContext)wrapper.getParent();
+FilterMap[] filterMaps = context.findFilterMaps();
+</code></pre>
+<p>将 servlet 放入 filterChain，取出 context，再从 context 中取出 filterMaps，filterMaps 的赋值可以回到 configureContext：</p>
+<pre><code class="java">var2 = webxml.getFilterMappings().iterator();
+
+while(var2.hasNext()) {
+    FilterMap filterMap = (FilterMap)var2.next();
+    this.context.addFilterMap(filterMap);
+}
+</code></pre>
+<p>简单来说也是从 web.xml 中来的。回到 createFilterChain：</p>
+<pre><code class="java">String servletName = wrapper.getName();
+FilterMap[] var10 = filterMaps;
+int var11 = filterMaps.length;
+
+int var12;
+FilterMap filterMap;
+ApplicationFilterConfig filterConfig;
+for(var12 = 0; var12 &lt; var11; ++var12) {
+    filterMap = var10[var12];
+    if (matchDispatcher(filterMap, dispatcher) &amp;&amp; matchFiltersURL(filterMap, requestPath)) {
+        filterConfig = (ApplicationFilterConfig)context.findFilterConfig(filterMap.getFilterName());
+        if (filterConfig != null) {
+            filterChain.addFilter(filterConfig);
+        }
+    }
+}
+</code></pre>
+<p>匹配上 DispatcherType 和 requestPath 就会加入 filterChain 中。</p>
+<p>回到 StandardWrapperValve，创建完 filterChain 之后执行：</p>
+<pre><code class="java">filterChain.doFilter(request.getRequest(), response.getResponse());
+</code></pre>
+<p>即：</p>
+<pre><code class="java">if (this.pos &lt; this.n) {
+    ApplicationFilterConfig filterConfig = this.filters[this.pos++];
+
+    try {
+        Filter filter = filterConfig.getFilter();
+        if (request.isAsyncSupported() &amp;&amp; &quot;false&quot;.equalsIgnoreCase(filterConfig.getFilterDef().getAsyncSupported())) {
+            request.setAttribute(&quot;org.apache.catalina.ASYNC_SUPPORTED&quot;, Boolean.FALSE);
+        }
+
+        if (Globals.IS_SECURITY_ENABLED) {
+            Principal principal = ((HttpServletRequest)request).getUserPrincipal();
+            Object[] args = new Object[]{request, response, this};
+            SecurityUtil.doAsPrivilege(&quot;doFilter&quot;, filter, classType, args, principal);
+        } else {
+            filter.doFilter(request, response, this);
+        }
+
+    } catch (ServletException | RuntimeException | IOException var15) {
+        throw var15;
+    } catch (Throwable var16) {
+        Throwable e = ExceptionUtils.unwrapInvocationTargetException(var16);
+        ExceptionUtils.handleThrowable(e);
+        throw new ServletException(sm.getString(&quot;filterChain.filter&quot;), e);
+    }
+}
+</code></pre>
+<p>依次调用这些 filter 的 doFilter 函数，在处理完 filter 之后：</p>
+<pre><code class="java">try {
+    if (ApplicationDispatcher.WRAP_SAME_OBJECT) {
+        lastServicedRequest.set(request);
+        lastServicedResponse.set(response);
+    }
+
+    if (request.isAsyncSupported() &amp;&amp; !this.servletSupportsAsync) {
+        request.setAttribute(&quot;org.apache.catalina.ASYNC_SUPPORTED&quot;, Boolean.FALSE);
+    }
+
+    if (request instanceof HttpServletRequest &amp;&amp; response instanceof HttpServletResponse &amp;&amp; Globals.IS_SECURITY_ENABLED) {
+        Principal principal = ((HttpServletRequest)request).getUserPrincipal();
+        Object[] args = new Object[]{request, response};
+        SecurityUtil.doAsPrivilege(&quot;service&quot;, this.servlet, classTypeUsedInService, args, principal);
+    } else {
+        this.servlet.service(request, response);
+    }
+}
+</code></pre>
+<p>就开始调用 servlet 的 service 函数，往后就是项目的具体实现代码了，就不提了。</p>
+<hr>
+<p>Orz</p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2020/11/24/Jenkins相关漏洞学习（一）/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>Jenkins相关漏洞学习（一）</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2020/10/21/Java-7u21-8u20-反序列化漏洞/">
+                        <span>Java 7u21/8u20 反序列化漏洞</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js"></script>
+<script src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js"></script>
+<script src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js"></script>
+<script src="/js/main.js"></script>
+
+
+  <script src="/js/lazyload.js"></script>
+
+
+
+  
+  <script src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js"></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "Tomcat源码观测&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js"></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script src="/js/local-search.js"></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js"></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

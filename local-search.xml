@@ -4,6 +4,25 @@
   
   
   <entry>
+    <title>CodeQL入门</title>
+    <link href="/2021/05/29/CodeQL%E5%85%A5%E9%97%A8/"/>
+    <url>/2021/05/29/CodeQL%E5%85%A5%E9%97%A8/</url>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> 学学学，开始入坑静态代码扫描。</p><p>初步看下来应该是通过词法语法分析把代码分解成一个个具体的操作存进数据库里，后续要用来做什么就靠自己了。</p><a id="more"></a><hr><h3 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h3><p>下载分析程序压缩包：<a href="https://github.com/github/codeql-cli-binaries/releases/latest/download/codeql.zip" target="_blank" rel="noopener">https://github.com/github/codeql-cli-binaries/releases/latest/download/codeql.zip</a></p><p>下载编写QL脚本需要用到的库文件：<a href="https://github.com/Semmle/ql" target="_blank" rel="noopener">https://github.com/Semmle/ql</a></p><p>参考文章里还用到了vscode扩展，在vscode里面搜索安装一下：</p><p><img src="/css/images/codeql1/2021052601.png" srcset="/img/loading.gif" alt=""></p><p>然后还要配置CodeQL可执行程序路径：</p><p><img src="/css/images/codeql1/2021052602.png" srcset="/img/loading.gif" alt=""></p><p>最后我的目录如下，分别是可执行程序目录、库目录、待分析代码目录及QL脚本目录：</p><p><img src="/css/images/codeql1/2021052606.png" srcset="/img/loading.gif" alt=""></p><h3 id="体验"><a href="#体验" class="headerlink" title="体验"></a>体验</h3><p>然后就开始体验使用CodeQL了，先写一个简单的JavaScript脚本，用于分析document.write这个函数调用：</p><pre><code class="javascript">var param = location.hash.split(&quot;#&quot;)[1];document.write(&quot;Hello &quot; + param + &quot;!&quot;);</code></pre><p>然后使用CodeQL分析并建立数据库：</p><pre><code class="shell">codeql database create js --language=javascript</code></pre><p>执行起来大概是这个样子的：</p><p><img src="/css/images/codeql1/2021052603.png" srcset="/img/loading.gif" alt=""></p><p>看起来除了要分析本身要分析的代码，还需要分析其他的库，完成后会生成一个数据库文件夹：</p><p><img src="/css/images/codeql1/2021052604.png" srcset="/img/loading.gif" alt=""></p><p>为了从数据库中查询我们需要的数据，需要编写QL脚本，简单写个来试试：</p><p><img src="/css/images/codeql1/2021052605.png" srcset="/img/loading.gif" alt=""></p><p>语法跟SQL类似，此时运行会遇到问题，说缺少qlpack.yml文件，<a href="https://codeql.github.com/docs/codeql-cli/about-ql-packs/" target="_blank" rel="noopener">官方文档</a>里有介绍相关的东西，简单写一个：</p><pre><code class="yaml">name: jsversion: 1.0.0libraryPathDependencies: codeql-javascript</code></pre><p>很奇怪的是，此时在QL脚本中import javascript可以导入到库目录下的文件，明明不管是CodeQL可执行程序的配置还是目录都不太相干，测试下来感觉像是QL扩展会自行进行搜索库文件夹，看起来会一级级网上找，具体不明。</p><p>QL脚本中的基础查询结构如下：</p><pre><code class="sql">/** * * Query metadata * */import /* ... CodeQL libraries or modules ... *//* ... Optional, define CodeQL classes and predicates ... */from /* ... variable declarations ... */where /* ... logical formula ... */select /* ... expressions ... */</code></pre><p>对于各个子句的描述如下：</p><p><img src="/css/images/codeql1/2021052611.png" srcset="/img/loading.gif" alt=""></p><p>简单来说from定义要查询的数据（数据类型及变量名），where定义查询条件并且给变量赋值，select定义要显示的结果，再看看JavaScript里面常用的一些变量，比如函数调用相关的CallExpr：</p><p><img src="/css/images/codeql1/2021052607.png" srcset="/img/loading.gif" alt=""></p><p>继续查看文档，可以看到可以调用其getArgument函数获取参数相关信息：</p><p><img src="/css/images/codeql1/2021052609.png" srcset="/img/loading.gif" alt=""></p><p>其返回值类型为Expr：</p><p><img src="/css/images/codeql1/2021052608.png" srcset="/img/loading.gif" alt=""></p><p>可以写出脚本：</p><p><img src="/css/images/codeql1/2021052610.png" srcset="/img/loading.gif" alt=""></p><p>找到了函数调用及其参数后，我们还需要继续检查该参数从何而来，按照文档所说，可以用它的DataFlow库和TaintTracking库来查看数据流：</p><p><img src="/css/images/codeql1/2021052612.png" srcset="/img/loading.gif" alt=""></p><p>这里试着用用TaintTracking做污点追踪：</p><p><img src="/css/images/codeql1/2021052613.png" srcset="/img/loading.gif" alt=""></p><p>简单理解起来就是通过判断一个可控输入(source)和一个危险函数调用(sink)之间是否存在联系，这段代码的检查机制要求源头是一个location.hash.split函数调用的可控输入，终点是一个document.write的危险函数调用。</p><p>参考文章中给出的样本：</p><pre><code class="javascript">quora = {    zebra: function (apple) {        document.write(this.params);    },    params:function(){        return location.hash.split(&#39;#&#39;)[1];    }};quora.zebra();</code></pre><p>稍微有点问题，这段代码会将params当成一个字符串处理，是无法进行XSS攻击的，稍微修改一下成：</p><pre><code class="javascript">quora = {    zebra: function (apple) {        document.write(this.params());    },    params: function(){        return location.hash.split(&#39;#&#39;)[1];    }};quora.zebra();</code></pre><p>没问题：</p><p><img src="/css/images/codeql1/2021052614.png" srcset="/img/loading.gif" alt=""></p><p>可能版本更新了，功能更强大了吧。</p><hr><h3 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h3><p><a href="https://paper.seebug.org/1078" target="_blank" rel="noopener">基础</a></p><p><a href="https://codeql.github.com/docs/" target="_blank" rel="noopener">CodeQL文档</a></p><p><a href="https://codeql.github.com/docs/codeql-language-guides/codeql-library-for-javascript/" target="_blank" rel="noopener">QL库用法</a></p><p><a href="https://codeql.github.com/codeql-standard-libraries/javascript/" target="_blank" rel="noopener">QL库API</a></p>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>Web</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>Java内几个有意思的代码/命令执行点</title>
     <link href="/2021/05/25/Java%E5%86%85%E5%87%A0%E4%B8%AA%E6%9C%89%E6%84%8F%E6%80%9D%E7%9A%84%E4%BB%A3%E7%A0%81-%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C%E7%82%B9/"/>
     <url>/2021/05/25/Java%E5%86%85%E5%87%A0%E4%B8%AA%E6%9C%89%E6%84%8F%E6%80%9D%E7%9A%84%E4%BB%A3%E7%A0%81-%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C%E7%82%B9/</url>
@@ -1043,9 +1062,9 @@
       
       <tag>Web</tag>
       
-      <tag>复现</tag>
-      
       <tag>二进制</tag>
+      
+      <tag>复现</tag>
       
     </tags>
     
@@ -1178,9 +1197,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1256,9 +1275,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>Crypto</tag>
+      
+      <tag>Web</tag>
       
       <tag>Pwn</tag>
       
@@ -1279,9 +1298,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1300,9 +1319,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1321,9 +1340,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1384,9 +1403,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>Crypto</tag>
+      
+      <tag>Web</tag>
       
       <tag>Pwn</tag>
       
@@ -1407,9 +1426,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1428,9 +1447,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1449,9 +1468,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1470,9 +1489,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>复现</tag>
       
@@ -1552,9 +1571,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1613,9 +1632,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>复现</tag>
       
@@ -1636,9 +1655,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1657,9 +1676,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1697,9 +1716,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1718,9 +1737,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Crypto</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -1758,9 +1777,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Crypto</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -1779,9 +1798,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1920,9 +1939,9 @@
     
     <tags>
       
-      <tag>复现</tag>
-      
       <tag>二进制</tag>
+      
+      <tag>复现</tag>
       
     </tags>
     
@@ -1962,9 +1981,9 @@
     
     <tags>
       
-      <tag>复现</tag>
-      
       <tag>二进制</tag>
+      
+      <tag>复现</tag>
       
     </tags>
     
@@ -1983,9 +2002,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     

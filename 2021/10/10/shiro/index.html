@@ -16,7 +16,7 @@
   <meta name="description" content="摸鱼">
   <meta name="author" content="Aluvion">
   <meta name="keywords" content="">
-  <title>Winrar远程代码执行漏洞复现 - Twings</title>
+  <title>shiro入门 - Twings</title>
 
   <link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css">
 <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
@@ -117,7 +117,7 @@
               
                 <p class="mt-3 post-meta">
                   <i class="fas fa-calendar-alt" aria-hidden="true"></i>
-                  星期五, 三月 1日 2019, 12:04 中午
+                  星期日, 十月 10日 2021, 12:34 下午
                 </p>
               
 
@@ -126,7 +126,7 @@
                   
                   <span class="post-meta">
                     <i class="far fa-chart-bar"></i>
-                    450 字
+                    575 字
                   </span>
                 
 
@@ -134,7 +134,7 @@
                   
                   <span class="post-meta">
                       <i class="far fa-clock"></i>
-                      1 分钟
+                      2 分钟
                   </span>
                 
 
@@ -169,28 +169,107 @@
           <div class="post-content mx-auto" id="post">
             
             <div class="markdown-body">
-              <p>最近出现的有名的Winrar的一个漏洞，成因是Winrar在处理ACE文件的时候处理不当，存在一个目录穿越漏洞，攻击者可以通过精心构造的压缩包，在受害人解压的时候实现任意文件写入。</p>
-<p>因为这个漏洞网上已经有了很多的相关文章，复现过程也没有什么坑，所以我就从简复现一下。</p>
-<p>因为我的电脑上的Winrar已经更新的原因，这里我采用win7的虚拟机进行复现。</p>
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> 前置知识学习中，主要是学学shiro怎么用，这里简单搭建一个springboot+shiro的项目。</p>
 <a id="more"></a>
 <hr>
-<p>首先我们要生成一个ACE压缩文件，这里需要用到一个Winace软件，将恶意文件压缩进去，这里用putty作为测试：</p>
-<p><img src="/css/images/2019311.png" srcset="/img/loading.gif" alt=""></p>
-<p>这里为了目录穿越要选择 store full path 选项。</p>
-<p>压缩完成会得到一个ace文件，接下来我们就需要修改这个文件，来将文件名修改成一个带有目录穿越符号的恶意文件名。</p>
-<p>github上面有一个项目可以提取ace文件的一些信息，可以使用 git clone <a href="https://github.com/droe/acefile" target="_blank" rel="noopener">https://github.com/droe/acefile</a> 来进行下载，我们生成的ace文件信息如下：</p>
-<p><img src="/css/images/2019313.png" srcset="/img/loading.gif" alt=""></p>
-<p>我们修改文件名的同时也要修改的参数是这几个：crc、size、filename的长度。</p>
-<p>相对于文件中的地方从前往后就是：</p>
-<p><img src="/css/images/2019312.png" srcset="/img/loading.gif" alt=""></p>
-<p>我们使用010Editor进行修改，按顺序修改文件名、filename长度、size、crc，具体的修改操作可以参考下面的链接。</p>
-<p>修改结束后：</p>
-<p><img src="/css/images/2019314.png" srcset="/img/loading.gif" alt=""></p>
-<p>然后将修改后的ace文件放入虚拟机桌面进行解压，成功看到putty出现在启动文件夹中！</p>
+<h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>通过IDEA New Project中的Spring Initializr新建一个项目，依赖部分勾选Spring Web及模板引擎Thymeleaf。</p>
+<p>下载依赖的时候遇到一些问题，插件装不上：</p>
+<pre><code>Cannot resolve plugin org.springframework.boot:spring-boot-maven-plugin:2.5.5
+</code></pre><p>看看缺失的插件，然后在pom文件中加上对应的版本号：</p>
+<pre><code class="xml">&lt;build&gt;
+    &lt;plugins&gt;
+        &lt;plugin&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-maven-plugin&lt;/artifactId&gt;
+            &lt;version&gt;2.5.5&lt;/version&gt;
+        &lt;/plugin&gt;
+    &lt;/plugins&gt;
+&lt;/build&gt;
+</code></pre>
+<p> 新建好控制器类，正常启动后加入shiro依赖：</p>
+<pre><code class="xml">&lt;dependency&gt;
+    &lt;groupId&gt;org.apache.shiro&lt;/groupId&gt;
+    &lt;artifactId&gt;shiro-spring&lt;/artifactId&gt;
+    &lt;version&gt;1.8.0&lt;/version&gt;
+&lt;/dependency&gt;
+</code></pre>
+<h3 id="shiro"><a href="#shiro" class="headerlink" title="shiro"></a>shiro</h3><p>主要看看身份认证和访问控制的功能。</p>
+<p>首先要创建一个配置类，在config包下新建一个MyShiroConfig类：</p>
+<pre><code class="java">package com.example.shiro.Config;
+
+import com.example.shiro.Realm.MyRealm;
+import org.apache.shiro.realm.Realm;
+import org.apache.shiro.spring.web.ShiroFilterFactoryBean;
+import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import java.util.HashMap;
+import java.util.Map;
+
+@Configuration
+public class MyShiroConfig {
+    @Bean
+    public ShiroFilterFactoryBean myShiroFilterFactoryBean(DefaultWebSecurityManager securityManager) {
+        ShiroFilterFactoryBean shiroFilterFactoryBean = new ShiroFilterFactoryBean();
+        shiroFilterFactoryBean.setSecurityManager(securityManager);
+        Map&lt;String, String&gt; map = new HashMap&lt;&gt;();
+        map.put(&quot;/shiro&quot;, &quot;authc&quot;);
+        shiroFilterFactoryBean.setLoginUrl(&quot;/login&quot;);
+        shiroFilterFactoryBean.setFilterChainDefinitionMap(map);
+        return shiroFilterFactoryBean;
+    }
+
+    @Bean
+    public DefaultWebSecurityManager myDefaultWebSecurityManager(Realm realm) {
+        DefaultWebSecurityManager defaultWebSecurityManager = new DefaultWebSecurityManager();
+        defaultWebSecurityManager.setRealm(realm);
+        return defaultWebSecurityManager;
+    }
+
+    @Bean
+    public Realm myRealm() {
+        return new MyRealm();
+    }
+}
+</code></pre>
+<p>和一个自定义的认证类：</p>
+<pre><code class="java">package com.example.shiro.Realm;
+
+import org.apache.shiro.authc.AuthenticationException;
+import org.apache.shiro.authc.AuthenticationInfo;
+import org.apache.shiro.authc.AuthenticationToken;
+import org.apache.shiro.authz.AuthorizationInfo;
+import org.apache.shiro.realm.AuthorizingRealm;
+import org.apache.shiro.subject.PrincipalCollection;
+
+public class MyRealm extends AuthorizingRealm {
+    @Override
+    protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principalCollection) {
+        return null;
+    }
+
+    @Override
+    protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken authenticationToken) throws AuthenticationException {
+        return null;
+    }
+}
+</code></pre>
+<p>看起来控制访问已经实现了，接下来实现身份认证。</p>
+<p>稍微修改一下Realm，加上密码认证方式就成：</p>
+<pre><code class="java">@Override
+protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken authenticationToken) throws AuthenticationException {
+    String username = (String) authenticationToken.getPrincipal();
+    if (username.equals(&quot;Twings&quot;)) {
+        return new SimpleAuthenticationInfo(username, &quot;123456&quot;, getName());
+    }
+    return null;
+}
+</code></pre>
+<p>不过看起来这个版本shiro的认证信息用session保存了，而不是加密之后存放在cookie中。</p>
+<h3 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h3><p>这些Bean注入到哪里去了，还有Shiro在spring boot中具体的工作原理后面再看。</p>
 <hr>
-<p>参考文章：</p>
-<p><a href="https://mp.weixin.qq.com/s?__biz=Mzg5MTA3NTg2MA%3D%3D&amp;mid=2247483812&amp;idx=1&amp;sn=91a32ac6a6eeb62798e08cbb74016042&amp;scene=45#wechat_redirect" target="_blank" rel="noopener">https://mp.weixin.qq.com/s?__biz=Mzg5MTA3NTg2MA%3D%3D&amp;mid=2247483812&amp;idx=1&amp;sn=91a32ac6a6eeb62798e08cbb74016042&amp;scene=45#wechat_redirect</a></p>
-<p><a href="https://www.freebuf.com/column/196660.html" target="_blank" rel="noopener">https://www.freebuf.com/column/196660.html</a></p>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://blog.csdn.net/Yearingforthefuture/article/details/117384035" target="_blank" rel="noopener">https://blog.csdn.net/Yearingforthefuture/article/details/117384035</a></p>
 
             </div>
             <hr>
@@ -201,9 +280,7 @@
                   <span>
                 <i class="iconfont icon-tag"></i>
                     
-                      <a class="hover-with-bg" href="/tags/二进制/">二进制</a>
-                    
-                      <a class="hover-with-bg" href="/tags/复现/">复现</a>
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
                     
                   </span>
                 
@@ -215,16 +292,11 @@
                 <div class="post-prevnext row">
                   <div class="post-prev col-12 col-md-6">
                     
-                      <a href="/2019/03/04/Nexus-Repository-Manager-3-CVE-2019-7238-IDEA远程调试/">
-                        <i class="fa fa-chevron-left"></i>
-                        <span>Nexus Repository Manager 3 CVE-2019-7238 IDEA远程调试</span>
-                      </a>
-                    
                   </div>
                   <div class="post-next col-12 col-md-6">
                     
-                      <a href="/2019/02/27/GoogleCTF2018-beginners-js_safe_1/">
-                        <span>GoogleCTF2018-beginners-js_safe_1</span>
+                      <a href="/2021/09/22/XMLDecoder反序列化漏洞/">
+                        <span>XMLDecoder反序列化漏洞</span>
                         <i class="fa fa-chevron-right"></i>
                       </a>
                     
@@ -397,7 +469,7 @@
     var typed = new Typed('#subtitle', {
       strings: [
         '  ',
-        "Winrar远程代码执行漏洞复现&nbsp;",
+        "shiro入门&nbsp;",
       ],
       cursorChar: "_",
       typeSpeed: 70,

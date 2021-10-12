@@ -203,6 +203,7 @@ public Realm myRealm() {
 <pre><code class="java">String[] postProcessorNames = beanFactory.getBeanNamesForType(BeanPostProcessor.class, true, false);
 </code></pre>
 <p>通过调试可以发现，这里获取到了我们自定义的Bean，名字叫做&amp;myShiroFilterFactoryBean：</p>
+<p><img src="/css/images/shiro2/2021101201.png" srcset="/img/loading.gif" alt=""></p>
 <p>进入这个getBeanNamesForType函数，来到doGetBeanNamesForType函数：</p>
 <pre><code class="java">private String[] doGetBeanNamesForType(ResolvableType type, boolean includeNonSingletons, boolean allowEagerInit) {
     List&lt;String&gt; result = new ArrayList&lt;&gt;();
@@ -288,7 +289,9 @@ if (!mbd.isAbstract() &amp;&amp; (allowEagerInit ||
 }
 </code></pre>
 <p>调试可以发现，此时的mbd是直接从内部map中取出的，虽然不会直接返回，但是其isFactoryBean属性和resolvedTargetType属性等已经有了值：</p>
+<p><img src="/css/images/shiro2/2021101202.png" srcset="/img/loading.gif" alt=""></p>
 <p>调试发现对这些属性的赋值是在注册BeanPostProcessor之前，会加载Bean，期间还有一次调用doGetBeanNamesForType函数的操作：</p>
+<p><img src="/css/images/shiro2/2021101203.png" srcset="/img/loading.gif" alt=""></p>
 <p>这次调用isFactoryBean函数时就会因为其isFactoryBean属性未赋值而进入predictBeanType函数：</p>
 <pre><code class="java">protected Class&lt;?&gt; predictBeanType(String beanName, RootBeanDefinition mbd, Class&lt;?&gt;... typesToMatch) {
     Class&lt;?&gt; targetType = determineTargetType(beanName, mbd, typesToMatch);

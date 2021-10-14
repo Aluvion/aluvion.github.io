@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>shiro-550 1.2.4反序列化漏洞 - Twings</title>
+
+  <link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css">
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+  <link rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css">
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+</head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期四, 十月 14日 2021, 8:02 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    702 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      3 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> 前置知识(?)。</p>
+<a id="more"></a>
+<hr>
+<h3 id="RememberMe"><a href="#RememberMe" class="headerlink" title="RememberMe"></a>RememberMe</h3><p>先把shiro依赖版本改成1.2.4。</p>
+<p>漏洞发生在shiro的rememberMe功能，因为这项功能只能允许访问user权限的路径，所以先改改配置文件中的权限配置：</p>
+<pre><code class="java">map.put(&quot;/logout&quot;, &quot;user&quot;);
+map.put(&quot;/user&quot;, &quot;user&quot;);
+</code></pre>
+<p>再改改控制器代码，开启这项功能：</p>
+<pre><code class="java">UsernamePasswordToken token = new UsernamePasswordToken(&quot;Twings&quot;, &quot;123456&quot;);
+token.setRememberMe(true);
+subject.login(token);
+</code></pre>
+<p>之后shiro会将身份信息加密，base64编码保存在cookie中，用于下一次身份认证：</p>
+<p><img src="/css/images/shiro550/2021101401.png" srcset="/img/loading.gif" alt=""></p>
+<h3 id="RememberMe解密"><a href="#RememberMe解密" class="headerlink" title="RememberMe解密"></a>RememberMe解密</h3><p>开始找相关的代码，直接搜索名字相关的类可以找到CookieRememberMeManager类及其父类AbstractRememberMeManager，但是换了几个点，断了几次都没有断下来，后来发现浏览器重启后第一次访问才会触发断点，原因不明，可能跟session有关，后面再来研究。最后的断点打在了getRememberedPrincipals函数，此时的调用栈如下：</p>
+<p><img src="/css/images/shiro550/2021101402.png" srcset="/img/loading.gif" alt=""></p>
+<p>getRememberedPrincipals函数如下：</p>
+<pre><code class="java">public PrincipalCollection getRememberedPrincipals(SubjectContext subjectContext) {
+    PrincipalCollection principals = null;
+    try {
+        byte[] bytes = getRememberedSerializedIdentity(subjectContext);
+        //SHIRO-138 - only call convertBytesToPrincipals if bytes exist:
+        if (bytes != null &amp;&amp; bytes.length &gt; 0) {
+            principals = convertBytesToPrincipals(bytes, subjectContext);
+        }
+    } catch (RuntimeException re) {
+        principals = onRememberedPrincipalFailure(re, subjectContext);
+    }
+
+    return principals;
+}
+</code></pre>
+<p>这段代码以前似乎还出现过代号为SHIRO-138的问题，这里通过getRememberedSerializedIdentity函数获取了base64解码后的cookie中保存的加密数据：</p>
+<pre><code class="java">protected byte[] getRememberedSerializedIdentity(SubjectContext subjectContext) {
+    ...
+    String base64 = getCookie().readValue(request, response);
+    // Browsers do not always remove cookies immediately (SHIRO-183)
+    // ignore cookies that are scheduled for removal
+    if (Cookie.DELETED_COOKIE_VALUE.equals(base64)) return null;
+
+    if (base64 != null) {
+        base64 = ensurePadding(base64);
+        ...
+        byte[] decoded = Base64.decode(base64);
+        ...
+        return decoded;
+    } 
+    ...
+}
+</code></pre>
+<p>然后调用convertBytesToPrincipals开始解密：</p>
+<pre><code class="java">protected PrincipalCollection convertBytesToPrincipals(byte[] bytes, SubjectContext subjectContext) {
+    if (getCipherService() != null) {
+        bytes = decrypt(bytes);
+    }
+    return deserialize(bytes);
+}
+</code></pre>
+<p>这里的处理分为两部分，decrypt函数负责解密：</p>
+<pre><code class="java">protected byte[] decrypt(byte[] encrypted) {
+    byte[] serialized = encrypted;
+    CipherService cipherService = getCipherService();
+    if (cipherService != null) {
+        ByteSource byteSource = cipherService.decrypt(encrypted, getDecryptionCipherKey());
+        serialized = byteSource.getBytes();
+    }
+    return serialized;
+}
+
+public byte[] getDecryptionCipherKey() {
+    return decryptionCipherKey;
+}
+</code></pre>
+<p>解密的key来自该对象中的decryptionCipherKey属性，通过调试可以发现该属性通过setter赋值，而在不特别设置的情况下，该属性在实例化时赋值：</p>
+<pre><code class="java">private static final byte[] DEFAULT_CIPHER_KEY_BYTES = Base64.decode(&quot;kPH+bIxk5D2deZiIxcaaaA==&quot;);
+
+public AbstractRememberMeManager() {
+    this.serializer = new DefaultSerializer&lt;PrincipalCollection&gt;();
+    this.cipherService = new AesCipherService();
+    setCipherKey(DEFAULT_CIPHER_KEY_BYTES);
+}
+</code></pre>
+<p>是一个固定值。</p>
+<p>第二部分的deserialize函数负责反序列化：</p>
+<pre><code class="java">public T deserialize(byte[] serialized) throws SerializationException {
+    ...
+    ByteArrayInputStream bais = new ByteArrayInputStream(serialized);
+    BufferedInputStream bis = new BufferedInputStream(bais);
+    try {
+        ObjectInputStream ois = new ClassResolvingObjectInputStream(bis);
+        @SuppressWarnings({&quot;unchecked&quot;})
+        T deserialized = (T) ois.readObject();
+        ois.close();
+        return deserialized;
+    } 
+    ...
+}
+</code></pre>
+<p>一个没有做安全检验的反序列化点，如果依赖中存在可利用的反序列化链就会导致一个反序列化漏洞。</p>
+<h3 id="后续"><a href="#后续" class="headerlink" title="后续"></a>后续</h3><p>shiro自带的commons-beanutils依赖是1.8.2版本的，好像不存在反序列化的样子：</p>
+<p><img src="/css/images/shiro550/2021101403.png" srcset="/img/loading.gif" alt=""></p>
+<p>而且shiro的类加载方式为ClassLoader.loadClass()，无法处理数组，所以commons-collections之类的利用链也不能直接打，估计要用JRMP的方式绕开来打了。</p>
+<hr>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://www.freebuf.com/vuls/178014.html" target="_blank" rel="noopener">https://www.freebuf.com/vuls/178014.html</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2021/10/12/shiro2/">
+                        <span>shiro2</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js"></script>
+<script src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js"></script>
+<script src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js"></script>
+<script src="/js/main.js"></script>
+
+
+  <script src="/js/lazyload.js"></script>
+
+
+
+  
+  <script src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js"></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "shiro-550 1.2.4反序列化漏洞&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js"></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script src="/js/local-search.js"></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js"></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

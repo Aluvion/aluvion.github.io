@@ -16,7 +16,7 @@
   <meta name="description" content="摸鱼">
   <meta name="author" content="Aluvion">
   <meta name="keywords" content="">
-  <title>cve-2019-5736 复现失败 - Twings</title>
+  <title>shiro-550 1.2.4反序列化漏洞 - Twings</title>
 
   <link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css">
 <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
@@ -117,7 +117,7 @@
               
                 <p class="mt-3 post-meta">
                   <i class="fas fa-calendar-alt" aria-hidden="true"></i>
-                  星期六, 三月 9日 2019, 8:59 晚上
+                  星期三, 十月 20日 2021, 10:22 晚上
                 </p>
               
 
@@ -126,7 +126,7 @@
                   
                   <span class="post-meta">
                     <i class="far fa-chart-bar"></i>
-                    1.6k 字
+                    1.4k 字
                   </span>
                 
 
@@ -134,7 +134,7 @@
                   
                   <span class="post-meta">
                       <i class="far fa-clock"></i>
-                      5 分钟
+                      6 分钟
                   </span>
                 
 
@@ -169,42 +169,157 @@
           <div class="post-content mx-auto" id="post">
             
             <div class="markdown-body">
-              <p>poc地址：<a href="https://github.com/twistlock/RunC-CVE-2019-5736" target="_blank" rel="noopener">https://github.com/twistlock/RunC-CVE-2019-5736</a></p>
-<p>今年2月的时候，国外披露了一个docker容器逃逸的漏洞（CVE-2019-5736），这个漏洞允许攻击者通过覆盖宿主机上的runc二进制文件的方式执行代码，而因为docker一般运行在root模式下的原因，这个漏洞可以让攻击者直接获取root的权限。</p>
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> 前置知识(?)。</p>
 <a id="more"></a>
-<h3 id="runc"><a href="#runc" class="headerlink" title="runc"></a>runc</h3><p>在docker的使用中，runc的作用是在容器中运行用户所定义的二进制文件，即images镜像的入口文件（Dockerfile里的cmd及entrypoint），或者在现有容器内执行（docker exec）的文件。在运行runc文件的时候，它必须被限制在容器中，不然用户所定义的二进制文件就有可能影响到宿主机。而为了实现这一点，runc会创建一个子进程”runc init”，并将所有需要的限制都放在它身上。最后，runc init进程会调用execve函数，运行用户所定义的二进制文件。还有则是，在停止容器的时候会运行runc delete，同样会执行runc。</p>
-<h3 id="攻击方式"><a href="#攻击方式" class="headerlink" title="攻击方式"></a>攻击方式</h3><ul>
-<li>在受感染的Docker容器上从主机运行”docker exec”。</li>
-<li>启动恶意Docker镜像。</li>
-</ul>
-<p>听起来是不是特别给力？是不是？然而这个漏洞的影响范围出乎意料的小。</p>
-<h3 id="漏洞影响"><a href="#漏洞影响" class="headerlink" title="漏洞影响"></a>漏洞影响</h3><ul>
-<li>Ubuntu：runc 1.0.0~rc4+dfsg1-6ubuntu0.18.10.1之前版本</li>
-<li>Debian：runc 0.1.1+dfsg1-2 之前版本</li>
-<li>RedHat Enterprise Linux： docker 1.13.1-91.git07f3374.el7之前版本</li>
-<li>Amazon Linux：docker 18.06.1ce-7.25.amzn1.x86_64之前版本</li>
-<li>CoreOS：2051.0.0之前版本</li>
-<li>Kops Debian 所有版本（正在修复）</li>
-<li>Docker：18.09.2之前版本</li>
-</ul>
-<p>也就是说这个漏洞，需要系统、docker、runc三个版本都符合才能造成影响。而我花了三四天的时间，测试了多个系统和多个docker版本，包括其他师傅提到的可以成功的环境，却没有一个能够成功的。</p>
-<h3 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h3><p>在docker运行的时候，宿主机通过runc对docker容器进行操作，而在这个过程中却没有做好访问限制，导致runc可以通过/proc/self/exe符号链接来访问到宿主机上的runc文件。攻击者可以让runc运行/proc/self/exe符号链接来欺骗它自己执行自己，然后如果攻击者在容器内具有root权限（因为runc的所有用户为root），就可以通过/proc/[runc-pid]/exe这个符号链接对宿主机上的runc文件进行覆盖重写。</p>
-<p>Linux中的”#!”被称为Shebang，它被用于指定脚本的解释器，我们经常可以在Shell脚本或者Python脚本中看到它的身影。而当Linux遇到Shebang的时候，它会去运行解释器。在docker的使用中用户最常用的入口二进制文件是/bin/bash，所以我们可以将其替换为#!/proc/self/exe来让runc文件执行自身。</p>
-<p>为什么需要先让runc执行自己，再通过/proc/[runc-pid]/exe进行覆盖，而不是直接使用子进程的/proc/[runc-init-pid]/exe进行覆盖呢？这样不是更简单吗？</p>
-<p>原因是docker几年前有一个漏洞（CVE-2016-9962），而为了修补这个漏洞，程序在进入docker之前将runc init程序设置为”不可转储”，而在CVE-2019-5736的上下文环境中，’non-dumpable’标志拒绝其他进程解除引用runc init进程的/proc/[pid]/exe，所以我们就无法保存它的文件描述符并修改它了，减轻了通过/proc/[runc-init-pid]/exe覆盖runC二进制文件的问题。这个时候就需要让runc执行自己了，因为runc init会调用execve来执行runc，而execve会丢弃这个标志，所以我们就可以访问新的runc进程/proc/[runc-pid]/exe了。</p>
-<p>这样一来，我们就能成功覆盖宿主机上的runc文件，接下来就是再次运行它实现代码执行了。</p>
-<p>总结一下，我们需要在docker容器内运行一个脚本，这个脚本修改bash，并在用户从宿主机对容器进行访问的时候（exec），即runc文件运行的时候，读取宿主机上的runc文件并获取它的文件描述符，然后等待runc文件的退出并将其覆盖改写为我们想要的样子。</p>
-<p>这样一来就有一个缺陷，我们还需要再在宿主机上用exec执行bash。现在我们需要一个自动化攻击的方案，让用户交互最小化。</p>
-<p>为了自动执行恶意脚本，攻击者可以runc文件的动态链接，它所需要的动态链接库可以用ldd命令列出。因为runc在运行的时候动态链接到这些库的原因，所以攻击者可以自行build一个恶意镜像，在build的过程中，用恶意版本替换其中的一个动态链接库，从而让runc在运行的时候同时执行恶意脚本。</p>
-<p>使用过docker的人应该知道，docker容器在启动的时候有一个启动命令，有时候我们用shell脚本作为容器的启动命令的时候，如果最后不加上一个/bin/bash之类的命令，就会导致容器无法启动。这是因为容器启动的时候，会将这个启动命令以pid=1运行，而一旦这个pid=1的进程结束了，容器也会跟着结束。所以我们就可以利用这一点，在脚本中调用execve来执行对runc的修改，这样可以就可以强制runc进程退出并覆盖，最后pid=1进程结束-&gt;终止容器-&gt;再次运行runc-&gt;代码执行，这样就可以实现自动化执行两次runc，实现了代码执行。</p>
-<h3 id="漏洞修复"><a href="#漏洞修复" class="headerlink" title="漏洞修复"></a>漏洞修复</h3><p>容器启动时，二进制文件附加到容器中时会创建临时副本并加以密封，防止损害宿主机。</p>
 <hr>
-<p>本人水平有限，如有错误请指出Orz</p>
-<p>参考链接：</p>
-<p><a href="https://www.twistlock.com/labs-blog/breaking-docker-via-runc-explaining-cve-2019-5736/" target="_blank" rel="noopener">https://www.twistlock.com/labs-blog/breaking-docker-via-runc-explaining-cve-2019-5736/</a></p>
-<p><a href="http://sec.sangfor.com.cn/events/198.html" target="_blank" rel="noopener">http://sec.sangfor.com.cn/events/198.html</a></p>
-<p><a href="https://x3fwy.bitcron.com/post/runc-malicious-container-escape" target="_blank" rel="noopener">https://x3fwy.bitcron.com/post/runc-malicious-container-escape</a></p>
-<p><a href="https://blog.dragonsector.pl/2019/02/cve-2019-5736-escape-from-docker-and.html" target="_blank" rel="noopener">https://blog.dragonsector.pl/2019/02/cve-2019-5736-escape-from-docker-and.html</a></p>
+<h3 id="RememberMe"><a href="#RememberMe" class="headerlink" title="RememberMe"></a>RememberMe</h3><p>先把shiro依赖版本改成1.2.4。</p>
+<p>漏洞发生在shiro的rememberMe功能，因为这项功能只能允许访问user权限的路径，所以先改改配置文件中的权限配置：</p>
+<pre><code class="java">map.put(&quot;/logout&quot;, &quot;user&quot;);
+map.put(&quot;/user&quot;, &quot;user&quot;);
+</code></pre>
+<p>再改改控制器代码，开启这项功能：</p>
+<pre><code class="java">UsernamePasswordToken token = new UsernamePasswordToken(&quot;Twings&quot;, &quot;123456&quot;);
+token.setRememberMe(true);
+subject.login(token);
+</code></pre>
+<p>之后shiro会将身份信息加密，base64编码保存在cookie中，用于下一次身份认证：</p>
+<p><img src="/css/images/shiro550/2021101401.png" srcset="/img/loading.gif" alt=""></p>
+<h3 id="RememberMe解密"><a href="#RememberMe解密" class="headerlink" title="RememberMe解密"></a>RememberMe解密</h3><p>开始找相关的代码，直接搜索名字相关的类可以找到CookieRememberMeManager类及其父类AbstractRememberMeManager，但是换了几个点，断了几次都没有断下来，后来发现浏览器重启后第一次访问才会触发断点，原因不明，可能跟session有关，后面再来研究。最后的断点打在了getRememberedPrincipals函数，此时的调用栈如下：</p>
+<p><img src="/css/images/shiro550/2021101402.png" srcset="/img/loading.gif" alt=""></p>
+<p>getRememberedPrincipals函数如下：</p>
+<pre><code class="java">public PrincipalCollection getRememberedPrincipals(SubjectContext subjectContext) {
+    PrincipalCollection principals = null;
+    try {
+        byte[] bytes = getRememberedSerializedIdentity(subjectContext);
+        //SHIRO-138 - only call convertBytesToPrincipals if bytes exist:
+        if (bytes != null &amp;&amp; bytes.length &gt; 0) {
+            principals = convertBytesToPrincipals(bytes, subjectContext);
+        }
+    } catch (RuntimeException re) {
+        principals = onRememberedPrincipalFailure(re, subjectContext);
+    }
+
+    return principals;
+}
+</code></pre>
+<p>这段代码以前似乎还出现过代号为SHIRO-138的问题，这里通过getRememberedSerializedIdentity函数获取了base64解码后的cookie中保存的加密数据：</p>
+<pre><code class="java">protected byte[] getRememberedSerializedIdentity(SubjectContext subjectContext) {
+    ...
+    String base64 = getCookie().readValue(request, response);
+    // Browsers do not always remove cookies immediately (SHIRO-183)
+    // ignore cookies that are scheduled for removal
+    if (Cookie.DELETED_COOKIE_VALUE.equals(base64)) return null;
+
+    if (base64 != null) {
+        base64 = ensurePadding(base64);
+        ...
+        byte[] decoded = Base64.decode(base64);
+        ...
+        return decoded;
+    } 
+    ...
+}
+</code></pre>
+<p>然后调用convertBytesToPrincipals开始解密：</p>
+<pre><code class="java">protected PrincipalCollection convertBytesToPrincipals(byte[] bytes, SubjectContext subjectContext) {
+    if (getCipherService() != null) {
+        bytes = decrypt(bytes);
+    }
+    return deserialize(bytes);
+}
+</code></pre>
+<p>这里的处理分为两部分，decrypt函数负责解密：</p>
+<pre><code class="java">protected byte[] decrypt(byte[] encrypted) {
+    byte[] serialized = encrypted;
+    CipherService cipherService = getCipherService();
+    if (cipherService != null) {
+        ByteSource byteSource = cipherService.decrypt(encrypted, getDecryptionCipherKey());
+        serialized = byteSource.getBytes();
+    }
+    return serialized;
+}
+
+public byte[] getDecryptionCipherKey() {
+    return decryptionCipherKey;
+}
+</code></pre>
+<p>解密的key来自该对象中的decryptionCipherKey属性，通过调试可以发现该属性通过setter赋值，而在不特别设置的情况下，该属性在实例化时赋值：</p>
+<pre><code class="java">private static final byte[] DEFAULT_CIPHER_KEY_BYTES = Base64.decode(&quot;kPH+bIxk5D2deZiIxcaaaA==&quot;);
+
+public AbstractRememberMeManager() {
+    this.serializer = new DefaultSerializer&lt;PrincipalCollection&gt;();
+    this.cipherService = new AesCipherService();
+    setCipherKey(DEFAULT_CIPHER_KEY_BYTES);
+}
+</code></pre>
+<p>是一个固定值，而cipherService是一个JcaCipherService对象，其在解密时会从密文中读取iv：</p>
+<pre><code class="java">System.arraycopy(ciphertext, 0, iv, 0, ivByteSize);
+</code></pre>
+<p>第二部分的deserialize函数负责反序列化：</p>
+<pre><code class="java">public T deserialize(byte[] serialized) throws SerializationException {
+    ...
+    ByteArrayInputStream bais = new ByteArrayInputStream(serialized);
+    BufferedInputStream bis = new BufferedInputStream(bais);
+    try {
+        ObjectInputStream ois = new ClassResolvingObjectInputStream(bis);
+        @SuppressWarnings({&quot;unchecked&quot;})
+        T deserialized = (T) ois.readObject();
+        ois.close();
+        return deserialized;
+    } catch (Exception e) {
+        String msg = &quot;Unable to deserialze argument byte array.&quot;;
+        throw new SerializationException(msg, e);
+    }
+}
+</code></pre>
+<p>一个没有做安全检验的反序列化点，如果依赖中存在可利用的反序列化链就会导致一个反序列化漏洞。</p>
+<h3 id="后续"><a href="#后续" class="headerlink" title="后续"></a>后续</h3><p>尝试复现漏洞时发现出现这么一个错误：</p>
+<pre><code>org.apache.shiro.io.SerializationException: Unable to deserialze argument byte array.
+</code></pre><p>看起来是不能处理数组类型的对象？不过读读代码就会发现反序列化中只要捕捉到Exception就会抛出这种错误，晚点再看看具体原因。</p>
+<h4 id="commons-beanutils"><a href="#commons-beanutils" class="headerlink" title="commons-beanutils"></a>commons-beanutils</h4><p>shiro自带的commons-beanutils依赖是1.8.3版本的：</p>
+<p><img src="/css/images/shiro550/2021101403.png" srcset="/img/loading.gif" alt=""></p>
+<p>1.9.3版本下打得通的利用链在这个版本生成时会出现一点问题：</p>
+<p><img src="/css/images/shiro550/2021102001.png" srcset="/img/loading.gif" alt=""></p>
+<p>问题发生在类的初始化函数中：</p>
+<pre><code class="java">public BeanComparator( String property ) {
+    this( property, ComparableComparator.getInstance() );
+}
+</code></pre>
+<p>简单来说就是BeanComparator对象的实例化依赖于commons-collections中的一个类org.apache.commons.collections.comparators.ComparableComparator，而由于依赖中不存在commons-collections就导致了这个问题。按照参考文章的说法就是：</p>
+<p><img src="/css/images/shiro550/2021102002.png" srcset="/img/loading.gif" alt=""></p>
+<p>所以如果想在这个版本下实现RCE，就要通过反射的方式实例化BeanComparator类再给它的属性赋值，Comparator找不找倒是无所谓：</p>
+<pre><code class="java">BeanComparator beanComparator = (BeanComparator)Utils.createWithoutConstructor(&quot;org.apache.commons.beanutils.BeanComparator&quot;);
+Utils.setField(beanComparator, &quot;property&quot;, &quot;outputProperties&quot;);
+</code></pre>
+<p>要注意的一点是，最好用byte[]类型来存放Java序列化数据，后面通过base64编码输出，不然转换为String类型时可能会有编码问题，序列化数据头会被弄成两个问号，一开始没注意踩了一会的坑，生成序列化数据后用python写个脚本发送就行了。</p>
+<h4 id="commons-collections"><a href="#commons-collections" class="headerlink" title="commons-collections"></a>commons-collections</h4><p>CommonsCollections的利用链可以直接打通，看参考文章似乎在tomcat+shiro环境下，会因为数组形式存在加载问题而无法利用。</p>
+<h4 id="JRMP"><a href="#JRMP" class="headerlink" title="JRMP"></a>JRMP</h4><p>本地Java版本为8u281，这个版本已经有了对JRMP利用的限制，反序列化时会触发安全检查：</p>
+<pre><code class="java">2021-10-20 21:49:54.771  INFO 42580 --- [127.0.0.1:1099]] java.io.serialization                    : ObjectInputFilter REJECTED: class javax.management.BadAttributeValueExpException, array length: -1, nRefs: 2, depth: 1, bytes: 110, ex: n/a
+</code></pre>
+<p>ObjectInputStream类在反序列化JRMPClient传输的数据时，会调用filterCheck函数：</p>
+<pre><code class="java">// Call filterCheck on the class before reading anything else
+filterCheck(cl, -1);
+</code></pre>
+<p>其检验代码如下：</p>
+<pre><code class="java">try {
+    status = serialFilter.checkInput(new FilterValues(clazz, arrayLength,
+                                                      totalObjectRefs, depth, bytesRead));
+}
+</code></pre>
+<p>serialFilter是一个DGCImpl_Stub对象，其检验代码如下：</p>
+<pre><code class="java">if (var1.isPrimitive()) {
+    return Status.ALLOWED;
+} else {
+    return var1 != UID.class &amp;&amp; var1 != VMID.class &amp;&amp; var1 != Lease.class &amp;&amp; (var1.getPackage() == null || !Throwable.class.isAssignableFrom(var1) || !&quot;java.lang&quot;.equals(var1.getPackage().getName()) &amp;&amp; !&quot;java.rmi&quot;.equals(var1.getPackage().getName())) &amp;&amp; var1 != StackTraceElement.class &amp;&amp; var1 != ArrayList.class &amp;&amp; var1 != Object.class &amp;&amp; !var1.getName().equals(&quot;java.util.Collections$UnmodifiableList&quot;) &amp;&amp; !var1.getName().equals(&quot;java.util.Collections$UnmodifiableCollection&quot;) &amp;&amp; !var1.getName().equals(&quot;java.util.Collections$UnmodifiableRandomAccessList&quot;) &amp;&amp; !var1.getName().equals(&quot;java.util.Collections$EmptyList&quot;) ? Status.REJECTED : Status.ALLOWED;
+}
+</code></pre>
+<p>对要反序列化的类做了白名单检测，按照<a href="https://mp.weixin.qq.com/s/DIgEe2HpwzHcvNM71cKxvg" target="_blank" rel="noopener">文章</a>所说，应该是8u231版本做的安全检验，然后因为出现了绕过所以8u241做了进一步的修复。</p>
+<h4 id="tomcat-shiro"><a href="#tomcat-shiro" class="headerlink" title="tomcat+shiro"></a>tomcat+shiro</h4><p>留坑。</p>
+<hr>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://www.freebuf.com/vuls/178014.html" target="_blank" rel="noopener">https://www.freebuf.com/vuls/178014.html</a></p>
+<p><a href="https://cloud.tencent.com/developer/article/1816604" target="_blank" rel="noopener">https://cloud.tencent.com/developer/article/1816604</a></p>
+<p><a href="https://blog.zsxsoft.com/post/35" target="_blank" rel="noopener">https://blog.zsxsoft.com/post/35</a></p>
+<p><a href="https://www.cnblogs.com/W4nder/p/14508817.html" target="_blank" rel="noopener">https://www.cnblogs.com/W4nder/p/14508817.html</a></p>
 
             </div>
             <hr>
@@ -215,9 +330,7 @@
                   <span>
                 <i class="iconfont icon-tag"></i>
                     
-                      <a class="hover-with-bg" href="/tags/复现/">复现</a>
-                    
-                      <a class="hover-with-bg" href="/tags/二进制/">二进制</a>
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
                     
                   </span>
                 
@@ -229,16 +342,11 @@
                 <div class="post-prevnext row">
                   <div class="post-prev col-12 col-md-6">
                     
-                      <a href="/2019/03/10/Wordpress5-0-RCE-CVE-2019-8942复现/">
-                        <i class="fa fa-chevron-left"></i>
-                        <span>Wordpress5.0 RCE CVE-2019-8942复现</span>
-                      </a>
-                    
                   </div>
                   <div class="post-next col-12 col-md-6">
                     
-                      <a href="/2019/03/04/Nexus-Repository-Manager-3-CVE-2019-7238-IDEA远程调试/">
-                        <span>Nexus Repository Manager 3 CVE-2019-7238 IDEA远程调试</span>
+                      <a href="/2021/10/12/shiro2/">
+                        <span>shiro2</span>
                         <i class="fa fa-chevron-right"></i>
                       </a>
                     
@@ -411,7 +519,7 @@
     var typed = new Typed('#subtitle', {
       strings: [
         '  ',
-        "cve-2019-5736 复现失败&nbsp;",
+        "shiro-550 1.2.4反序列化漏洞&nbsp;",
       ],
       cursorChar: "_",
       typeSpeed: 70,

@@ -4,6 +4,25 @@
   
   
   <entry>
+    <title>CVE-2020-11989 Shiro认证绕过</title>
+    <link href="/2021/11/10/CVE-2020-11989-Shiro%E8%AE%A4%E8%AF%81%E7%BB%95%E8%BF%87/"/>
+    <url>/2021/11/10/CVE-2020-11989-Shiro%E8%AE%A4%E8%AF%81%E7%BB%95%E8%BF%87/</url>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> 无。</p><a id="more"></a><hr><h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>代码不变。</p><h3 id="攻击方法1"><a href="#攻击方法1" class="headerlink" title="攻击方法1"></a>攻击方法1</h3><p>跟CVE-2020-1957相似的方法，用分号;绕过。</p><p>好像1.5.2版本要利用还要配置tomcat根目录，我这用的SpringBoot，就不管它了。</p><h3 id="攻击方法2"><a href="#攻击方法2" class="headerlink" title="攻击方法2"></a>攻击方法2</h3><p>通过双重URL编码绕过：</p><p><img src="/css/images/CVE-2020-11989/2021111001.png" srcset="/img/loading.gif" alt=""></p><p>原因很好猜，肯定是shiro对双重URL编码的处理跟spring之间出了点偏差，继续去getRequestUri函数看看：</p><p><img src="/css/images/CVE-2020-11989/2021111002.png" srcset="/img/loading.gif" alt=""></p><p>可以看到，此时从tomcat中取到的uri已经经过了一次URL解码，而在后面的处理函数decodeAndCleanUriString函数中：</p><pre><code class="java">private static String decodeAndCleanUriString(HttpServletRequest request, String uri) {    uri = decodeRequestString(request, uri);    int semicolonIndex = uri.indexOf(&#39;;&#39;);    return (semicolonIndex != -1 ? uri.substring(0, semicolonIndex) : uri);}public static String decodeRequestString(HttpServletRequest request, String source) {    String enc = determineEncoding(request);    try {        return URLDecoder.decode(source, enc);    } catch (UnsupportedEncodingException ex) {        ...        return URLDecoder.decode(source);    }}</code></pre><p>可以看到会再进行一次URL解码，也就是说最后获得的就是//admin//：</p><p><img src="/css/images/CVE-2020-11989/2021111003.png" srcset="/img/loading.gif" alt=""></p><p>经过normalize处理后就变成了/admin/，匹配不上，也就绕过了认证。</p><h3 id="修复方法"><a href="#修复方法" class="headerlink" title="修复方法"></a>修复方法</h3><p>1.5.3版本下，getPathWithinApplication函数做了修改：</p><pre><code class="java">public static String getPathWithinApplication(HttpServletRequest request) {    return normalize(removeSemicolon(getServletPath(request) + getPathInfo(request)));}private static String removeSemicolon(String uri) {    int semicolonIndex = uri.indexOf(&#39;;&#39;);    return (semicolonIndex != -1 ? uri.substring(0, semicolonIndex) : uri);}</code></pre><p>不做URL解码了。</p><hr><h3 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h3><p><a href="https://www.freebuf.com/vuls/249380.html" target="_blank" rel="noopener">https://www.freebuf.com/vuls/249380.html</a></p><p><a href="https://www.freebuf.com/articles/network/254664.html" target="_blank" rel="noopener">https://www.freebuf.com/articles/network/254664.html</a></p>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>Web</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>CVE-2020-1957 Shiro认证绕过</title>
     <link href="/2021/11/09/CVE-2020-1957-Shiro%E8%AE%A4%E8%AF%81%E7%BB%95%E8%BF%87/"/>
     <url>/2021/11/09/CVE-2020-1957-Shiro%E8%AE%A4%E8%AF%81%E7%BB%95%E8%BF%87/</url>
@@ -1256,9 +1275,9 @@
       
       <tag>Web</tag>
       
-      <tag>复现</tag>
-      
       <tag>二进制</tag>
+      
+      <tag>复现</tag>
       
     </tags>
     
@@ -2133,9 +2152,9 @@
     
     <tags>
       
-      <tag>复现</tag>
-      
       <tag>二进制</tag>
+      
+      <tag>复现</tag>
       
     </tags>
     
@@ -2175,9 +2194,9 @@
     
     <tags>
       
-      <tag>复现</tag>
-      
       <tag>二进制</tag>
+      
+      <tag>复现</tag>
       
     </tags>
     

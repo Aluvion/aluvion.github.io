@@ -4,6 +4,25 @@
   
   
   <entry>
+    <title>机器学习入门2</title>
+    <link href="/2021/12/08/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E5%85%A5%E9%97%A82/"/>
+    <url>/2021/12/08/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E5%85%A5%E9%97%A82/</url>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> kNN的玩法强化练习一下。</p><a id="more"></a><hr><h3 id="数据集准备"><a href="#数据集准备" class="headerlink" title="数据集准备"></a>数据集准备</h3><p><a href="http://archive.ics.uci.edu/ml/machine-learning-databases/optdigits/" target="_blank" rel="noopener">here</a>。</p><h3 id="数据集处理读取"><a href="#数据集处理读取" class="headerlink" title="数据集处理读取"></a>数据集处理读取</h3><p>说是Cross-validation文件，不过我也只是把它当训练测试集用，前面有一些不需要读取的数据可以删掉：</p><p><img src="/css/images/ml2/2021120801.png" srcset="/img/loading.gif" alt=""></p><p>再看数据部分：</p><p><img src="/css/images/ml2/2021120802.png" srcset="/img/loading.gif" alt=""></p><p>可以看到每个数字图片为32x32的大小，最后一行是其标签。</p><p>读取数据集：</p><pre><code class="python">def file2matrix(filename):    f = open(filename)    arrayOfLines = f.readlines()    numberOfLines = len(arrayOfLines)    assert numberOfLines % 33 == 0    numberOfDigits = int(numberOfLines / 33)    myMat = zeros((numberOfDigits, 1024))    labels = []    for x in range(numberOfDigits):        for y in range(32):            for z in range(32):                myMat[x, 32 * y + z] = int(arrayOfLines[x * 33 + y][z])        labels.append(arrayOfLines[x * 33 + 32].strip())    return myMat, labels</code></pre><p>归一化就不用做了，然后分割训练测试，因为文本中的数据原本就是乱序，所以直接取前70%做训练集：</p><pre><code class="python">trainRatio = 0.7myMat, labels = file2matrix(&quot;E:/dataSet/kNN/optdigits-orig.cv&quot;)numberOfMat = myMat.shape[0]numberForTrain = int(trainRatio * numberOfMat)numberForTest = numberOfMat - numberForTrainkNN = KNeighborsClassifier(8)kNN.fit(myMat[:numberForTrain], labels[:numberForTrain])predictResult = kNN.predict(myMat[numberForTrain:])errorCount = 0index = 0for result in predictResult:    print(&quot;the classifier came back, with: %d, the real answer is: %d&quot; % (predictResult[index] ,labels[numberForTrain + index]))    if (predictResult[index] != labels[numberForTrain + index]):         errorCount += 1.0    index += 1print(&quot;the total error rate is: %f&quot; % (errorCount / float(numberForTest)))</code></pre><p>最后结果：</p><p><img src="/css/images/ml2/2021120803.png" srcset="/img/loading.gif" alt=""></p><p>大概有95.8%的准确率，还行。</p><hr><h3 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h3><p>这个数据集有900多个样本，kNN处理速度还行。</p>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>机器学习</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>机器学习入门1</title>
     <link href="/2021/12/08/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E5%85%A5%E9%97%A81/"/>
     <url>/2021/12/08/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E5%85%A5%E9%97%A81/</url>
@@ -1313,9 +1332,9 @@
       
       <tag>Web</tag>
       
-      <tag>复现</tag>
-      
       <tag>二进制</tag>
+      
+      <tag>复现</tag>
       
     </tags>
     
@@ -2190,9 +2209,9 @@
     
     <tags>
       
-      <tag>复现</tag>
-      
       <tag>二进制</tag>
+      
+      <tag>复现</tag>
       
     </tags>
     
@@ -2232,9 +2251,9 @@
     
     <tags>
       
-      <tag>复现</tag>
-      
       <tag>二进制</tag>
+      
+      <tag>复现</tag>
       
     </tags>
     

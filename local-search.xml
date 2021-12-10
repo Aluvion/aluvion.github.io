@@ -4,6 +4,25 @@
   
   
   <entry>
+    <title>机器学习入门4</title>
+    <link href="/2021/12/10/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E5%85%A5%E9%97%A84/"/>
+    <url>/2021/12/10/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E5%85%A5%E9%97%A84/</url>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> 用</p><a id="more"></a><hr><h3 id="确定x轴y轴长度"><a href="#确定x轴y轴长度" class="headerlink" title="确定x轴y轴长度"></a>确定x轴y轴长度</h3><p>即确定树的深度和叶子节点的数量：</p><pre><code class="python">def getNumberOfLeafs(tree):    numberOfLeafs = 0    nextFeature = list(tree.keys())[0]    valuesOfFeature = tree[nextFeature]    for value in valuesOfFeature.keys():        if type(valuesOfFeature[value]).__name__ == &quot;dict&quot;:            numberOfLeafs += getNumberOfLeafs(valuesOfFeature[value])        else:            numberOfLeafs += 1    return numberOfLeafsdef getDeepthOfTree(tree):    depth = 0    nextFeature = list(tree.keys())[0]    valuesOfFeature = tree[nextFeature]    for value in valuesOfFeature.keys():        if type(valuesOfFeature[value]).__name__ == &quot;dict&quot;:            thisDepth = 1 + getDeepthOfTree(valuesOfFeature[value])        else:            thisDepth = 1        if thisDepth &gt; depth:            depth = thisDepth    return depth</code></pre><h3 id="绘制节点"><a href="#绘制节点" class="headerlink" title="绘制节点"></a>绘制节点</h3><pre><code class="python">def plotNode(ax1, nodeText, centerPt, parentPt, nodeType):    ax1.annotate(nodeText, xy=parentPt, xytext=centerPt, va=&quot;center&quot;, ha=&quot;center&quot;, bbox=nodeType, arrowprops=arrow_args) # va/ha=水平垂直居中</code></pre><h3 id="构造树"><a href="#构造树" class="headerlink" title="构造树"></a>构造树</h3><pre><code class="python">def plotMidTest(ax1, centerPt, parentPt, text):    xMid = (parentPt[0] - centerPt[0]) / 2 + centerPt[0]    yMid = (parentPt[1] - centerPt[1]) / 2 + centerPt[1]    ax1.text(xMid, yMid, text)def plotTree(ax1, treeToPlot, myTree, parentPt, nodeText):    numberOfLeafs = getNumberOfLeafs(myTree)    nextFeature = list(myTree.keys())[0]    centerPt = (treeToPlot[&quot;xOff&quot;] + (1.0 + float(numberOfLeafs)) / 2.0 / treeToPlot[&quot;totalW&quot;], treeToPlot[&quot;yOff&quot;])    plotMidTest(ax1, centerPt, parentPt, nodeText)    plotNode(ax1, nextFeature, centerPt, parentPt, decisionNode)    valuesOfFeature = myTree[nextFeature]    treeToPlot[&quot;yOff&quot;] = treeToPlot[&quot;yOff&quot;] - 1.0 / treeToPlot[&quot;totalD&quot;] # 进入下一层    for value in valuesOfFeature.keys():        if type(valuesOfFeature[value]).__name__ == &quot;dict&quot;:            plotTree(ax1, treeToPlot, valuesOfFeature[value], centerPt, value)        else:            treeToPlot[&quot;xOff&quot;] = treeToPlot[&quot;xOff&quot;] + 1.0 / treeToPlot[&quot;totalW&quot;] # 绘制该层下一个节点            plotNode(ax1, valuesOfFeature[value], (treeToPlot[&quot;xOff&quot;], treeToPlot[&quot;yOff&quot;]), centerPt, leafNode)            plotMidTest(ax1, (treeToPlot[&quot;xOff&quot;], treeToPlot[&quot;yOff&quot;]), centerPt, value)    treeToPlot[&quot;yOff&quot;] = treeToPlot[&quot;yOff&quot;] + 1.0 / treeToPlot[&quot;totalD&quot;] # 返回上一层def createPlot(myTree):    figure = plt.figure(&quot;myTree&quot;, facecolor=&quot;white&quot;)    figure.clf()    axprops = dict(xticks=[], yticks=[]) # 消除x轴y轴    ax1 = plt.subplot(111, frameon=False, **axprops)    treeToPlot = {}    treeToPlot[&quot;totalW&quot;] = float(getNumberOfLeafs(myTree))    treeToPlot[&quot;totalD&quot;] = float(getDeepthOfTree(myTree))    treeToPlot[&quot;xOff&quot;] = -0.5 / treeToPlot[&quot;totalW&quot;]    treeToPlot[&quot;yOff&quot;] = 1.0    plotTree(ax1, treeToPlot, myTree, (0.5, 1.0), &quot;&quot;)    plt.show()</code></pre><p>拼起来：</p><pre><code class="python">decisionNode = dict(boxstyle=&quot;circle&quot;, fc=&quot;0.8&quot;) # boxstyle=边框样式,fc=颜色深度leafNode = dict(boxstyle=&quot;round&quot;, fc=&quot;0.8&quot;)arrow_args = dict(arrowstyle=&quot;&lt;-&quot;) # 连线样式myDataSet = file2DataSet(&quot;E:/dataSet/tree/lenses.data&quot;)myTree = createTree(myDataSet, features, valueForFeatures, labels)createPlot(myTree)</code></pre><p>最后连线上的标签有点重合，可能要斜放或者调大一下间距会好一点。</p><hr><h3 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h3><p>hard。</p>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>机器学习</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>机器学习入门3</title>
     <link href="/2021/12/09/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E5%85%A5%E9%97%A83/"/>
     <url>/2021/12/09/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E5%85%A5%E9%97%A83/</url>

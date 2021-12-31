@@ -4,6 +4,25 @@
   
   
   <entry>
+    <title>通过MockingBird克隆中文语音</title>
+    <link href="/2021/12/31/%E9%80%9A%E8%BF%87MockingBird%E5%85%8B%E9%9A%86%E4%B8%AD%E6%96%87%E8%AF%AD%E9%9F%B3/"/>
+    <url>/2021/12/31/%E9%80%9A%E8%BF%87MockingBird%E5%85%8B%E9%9A%86%E4%B8%AD%E6%96%87%E8%AF%AD%E9%9F%B3/</url>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> 好玩的！</p><a id="more"></a><hr><h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>按<a href="https://github.com/babysor/MockingBird" target="_blank" rel="noopener">官方教程</a>来就行了。</p><h3 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h3><p>先不管怎么做数据集怎么训练，用别人训练好的<a href="https://www.bilibili.com/video/BV1RF411z7C5?spm_id_from=333.999.0.0" target="_blank" rel="noopener">模型</a>玩一玩先。</p><p>从B站下载一个杂谈视频的音频准备处理一下作为输入音频，方法很多，然而我用油猴脚本总是有问题，最后用了<a href="https://link.zhihu.com/?target=http%3A//client.jijidown.com/" target="_blank" rel="noopener">唧唧 Down</a>，UI挺好的，似乎也没有捆绑软件，最后下载到一个MP3的音频文件：</p><p><img src="/css/images/mockingbird/2021123101.png" srcset="/img/loading.gif" alt=""></p><p>虽然不需要从视频中导出音频，但是音频太长了，还是需要一个分割音频的工具，然而<a href="https://helpx.adobe.com/cn/media-encoder/get-started.html" target="_blank" rel="noopener">Adobe mediaencoder</a>只有试用版，所以最后还是安了个<a href="http://www.pcgeshi.com/download.html" target="_blank" rel="noopener">格式工厂</a>，切割一下音频，十分钟一段，可能稍微有点大：</p><p><img src="/css/images/mockingbird/2021123102.png" srcset="/img/loading.gif" alt=""></p><p>再来个降噪工具<a href="https://zhuanlan.zhihu.com/p/118743228" target="_blank" rel="noopener">spleeter</a>，没降噪的音频效果很差。</p><p>现在还不需要制作字幕训练模型，直接运行MockingBird加载模型和音频就行：</p><p><img src="/css/images/mockingbird/2021123103.png" srcset="/img/loading.gif" alt=""></p><p>玩了一下，感觉可能是输入音频太长太乱的问题，效果一般。</p><h3 id="数据集制作"><a href="#数据集制作" class="headerlink" title="数据集制作"></a>数据集制作</h3><p>首先要把这些音频文件都拖出来重命名好：</p><pre><code class="python"># -*- coding:utf8 -*-import osimport shutilimport rerootDir = &quot;E:/SpleeterGUI/output/&quot;for dir in os.listdir(rootDir):    dir = rootDir + dir    if os.path.isdir(dir):        fileName = re.findall(&quot;E:/SpleeterGUI/output/FormatFactoryPart([0-9]+)&quot;, dir)[0]        shutil.move(dir + &quot;/vocals.wav&quot;, rootDir + &quot;az&quot; + fileName + &quot;.wav&quot;)print &quot;Clear&quot;</code></pre><p>跟前面的步骤差不多，在降噪之后要配上字幕才能开始训练，这里用的是语音识别软件<a href="https://www.bilibili.com/video/BV1K7411D72f" target="_blank" rel="noopener">Videosrt</a>，GitHub上的下载链接好像被百度智能云给ban了下不到了。</p><p>Videosrt需要用到阿里云的语音识别功能，要去阿里云开一个。有时候会有奇怪的报错，再跑一次报错又没了，有时候又不行，搞不懂，干脆把那个片段删掉算了。然后一个个进行语音识别：</p><p><img src="/css/images/mockingbird/2021123104.png" srcset="/img/loading.gif" alt=""></p><p>变成这个样子：</p><p><img src="/css/images/mockingbird/2021123105.png" srcset="/img/loading.gif" alt=""></p><p>然后下载<a href="https://gitee.com/kslizi/Sound_File_Processing" target="_blank" rel="noopener">sound_file_processing</a>，用conda给它安个环境安依赖，再按照字幕切割音频成句子：</p><pre><code class="shell">python .\long_file_cut_by_srt.py</code></pre><p>这个文件有点小问题，遇到识别失败，没有字幕只有时间戳的地方就会出错，要修一下。</p><p>下一步，对语音识别得到的字幕进行人工修正，有点麻烦的。一共1700条左右，简单得修了500条，先去训练看看效果。</p><h3 id="训练模型"><a href="#训练模型" class="headerlink" title="训练模型"></a>训练模型</h3><p>首先预处理：</p><p><img src="/css/images/mockingbird/2021123106.png" srcset="/img/loading.gif" alt=""></p><p>开始训练：</p><p><img src="/css/images/mockingbird/2021123107.png" srcset="/img/loading.gif" alt=""></p><p>跑了一段时间收敛不了，按照参考视频的做法，下载一个<a href="https://pan.baidu.com/s/1iONvRxmkI-t1nHqxKytY3g" target="_blank" rel="noopener">预处理好的合成器模型</a>来用，替换之后继续执行命令。</p><p>我的硬件太差了，1k步要跑七八个钟，然而要出结果需要跑几十个k步，难顶。</p><p>还是挺好玩的，输入不同的语句音频会有不同的语调产出。</p><hr><h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://www.bilibili.com/video/BV1DL4y1q7VL" target="_blank" rel="noopener">https://www.bilibili.com/video/BV1DL4y1q7VL</a></p><p><a href="https://www.bilibili.com/video/BV1dq4y137pH" target="_blank" rel="noopener">https://www.bilibili.com/video/BV1dq4y137pH</a></p>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>机器学习</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>h2 jdbc 攻击</title>
     <link href="/2021/12/27/h2-jdbc-%E6%94%BB%E5%87%BB/"/>
     <url>/2021/12/27/h2-jdbc-%E6%94%BB%E5%87%BB/</url>
@@ -1524,9 +1543,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1602,9 +1621,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>Crypto</tag>
+      
+      <tag>Web</tag>
       
       <tag>Pwn</tag>
       
@@ -1625,9 +1644,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1646,9 +1665,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1667,9 +1686,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1730,9 +1749,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>Crypto</tag>
+      
+      <tag>Web</tag>
       
       <tag>Pwn</tag>
       
@@ -1753,9 +1772,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1774,9 +1793,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1795,9 +1814,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1816,9 +1835,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>复现</tag>
       
@@ -1898,9 +1917,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1959,9 +1978,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>复现</tag>
       
@@ -1982,9 +2001,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -2003,9 +2022,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -2043,9 +2062,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -2064,9 +2083,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Crypto</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -2104,9 +2123,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Crypto</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -2125,9 +2144,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -2329,9 +2348,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     

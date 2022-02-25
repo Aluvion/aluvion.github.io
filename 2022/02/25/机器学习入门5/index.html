@@ -16,7 +16,7 @@
   <meta name="description" content="摸鱼">
   <meta name="author" content="Aluvion">
   <meta name="keywords" content="">
-  <title>机器学习入门3 - Twings</title>
+  <title>机器学习入门5 - Twings</title>
 
   <link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css">
 <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
@@ -117,7 +117,7 @@
               
                 <p class="mt-3 post-meta">
                   <i class="fas fa-calendar-alt" aria-hidden="true"></i>
-                  星期四, 十二月 9日 2021, 11:26 晚上
+                  星期五, 二月 25日 2022, 9:13 晚上
                 </p>
               
 
@@ -126,7 +126,7 @@
                   
                   <span class="post-meta">
                     <i class="far fa-chart-bar"></i>
-                    1.1k 字
+                    648 字
                   </span>
                 
 
@@ -134,7 +134,7 @@
                   
                   <span class="post-meta">
                       <i class="far fa-clock"></i>
-                      5 分钟
+                      3 分钟
                   </span>
                 
 
@@ -169,204 +169,99 @@
           <div class="post-content mx-auto" id="post">
             
             <div class="markdown-body">
-              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> 继续学习。</p>
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> 用朴素贝叶斯做分类问题。</p>
 <a id="more"></a>
 <hr>
-<h3 id="matplotlib"><a href="#matplotlib" class="headerlink" title="matplotlib"></a>matplotlib</h3><p>用conda装不上，去手动<a href="https://pypi.org/project/matplotlib/#files" target="_blank" rel="noopener">下载</a>一个来安装：</p>
-<pre><code class="bash">pip install E:\dataSet\matplotlib-3.5.0-cp39-cp39-win_amd64.whl
-</code></pre>
-<h3 id="数据集准备"><a href="#数据集准备" class="headerlink" title="数据集准备"></a>数据集准备</h3><p>这里用文档中使用的<a href="http://archive.ics.uci.edu/ml/machine-learning-databases/lenses/" target="_blank" rel="noopener">隐形眼镜数据集</a>。</p>
-<h3 id="读取数据集"><a href="#读取数据集" class="headerlink" title="读取数据集"></a>读取数据集</h3><p>数据集长这样：</p>
-<pre><code>1  1  1  1  1  3
-2  1  1  1  2  2
-3  1  1  2  1  3
-4  1  1  2  2  1
-5  1  2  1  1  3
-6  1  2  1  2  2
-7  1  2  2  1  3
-8  1  2  2  2  1
-9  2  1  1  1  3
-10 2  1  1  2  2
-11 2  1  2  1  3
-12 2  1  2  2  1
-13 2  2  1  1  3
-14 2  2  1  2  2
-15 2  2  2  1  3
-16 2  2  2  2  3
-17 3  1  1  1  3
-18 3  1  1  2  3
-19 3  1  2  1  3
-20 3  1  2  2  1
-21 3  2  1  1  3
-22 3  2  1  2  2
-23 3  2  2  1  3
-24 3  2  2  2  3
-</code></pre><p>按照描述：</p>
-<pre><code>7. Attribute Information:
-    -- 3 Classes
-     1 : the patient should be fitted with hard contact lenses,
-     2 : the patient should be fitted with soft contact lenses,
-     3 : the patient should not be fitted with contact lenses.
-
-    1. age of the patient: (1) young, (2) pre-presbyopic, (3) presbyopic
-    2. spectacle prescription:  (1) myope, (2) hypermetrope
-    3. astigmatic:     (1) no, (2) yes
-    4. tear production rate:  (1) reduced, (2) normal
-</code></pre><p>第一列是序号，最后一列是标签，中间是四个特征值。读取：</p>
-<pre><code class="python">def file2DataSet(filename):
-    f = open(filename)
+<h3 id="准备数据集"><a href="#准备数据集" class="headerlink" title="准备数据集"></a>准备数据集</h3><p>直接用之前的隐形眼镜数据集，文本数据集处理起来太麻烦了。</p>
+<h3 id="读取数据集"><a href="#读取数据集" class="headerlink" title="读取数据集"></a>读取数据集</h3><pre><code class="python">def file2DataSet(_filename):
+    f = open(_filename)
     arrayOfLines = f.readlines()
     myDataSet = []
+    myCategory = []
     for line in arrayOfLines:
         line = line.strip()
         line = line.replace(&quot;  &quot;, &quot; &quot;)
         listFromLine = line.split(&quot; &quot;)
-        myDataSet.append(listFromLine[1:])
-    return myDataSet
+        myDataSet.append(listFromLine[1:-1])
+        myCategory.append(int(listFromLine[-1]))
+    return myDataSet, myCategory
 </code></pre>
-<h3 id="划分数据集"><a href="#划分数据集" class="headerlink" title="划分数据集"></a>划分数据集</h3><p>构造决策树需要确定每一层所使用的特征，简单来说就是先判断什么，所以需要通过计算数据集本身的熵，以及根据每个特征划分后的数据集熵，最后通过信息增益确定使用什么特征。</p>
-<pre><code class="python">def splitDataSet(dataSet, axis, value): # axis=根据哪个特征划分,value=筛选出该特征符合该值的数据
-    returnDataSet = []
-    for row in dataSet:
-        if row[axis] == value:
-            reduceRow = row[:axis]
-            reduceRow.extend(row[axis + 1:])
-            returnDataSet.append(reduceRow)
-    return returnDataSet
+<p>然后按7:3的比例划分为训练集和测试集：</p>
+<pre><code class="python">myDataSetForTrain, myDataSetForTest = split(myDataSet, (math.ceil(len(myDataSet) * 0.7),))
+myCategoryForTrain, myCategoryForTest = split(myCategory, (math.ceil(len(myCategory) * 0.7),))
 </code></pre>
-<h3 id="计算熵"><a href="#计算熵" class="headerlink" title="计算熵"></a>计算熵</h3><p>香农熵：</p>
-<pre><code class="python">def calcShannonEnt(dataSet):
-    numberOfRows = len(dataSet)
-    labelCounts = {}
-    for row in dataSet:
-        currentLabel = row[-1]
-        if currentLabel not in labelCounts.keys():
-            labelCounts[currentLabel] = 0
-        labelCounts[currentLabel] += 1
-    shannonCount = 0
-    for label in labelCounts:
-        prob = float(labelCounts[label]) / numberOfRows
-        shannonCount -= prob * log2(prob)
-    return shannonCount
+<h3 id="计算概率"><a href="#计算概率" class="headerlink" title="计算概率"></a>计算概率</h3><p>因为用的训练集是一个多属性多种值的数据集，所以还要将其属性扩张先处理成01，此外处理完后各属性也不是相互独立的，最后也还是不怎么适合贝叶斯分类就是了。</p>
+<pre><code class="python">def trainNBO(_dataSetForTrain, _categoryForTrain):
+    numTrainData = len(_dataSetForTrain)
+    numAttributes = len(_dataSetForTrain[0])
+    p1Num = zeros(numAttributes * 3); p2Num = zeros(numAttributes * 3); p3Num = zeros(numAttributes * 3)
+    p1Denom = 0.0; p2Denom = 0.0; p3Denom = 0.0
+    for x in range(numTrainData):
+        if _categoryForTrain[x] == 1:
+            for y in range(numAttributes):
+                p1Num[3 * y + _dataSetForTrain[x][y] - 1] += 1
+            p1Denom += numAttributes
+        if _categoryForTrain[x] == 2:
+            for y in range(numAttributes):
+                p2Num[3 * y + _dataSetForTrain[x][y] - 1] += 1
+            p2Denom += numAttributes
+        if _categoryForTrain[x] == 3:
+            for y in range(numAttributes):
+                p3Num[3 * y + _dataSetForTrain[x][y] - 1] += 1
+            p3Denom += numAttributes
+    p1Vec = p1Num / p1Denom
+    p2Vec = p2Num / p2Denom
+    p3Vec = p3Num / p3Denom
+    return p1Vec, p2Vec, p3Vec, (p1Denom / (4 * numTrainData)), (p2Denom / (4 * numTrainData)), (p3Denom / (4 * numTrainData))
 </code></pre>
-<h3 id="选择用于划分的特征"><a href="#选择用于划分的特征" class="headerlink" title="选择用于划分的特征"></a>选择用于划分的特征</h3><p>计算各特征的信息增益(分割前后香农熵相减)然后取最大的一个：</p>
-<pre><code class="python">def chooseBestFeatureToSplit(dataSet):
-    numberOfFeatures = len(dataSet[0]) - 1
-    baseEntropy = calcShannonEnt(dataSet)
-    bestInfoGain = 0.0
-    bestFeature = -1
-    for x in range(numberOfFeatures):
-        featureList = [row[x + 1] for row in dataSet]
-        uniqueValue = set(featureList)
-        newEntropy = 0
-        for value in uniqueValue:
-            subDataSet = splitDataSet(dataSet, x + 1, value)
-            prob = float(len(subDataSet)) / len(dataSet)
-            newEntropy += prob * calcShannonEnt(subDataSet)
-        infoGain = baseEntropy - newEntropy
-        if infoGain &gt; bestInfoGain:
-            bestInfoGain = infoGain
-            bestFeature = x + 1
-    return bestFeature
+<h3 id="处理测试集"><a href="#处理测试集" class="headerlink" title="处理测试集"></a>处理测试集</h3><p>跟训练集差不多的方式。</p>
+<pre><code class="python">def prepareDataSetForTest(_dataSetForTest):
+    numTestData = len(_dataSetForTest)
+    numAttributes = len(_dataSetForTest[0])
+    preparedDataSetForTest = zeros((numTestData, numAttributes * 3))
+    for x in range(numTestData):
+        for y in range(numAttributes):
+            preparedDataSetForTest[x][3 * y + _dataSetForTest[x][y] - 1] += 1
+    return preparedDataSetForTest
 </code></pre>
-<h3 id="构造决策树"><a href="#构造决策树" class="headerlink" title="构造决策树"></a>构造决策树</h3><p>首先考虑的是叶子节点怎么构造，一共两种情况，第一种是数据集中都是同一个标签了，那就直接返回。</p>
-<p>第二种是已经没有特征可以用来继续分割，数据集中只剩下标签，即特征值完全相同的数据中有多种标签。这里可以统计出现次数，直接返回出现最多次数的标签：</p>
-<pre><code class="python">def majorityCnt(labels):
-    labelsCount = {}
-    for label in labels:
-        if label not in labelsCount.keys():
-            labelsCount[label] = 0
-        labelsCount[label] += 1
-    sortedLabelsCount = sorted(labelsCount.items(), key=lambda label: label[1], reverse=True)
-    return sortedLabelsCount[0][0]
+<h3 id="分类"><a href="#分类" class="headerlink" title="分类"></a>分类</h3><pre><code class="python">def classifyNB(_vec2classify, _p1Vec, _p2Vec, _p3Vec, _pClass1, _pClass2, _pClass3):
+    p1 = sum(_vec2classify * _p1Vec) + log(_pClass1)
+    p2 = sum(_vec2classify * _p2Vec) + log(_pClass2)
+    p3 = sum(_vec2classify * _p3Vec) + log(_pClass3)
+    if p1 &gt; p2 and p1 &gt; p3:
+        return 1
+    if p2 &gt; p1 and p2 &gt; p3:
+        return 2
+    return 3
 </code></pre>
-<p>然后建立决策树，注意复制数组时不要直接用：</p>
-<pre><code class="python">subLabels = labels
-</code></pre>
-<p>这样就不是复制而是引用，而要写成：</p>
-<pre><code class="python">subLabels = labels[:]
-</code></pre>
-<p>决策树：</p>
-<pre><code class="python">def createTree(dataSet, features, valueForFeatures, labels):
-    classList = [row[-1] for row in dataSet]
-    if classList.count(classList[0]) == len(classList): # 数据集中所有数据都是同一个标签
-        return labels[int(classList[0]) - 1]
-    if len(dataSet[0]) == 1: # 数据集只剩下标签没有特征
-        return labels[majorityCnt(classList) - 1]
-    bestFeature = chooseBestFeatureToSplit(dataSet)
-    bestFeatureLabel = features[bestFeature]
-    myTree = {bestFeatureLabel:{}}
-    realValueForThisFeature = valueForFeatures[bestFeature]
-    del(features[bestFeature])
-    del(valueForFeatures[bestFeature])
-    featureValues = [row[bestFeature] for row in dataSet]
-    uniqueValue = set(featureValues)
-    for value in uniqueValue:
-        subFeatures = features[:]
-        subRealValueForFeatures = valueForFeatures[:]
-        realValue = realValueForThisFeature[int(value) - 1]
-        myTree[bestFeatureLabel][realValue] = createTree(splitDataSet(dataSet, bestFeature, value), subFeatures, subRealValueForFeatures, labels)
-    return myTree
-</code></pre>
-<p>最后整合一下：</p>
-<pre><code class="python">labels = [
-    &quot;hard&quot;,
-    &quot;soft&quot;,
-    &quot;not be fitted with contact lenses&quot;
-]
-features = [
-    &quot;age of the patient&quot;,
-    &quot;spectacle prescription&quot;,
-    &quot;astigmatic&quot;,
-    &quot;tear production rate&quot;,
-]
-valueForFeatures = [
-    [&quot;young&quot;, &quot;pre-presbyopic&quot;, &quot;presbyopic&quot;],
-    [&quot;myope&quot;, &quot;hypermetrope&quot;],
-    [&quot;no&quot;, &quot;yes&quot;],
-    [&quot;reduced&quot;, &quot;normal&quot;]
-]
-myDataSet = file2DataSet(&quot;E:/dataSet/tree/lenses.data&quot;)
-print(createTree(myDataSet, features, valueForFeatures, labels))
+<h3 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h3><pre><code class="python">myDataSet, myCategory = file2DataSet(&quot;E:/dataSet/tree/lenses.data&quot;)
+myDataSetForTrain, myDataSetForTest = split(myDataSet, (math.ceil(len(myDataSet) * 0.7),))
+myCategoryForTrain, myCategoryForTest = split(myCategory, (math.ceil(len(myCategory) * 0.7),))
+p1Vec, p2Vec, p3Vec, pClass1, pClass2, pClass3 = trainNBO(myDataSetForTrain, myCategoryForTrain)
+myDataSetForTest = prepareDataSetForTest(myDataSetForTest)
+errorCount = 0
+numForTest = len(myDataSetForTest)
+for x in range(numForTest):
+    result = classifyNB(myDataSetForTest[x], p1Vec, p2Vec, p3Vec, pClass1, pClass2, pClass3)
+    print(&quot;the classifier came back, with: %d, the real answer is: %d&quot; % (result, myCategoryForTest[x]))
+    if (result != myCategoryForTest[x]): 
+        errorCount += 1.0
+print(&quot;the total error rate is: %f&quot; % (errorCount / float(numForTest)))
 </code></pre>
 <p>结果：</p>
-<pre><code class="json">{
-    &quot;tear production rate&quot;: {
-        &quot;normal&quot;: {
-            &quot;astigmatic&quot;: {
-                &quot;yes&quot;: {
-                    &quot;spectacle prescription&quot;: {
-                        &quot;hypermetrope&quot;: {
-                            &quot;age of the patient&quot;: {
-                                &quot;presbyopic&quot;: &quot;not be fitted with contact lenses&quot;,
-                                &quot;pre-presbyopic&quot;: &quot;not be fitted with contact lenses&quot;,
-                                &quot;young&quot;: &quot;hard&quot;
-                            }
-                        },
-                        &quot;myope&quot;: &quot;hard&quot;
-                    }
-                },
-                &quot;no&quot;: {
-                    &quot;age of the patient&quot;: {
-                        &quot;presbyopic&quot;: {
-                            &quot;spectacle prescription&quot;: {
-                                &quot;hypermetrope&quot;: &quot;soft&quot;,
-                                &quot;myope&quot;: &quot;not be fitted with contact lenses&quot;
-                            }
-                        },
-                        &quot;pre-presbyopic&quot;: &quot;soft&quot;,
-                        &quot;young&quot;: &quot;soft&quot;
-                    }
-                }
-            }
-        },
-        &quot;reduced&quot;: &quot;not be fitted with contact lenses&quot;
-    }
-}
-</code></pre>
+<pre><code>(ml) PS D:\ml\bayes&gt; python .\bayes.py
+the classifier came back, with: 3, the real answer is: 3
+the classifier came back, with: 3, the real answer is: 3
+the classifier came back, with: 3, the real answer is: 1
+the classifier came back, with: 3, the real answer is: 3
+the classifier came back, with: 3, the real answer is: 2
+the classifier came back, with: 3, the real answer is: 3
+the classifier came back, with: 3, the real answer is: 3
+the total error rate is: 0.285714
+</code></pre><p>可能跟训练集中种类为3的数据太多也有关系，训练结果一般。</p>
+<h3 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h3><p>无。</p>
 <hr>
-<h3 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h3><p>用matplotlib画画的事情晚点再做吧。</p>
-
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3>
             </div>
             <hr>
             <div>
@@ -388,16 +283,11 @@ print(createTree(myDataSet, features, valueForFeatures, labels))
                 <div class="post-prevnext row">
                   <div class="post-prev col-12 col-md-6">
                     
-                      <a href="/2021/12/10/机器学习入门4/">
-                        <i class="fa fa-chevron-left"></i>
-                        <span>机器学习入门4</span>
-                      </a>
-                    
                   </div>
                   <div class="post-next col-12 col-md-6">
                     
-                      <a href="/2021/12/08/机器学习入门2/">
-                        <span>机器学习入门2</span>
+                      <a href="/2021/12/31/通过MockingBird克隆中文语音/">
+                        <span>通过MockingBird克隆中文语音</span>
                         <i class="fa fa-chevron-right"></i>
                       </a>
                     
@@ -570,7 +460,7 @@ print(createTree(myDataSet, features, valueForFeatures, labels))
     var typed = new Typed('#subtitle', {
       strings: [
         '  ',
-        "机器学习入门3&nbsp;",
+        "机器学习入门5&nbsp;",
       ],
       cursorChar: "_",
       typeSpeed: 70,

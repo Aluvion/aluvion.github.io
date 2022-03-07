@@ -4,6 +4,25 @@
   
   
   <entry>
+    <title>论文研读(1)</title>
+    <link href="/2022/03/07/%E8%AE%BA%E6%96%87%E7%A0%94%E8%AF%BB-1/"/>
+    <url>/2022/03/07/%E8%AE%BA%E6%96%87%E7%A0%94%E8%AF%BB-1/</url>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> 无。</p><a id="more"></a><hr><h3 id="一种基于多视角特征融合的Webshell检测方法"><a href="#一种基于多视角特征融合的Webshell检测方法" class="headerlink" title="一种基于多视角特征融合的Webshell检测方法"></a>一种基于多视角特征融合的Webshell检测方法</h3><p>挑战：</p><ul><li>C&amp;C交互可由非频繁交互伪装</li><li>基于上下文内容综合检测的动态方法面临海量日志数据的存储问题以及检测判断时的内存开销问题</li><li>基于签名的检测方法面临文件签名特征不断变动问题</li><li>高级语言的句法无法全部用正则表达式体现</li></ul><p>现有安全检测策略：</p><ul><li>事前漏洞扫描</li><li>事中基于事件跟踪策略的异常检测</li><li>事后蜜罐、webshell检测</li></ul><p>提出：基于多视角特征融合的 Webshell 检测方法。</p><h4 id="利用爬虫在GitHub收集Webshell脚本"><a href="#利用爬虫在GitHub收集Webshell脚本" class="headerlink" title="利用爬虫在GitHub收集Webshell脚本"></a>利用爬虫在GitHub收集Webshell脚本</h4><p>略。 </p><h4 id="数据预处理"><a href="#数据预处理" class="headerlink" title="数据预处理"></a>数据预处理</h4><ul><li>去除超过3MB大小的脚本(因为大量分析认为超过此大小的脚本大多无法有效运行)</li><li>通过<a href="https://www.unphp.net/" target="_blank" rel="noopener">unphp</a>在线工具反混淆</li><li>代码格式化</li><li>家族聚类</li></ul><h4 id="特征提取"><a href="#特征提取" class="headerlink" title="特征提取"></a>特征提取</h4><ul><li>词法特征，指各种输入全局变量的使用次数</li><li>句法特征，指各种语句如条件、循环语句在所有语句中的占比</li><li>抽象特征，指是否含有一些敏感函数。</li></ul><h4 id="特征排序与筛选"><a href="#特征排序与筛选" class="headerlink" title="特征排序与筛选"></a>特征排序与筛选</h4><p>费舍尔评分，指一个好的特征与同一类所有对应的值的方差应该尽可能地小。</p><h4 id="建模分类"><a href="#建模分类" class="headerlink" title="建模分类"></a>建模分类</h4><p>支持向量机，处理非线性分类问题。</p><h3 id="SmartDetect-A-Smart-Detection-Schemefor-Malicious-Web-Shell-Codesvia-Ensemble-Learning"><a href="#SmartDetect-A-Smart-Detection-Schemefor-Malicious-Web-Shell-Codesvia-Ensemble-Learning" class="headerlink" title="SmartDetect: A Smart Detection Schemefor Malicious Web Shell Codesvia Ensemble Learning"></a>SmartDetect: A Smart Detection Schemefor Malicious Web Shell Codesvia Ensemble Learning</h3><h4 id="obtaine-web-shell-samples-from-some-publicly-available-data-sets-on-the-web"><a href="#obtaine-web-shell-samples-from-some-publicly-available-data-sets-on-the-web" class="headerlink" title="obtaine web shell samples from some publicly available data sets on the web"></a>obtaine web shell samples from some publicly available data sets on the web</h4><p>从网络上收集webshell数据集，但是结构不一无法直接使用。</p><h4 id="Data-Preprocessing"><a href="#Data-Preprocessing" class="headerlink" title="Data Preprocessing"></a>Data Preprocessing</h4><ul><li>根据标签筛选出PHP脚本</li><li>去除脚本中的空白字符、注释</li><li>又是用unphp反混淆</li></ul><h4 id="Feature-Extraction"><a href="#Feature-Extraction" class="headerlink" title="Feature Extraction"></a>Feature Extraction</h4><p>用vld扩展读取opcode放入Bi-Gram模型中。(意义不明)</p><h4 id="Model-Training"><a href="#Model-Training" class="headerlink" title="Model Training"></a>Model Training</h4><p>训练SVM、KNN、NB、DT、CNN等五个模型。</p><h4 id="Ensemble-Learning"><a href="#Ensemble-Learning" class="headerlink" title="Ensemble Learning"></a>Ensemble Learning</h4><p>五个模型得出结果后，用简单投票法决定最终答案。</p><h4 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h4><p>这篇论文怎么感觉怪怪的。</p><hr><h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>Web</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>SpringBoot框架下的JNDI利用法探索</title>
     <link href="/2022/03/03/SpringBoot%E6%A1%86%E6%9E%B6%E4%B8%8B%E7%9A%84JNDI%E5%88%A9%E7%94%A8%E6%B3%95%E6%8E%A2%E7%B4%A2/"/>
     <url>/2022/03/03/SpringBoot%E6%A1%86%E6%9E%B6%E4%B8%8B%E7%9A%84JNDI%E5%88%A9%E7%94%A8%E6%B3%95%E6%8E%A2%E7%B4%A2/</url>
@@ -1680,9 +1699,9 @@
       
       <tag>Web</tag>
       
-      <tag>Pwn</tag>
-      
       <tag>Crypto</tag>
+      
+      <tag>Pwn</tag>
       
     </tags>
     
@@ -1808,9 +1827,9 @@
       
       <tag>Web</tag>
       
-      <tag>Pwn</tag>
-      
       <tag>Crypto</tag>
+      
+      <tag>Pwn</tag>
       
     </tags>
     

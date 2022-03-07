@@ -16,7 +16,7 @@
   <meta name="description" content="摸鱼">
   <meta name="author" content="Aluvion">
   <meta name="keywords" content="">
-  <title>SpringBoot框架下的JNDI利用法探索 - Twings</title>
+  <title>论文研读(1) - Twings</title>
 
   <link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css">
 <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
@@ -117,7 +117,7 @@
               
                 <p class="mt-3 post-meta">
                   <i class="fas fa-calendar-alt" aria-hidden="true"></i>
-                  星期四, 三月 3日 2022, 10:04 晚上
+                  星期一, 三月 7日 2022, 11:56 晚上
                 </p>
               
 
@@ -126,7 +126,7 @@
                   
                   <span class="post-meta">
                     <i class="far fa-chart-bar"></i>
-                    1.2k 字
+                    505 字
                   </span>
                 
 
@@ -134,7 +134,7 @@
                   
                   <span class="post-meta">
                       <i class="far fa-clock"></i>
-                      5 分钟
+                      1 分钟
                   </span>
                 
 
@@ -169,197 +169,49 @@
           <div class="post-content mx-auto" id="post">
             
             <div class="markdown-body">
-              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> JNDI注入在高版本下显得比较鸡肋，不过基于本地Factory的利用方式还是值得学习的。</p>
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> 无。</p>
 <a id="more"></a>
 <hr>
-<h3 id="Tomcat-BeanFactory"><a href="#Tomcat-BeanFactory" class="headerlink" title="Tomcat-BeanFactory"></a>Tomcat-BeanFactory</h3><p>比较出名的可利用Factory，而且Tomcat使用范围比较广。</p>
-<p>该类中的getObjectInstance函数可以调用一个对象的函数，要求满足三个条件。</p>
+<h3 id="一种基于多视角特征融合的Webshell检测方法"><a href="#一种基于多视角特征融合的Webshell检测方法" class="headerlink" title="一种基于多视角特征融合的Webshell检测方法"></a>一种基于多视角特征融合的Webshell检测方法</h3><p>挑战：</p>
 <ul>
-<li>要有public的无参构造函数：</li>
+<li>C&amp;C交互可由非频繁交互伪装</li>
+<li>基于上下文内容综合检测的动态方法面临海量日志数据的存储问题以及检测判断时的内存开销问题</li>
+<li>基于签名的检测方法面临文件签名特征不断变动问题</li>
+<li>高级语言的句法无法全部用正则表达式体现</li>
 </ul>
-<pre><code class="java">Object bean = beanClass.getConstructor().newInstance();
-</code></pre>
+<p>现有安全检测策略：</p>
 <ul>
-<li>要调用的函数为public：</li>
+<li>事前漏洞扫描</li>
+<li>事中基于事件跟踪策略的异常检测</li>
+<li>事后蜜罐、webshell检测</li>
 </ul>
-<pre><code class="java">Method method = forced.get(propName);
-...
-method.invoke(bean, valueArray);
-</code></pre>
-<ul>
-<li>要调用的函数有且只有一个String类型的参数</li>
+<p>提出：基于多视角特征融合的 Webshell 检测方法。</p>
+<h4 id="利用爬虫在GitHub收集Webshell脚本"><a href="#利用爬虫在GitHub收集Webshell脚本" class="headerlink" title="利用爬虫在GitHub收集Webshell脚本"></a>利用爬虫在GitHub收集Webshell脚本</h4><p>略。 </p>
+<h4 id="数据预处理"><a href="#数据预处理" class="headerlink" title="数据预处理"></a>数据预处理</h4><ul>
+<li>去除超过3MB大小的脚本(因为大量分析认为超过此大小的脚本大多无法有效运行)</li>
+<li>通过<a href="https://www.unphp.net/" target="_blank" rel="noopener">unphp</a>在线工具反混淆</li>
+<li>代码格式化</li>
+<li>家族聚类</li>
 </ul>
-<pre><code class="java">Class&lt;?&gt; paramTypes[] = new Class[1];
-paramTypes[0] = String.class;
-...
-forced.put(param, beanClass.getMethod(setterName, paramTypes));
-</code></pre>
-<ul>
-<li>其实还有一些隐含的条件，比如它的bean在通过无参构造函数实例化后，到调用该函数之间没有其他操作，也就是说可控输入就只剩下参数了（或许可以通过多次调用提前控制一些成员）。又比如它无法进行链式调用，所以反射链难以实现，要找到利用方式基本只有那种输入命令-&gt;执行，或者ClassLoader的奇妙玩法了。</li>
+<h4 id="特征提取"><a href="#特征提取" class="headerlink" title="特征提取"></a>特征提取</h4><ul>
+<li>词法特征，指各种输入全局变量的使用次数</li>
+<li>句法特征，指各种语句如条件、循环语句在所有语句中的占比</li>
+<li>抽象特征，指是否含有一些敏感函数。</li>
 </ul>
-<h4 id="存在漏洞或危险操作的依赖"><a href="#存在漏洞或危险操作的依赖" class="headerlink" title="存在漏洞或危险操作的依赖"></a>存在漏洞或危险操作的依赖</h4><p>通过ELProcessor、GroovyShell、Yaml、MVEL、Xstream、bsh等存在漏洞的工具的玩法。</p>
-<h4 id="Mlet"><a href="#Mlet" class="headerlink" title="Mlet"></a>Mlet</h4><p>MLet是一个ClassLoader，继承自URLClassLoader，其public函数addURL可以通过一个字符串URL定义远程资源：</p>
-<pre><code class="java">public void addURL(String url) throws ServiceNotFoundException {
-    try {
-        URL ur = new URL(url);
-        if (!Arrays.asList(getURLs()).contains(ur))
-            super.addURL(ur);
-    } catch (MalformedURLException e) {
-       ...
-    }
-}
-</code></pre>
-<p>远程类需要加载并初始化才能执行其中的静态代码块，问题在于我们通过BeanFactory实例化并调用的Mlet是一个与环境隔离的ClassLoader，我们无法通过这里之外的加载/实例化点完成利用，因为环境中使用的ClassLoader不是这个Mlet。</p>
-<p>而在Mlet类中，可以调用的loadClass函数来自父类的父类ClassLoader，而loadClass在加载失败时会调用findClass从资源中定义类：</p>
-<pre><code class="java">public Class&lt;?&gt; loadClass(String name) throws ClassNotFoundException {
-    return loadClass(name, false);
-}
-
-
-protected Class&lt;?&gt; loadClass(String name, boolean resolve)
-    throws ClassNotFoundException
-{
-    synchronized (getClassLoadingLock(name)) {
-        // First, check if the class has already been loaded
-        Class&lt;?&gt; c = findLoadedClass(name);
-        if (c == null) {
-            long t0 = System.nanoTime();
-            try {
-                if (parent != null) {
-                    c = parent.loadClass(name, false);
-                } else {
-                    c = findBootstrapClassOrNull(name);
-                }
-            } 
-            ...
-
-                if (c == null) {
-                    // If still not found, then invoke findClass in order
-                    // to find the class.
-                    long t1 = System.nanoTime();
-                    c = findClass(name);
-
-                    ...
-                }
-        }
-        ...
-    }
-}
-
-// Mlet
-protected Class&lt;?&gt; findClass(String name) throws ClassNotFoundException {
-    return findClass(name, currentClr);
-}
-
-Class&lt;?&gt; findClass(String name, ClassLoaderRepository clr)
-    throws ClassNotFoundException {
-    Class&lt;?&gt; c = null;
-    MLET_LOGGER.logp(Level.FINER, MLet.class.getName(), &quot;findClass&quot;, name);
-    // Try looking in the JAR:
-    try {
-        c = super.findClass(name);
-        ...
-    }
-}
-
-// URLClassLoader
-protected Class&lt;?&gt; findClass(final String name)
-    throws ClassNotFoundException
-{
-    final Class&lt;?&gt; result;
-    try {
-        result = AccessController.doPrivileged(
-            new PrivilegedExceptionAction&lt;Class&lt;?&gt;&gt;() {
-                public Class&lt;?&gt; run() throws ClassNotFoundException {
-                    String path = name.replace(&#39;.&#39;, &#39;/&#39;).concat(&quot;.class&quot;);
-                    Resource res = ucp.getResource(path, false);
-                    if (res != null) {
-                        try {
-                            return defineClass(name, res);
-                        } 
-                        ...
-                    } else {
-                        return null;
-                    }
-                }
-            }, acc);
-    } 
-    ...
-}
-</code></pre>
-<p>然而loadClass的第二个参数固定为false，也就是说仅仅是加载也无法执行静态代码块，必须要走到实例化的步骤才行。而ClassLoader中自然是不会有实例化类的操作的，所以这种方式也就走不通了。</p>
-<h4 id="NashornScriptEngineFactory"><a href="#NashornScriptEngineFactory" class="headerlink" title="NashornScriptEngineFactory"></a>NashornScriptEngineFactory</h4><p>有无参构造函数：</p>
-<pre><code class="java">public NashornScriptEngineFactory() {
-}
-</code></pre>
-<p>有危险函数：</p>
-<pre><code class="java">public ScriptEngine getScriptEngine(String... args) {
-    return this.newEngine((String[])Objects.requireNonNull(args), getAppClassLoader(), (ClassFilter)null);
-}
-</code></pre>
-<p>可以链式利用：</p>
-<pre><code class="java">new NashornScriptEngineFactory().getScriptEngine(&quot;js&quot;).eval(&quot;java.lang.Runtime.getRuntime().exec(&#39;calc&#39;)&quot;);
-</code></pre>
-<p>然而BeanFactory似乎实现不了链式调用，寄。</p>
-<h4 id="Mvel"><a href="#Mvel" class="headerlink" title="Mvel"></a>Mvel</h4><p>一种表达式，需要依赖：</p>
-<pre><code class="xml">&lt;!-- https://mvnrepository.com/artifact/org.mvel/mvel2 --&gt;
-&lt;dependency&gt;
-    &lt;groupId&gt;org.mvel&lt;/groupId&gt;
-    &lt;artifactId&gt;mvel2&lt;/artifactId&gt;
-    &lt;version&gt;2.4.14.Final&lt;/version&gt;
-&lt;/dependency&gt;
-</code></pre>
-<p>MVEL类没有无参构造函数，但是有很多静态public函数，比如eval、evalToString和evalToBoolean，可以在mvel2包里面其他public类中找一找有没有调用这些静态函数的地方。</p>
-<p>单纯用文本搜索做起来会比较麻烦，因为调用了eval的地方实在有点多，看起来很麻烦，如果用codeQL等工具污点分析就会方便很多，详见参考文章。</p>
-<p>ShellSession类有一个无参构造函数：</p>
-<pre><code class="java">public ShellSession() {
-    ...
-}
-</code></pre>
-<p>其exec函数只有一个String类型参数：</p>
-<pre><code class="java">public void exec(String command) {
-    for (String c : command.split(&quot;\n&quot;)) {
-        inBuffer.append(c);
-        _exec();
-    }
-}
-</code></pre>
-<p>其_exec函数会调用内部定义好的Command们的execute函数：</p>
-<pre><code class="java">try {
-    commands.get(inTokens[0]).execute(this, passParameters);
-}
-</code></pre>
-<p>PushContext的execute函数中会调用MVEL类的eval函数：</p>
-<pre><code class="java">public Object execute(ShellSession session, String[] args) {
-    session.setCtxObject(MVEL.eval(args[0], session.getCtxObject(), session.getVariables()));
-    return &quot;Changed Context&quot;;
-}
-</code></pre>
-<h3 id="MemoryUserDatabaseFactory"><a href="#MemoryUserDatabaseFactory" class="headerlink" title="MemoryUserDatabaseFactory"></a>MemoryUserDatabaseFactory</h3><p>继承了ObjectFactory接口，其getObjectInstance函数中会实例化一个MemoryUserDatabase对象，该对象可以设置几个属性：</p>
-<pre><code class="java">MemoryUserDatabase database = new MemoryUserDatabase(name.toString());
-RefAddr ra = null;
-
-ra = ref.get(&quot;pathname&quot;);
-if (ra != null) {
-    database.setPathname(ra.getContent().toString());
-}
-
-ra = ref.get(&quot;readonly&quot;);
-if (ra != null) {
-    database.setReadonly(Boolean.parseBoolean(ra.getContent().toString()));
-}
-
-ra = ref.get(&quot;watchSource&quot;);
-if (ra != null) {
-    database.setWatchSource(Boolean.parseBoolean(ra.getContent().toString()));
-}
-</code></pre>
-<p>然后调用其open和save函数，分别可以触发xxe和tomcat下的rce漏洞。</p>
-<h3 id="JDBC"><a href="#JDBC" class="headerlink" title="JDBC"></a>JDBC</h3><p>详见参考文章。</p>
+<h4 id="特征排序与筛选"><a href="#特征排序与筛选" class="headerlink" title="特征排序与筛选"></a>特征排序与筛选</h4><p>费舍尔评分，指一个好的特征与同一类所有对应的值的方差应该尽可能地小。</p>
+<h4 id="建模分类"><a href="#建模分类" class="headerlink" title="建模分类"></a>建模分类</h4><p>支持向量机，处理非线性分类问题。</p>
+<h3 id="SmartDetect-A-Smart-Detection-Schemefor-Malicious-Web-Shell-Codesvia-Ensemble-Learning"><a href="#SmartDetect-A-Smart-Detection-Schemefor-Malicious-Web-Shell-Codesvia-Ensemble-Learning" class="headerlink" title="SmartDetect: A Smart Detection Schemefor Malicious Web Shell Codesvia Ensemble Learning"></a>SmartDetect: A Smart Detection Schemefor Malicious Web Shell Codesvia Ensemble Learning</h3><h4 id="obtaine-web-shell-samples-from-some-publicly-available-data-sets-on-the-web"><a href="#obtaine-web-shell-samples-from-some-publicly-available-data-sets-on-the-web" class="headerlink" title="obtaine web shell samples from some publicly available data sets on the web"></a>obtaine web shell samples from some publicly available data sets on the web</h4><p>从网络上收集webshell数据集，但是结构不一无法直接使用。</p>
+<h4 id="Data-Preprocessing"><a href="#Data-Preprocessing" class="headerlink" title="Data Preprocessing"></a>Data Preprocessing</h4><ul>
+<li>根据标签筛选出PHP脚本</li>
+<li>去除脚本中的空白字符、注释</li>
+<li>又是用unphp反混淆</li>
+</ul>
+<h4 id="Feature-Extraction"><a href="#Feature-Extraction" class="headerlink" title="Feature Extraction"></a>Feature Extraction</h4><p>用vld扩展读取opcode放入Bi-Gram模型中。(意义不明)</p>
+<h4 id="Model-Training"><a href="#Model-Training" class="headerlink" title="Model Training"></a>Model Training</h4><p>训练SVM、KNN、NB、DT、CNN等五个模型。</p>
+<h4 id="Ensemble-Learning"><a href="#Ensemble-Learning" class="headerlink" title="Ensemble Learning"></a>Ensemble Learning</h4><p>五个模型得出结果后，用简单投票法决定最终答案。</p>
+<h4 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h4><p>这篇论文怎么感觉怪怪的。</p>
 <hr>
-<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://xz.aliyun.com/t/10829" target="_blank" rel="noopener">https://xz.aliyun.com/t/10829</a></p>
-<p><a href="https://tttang.com/archive/1405/" target="_blank" rel="noopener">https://tttang.com/archive/1405/</a></p>
-
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3>
             </div>
             <hr>
             <div>
@@ -381,16 +233,11 @@ if (ra != null) {
                 <div class="post-prevnext row">
                   <div class="post-prev col-12 col-md-6">
                     
-                      <a href="/2022/03/07/论文研读-1/">
-                        <i class="fa fa-chevron-left"></i>
-                        <span>论文研读(1)</span>
-                      </a>
-                    
                   </div>
                   <div class="post-next col-12 col-md-6">
                     
-                      <a href="/2022/02/27/Java反序列化中的RMI、JRMP、JNDI、LDAP-2/">
-                        <span>Java反序列化中的RMI、JRMP、JNDI、LDAP(2)</span>
+                      <a href="/2022/03/03/SpringBoot框架下的JNDI利用法探索/">
+                        <span>SpringBoot框架下的JNDI利用法探索</span>
                         <i class="fa fa-chevron-right"></i>
                       </a>
                     
@@ -563,7 +410,7 @@ if (ra != null) {
     var typed = new Typed('#subtitle', {
       strings: [
         '  ',
-        "SpringBoot框架下的JNDI利用法探索&nbsp;",
+        "论文研读(1)&nbsp;",
       ],
       cursorChar: "_",
       typeSpeed: 70,

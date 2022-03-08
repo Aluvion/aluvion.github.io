@@ -4,6 +4,25 @@
   
   
   <entry>
+    <title>论文研读(2)</title>
+    <link href="/2022/03/08/%E8%AE%BA%E6%96%87%E7%A0%94%E8%AF%BB-2/"/>
+    <url>/2022/03/08/%E8%AE%BA%E6%96%87%E7%A0%94%E8%AF%BB-2/</url>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> 无。</p><a id="more"></a><hr><h3 id="基于语义分析的Webshell检测技术研究"><a href="#基于语义分析的Webshell检测技术研究" class="headerlink" title="基于语义分析的Webshell检测技术研究"></a>基于语义分析的Webshell检测技术研究</h3><h4 id="预处理模块"><a href="#预处理模块" class="headerlink" title="预处理模块"></a>预处理模块</h4><h5 id="词法分析"><a href="#词法分析" class="headerlink" title="词法分析"></a>词法分析</h5><p>借用php本身的词法分析器。</p><h5 id="语法分析"><a href="#语法分析" class="headerlink" title="语法分析"></a>语法分析</h5><p>语法分析程序(可能自己搞的？)构建AST树。</p><h4 id="污点子树提取模块"><a href="#污点子树提取模块" class="headerlink" title="污点子树提取模块"></a>污点子树提取模块</h4><p>遍历AST树，根据各个节点的Zend操作符计算风险等级(如Eval、System、FuncCall为高危，Assign为中危)。</p><p>之后剪除安全分支，通过变量传递和风险等级提取污点子树。</p><h4 id="基于特征图的风险值算法"><a href="#基于特征图的风险值算法" class="headerlink" title="基于特征图的风险值算法"></a>基于特征图的风险值算法</h4><p>将单个行为提取为操作+输入参数+输出，根据行为间控制依赖和数据依赖构造行为特征图。</p><p>将受分析对象和特征图进行节点和边匹配，计算匹配值，超过阈值则为风险文件。</p><h3 id="基于决策树的Webshell检测方法研究-胡建康"><a href="#基于决策树的Webshell检测方法研究-胡建康" class="headerlink" title="基于决策树的Webshell检测方法研究_胡建康"></a>基于决策树的Webshell检测方法研究_胡建康</h3><h4 id="特征选取"><a href="#特征选取" class="headerlink" title="特征选取"></a>特征选取</h4><h5 id="文档属性"><a href="#文档属性" class="headerlink" title="文档属性"></a>文档属性</h5><ul><li>单词数量(？)</li><li>不同单词数量</li><li>行数</li><li>平均每行单词数、空字符和空格数量(？)</li><li>最大单词长度</li></ul><h5 id="基本属性"><a href="#基本属性" class="headerlink" title="基本属性"></a>基本属性</h5><ul><li>注释数量</li><li>字符操作函数</li><li>eval、exec、shell_exec、system等函数调用</li><li>系统函数调用数量</li><li>脚本区块数</li><li>函数参数的最大长度</li><li>加解密函数调用</li></ul><h5 id="高级属性"><a href="#高级属性" class="headerlink" title="高级属性"></a>高级属性</h5><ul><li>文件操作</li><li>ftp操作</li><li>数据库操作</li><li>ActiveX控件调用</li></ul><h4 id="决策树"><a href="#决策树" class="headerlink" title="决策树"></a>决策树</h4><p>计算信息熵，根据信息增益率（由信息增益度和分裂信息度计算）选择属性构建决策树。</p><h4 id="集体学习"><a href="#集体学习" class="headerlink" title="集体学习"></a>集体学习</h4><p>每个样本分配一个权重，选取样本子集构造决策树，使用决策树预测样本集。加权正确率符合要求时，降低正确分类样本的权重，提高错误分类样本的权重，并进入下一次迭代，若迭代完成则输出带有影响因子的决策树。</p><h3 id="基于RNN的Webshell检测研究"><a href="#基于RNN的Webshell检测研究" class="headerlink" title="基于RNN的Webshell检测研究"></a>基于RNN的Webshell检测研究</h3><h4 id="数据预处理"><a href="#数据预处理" class="headerlink" title="数据预处理"></a>数据预处理</h4><h5 id="切词"><a href="#切词" class="headerlink" title="切词"></a>切词</h5><p>采用以非字母和非数字字符作为分割符来切分源文件，结果可能是变量名称、函数名称等。长度为小于4的字符串一般是没有实际意义的变量名或变量值的一部分，几乎在每个样本中都会大量出现。而字符串长度大于等于 5的字符串大多是经过编码和加密处理之后的字符串，此类字符串词频极低，且对源文件几乎没有区分能力。只保留字符串长度介于3到15之间的字符串。</p><h5 id="提取关键词"><a href="#提取关键词" class="headerlink" title="提取关键词"></a>提取关键词</h5><p>使用TF-IDF算法（正常文件和webshell文件调用函数不同，且变量名称可读性高于webshell文件），提取出webshell文件关键词。</p><h4 id="模型结构"><a href="#模型结构" class="headerlink" title="模型结构"></a>模型结构</h4><p>使用GRU结构，不懂。</p><hr><h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>Web</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>论文研读(1)</title>
     <link href="/2022/03/07/%E8%AE%BA%E6%96%87%E7%A0%94%E8%AF%BB-1/"/>
     <url>/2022/03/07/%E8%AE%BA%E6%96%87%E7%A0%94%E8%AF%BB-1/</url>
@@ -1619,9 +1638,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1697,9 +1716,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>Crypto</tag>
+      
+      <tag>Web</tag>
       
       <tag>Pwn</tag>
       
@@ -1720,9 +1739,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1741,9 +1760,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1762,9 +1781,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1825,9 +1844,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>Crypto</tag>
+      
+      <tag>Web</tag>
       
       <tag>Pwn</tag>
       
@@ -1848,9 +1867,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1869,9 +1888,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1890,9 +1909,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -1911,9 +1930,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>复现</tag>
       
@@ -1993,9 +2012,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -2054,9 +2073,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>复现</tag>
       
@@ -2077,9 +2096,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -2098,9 +2117,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -2138,9 +2157,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -2159,9 +2178,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Crypto</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -2199,9 +2218,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Crypto</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -2220,9 +2239,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -2424,9 +2443,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     

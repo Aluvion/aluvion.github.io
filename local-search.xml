@@ -4,6 +4,19 @@
   
   
   <entry>
+    <title>论文研读(3)</title>
+    <link href="/2022/03/09/%E8%AE%BA%E6%96%87%E7%A0%94%E8%AF%BB-3/"/>
+    <url>/2022/03/09/%E8%AE%BA%E6%96%87%E7%A0%94%E8%AF%BB-3/</url>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> 无。</p><a id="more"></a><hr><h3 id="基于LSTM的Webshell检测方法研究"><a href="#基于LSTM的Webshell检测方法研究" class="headerlink" title="基于LSTM的Webshell检测方法研究"></a>基于LSTM的Webshell检测方法研究</h3><p>看起来是通过检查HTTP流量检测webshell上传，不是文件检测。</p><h4 id="基于规则匹配的预处理方法"><a href="#基于规则匹配的预处理方法" class="headerlink" title="基于规则匹配的预处理方法"></a>基于规则匹配的预处理方法</h4><p>比较简易的检测方法，基于规则匹配对HTTP的URL和POST数据进行初步检查，从关键词、Payload字符数等方面来处理数据集，通过总结归纳规律完成这一项简单且成本低的检查。</p><h5 id="URL白名单"><a href="#URL白名单" class="headerlink" title="URL白名单"></a>URL白名单</h5><p>常见的网站域名、API调用、正常的文件上传和一些其他关键词。(小怪)</p><h5 id="Payload长度"><a href="#Payload长度" class="headerlink" title="Payload长度"></a>Payload长度</h5><p>即webshell文件上传，根据统计数据，webshell的Payload长度主要集中在1000-1250之间，最后选择120-1.1M长度的进行下一步处理。</p><h5 id="key-value长度"><a href="#key-value长度" class="headerlink" title="key-value长度"></a>key-value长度</h5><p>即webshell以key-value形式表现，跟Payload有很大交集。</p><h5 id="关键词"><a href="#关键词" class="headerlink" title="关键词"></a>关键词</h5><p>命中一定数量的中文关键词和一些常见参数名的，或者未命中一定数量PHP关键词的就是正常文件体。</p><h5 id="特殊字符长度"><a href="#特殊字符长度" class="headerlink" title="特殊字符长度"></a>特殊字符长度</h5><p>主要由数字、字母组成的字符串，如加密、编码后的恶意代码，阈值10左右可以区分正常文件和webshell。</p><h4 id="切词"><a href="#切词" class="headerlink" title="切词"></a>切词</h4><p>基本就是按16长度切分。（好怪的切词法）</p><h4 id="词均衡"><a href="#词均衡" class="headerlink" title="词均衡"></a>词均衡</h4><p>增删各个文件体中的词数，让它们次数相等以用于前馈网络的固定维度输入。</p><p>计算各个词的TF-IDF值，取前n个作为关键词。</p><h4 id="模型结构"><a href="#模型结构" class="headerlink" title="模型结构"></a>模型结构</h4><p>基于注意力机制使用两种方式(MLT+MLST)结合不同层的特征。（太复杂了吧这些算法，搞不懂）</p><hr><h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3>]]></content>
+    
+    
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>论文研读(2)</title>
     <link href="/2022/03/08/%E8%AE%BA%E6%96%87%E7%A0%94%E8%AF%BB-2/"/>
     <url>/2022/03/08/%E8%AE%BA%E6%96%87%E7%A0%94%E8%AF%BB-2/</url>

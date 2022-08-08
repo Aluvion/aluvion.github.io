@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>指针分析工具Doop安装与使用 - Twings</title>
+
+  <link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css">
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+  <link rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css">
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+</head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期一, 八月 8日 2022, 10:57 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    2k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      8 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>学术们喜欢用的代码分析工具之一，专职指针分析，将代码分析问题转换为图问题进行求解，想要污点分析好像还要自己整，相比之下工程们更喜欢更贴近代码层面功能也更全面的CodeQL。</p>
+<a id="more"></a>
+<hr>
+<h3 id="Datalog"><a href="#Datalog" class="headerlink" title="Datalog"></a>Datalog</h3><p>常用于静态代码分析领域的声明式编程语言，由data(谓词，如数据表)和logic(规则，如关系)组成。</p>
+<p>原子是Datalog中的基本元素，包括关系原子(类似返回值为boolean的函数调用)和算术原子(常见算式，如a&gt;b)。</p>
+<pre><code># 谓词Age
+person      age
+Xiaoming    18
+Xiaohong    23
+Alan        16
+Abao        31
+
+# 关系原子
+Age(&quot;Xiaoming&quot;, 18) # = ture
+Age(&quot;Alan&quot;, 23)     # = false
+</code></pre><p>逻辑的表达形式为：</p>
+<pre><code>H &lt;- B1, B2,...,Bn
+</code></pre><p>H为结论，B1到Bn为前因，仅当前因为真时结论为真。</p>
+<p>逗号(,)代表逻辑与(and &amp;)，分号(;)代表逻辑或(or |)，感叹号(!)代表取反。</p>
+<p>如以下关系推定：</p>
+<pre><code># Datalog代码
+Adult(person) &lt;- Age(person, age), age &gt;= 18
+</code></pre><p>枚举Age表中的所有数据，如果该条数据的age字段大于18，则其person字段代表的人为成年人。</p>
+<p>支持递归结构，为了避免出现无穷结论的情况，Datalog要求前因中的每一个变量至少要出现在一个非取反的关系原子中：</p>
+<pre><code># x只出现在算术原子中
+A(x) &lt;- B(y), x &gt; y
+# x只出现在取反原子中
+A(x) &lt;- B(y), !C(x, y)
+</code></pre><p>为了避免前因结论发生矛盾的情况，Datalog还禁止一个关系与其取反同时出现在前因和结论中：</p>
+<pre><code>A(x) &lt;- B(x), !A(x)
+</code></pre><p>看起来Datalog中有一些已定义的关系，如New(对象实例化)、Assign(变量赋值)、Store(对象属性赋值)、Load(对象属性作为赋值语句的右端)等。</p>
+<p>使用这些关系定义新的便于分析的关系(如代表变量指向的VarPointsTo可以由递归的VarPointsTo和Assign、New等关系组成)，借用参考文章里一张有注释的call指令规则图：</p>
+<p><img src="/css/images/doop/2022080501.jpg" srcset="/img/loading.gif" alt=""></p>
+<p>完成以下四步：</p>
+<ol>
+<li><p>VCall(l, x, k): 给定调用指令l、调用主体x和调用函数信息k(函数名/参数等)等函数调用信息</p>
+</li>
+<li><p>VarPointsTo(x, o): 找到调用主体x指向的具体对象o</p>
+</li>
+<li><p>Dispatch(o, k, m): 根据具体对象o、调用函数信息k找到具体调用函数m</p>
+</li>
+<li><p>ThisVar(m, this): 获得具体调用函数m中的this变量</p>
+</li>
+</ol>
+<p>可以得到这些结论：</p>
+<ol>
+<li><p>CallGraph(l, m): 调用指令l到具体调用函数m之间存在调用路径</p>
+</li>
+<li><p>Reachable(m): 具体调用函数m在程序流程中可达</p>
+</li>
+<li><p>VarPointsTo(this, o): 将具体调用函数m的this变量设置为具体对象o，以后可能可以用来避免父子类困扰</p>
+</li>
+</ol>
+<p>call指令后续还有传递参数(Datalog会先找到实参ai指向的具体对象o，再将形参pi也指向o)和传递返回值(找到具体调用函数m的返回值ret指向的具体对象o，再让接受返回值的变量r也指向o)两条规则，和完整的项目分析、污点分析等内容，就不多说了。</p>
+<h3 id="安装Souffle"><a href="#安装Souffle" class="headerlink" title="安装Souffle"></a>安装Souffle</h3><p>Souffle是Datalog的高效实现之一，主要用于图可达性求解，可以用于Java下的语言分析、污点分析、安全检查等方面。</p>
+<p>但是它不支持Windows，只能用虚拟机来装了，最好挂上代理如proxychains，不然可能会有网络问题。</p>
+<pre><code class="bash"># 下载安装脚本
+wget https://packagecloud.io/install/repositories/souffle-lang/souffle/script.deb.sh
+
+# 运行
+./script.deb.sh
+</code></pre>
+<p>结果：</p>
+<pre><code>The repository is setup! You can now install packages.
+</code></pre><p>看起来脚本完成了apt库的添加，然后直接apt安装：</p>
+<pre><code>apt-get install souffle
+</code></pre><h4 id="简单的例子"><a href="#简单的例子" class="headerlink" title="简单的例子"></a>简单的例子</h4><p>官方文档中的简单例子example.dl：</p>
+<pre><code class="souffle">.decl edge(x:number, y:number)
+.input edge
+
+.decl path(x:number, y:number)
+.output path
+
+path(x, y) :- edge(x, y).
+path(x, y) :- path(x, z), edge(z, y).
+</code></pre>
+<p>第一段定义了从输入事实中获取的edge(边)关系，其成员节点为两个number。</p>
+<p>第二段定义了path(路径)关系，并将其输出。</p>
+<p>第三段定义了路径的推导方式，当两个节点间存在边时则该两节点间存在路径，并定义了一个递归推导式令程序可以推导更长的路径。</p>
+<p>创建一个输入文件edge.facts(每行数据各成员之间以制表符分隔)：</p>
+<pre><code>1 2
+2 3
+</code></pre><p>代表节点1和节点2、节点2和节点3之间各存在一条边。然后运行命令：</p>
+<pre><code>souffle -F. -D. example.dl
+</code></pre><p>-F和-D选项代表输入输出目录，可以在path.csv推导结果输出文件中看到推导出来的几条路径：</p>
+<pre><code>1    2
+1    3
+2    3
+</code></pre><h4 id="变量指向分析"><a href="#变量指向分析" class="headerlink" title="变量指向分析"></a>变量指向分析</h4><p>同样是一个简单的例子，其待分析代码如下：</p>
+<pre><code class="java">v1 = new h1();
+v2 = new h2();
+v1 = v2;
+v3 = new h3();
+v1.f = v3;
+v4 = v1.f;
+</code></pre>
+<p>我们手动分析将其写入facts事实文件中：</p>
+<pre><code># new.facts
+v1    h1
+v2    h2
+v3    h3
+
+# assgin.facts
+v1    v2
+
+# store.facts
+v1    f    v3
+
+# load.facts
+v4    v1    f
+</code></pre><p>简单来说就是由对象实例化、赋值和对象属性组成的一小段代码。其Souffle代码如下：</p>
+<pre><code class="souffle">.type var &lt;: symbol
+.type obj &lt;: symbol
+.type field &lt;: symbol
+
+// -- inputs --
+.decl assign( a:var, b:var )
+.input assign(filename=&quot;assign.facts&quot;)
+.decl new( v:var, o:obj )
+.input new(filename=&quot;new.facts&quot;)
+.decl ld( a:var, b:var, f:field )
+.input ld(filename=&quot;load.facts&quot;)
+.decl st( a:var, f:field, b:var )
+.input st(filename=&quot;store.facts&quot;)
+
+// -- analysis --
+
+.decl alias( a:var, b:var ) 
+.output alias
+// 自己和自己是alias关系
+alias(X,X) :- assign(X,_).
+alias(X,X) :- assign(_,X).
+// 赋值导致XY是alias关系
+alias(X,Y) :- assign(X,Y).
+alias(X,Y) :- ld(X,A,F), alias(A,B), st(B,F,Y).
+
+.decl pointsTo( a:var, o:obj )
+.output pointsTo
+pointsTo(X,Y) :- new(X,Y).
+pointsTo(X,Y) :- alias(X,Z), pointsTo(Z,Y).
+</code></pre>
+<p>第一段定义了var、obj、field三种关系成员类型为符号类型。</p>
+<p>第二段定义了assign、new、load、store关系并从输入文件读取事实。</p>
+<p>第三段定义了alias关系(assign以及store再load)和pointsTo关系(new以及alias且pointTo)并输出，</p>
+<p>其推导结果如下：</p>
+<pre><code># alias.csv
+v1    v1
+v1    v2
+v2    v2
+v4    v3
+
+# pointsTo.csv
+v1    h1
+v1    h2
+v2    h2
+v4    h3
+v3    h3
+</code></pre><h3 id="安装Doop"><a href="#安装Doop" class="headerlink" title="安装Doop"></a>安装Doop</h3><p>了解了Datalog和Souffle，接下来就开始安装和试用Doop了。</p>
+<p>Doop是Datalog规则下的多种分析的集合，使用Souffle作为默认引擎。</p>
+<p>首先需要安装Java，当然也可以去Oracle官网直接下载：</p>
+<pre><code class="bash">apt-get install openjdk-8-jdk
+</code></pre>
+<p>装好了Java 8u342，然后从GitHub上下载仓库：</p>
+<pre><code class="bash">git clone https://bitbucket.org/yanniss/doop.git
+</code></pre>
+<p>运行根目录下的doop程序，它就会开始下载Gradle并编译项目，同样建议挂代理，不然下载依赖的时候可能会有问题。</p>
+<h4 id="简单的例子-1"><a href="#简单的例子-1" class="headerlink" title="简单的例子"></a>简单的例子</h4><p>先写一个简单的Java类：</p>
+<pre><code class="java">package org.example;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class Doop {
+    public static String s = &quot;Twings&quot;;
+
+    public static List&lt;String&gt; list;
+
+    public static void main(String[] args) {
+        list = getList();
+        System.out.println(list);
+    }
+
+    public static List&lt;String&gt; getList() {
+        List&lt;String&gt; list = new ArrayList&lt;&gt;();
+        list.add(s);
+        return list;
+    }
+}
+</code></pre>
+<p>然后编译成class文件并打包jar：</p>
+<pre><code class="bash">jar -cvf doop.jar Doop.class
+</code></pre>
+<p>放到Doop目录下开始分析：</p>
+<pre><code class="bash">./doop -i doop.jar -a context-insensitive --app-only
+</code></pre>
+<p>仅分析输入jar文件，完成耗时4m5s，结果存放在out/database目录中：</p>
+<p><img src="/css/images/doop/2022080502.png" srcset="/img/loading.gif" alt=""></p>
+<p>除了解析出来的facts事实文件，还有推导出来的csv文件，如CallGraphEdge.csv。</p>
+<p>好像得设定main入口函数，输出文件中没有Doop.class的路径，跑着跑着虚拟机还炸了，镜像直接不见了。</p>
+<p>Doop还有其他很多选项，如上下文敏感、分析模式、最大并行任务数量、反射设定和自定义Datalog规则等等，这里就不多看了。</p>
+<hr>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://zhuanlan.zhihu.com/p/161700173" target="_blank" rel="noopener">【南大软件分析】lecture14笔记-Datalog-Based Program Analysis</a></p>
+<p><a href="https://zhuanlan.zhihu.com/p/145766313" target="_blank" rel="noopener">南大软件分析课程10——基于Datalog的程序分析</a></p>
+<p><a href="https://bitbucket.org/yanniss/doop/src/46b1d002eb90625d5e330112144ec7edf789f5b3/docs/datalog-101-legacy.md" target="_blank" rel="noopener">Datalog参考文档</a></p>
+<p><a href="https://jckling.github.io/2021/11/22/Other/Datalog%20%E5%BC%95%E6%93%8E%20Souffl%C3%A9%20%E6%8C%87%E5%8D%97/" target="_blank" rel="noopener">Datalog 引擎 Soufflé 指南</a></p>
+<p><a href="https://souffle-lang.github.io/install" target="_blank" rel="noopener">Souffle</a></p>
+<p><a href="https://bitbucket.org/yanniss/doop/src/master/" target="_blank" rel="noopener">Doop</a></p>
+<p><a href="https://jckling.github.io/2021/12/17/Security/%E6%8C%87%E9%92%88%E5%88%86%E6%9E%90%E5%B7%A5%E5%85%B7%20Doop%20%E4%BD%BF%E7%94%A8%E6%8C%87%E5%8D%97/" target="_blank" rel="noopener">指针分析工具Doop使用指南</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/代码审计/">代码审计</a>
+                    
+                      <a class="hover-with-bg" href="/tags/自动化/">自动化</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2022/08/04/污点分析论文研读-1/">
+                        <span>污点分析论文研读(1)</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js"></script>
+<script src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js"></script>
+<script src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js"></script>
+<script src="/js/main.js"></script>
+
+
+  <script src="/js/lazyload.js"></script>
+
+
+
+  
+  <script src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js"></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "指针分析工具Doop安装与使用&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js"></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script src="/js/local-search.js"></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js"></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

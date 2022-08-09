@@ -334,41 +334,35 @@ v3    h3
 <p>装好了Java 8u342，然后从GitHub上下载仓库：</p>
 <pre><code class="bash">git clone https://bitbucket.org/yanniss/doop.git
 </code></pre>
-<p>运行根目录下的doop程序，它就会开始下载Gradle并编译项目，同样建议挂代理，不然下载依赖的时候可能会有问题。</p>
+<p>运行根目录下的doop程序，它就会开始下载Gradle并编译项目，同样建议挂代理(好像得用proxychains3，很怪)，不然下载依赖的时候可能会有问题。</p>
 <h4 id="简单的例子-1"><a href="#简单的例子-1" class="headerlink" title="简单的例子"></a>简单的例子</h4><p>先写一个简单的Java类：</p>
-<pre><code class="java">package org.example;
-
-import java.util.ArrayList;
+<pre><code class="java">import java.util.ArrayList;
 import java.util.List;
 
 public class Doop {
-    public static String s = &quot;Twings&quot;;
-
-    public static List&lt;String&gt; list;
+    public static List&lt;String&gt; list = new ArrayList&lt;&gt;();
 
     public static void main(String[] args) {
-        list = getList();
+        getList(&quot;Twings&quot;);
         System.out.println(list);
     }
 
-    public static List&lt;String&gt; getList() {
-        List&lt;String&gt; list = new ArrayList&lt;&gt;();
+    public static void getList(String s) {
         list.add(s);
-        return list;
     }
 }
 </code></pre>
 <p>然后编译成class文件并打包jar：</p>
-<pre><code class="bash">jar -cvf doop.jar Doop.class
+<pre><code class="bash">jar -cfe Doop.jar Doop *.class
 </code></pre>
 <p>放到Doop目录下开始分析：</p>
-<pre><code class="bash">./doop -i doop.jar -a context-insensitive --app-only
+<pre><code class="bash">./doop -i Doop.jar -a context-insensitive --app-only
 </code></pre>
-<p>仅分析输入jar文件，完成耗时4m5s，结果存放在out/database目录中：</p>
+<p>仅分析输入jar文件，完成耗时1m20s，结果存放在out/database目录中，也可以在last-analysis目录找到最近一次分析的结果：</p>
 <p><img src="/css/images/doop/2022080502.png" srcset="/img/loading.gif" alt=""></p>
-<p>除了解析出来的facts事实文件，还有推导出来的csv文件，如CallGraphEdge.csv。</p>
-<p>好像得设定main入口函数，输出文件中没有Doop.class的路径，跑着跑着虚拟机还炸了，镜像直接不见了。</p>
-<p>Doop还有其他很多选项，如上下文敏感、分析模式、最大并行任务数量、反射设定和自定义Datalog规则等等，这里就不多看了。</p>
+<p>除了解析出来的facts事实文件，还有推导出来的csv文件，如AnyCallGraphEdge.csv：</p>
+<p><img src="/css/images/doop/2022080503.png" srcset="/img/loading.gif" alt=""></p>
+<p>此外，Doop还有其他很多选项，如上下文敏感、分析模式、最大并行任务数量、反射设定和自定义Datalog规则等等，这里就不多看了。</p>
 <hr>
 <h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://zhuanlan.zhihu.com/p/161700173" target="_blank" rel="noopener">【南大软件分析】lecture14笔记-Datalog-Based Program Analysis</a></p>
 <p><a href="https://zhuanlan.zhihu.com/p/145766313" target="_blank" rel="noopener">南大软件分析课程10——基于Datalog的程序分析</a></p>

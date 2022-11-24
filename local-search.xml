@@ -4,6 +4,27 @@
   
   
   <entry>
+    <title>CVE-2022-32532 Shiro认证绕过</title>
+    <link href="/2022/11/24/CVE-2022-32532-Shiro%E8%AE%A4%E8%AF%81%E7%BB%95%E8%BF%87/"/>
+    <url>/2022/11/24/CVE-2022-32532-Shiro%E8%AE%A4%E8%AF%81%E7%BB%95%E8%BF%87/</url>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>无。</p><a id="more"></a><hr><h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>按照<a href="https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-32532" target="_blank" rel="noopener">漏洞通告</a>，漏洞影响版本1.9.1之前的shiro，于是配置1.9.0版本的shiro依赖：</p><pre><code class="xml">&lt;dependency&gt;    &lt;groupId&gt;org.apache.shiro&lt;/groupId&gt;    &lt;artifactId&gt;shiro-spring&lt;/artifactId&gt;    &lt;version&gt;1.9.0&lt;/version&gt;&lt;/dependency&gt;</code></pre><h3 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h3><p>根据漏洞通告，问题就是RegExPatternMatcher类处理’.’这个正则字符时可能导致认证绕过，根据参考文章所说，也就是常常看到的不加修饰符情况下’.’不会匹配的问题。</p><p>RegExPatternMatcher类是使用Java内部提供的Pattern类完成的正则表达式解析工作：</p><pre><code class="java">public boolean matches(String pattern, String source) {    if (pattern == null) {        throw new IllegalArgumentException(&quot;pattern argument cannot be null.&quot;);    }    Pattern p = Pattern.compile(pattern);    Matcher m = p.matcher(source);    return m.matches();}</code></pre><p>简单测试一下：</p><pre><code class="java">@RequestMapping(&quot;/test&quot;)public String test() {    RegExPatternMatcher regExPatternMatcher = new RegExPatternMatcher();    System.out.println(regExPatternMatcher.matches(&quot;.*&quot;, &quot;Twings\n&quot;));    return &quot;index&quot;;}</code></pre><p>可以看到此时RegExPatternMatcher无法匹配换行符，导致匹配失败，可以通过向URI写入换行符的方式绕过路径匹配。</p><p>然后问题就来了，RegExPatternMatcher并不是默认的路径匹配器，为了使用它我们还需要自定义一个东西将它配置进去。</p><p>搜索一下PatternMatcher.matches()函数会被调用的地方：</p><p><img src="/css/images/CVE-2022-32532/2022112401.png" srcset="/img/loading.gif" alt=""></p><p>PathMatchingFilterChainResolver类的pathMatcher不好改也一般都不会改，可以看到另一个调用点是PathMatchingFilter类的pathsMatch函数会调用该函数：</p><pre><code class="java">protected boolean pathsMatch(String pattern, String path) {    boolean matches = pathMatcher.matches(pattern, path);    log.trace(&quot;Pattern [{}] matches path [{}] =&gt; [{}]&quot;, pattern, path, matches);    return matches;}</code></pre><p>其调用来自用于处理URI中非法字符的子类InvalidRequestFilter：</p><p><img src="/css/images/CVE-2022-32532/2022112402.png" srcset="/img/loading.gif" alt=""></p><p>那么最容易想到的办法就是写一个继承了PathMatchingFilter的Filter，然后设置进shiro里面去。</p><p>先试一试，写一个自定义Filter：</p><pre><code class="java">public class MyFilter extends PathMatchingFilter {    public MyFilter() {        this.pathMatcher = new RegExPatternMatcher();    }}</code></pre><p>然后添加到shiro里面：</p><pre><code class="java">DefaultWebSecurityManager defaultWebSecurityManager = new DefaultWebSecurityManager();defaultWebSecurityManager.setRealm(new MyRealm());ShiroFilterFactoryBean shiroFilterFactoryBean = new ShiroFilterFactoryBean();shiroFilterFactoryBean.setSecurityManager(defaultWebSecurityManager);HashMap&lt;String, Filter&gt; filters = new HashMap();filters.put(&quot;myFilter&quot;, new MyFilter());shiroFilterFactoryBean.setFilters(filters);map.put(&quot;/admin/.*&quot;, &quot;myFilter&quot;);</code></pre><p>没触发，看看是什么原因。</p><p>原因在于Tomcat要通过ApplicationFilterConfig获取要调用的filter，而在一般情况下，shiro配置的是一个DefaultWebSecurityManager的类中类SpringShiroFilter对象，而该类在实例化时会配置一个FilterChain生成器：</p><pre><code class="java">protected SpringShiroFilter(WebSecurityManager webSecurityManager, FilterChainResolver resolver) {    super();    if (webSecurityManager == null) {        throw new IllegalArgumentException(&quot;WebSecurityManager property cannot be null.&quot;);    }    setSecurityManager(webSecurityManager);    if (resolver != null) {        setFilterChainResolver(resolver);    }}</code></pre><p>往上追溯可以看到这是一个PathMatchingFilterChainResolver对象：</p><pre><code class="java">PathMatchingFilterChainResolver chainResolver = new PathMatchingFilterChainResolver();chainResolver.setFilterChainManager(manager);return new SpringShiroFilter((WebSecurityManager) securityManager, chainResolver);</code></pre><p>这个FilterChain生成器在进行路径匹配时使用的是AntPathMatcher这个路径匹配器：</p><pre><code class="java">public PathMatchingFilterChainResolver() {    this.pathMatcher = new AntPathMatcher();    this.filterChainManager = new DefaultFilterChainManager();}</code></pre><p>看起来这个漏洞不是这么玩的。</p><p>换句话说就是要触发这个漏洞，我们要做的不是自定义一个使用RegExPatternMatcher这个路径匹配器的Filter然后配置到shiro里面，而是将SpringShiroFilter-filterChainResolver-pathMatcher重新配置为RegExPatternMatcher，也就是通过上文中PatternMatcher.matches()的另一个触发点。</p><p>为了实现这个目标，按照正常项目需求应该就是自定义一个ShiroFilterFactoryBean，直接把ShiroFilterFactoryBean的大部分代码复制过去就行：</p><pre><code class="java">public class MyShiroFilterFactoryBean extends ShiroFilterFactoryBean {    @Override    protected AbstractShiroFilter createInstance() {        SecurityManager securityManager = getSecurityManager();        if (securityManager == null) {            String msg = &quot;SecurityManager property must be set.&quot;;            throw new BeanInitializationException(msg);        }        if (!(securityManager instanceof WebSecurityManager)) {            String msg = &quot;The security manager does not implement the WebSecurityManager interface.&quot;;            throw new BeanInitializationException(msg);        }        FilterChainManager manager = createFilterChainManager();        PathMatchingFilterChainResolver chainResolver = new PathMatchingFilterChainResolver();        chainResolver.setPathMatcher(new RegExPatternMatcher());        chainResolver.setFilterChainManager(manager);        return new SpringShiroFilter((WebSecurityManager) securityManager, chainResolver);    }    private static final class SpringShiroFilter extends AbstractShiroFilter {        protected SpringShiroFilter(WebSecurityManager webSecurityManager, FilterChainResolver resolver) {            super();            if (webSecurityManager == null) {                throw new IllegalArgumentException(&quot;WebSecurityManager property cannot be null.&quot;);            }            setSecurityManager(webSecurityManager);            if (resolver != null) {                setFilterChainResolver(resolver);            }        }    }}</code></pre><p>再把shiro config还原一下。</p><p>然而问题又来了，此时应用环境还是没有配置完全，尽管给需要认证的路由配置了authc的权限要求，但是由于shiro内部的认证用的是filter对象FormAuthenticationFilter，它父类PathMatchingFilter的preHandle函数还要进行一次pathsMatch，里面使用的仍然是AntPathMatcher。</p><p>所以还得写一个自定义filter用于鉴权：</p><pre><code class="java">public class MyFilter extends AccessControlFilter {    public MyFilter() {        this.pathMatcher = new RegExPatternMatcher();    }    @Override    protected boolean isAccessAllowed(ServletRequest request, ServletResponse response, Object mappedValue) throws Exception {        return false;    }    @Override    protected boolean onAccessDenied(ServletRequest request, ServletResponse response) throws Exception {        saveRequestAndRedirectToLogin(request, response);        return false;    }}</code></pre><p>再修改一下Config：</p><pre><code class="java">@Configurationpublic class MyShiroConfig {    @Bean    public ShiroFilterFactoryBean myShiroFilterFactoryBean() {        DefaultWebSecurityManager defaultWebSecurityManager = new DefaultWebSecurityManager();        defaultWebSecurityManager.setRealm(new MyRealm());        MyShiroFilterFactoryBean myShiroFilterFactoryBean = new MyShiroFilterFactoryBean();        myShiroFilterFactoryBean.setSecurityManager(defaultWebSecurityManager);        HashMap&lt;String, Filter&gt; filters = new HashMap&lt;&gt;();        filters.put(&quot;myFilter&quot;, new MyFilter());        myShiroFilterFactoryBean.setFilters(filters);        Map&lt;String, String&gt; map = new HashMap&lt;&gt;();        map.put(&quot;/shiro&quot;, &quot;authc&quot;);        map.put(&quot;/logout&quot;, &quot;user&quot;);        map.put(&quot;/user&quot;, &quot;user&quot;);        map.put(&quot;/admin/.*&quot;, &quot;myFilter&quot;);        myShiroFilterFactoryBean.setLoginUrl(&quot;/index&quot;);        myShiroFilterFactoryBean.setFilterChainDefinitionMap(map);        return myShiroFilterFactoryBean;    }}</code></pre><p>此时能正确拦截对/admin路由的访问：</p><p><img src="/css/images/CVE-2022-32532/2022112403.png" srcset="/img/loading.gif" alt=""></p><p>加入换行符，发现出现了路由匹配问题：</p><pre><code>java.util.regex.PatternSyntaxException: Dangling meta character &#39;*&#39; near index 2/**  ^</code></pre><p>追溯一下，可以看到ShiroFilterFactoryBean在调用createFilterChainManager函数创建FilterChainManager时会同时创建一个默认路由：</p><pre><code class="java">// create the default chain, to match anything the path matching would have missedmanager.createDefaultChain(&quot;/**&quot;); // TODO this assumes ANT path matching, which might be OK here</code></pre><p>然而这个写法是给AntPathMatcher用的，在RegExPatternMatcher里会发生错误，改一下自定义ShiroFilterFactoryBean的createInstance函数：</p><pre><code class="java">FilterChainManager manager = new DefaultFilterChainManager();manager.addFilter(&quot;myFilter&quot;, new MyFilter());manager.addToChain(&quot;/admin/.*&quot;, &quot;myFilter&quot;);</code></pre><p>再删掉Config中的路由配置，可以看到换行符可以成功绕过认证：</p><p><img src="/css/images/CVE-2022-32532/2022112404.png" srcset="/img/loading.gif" alt=""></p><h3 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h3><p>如上。</p><h3 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h3><p>利用范围好像有点小。</p><hr><h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://mp.weixin.qq.com/s?__biz=Mzg3NDcwMDk3OA==&amp;mid=2247483864&amp;idx=1&amp;sn=6c02552494d488652ed20f20425854f1&amp;chksm=cecd8805f9ba01130cbf0f11d0277eac9aee8a448132587f75041727915160ea27410a104fc8&amp;scene=21#wechat_redirect" target="_blank" rel="noopener">【技术干货】 CVE-2022-32532 Apache Shiro RegExPatternMatcher 认证绕过漏洞</a></p>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>Web</tag>
+      
+      <tag>Shiro</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>CVE-2022-42889 Apache Commons Text RCE 漏洞学习</title>
     <link href="/2022/11/23/CVE-2022-42889-Apache-Commons-Text-RCE-%E6%BC%8F%E6%B4%9E%E5%AD%A6%E4%B9%A0/"/>
     <url>/2022/11/23/CVE-2022-42889-Apache-Commons-Text-RCE-%E6%BC%8F%E6%B4%9E%E5%AD%A6%E4%B9%A0/</url>
@@ -366,9 +387,9 @@
       
       <tag>反序列化</tag>
       
-      <tag>JRMP</tag>
-      
       <tag>JNDI</tag>
+      
+      <tag>JRMP</tag>
       
     </tags>
     
@@ -1973,9 +1994,9 @@
       
       <tag>反序列化</tag>
       
-      <tag>JRMP</tag>
-      
       <tag>JNDI</tag>
+      
+      <tag>JRMP</tag>
       
     </tags>
     
@@ -2044,9 +2065,9 @@
       
       <tag>Web</tag>
       
-      <tag>二进制</tag>
-      
       <tag>复现</tag>
+      
+      <tag>二进制</tag>
       
       <tag>PHPFPM</tag>
       
@@ -2670,9 +2691,9 @@
       
       <tag>Web</tag>
       
-      <tag>复现</tag>
-      
       <tag>NodeJS</tag>
+      
+      <tag>复现</tag>
       
       <tag>前端</tag>
       
@@ -3011,9 +3032,9 @@
     
     <tags>
       
-      <tag>二进制</tag>
-      
       <tag>复现</tag>
+      
+      <tag>二进制</tag>
       
       <tag>docker</tag>
       
@@ -3059,9 +3080,9 @@
     
     <tags>
       
-      <tag>二进制</tag>
-      
       <tag>复现</tag>
+      
+      <tag>二进制</tag>
       
       <tag>Winrar</tag>
       

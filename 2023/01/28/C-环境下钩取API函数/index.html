@@ -16,7 +16,7 @@
   <meta name="description" content="摸鱼">
   <meta name="author" content="Aluvion">
   <meta name="keywords" content="">
-  <title>Go-gin/C++-cinatra Web开发 - Twings</title>
+  <title>C++环境下钩取API函数 - Twings</title>
 
   <link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css">
 <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
@@ -117,7 +117,7 @@
               
                 <p class="mt-3 post-meta">
                   <i class="fas fa-calendar-alt" aria-hidden="true"></i>
-                  星期一, 三月 16日 2020, 10:46 上午
+                  星期六, 一月 28日 2023, 10:28 晚上
                 </p>
               
 
@@ -126,7 +126,7 @@
                   
                   <span class="post-meta">
                     <i class="far fa-chart-bar"></i>
-                    1.1k 字
+                    959 字
                   </span>
                 
 
@@ -134,7 +134,7 @@
                   
                   <span class="post-meta">
                       <i class="far fa-clock"></i>
-                      5 分钟
+                      4 分钟
                   </span>
                 
 
@@ -169,136 +169,181 @@
           <div class="post-content mx-auto" id="post">
             
             <div class="markdown-body">
-              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>做毕设的时候用到了 Go 和 C++ 开发了两个 Web 后端，顺便简单记录一下。</p>
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>有意思的。</p>
 <a id="more"></a>
 <hr>
-<h3 id="Go-gin"><a href="#Go-gin" class="headerlink" title="Go - gin"></a>Go - gin</h3><p>Go 的函数返回中数据和错误一般是分开的，方便错误处理。Web 开发选用的是比较轻量级的 gin 框架，这个框架的中文文档好像有点时日没有更新了，建议去看 GitHub 上的官方文档，在开发过程中用到了这些库：</p>
-<pre><code>&quot;net/http&quot;
-&quot;encoding/json&quot;
-&quot;github.com/gin-gonic/gin&quot;
-&quot;github.com/gomodule/redigo/redis&quot;
-_ &quot;github.com/go-sql-driver/mysql&quot;
-&quot;github.com/jmoiron/sqlx&quot;
-&quot;sort&quot;
-</code></pre><p>Go 的库安装也很简单，go get 就可以了，也可以自己去 GitHub 上下载。</p>
-<p>第一个 http 库是为了 set cookie 使用的，用来表示 cookie 的安全策略：</p>
-<pre><code class="go">c.SetCookie(&quot;SESSID&quot;, string(data)[:36], 3600 * 24 * 30, &quot;/api/&quot;, &quot;xxx.monster&quot;, http.SameSiteLaxMode, false, true)
-</code></pre>
-<p>第二个是 json 库，大概是这样用法：</p>
-<pre><code class="go">var session map[string]interface{}
-json.Unmarshal([]byte(data), &amp;session)
+<h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>首先需要C++的开发环境，下载<a href="https://sourceforge.net/projects/mingw-w64/files/mingw-w64/mingw-w64-release/" target="_blank" rel="noopener">MinGW安装程序</a>，得到一个mingw-w64-install.exe。</p>
+<p>运行之后发现网络问题导致在线安装失败，选择需要的版本，比如我就是Windowsx64，<a href="https://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win64/Personal%20Builds/mingw-builds/8.1.0/threads-win32/seh/x86_64-8.1.0-release-win32-seh-rt_v6-rev0.7z" target="_blank" rel="noopener">离线下载安装</a>，网络问题好像还是很大，总归是能下载了。</p>
+<p>下载完成后解压，并配置好环境变量，将bin下面的可执行文件加入path中。</p>
+<p>执行gcc -v命令，可以看到安装成功了：</p>
+<pre><code>Using built-in specs.
 ...
-team = session[&quot;team&quot;].(string)
-</code></pre>
-<p>data 是 json 字符串，值得一提的是从这个 session 里面取值的时候，需要加上数据类型，还有则是在我的 docker 环境(也就是 go 官方镜像)下，反序列化之后，数字类型会默认用 float64 存放，所以取值也需要用 float64 来取值。</p>
-<p>第三个是 gin，不提。第四个是 redis 库，具体做法是初始化一个连接池，需要用的时候再取出使用：</p>
-<pre><code class="go">func newPool(addr string) *redis.Pool {
-    return &amp;redis.Pool{
-        MaxIdle: 3,
-        IdleTimeout: 240 * time.Second,
-        Dial: func () (redis.Conn, error) { return redis.Dial(&quot;tcp&quot;, addr) },
-    }
+Thread model: win32
+gcc version 8.1.0 (x86_64-win32-seh-rev0, Built by MinGW-W64 project)
+</code></pre><h3 id="测试编译C-程序"><a href="#测试编译C-程序" class="headerlink" title="测试编译C++程序"></a>测试编译C++程序</h3><p>新建一个hello.cpp文件，写一个hello world：</p>
+<pre><code class="cpp">#include &lt;iostream&gt;
+using namespace std;
+
+int main() {
+    cout&lt;&lt;&quot;hello world&quot;&lt;&lt;endl;
+    return 0;
 }
-...
-conn := pool.Get()
-defer conn.Close()
-encodedSession, err := redis.String(conn.Do(&quot;get&quot;, cookie))
 </code></pre>
-<p>五、六都是 MySQL 库，前面加个 _ 的意思是我们不使用包里面的成员函数，只使用构造函数，同样也是连接池的做法：</p>
-<pre><code class="go">func newDb() *sqlx.DB {
-    Db, _ := sqlx.Open(&quot;mysql&quot;, &quot;root:root@tcp(172.17.0.4:3306)/ctf?charset=utf8&quot;)
-    return Db
+<p>配置好g++编译器后编译运行，不过我的环境下似乎自动配置好了，新建终端并输入：</p>
+<pre><code>g++ .\hello.cpp
+</code></pre><p>生成a.exe程序并运行，可以看到输出：</p>
+<pre><code>PS D:\Cpp&gt; .\a.exe
+hello world
+</code></pre><h3 id="关于函数调用栈"><a href="#关于函数调用栈" class="headerlink" title="关于函数调用栈"></a>关于函数调用栈</h3><p>观摩一下一个函数最开始会干什么，将程序放到IDA中打开，看到main函数的前几个汇编代码：</p>
+<pre><code>.text:0000000000401550                 push    rbp
+.text:0000000000401551                 mov     rbp, rsp
+.text:0000000000401554                 sub     rsp, 20h
+</code></pre><p>保存rbp寄存器，更新rbp寄存器并开拓栈空间用于保存局部变量。</p>
+<p>也就是说，如果是x86环境，此时的栈中只有函数返回地址和函数参数，还没有rbp。</p>
+<h3 id="API钩取"><a href="#API钩取" class="headerlink" title="API钩取"></a>API钩取</h3><p>然而我是x64环境，此时前四个参数被放在了寄存器中。</p>
+<p>根据参考文章稍作修改，要注意的点比如寄存器名字、一些变量的类型要放大到适合64位系统以及ContextFlags要设置为CONTEXT_FULL来获取所有寄存器：</p>
+<pre><code class="cpp">#include &lt;iostream&gt;
+#include &lt;windows.h&gt;
+#include &lt;tchar.h&gt;
+#include &lt;tlhelp32.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;shlobj.h&gt;
+
+LPVOID g_pWriteFile = NULL;
+CREATE_PROCESS_DEBUG_INFO g_cpdi;
+BYTE g_chINT3 = 0xCC;
+BYTE g_orgByte = 0;
+
+BOOL CreateProcessDebugEvent(LPDEBUG_EVENT pde)
+{
+    g_pWriteFile = (void*)GetProcAddress(GetModuleHandleA(&quot;kernel32.dll&quot;), &quot;WriteFile&quot;);
+
+    memcpy(&amp;g_cpdi, &amp;pde-&gt;u.CreateProcessInfo, sizeof(CREATE_PROCESS_DEBUG_INFO)); 
+
+    ReadProcessMemory(g_cpdi.hProcess, g_pWriteFile, &amp;g_orgByte, sizeof(BYTE), NULL);
+
+    WriteProcessMemory(g_cpdi.hProcess, g_pWriteFile, &amp;g_chINT3, sizeof(BYTE), NULL); 
+
+    return TRUE;
 }
-...
-rows, _ := db.Query(&quot;select cid from challenge where challenge.mode=?;&quot;, mode)
-data := []map[string]interface{}{}
-for rows.Next() {
-    var cidstring
-    rows.Scan(&amp;cid)
-    data = append(data, row)
+
+BOOL ExceprtionDebugEvent(LPDEBUG_EVENT pde) 
+{
+    CONTEXT ctx;
+    PBYTE lpBuffer = NULL; 
+    ULONG_PTR dwNumOfBytesToWrite, dwAddrOfBuffer;
+    DWORD i = 0;
+    PEXCEPTION_RECORD per = &amp;pde-&gt;u.Exception.ExceptionRecord;
+
+    if (per-&gt;ExceptionCode == EXCEPTION_BREAKPOINT)
+    {
+        if (g_pWriteFile == per-&gt;ExceptionAddress) 
+        {
+
+            WriteProcessMemory(g_cpdi.hProcess, g_pWriteFile, &amp;g_orgByte, sizeof(BYTE), NULL); 
+
+            ctx.ContextFlags = CONTEXT_FULL;
+            GetThreadContext(g_cpdi.hThread, &amp;ctx); 
+
+            // ReadProcessMemory(g_cpdi.hProcess, (LPVOID)(ctx.Rsp + 0x10), &amp;dwAddrOfBuffer, sizeof(DWORD), NULL); 
+            // ReadProcessMemory(g_cpdi.hProcess, (LPVOID)(ctx.Rsp + 0x18), &amp;dwNumofBytestTowrite, sizeof(DWORD), NULL);
+
+            dwAddrOfBuffer = ctx.Rdx;
+            dwNumOfBytesToWrite = ctx.R8;
+
+            lpBuffer = (PBYTE)malloc(dwNumOfBytesToWrite + 1);
+            memset(lpBuffer, 0, dwNumOfBytesToWrite + 1); 
+
+            ReadProcessMemory(g_cpdi.hProcess, (LPVOID)dwAddrOfBuffer, lpBuffer, dwNumOfBytesToWrite, NULL);
+            printf(&quot;orignal string: %s\n&quot;, lpBuffer);
+
+            for (i = 0; i &lt; dwNumOfBytesToWrite; i++)
+            {
+                if (lpBuffer[i] &gt;= 0x61 &amp;&amp; lpBuffer[i] &lt;= 0x7A)
+                {
+                    lpBuffer[i] -= 0x20; 
+                }
+            }
+            printf(&quot;string after changing:%s\n&quot;, lpBuffer);
+
+            WriteProcessMemory(g_cpdi.hProcess, (LPVOID)dwAddrOfBuffer, lpBuffer, dwNumOfBytesToWrite, NULL);
+
+            free(lpBuffer);
+
+            ctx.Rip = (DWORD64)g_pWriteFile;
+            SetThreadContext(g_cpdi.hThread, &amp;ctx);
+
+            ContinueDebugEvent(pde-&gt;dwProcessId, pde-&gt;dwThreadId, DBG_CONTINUE);
+            Sleep(0); 
+
+            WriteProcessMemory(g_cpdi.hProcess, g_pWriteFile, &amp;g_chINT3, sizeof(BYTE), NULL);
+
+            return TRUE;
+        }
+    }
+    return FALSE;
 }
-rows.Close()
-</code></pre>
-<p>最后 sort 可以实现二维数组的排序：</p>
-<pre><code class="go">sort.Slice(rank, func(i, j int) bool {
-    if rank[i][&quot;score&quot;].(float64) &gt; rank[j][&quot;score&quot;].(float64) {
-        return true
+
+void DebugLoop()
+{
+    DEBUG_EVENT de;
+    DWORD dwContinueStatus;
+
+    while (WaitForDebugEvent(&amp;de, INFINITE))
+    {
+        dwContinueStatus = DBG_CONTINUE;
+        if (de.dwDebugEventCode == CREATE_PROCESS_DEBUG_EVENT)
+        {
+            CreateProcessDebugEvent(&amp;de);
+        }
+        else if (de.dwDebugEventCode == EXCEPTION_DEBUG_EVENT)
+        {
+            if (ExceprtionDebugEvent(&amp;de))
+                continue;
+        }
+        else if (de.dwDebugEventCode == EXIT_PROCESS_DEBUG_EVENT)
+        {
+            break;
+        }
+
+        ContinueDebugEvent(de.dwProcessId, de.dwThreadId, dwContinueStatus);
     }
-    if rank[i][&quot;score&quot;].(float64) == rank[j][&quot;score&quot;].(float64) &amp;&amp; rank[i][&quot;time&quot;].(int64) &lt; rank[j][&quot;time&quot;].(int64) {
-        return true
-    }
-    return false
-})
-</code></pre>
-<hr>
-<h3 id="C-cinatra"><a href="#C-cinatra" class="headerlink" title="C++ - cinatra"></a>C++ - cinatra</h3><p>C++ 找不到什么合适的框架，最后选用了 Cinatra，但是这个框架还不成熟，文档也缺失得不行。没事还是不要用 C++ 写 Web 后端了。</p>
-<p>Redis 使用 hiredis：</p>
-<pre><code class="c++">struct timeval timeout = {1, 500000};
-redis = redisConnectWithTimeout(&quot;172.17.0.2&quot;, 6379, timeout);
-if (redis -&gt; err) {
 
 }
-...
-redisReply *reply;
-reply = (redisReply *)redisCommand(redis, &quot;GET %s&quot;, key.c_str());
-if (reply == NULL) {
-    redisFree(redis);
-    redis = NULL;
-    ...
-}else if (reply -&gt; len &lt;= 0) {
-    freeReplyObject(reply);
-    ...
-}
-.......
-    else if (strcmp(reply -&gt; str, &quot;OK&quot;) == 0) {
-    freeReplyObject(reply);
-    return &quot;OK&quot;;
-}
-std::string result = reply -&gt; str;
-freeReplyObject(reply);
-</code></pre>
-<p>MySQL 的写法跟 PHP 很类似，自行过滤要这么做：</p>
-<pre><code class="c++">char *escape_team = new char[team.length()];
-char *escape_password = new char[password.length()];
-mysql_real_escape_string(&amp;mysql, escape_team, team.data(), team.length());
-mysql_real_escape_string(&amp;mysql, escape_password, password.data(), password.length());
-std::string str_sql = &quot;&quot;;
-str_sql += &quot;select uid, mail from user where team=&#39;&quot;;
-str_sql += escape_team;
-str_sql += &quot;&#39; and password=&#39;&quot;;
-str_sql += escape_password;
-str_sql += &quot;&#39;;&quot;;
-</code></pre>
-<p>C++ 里面还有一种类型叫做 string_view，是 string 的一个只读视图，可以提高字符串处理性能，Cinatra 这个框架在解析 HTTP 的时候就大量用到了这个类型，从 string_view 变成 string 可以这么做：</p>
-<pre><code class="c++">std::string(cookies[&quot;SESSID&quot;].data(), cookies[&quot;SESSID&quot;].length())
-</code></pre>
-<p>C++ 里面的变长数组可以使用 vector：</p>
-<pre><code class="c++">std::vector&lt;Rank::Rank&gt; ranks;
-</code></pre>
-<p>C++ 里面没有 Go 那种可以用来表示任何数据类型的 interface，所以无法制作多种成员类型的 map。使用自定义 struct 可以解决，不过这样一来，json 就无法识别我们自己设定的结构体，所以需要给它加上序列化函数：</p>
-<pre><code class="C++">namespace Rank {
-    struct Rank {
-        int uid;
-        std::string team;
-        long long time;
-        double score;
-    };
-    void to_json(nlohmann::json&amp; j, const Rank&amp; p) {
-        j = nlohmann::json {
-            {&quot;uid&quot;, p.uid},
-            {&quot;time&quot;, p.time},
-            {&quot;team&quot;, p.team},
-            {&quot;score&quot;, p.score},
-        };
+
+int main(int argc, char* argv[])
+{
+    DWORD dwPID = 0;
+
+    dwPID = atoi(argv[1]);
+
+    if (!DebugActiveProcess(dwPID))
+    {
+        printf(&quot;DebugActiveProcess(%d) failed!!!\n&quot;&quot;Error Code = %d\n&quot;, dwPID, GetLastError());
+        return -1;
     }
+
+    printf(&quot;DebugActiveProcess(%d) successfully!!!\n&quot;, dwPID);
+
+    DebugLoop();
+
+    return 0;
 }
 </code></pre>
-<p>自定义结构体数组的排序跟 Go 差不多，sort 调用自定义函数。</p>
-<p>编译：</p>
-<pre><code class="shell">g++ main.cpp -std=c++17 -lboost_system -lpthread -lstdc++fs -luuid -lhiredis -I/usr/include/mariadb -lmysqlclient -o web
-</code></pre>
+<p>打开一个记事本，并使用PowerShell运行该程序调试记事本进程：</p>
+<pre><code>.\a.exe 27276
+</code></pre><p>开始调试后，往记事本中写入一些字符串并保存，可以看到调试程序捕获了这些字符串：</p>
+<pre><code>orignal string: twings
+twings hello world
+string after changing:TWINGS
+TWINGS HELLO WORLD
+</code></pre><p>关闭记事本后再打开，可以发现写入的字符串已经被改为了大写字母。</p>
 <hr>
-<p>Orz</p>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://blog.csdn.net/kramer_1711/article/details/119416512" target="_blank" rel="noopener">wingw-w64安装时 the file has been downloaded incorrectly!</a></p>
+<p><a href="https://zhuanlan.zhihu.com/p/76613134" target="_blank" rel="noopener">MinGW-w64安装教程——著名C/C++编译器GCC的Windows版本</a></p>
+<p><a href="https://zhuanlan.zhihu.com/p/87864677/" target="_blank" rel="noopener">VSCode配置C/C++环境</a></p>
+<p><a href="https://xz.aliyun.com/t/11963" target="_blank" rel="noopener">API钩取：通过调试手段钩取API函数</a></p>
+<p><a href="https://www.bbsmax.com/A/gAJGq77ZdZ/" target="_blank" rel="noopener">x64 下记事本WriteFile() API钩取</a></p>
 
             </div>
             <hr>
@@ -309,11 +354,9 @@ str_sql += &quot;&#39;;&quot;;
                   <span>
                 <i class="iconfont icon-tag"></i>
                     
+                      <a class="hover-with-bg" href="/tags/二进制/">二进制</a>
+                    
                       <a class="hover-with-bg" href="/tags/C/">C++</a>
-                    
-                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
-                    
-                      <a class="hover-with-bg" href="/tags/Go/">Go</a>
                     
                   </span>
                 
@@ -325,16 +368,11 @@ str_sql += &quot;&#39;;&quot;;
                 <div class="post-prevnext row">
                   <div class="post-prev col-12 col-md-6">
                     
-                      <a href="/2020/03/22/CVE-2019-11043-Nginx-php-fpm-RCE漏洞复现/">
-                        <i class="fa fa-chevron-left"></i>
-                        <span>CVE-2019-11043 Nginx+php-fpm RCE漏洞复现</span>
-                      </a>
-                    
                   </div>
                   <div class="post-next col-12 col-md-6">
                     
-                      <a href="/2020/03/12/VueElectronElementUI开发自己的B站弹幕姬/">
-                        <span>VueElectronElementUI开发自己的B站弹幕姬</span>
+                      <a href="/2023/01/26/ThinkPHP多语言模块文件包含漏洞/">
+                        <span>ThinkPHP多语言模块文件包含漏洞</span>
                         <i class="fa fa-chevron-right"></i>
                       </a>
                     
@@ -507,7 +545,7 @@ str_sql += &quot;&#39;;&quot;;
     var typed = new Typed('#subtitle', {
       strings: [
         '  ',
-        "Go-gin/C++-cinatra Web开发&nbsp;",
+        "C++环境下钩取API函数&nbsp;",
       ],
       cursorChar: "_",
       typeSpeed: 70,

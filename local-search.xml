@@ -4,6 +4,27 @@
   
   
   <entry>
+    <title>CVE-2022-42920 BCEL 越界写漏洞</title>
+    <link href="/2023/01/31/CVE-2022-42920-BCEL-%E8%B6%8A%E7%95%8C%E5%86%99%E6%BC%8F%E6%B4%9E/"/>
+    <url>/2023/01/31/CVE-2022-42920-BCEL-%E8%B6%8A%E7%95%8C%E5%86%99%E6%BC%8F%E6%B4%9E/</url>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>无。</p><a id="more"></a><hr><h3 id="影响版本"><a href="#影响版本" class="headerlink" title="影响版本"></a>影响版本</h3><p>Apache Commons Bcel version &lt; 6.6.0</p><h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>IDEA新建一个Java项目并添加BCEL的maven依赖：</p><pre><code class="xml">&lt;!-- https://mvnrepository.com/artifact/org.apache.bcel/bcel --&gt;&lt;dependency&gt;  &lt;groupId&gt;org.apache.bcel&lt;/groupId&gt;  &lt;artifactId&gt;bcel&lt;/artifactId&gt;  &lt;version&gt;6.5.0&lt;/version&gt;&lt;/dependency&gt;</code></pre><h3 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h3><h4 id="Java-Class文件构造"><a href="#Java-Class文件构造" class="headerlink" title="Java Class文件构造"></a>Java Class文件构造</h4><p>先弄个看Java字节码的工具，在GitHub上下载<a href="https://github.com/ingokegel/jclasslib/releases" target="_blank" rel="noopener">jclasslib安装程序</a>，或者也可以直接在IDEA里面下载安装扩展。</p><p>安装完成后，写一个简单的Java程序并编译成class文件：</p><pre><code class="java">package org.example;public class App {    public static void main( String[] args ) throws Exception{        String[] s = new String[]{&quot;cmd.exe&quot;, &quot;/c&quot;, &quot;calc.exe&quot;};        Runtime.getRuntime().exec(s);    }}</code></pre><p>然后使用jclasslib打开文件查看字节码，再用WinHex打开class文件查看原始数据，同时借助bcel的字节码写入函数们进行理解，找到JavaClass类的dump函数，首先是魔数、次版本和主版本信息：</p><pre><code class="java">file.writeInt(Const.JVM_CLASSFILE_MAGIC);file.writeShort(minor);file.writeShort(major);</code></pre><p>一共占8个字节，在WinHex中可以看到原始数据：</p><pre><code>CA FE BA BE 00 00 00 33</code></pre><p>在jclasslib中可以看到具体的意思：</p><p><img src="/css/images/CVE-2022-42920/2023020101.png" srcset="/img/loading.gif" alt=""></p><p>魔数意味不明，可以看到，次版本为0，而且应该是由于pom.xml中的编译配置为1.7，所以这里的主版本为1.7。</p><p>然后bcel开始写入常量池：</p><pre><code class="java">// JavaClass.dumpconstantPool.dump(file);// ConstantPool.dumpfile.writeShort(constantPool.length);for (int i = 1; i &lt; constantPool.length; i++) {    if (constantPool[i] != null) {        constantPool[i].dump(file);    }}</code></pre><p>可以看到首先写入了常量的个数，再按顺序调用常量类型相应的写入函数写入常量，值得注意的是实际写入的常量是从下标1开始的，即写入的常量数量比最先写入的常量数量少1。</p><p>在jclasslib可以看到实际上一共41个常量，而写入的常量数量为42。</p><p><img src="/css/images/CVE-2022-42920/2023020102.png" srcset="/img/loading.gif" alt=""></p><p>而在WinHex中，代表常量数量的short信息占2个字节：</p><pre><code>00 2A</code></pre><p>即42，接下来就是第一个常量，常量一般由常量类型 + 数据索引构成。在jclasslib中可以看到其类型为Methodref，在bcel中找到相应的处理类ConstantMethodref类，其类型字节为10：</p><pre><code class="java">// Constpublic static final byte CONSTANT_Methodref = 10;// ConstantMethodrefsuper(Const.CONSTANT_Methodref, input);</code></pre><p>写入函数在父类ConstantCP中：</p><pre><code class="java">public final void dump( final DataOutputStream file ) throws IOException {    file.writeByte(super.getTag());    file.writeShort(class_index);    file.writeShort(name_and_type_index);}</code></pre><p>除了代表类型的0xa字节外还有两个short类型的数据索引，一共占用5个字节，在jclasslib中可以看到具体代表和指向的数据：</p><p><img src="/css/images/CVE-2022-42920/2023020103.png" srcset="/img/loading.gif" alt=""></p><p>在WinHex中的原始数据则为：</p><pre><code>0A 00 09 00 1A</code></pre><p>即类型为10，类索引为9，函数名和描述符索引为26。</p><p>然后是第二个常量，其类型为Class，写入类为ConstantClass，类型字节为7，写入函数如下：</p><pre><code class="java">public void dump( final DataOutputStream file ) throws IOException {    file.writeByte(super.getTag());    file.writeShort(nameIndex);}</code></pre><p>一共占用3字节，包括类型和类名索引，在jclasslib中则是：</p><p><img src="/css/images/CVE-2022-42920/2023020104.png" srcset="/img/loading.gif" alt=""></p><p>WinHex中的原始数据：</p><pre><code>07 00 1B</code></pre><p>然后就是把剩下的常量们一个接一个地写下去了。</p><p>找到jclasslib显示的最后一个常量：</p><pre><code>01 00 28 28 5B 4C 6A 61 76 61 2F 6C 61 6E 67 2F 53 74 72 69 6E 67 3B 29 4C 6A 61 76 61 2F 6C 61 6E 67 2F 50 72 6F 63 65 73 73 3B</code></pre><p>即长度为40代表exec函数调用名和描述符的字符串。回到JavaClass类，看看写完常量之后写什么：</p><pre><code class="java">file.writeShort(super.getAccessFlags());file.writeShort(classNameIndex);file.writeShort(superclassNameIndex);file.writeShort(interfaces.length);for (final int interface1 : interfaces) {    file.writeShort(interface1);}file.writeShort(fields.length);for (final Field field : fields) {    field.dump(file);}file.writeShort(methods.length);for (final Method method : methods) {    method.dump(file);}</code></pre><p>可以跟WinHex中的原始数据对上，就是类描述符、本类索引、父类索引、接口、成员和成员函数等数据。</p><p>总结一下，class文件中的常量、接口、成员和成员函数等数据由于数量不定，所以都会在开头写入一个代表数量的字节。也就是说如果我们能让这个代表数量的字节小于它的实际写入数量，就会导致数据越界，比如常量数据越界到后面取代了类修饰符等数据。</p><h4 id="BCEL"><a href="#BCEL" class="headerlink" title="BCEL"></a>BCEL</h4><p>参考参考文章的BCEL构造类的写法，写一个测试用程序：</p><pre><code class="java">ClassGen cg = new ClassGen(&quot;HelloWorld&quot;, &quot;java.lang.Object&quot;,        &quot;&lt;generated&gt;&quot;, ACC_PUBLIC | ACC_SUPER, null);ConstantPoolGen cp = cg.getConstantPool();InstructionList il = new InstructionList();MethodGen mg = new MethodGen(ACC_STATIC | ACC_PUBLIC, Type.VOID,        new Type[] { new ArrayType(Type.STRING, 1) },        new String[] { &quot;argv&quot; }, &quot;main&quot;, &quot;HelloWorld&quot;, il, cp);LocalVariableGen lg;for (int j = 0; j &lt; 65500; j++) {    lg = mg.addLocalVariable(&quot;name&quot; + j, Type.STRING, null, null);    int name = lg.getIndex();    il.append(InstructionConst.ACONST_NULL); // add &quot;null&quot; to the stack top    lg.setStart(il.append(new ASTORE(name))); // &quot;store&quot; the value of &quot;null&quot; into &quot;name&quot; var}cg.addMethod(mg.getMethod());cg.addEmptyConstructor(ACC_PUBLIC);cg.getJavaClass().dump(&quot;HelloWorld.class&quot;);</code></pre><p>一个忠告，不要写在IDEA打开的目录里，不然它反编译的时候直接把电脑弄没了。</p><p>用jclasslib打开这个class，可以看到里面写入了65520个常量：</p><p><img src="/css/images/CVE-2022-42920/2023020104.png" srcset="/img/loading.gif" alt=""></p><p>然后看一下class的生成流程，这段代码首先调用ClassGen的构造函数新建一个类：</p><pre><code class="java">public ClassGen(final String className, final String superClassName, final String fileName, final int accessFlags,        final String[] interfaces) {    this(className, superClassName, fileName, accessFlags, interfaces,            new ConstantPoolGen());}</code></pre><p>这里会调用ConstantPoolGen类的构造函数新建一个常量池：</p><pre><code class="java">public ConstantPoolGen() {    size = DEFAULT_BUFFER_SIZE;    constants = new Constant[size];}</code></pre><p>常量池被实例化为一个256大小的Constant数组。</p><p>然后就是新建函数和65500个变量，调用getMethod整合函数，getMethod函数会调用getLocalVariableTable处理变量表：</p><pre><code class="java">public LocalVariableTable getLocalVariableTable( final ConstantPoolGen cp ) {    final LocalVariableGen[] lg = getLocalVariables();    final int size = lg.length;    final LocalVariable[] lv = new LocalVariable[size];    for (int i = 0; i &lt; size; i++) {        lv[i] = lg[i].getLocalVariable(cp);    }    return new LocalVariableTable(cp.addUtf8(&quot;LocalVariableTable&quot;), 2 + lv.length * 10, lv, cp            .getConstantPool());}</code></pre><p>对于写入的65500个变量调用getLocalVariable函数，其关键代码如下：</p><pre><code class="java">public LocalVariable getLocalVariable( final ConstantPoolGen cp ) {    ...    final int name_index = cp.addUtf8(name);    final int signature_index = cp.addUtf8(type.getSignature());    return new LocalVariable(start_pc, length, name_index, signature_index, index, cp            .getConstantPool(), origIndex);}</code></pre><p>可以看到，这里将所有变量的变量名都作为常量调用addUtf8函数写入到了常量池里：</p><pre><code class="java">public int addUtf8( final String n ) {    int ret;    if ((ret = lookupUtf8(n)) != -1) {        return ret; // Already in CP    }    adjustSize();    ret = index;    constants[index++] = new ConstantUtf8(n);    if (!utf8Table.containsKey(n)) {        utf8Table.put(n, new Index(ret));    }    return ret;}</code></pre><p>而代表变量类型的字符串由于常量池已有所以不会重复写入，而由于常量池的初始长度只有256，所以addUtf8函数在写入时会调用adjustSize函数调整常量池大小：</p><pre><code class="java">protected void adjustSize() {    if (index + 3 &gt;= size) {        final Constant[] cs = constants;        size *= 2;        constants = new Constant[size];        System.arraycopy(cs, 0, constants, 0, index);    }}</code></pre><p>超出大小时则将常量池大小*2，这里的size是一个int变量，而我们看到dump函数在写入常量池长度时：</p><pre><code class="java">file.writeShort(constantPool.length);</code></pre><p>写入的是一个short数据而不是int数据，导致上限缩小了，也就是说：</p><pre><code class="java">public final void writeShort(int v) throws IOException {    out.write((v &gt;&gt;&gt; 8) &amp; 0xFF);    out.write((v &gt;&gt;&gt; 0) &amp; 0xFF);    incCount(2);}</code></pre><p>short数据只有2个字节，也就是说写入的代表常量个数的数据最多只有2字节长度，即65535个。而实际写入的常量数量却是int类型的，这就导致了一个越界写问题，超出上限的常量会占据后续类修饰符甚至函数字节码的位置。</p><p>所以如果能够控制写入的常量，就能通过精心构造越界写入一个存在恶意代码的class文件。</p><h3 id="漏洞修复"><a href="#漏洞修复" class="headerlink" title="漏洞修复"></a>漏洞修复</h3><p>在6.6.0版本下，ConstantPoolGen对涉及常量池大小的多个地方进行了长度限制，如构造函数里面限制了最大大小：</p><pre><code class="java">size = Math.min(Math.max(DEFAULT_BUFFER_SIZE, cs.length + 64), Const.MAX_CP_ENTRIES + 1);</code></pre><p>又比如adjustSize函数：</p><pre><code class="java">if (index + 3 &gt;= Const.MAX_CP_ENTRIES + 1) {    throw new IllegalStateException(&quot;The number of constants &quot; + (index + 3)            + &quot; is over the size of the constant pool: &quot;            + Const.MAX_CP_ENTRIES);}</code></pre><p>超出上限就会抛出异常。</p><hr><h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://xz.aliyun.com/t/11866" target="_blank" rel="noopener">CVE-2022-42920 BCEL 任意文件写漏洞</a></p>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>Web</tag>
+      
+      <tag>Java</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>CVE-2022-39198 Dubbo Hession反序列化漏洞</title>
     <link href="/2023/01/29/CVE-2022-39198-Dubbo-Hession%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E/"/>
     <url>/2023/01/29/CVE-2022-39198-Dubbo-Hession%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E/</url>
@@ -492,9 +513,9 @@
       
       <tag>反序列化</tag>
       
-      <tag>JNDI</tag>
-      
       <tag>JRMP</tag>
+      
+      <tag>JNDI</tag>
       
     </tags>
     
@@ -2099,9 +2120,9 @@
       
       <tag>反序列化</tag>
       
-      <tag>JNDI</tag>
-      
       <tag>JRMP</tag>
+      
+      <tag>JNDI</tag>
       
     </tags>
     
@@ -2796,9 +2817,9 @@
       
       <tag>Web</tag>
       
-      <tag>NodeJS</tag>
-      
       <tag>复现</tag>
+      
+      <tag>NodeJS</tag>
       
       <tag>前端</tag>
       

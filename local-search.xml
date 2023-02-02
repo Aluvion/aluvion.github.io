@@ -4,6 +4,27 @@
   
   
   <entry>
+    <title>NodeJS VM2 沙盒绕过漏洞学习</title>
+    <link href="/2023/02/02/NodeJS-VM2-%E6%B2%99%E7%9B%92%E7%BB%95%E8%BF%87%E6%BC%8F%E6%B4%9E%E5%AD%A6%E4%B9%A0/"/>
+    <url>/2023/02/02/NodeJS-VM2-%E6%B2%99%E7%9B%92%E7%BB%95%E8%BF%87%E6%BC%8F%E6%B4%9E%E5%AD%A6%E4%B9%A0/</url>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>无。</p><a id="more"></a><hr><h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>下载安装NodeJS，新建一个目录并运行命令npm init后下载依赖：</p><pre><code>npm install vm2@3.6.10</code></pre><p>npm提示说该版本的vm2存在高危安全漏洞，但是坚持安装。</p><h3 id="vm2"><a href="#vm2" class="headerlink" title="vm2"></a>vm2</h3><p>NodeJS沙盒，vm沙盒的优化版本，简单用法如下：</p><pre><code class="javascript">const {VM, VMScript} = require(&#39;vm2&#39;);const script = new VMScript(&quot;this;&quot;);console.log((new VM()).run(script));</code></pre><p>运行一下，看到此时的this作用域为vm环境下的特殊作用域。</p><p>可以在本目录的node_modules文件夹下找到vm2的代码，比如main.js中可以找到VMScript的构造函数：</p><pre><code class="javascript">constructor(code, filename) {    this.code = code;    this.filename = filename || &#39;vm.js&#39;;}</code></pre><p>只是简单地把待运行代码保存起来。</p><p>也可以找到VM的构造函数：</p><pre><code class="javascript">const host = {    version: parseInt(process.versions.node.split(&#39;.&#39;)[0]),    console,    String,    Number,    Buffer,    Boolean,    Array,    Date,    Error,    RangeError,    ReferenceError,    SyntaxError,    TypeError,    RegExp,    Function,    Object,    VMError,    Proxy,    Reflect,    Map,    WeakMap,    Set,    WeakSet,    Promise};this._context = vm.createContext();Reflect.defineProperty(this, &#39;_internal&#39;, {    value: vm.runInContext(`(function(require, host) { ${cf} \n})`, this._context, {        filename: `${__dirname}/contextify.js`,        displayErrors: false    }).call(this._context, require, host)});</code></pre><p>根据参考文章，这里将一些沙盒中需要的对象放入host中，创建了沙盒作用域并调用vm的API将contextify.js封装成了一个匿名函数，contextify.js涉及到一些对象代理之类的东西。可以看到global下只挂载了VMError和Buffer两个对象：</p><pre><code class="javascript">global.VMError = VMError;...const LocalBuffer = global.Buffer = Contextify.readonly(host.Buffer, {    allocUnsafe: function allocUnsafe(size) {        return this.alloc(size);    },    allocUnsafeSlow: function allocUnsafeSlow(size) {        return this.alloc(size);    }});</code></pre><p>readonly一直找到Contextify.object，可以看到Buffer实际上是一个代理对象Proxy：</p><pre><code class="javascript">const proxy = new host.Proxy(object, host.Object.assign(base, traps, deepTraps));Contextify.proxies.set(object, proxy);Contextified.set(proxy, object);return proxy;</code></pre><p>该代理对象拦截了get、set、construct等等操作，所以这个Buffer对象虽然是从外面传入沙盒的，但是也无法访问其constructor等属性，从而保证了沙盒安全性。</p><h3 id="CVE-2019-10761"><a href="#CVE-2019-10761" class="headerlink" title="CVE-2019-10761"></a>CVE-2019-10761</h3><p>基于调用栈过大爆栈捕获外部对象。</p><h3 id="CVE-2021-23449"><a href="#CVE-2021-23449" class="headerlink" title="CVE-2021-23449"></a>CVE-2021-23449</h3><p>基于import未经沙箱，</p><h3 id="trick"><a href="#trick" class="headerlink" title="trick"></a>trick</h3><p>基于对象代理和异常捕获。</p><hr><h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://xz.aliyun.com/t/11859" target="_blank" rel="noopener">NodeJS VM和VM2沙箱逃逸</a></p><p><a href="https://www.anquanke.com/post/id/207283" target="_blank" rel="noopener">vm2实现原理分析</a></p>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>Web</tag>
+      
+      <tag>NodeJS</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>PHP Development Server 远程源码泄露漏洞</title>
     <link href="/2023/02/01/PHP-Development-Server-%E8%BF%9C%E7%A8%8B%E6%BA%90%E7%A0%81%E6%B3%84%E9%9C%B2%E6%BC%8F%E6%B4%9E/"/>
     <url>/2023/02/01/PHP-Development-Server-%E8%BF%9C%E7%A8%8B%E6%BA%90%E7%A0%81%E6%B3%84%E9%9C%B2%E6%BC%8F%E6%B4%9E/</url>
@@ -2953,9 +2974,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Crypto</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -2997,9 +3018,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Crypto</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     

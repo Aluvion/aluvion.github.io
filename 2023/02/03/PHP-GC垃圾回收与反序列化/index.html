@@ -16,7 +16,7 @@
   <meta name="description" content="摸鱼">
   <meta name="author" content="Aluvion">
   <meta name="keywords" content="">
-  <title>chrome issue 716044 - Twings</title>
+  <title>PHP GC垃圾回收与反序列化 - Twings</title>
 
   <link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css">
 <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
@@ -117,7 +117,7 @@
               
                 <p class="mt-3 post-meta">
                   <i class="fas fa-calendar-alt" aria-hidden="true"></i>
-                  星期三, 七月 28日 2021, 7:00 晚上
+                  星期五, 二月 3日 2023, 8:04 晚上
                 </p>
               
 
@@ -126,7 +126,7 @@
                   
                   <span class="post-meta">
                     <i class="far fa-chart-bar"></i>
-                    213 字
+                    546 字
                   </span>
                 
 
@@ -134,7 +134,7 @@
                   
                   <span class="post-meta">
                       <i class="far fa-clock"></i>
-                      1 分钟
+                      2 分钟
                   </span>
                 
 
@@ -169,35 +169,96 @@
           <div class="post-content mx-auto" id="post">
             
             <div class="markdown-body">
-              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> 无。</p>
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>无。</p>
 <a id="more"></a>
 <hr>
-<h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>每次都要开一个vultr太麻烦了，用<a href="http://mirrors.aliyun.com/centos/8.4.2105/isos/x86_64/CentOS-8.4.2105-x86_64-dvd1.iso" target="_blank" rel="noopener">镜像</a>整了个centos8虚拟机，换源然后挂代理搭建环境试试。</p>
-<p>在/etc/profile中添加代理：</p>
-<pre><code>export http_proxy=&quot;192.168.88.1:1080&quot;
-export https_proxy=&quot;192.168.88.1:1080&quot;
-</code></pre><p>再source一下完成配置。</p>
-<p>连上代理没什么问题，然后再在官网上找到<a href="https://bugs.chromium.org/p/chromium/issues/detail?id=716044" target="_blank" rel="noopener">这个issue</a>，找到对应的<a href="https://chromium.googlesource.com/v8/v8.git/+/192984ea88badc0c02e22e528b1243a9efa46f90" target="_blank" rel="noopener">补丁</a>，回滚到上个版本：</p>
-<pre><code class="bash">yum groupinstall &quot;Development Tools&quot;
-yum install python2
-ln -s /usr/bin/python2 /usr/bin/python
-yum install -y git gdb bzip2 wget
-cd ~
-git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
-export PATH=`pwd`/depot_tools:&quot;$PATH&quot;
-mkdir v8
-cd v8
-fetch v8
-cd ~/v8/v8
-git reset --hard 40d01184a18a599392691c0eb931720628a44e80 # 漏洞分支
-gclient sync
-./tools/dev/v8gen.py x64.release
-ninja -C ./out.gn/x64.release # Release version
-./tools/dev/v8gen.py x64.debug
-ninja -C ./out.gn/x64.debug # Debug version
+<h3 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h3><p>就用之前的php7.4.33，测试用代码：</p>
+<pre><code class="php">&lt;?php
+class B {
+  function __destruct() {
+    echo &quot;Destruct&quot;;
+  }
+}
+unserialize(&#39;a:2:{i:0;O:1:&quot;B&quot;:0:{}i:0;i:0;}&#39;);
+throw new Exception(&#39;Error&#39;);
 </code></pre>
+<p>运行会发现，由于数组键的冲突，反序列化的过程中就触发了B类的构析函数。</p>
+<h3 id="源码"><a href="#源码" class="headerlink" title="源码"></a>源码</h3><p>找到反序列化源码文件var_unserializer.c，找到处理类和数组反序列化的函数process_nested_data，该函数反序列化出键后会查看已有数据中是否存在该键：</p>
+<pre><code class="c">if (Z_TYPE(key) == IS_LONG) {
+  idx = Z_LVAL(key);
+  if (UNEXPECTED((old_data = zend_hash_index_find(ht, idx)) != NULL)) {
+    //??? update hash
+    var_push_dtor(var_hash, old_data);
+    data = zend_hash_index_update(ht, idx, &amp;d);
+  } else {
+    data = zend_hash_index_add_new(ht, idx, &amp;d);
+  }
+}
+</code></pre>
+<p>如果发生了键冲突，则会调用var_push_dtor函数：</p>
+<pre><code class="c">if (Z_REFCOUNTED_P(rval)) {
+  zval *tmp_var = var_tmp_var(var_hashx);
+  if (!tmp_var) {
+    return;
+  }
+  ZVAL_COPY(tmp_var, rval);
+}
+</code></pre>
+<p>Z_REFCOUNTED_P宏判断的是变量的type_flags标志位不为0，此时B对象的type_flags值为3：</p>
+<pre><code>(gdb) p rval.u1.v.type_flags 
+$3 = 3 &#39;\003
+</code></pre><p>其在定义中可能的值如下：</p>
+<pre><code class="c">/* zval.u1.v.type_flags */
+#define IS_TYPE_REFCOUNTED            (1&lt;&lt;0)
+#define IS_TYPE_COLLECTABLE            (1&lt;&lt;1)
+</code></pre>
+<p>简单来说就是判断是否需要引用计数。然后会调用var_tmp_var函数生成并返回一个临时变量，并将B对象保存了进去，这个临时变量会挂在var_hashx这个php_unserialize_data_t下面：</p>
+<pre><code class="c">return &amp;var_hash-&gt;data[used_slots];
+</code></pre>
+<p>回到PHP的unserialize函数，即var.c的PHP_FUNCTION(unserialize)，最后销毁多余变量：</p>
+<pre><code class="c">PHP_VAR_UNSERIALIZE_DESTROY(var_hash);
+</code></pre>
+<p>一路找到var_destroy函数，里面会调用i_zval_ptr_dtor开始销毁变量：</p>
+<pre><code class="c">if (Z_REFCOUNTED_P(zval_ptr)) {
+  zend_refcounted *ref = Z_COUNTED_P(zval_ptr);
+  if (!GC_DELREF(ref)) {
+    rc_dtor_func(ref);
+  } else {
+    gc_check_possible_root(ref);
+  }
+}
+</code></pre>
+<p>再到rc_dtor_func函数：</p>
+<pre><code class="c">ZEND_ASSERT(GC_TYPE(p) &lt;= IS_CONSTANT_AST);
+zend_rc_dtor_func[GC_TYPE(p)](p);
+</code></pre>
+<p>找到类型对应的销毁函数：</p>
+<pre><code class="c">static const zend_rc_dtor_func_t zend_rc_dtor_func[] = {
+    /* IS_UNDEF        */ (zend_rc_dtor_func_t)zend_empty_destroy,
+    /* IS_NULL         */ (zend_rc_dtor_func_t)zend_empty_destroy,
+    /* IS_FALSE        */ (zend_rc_dtor_func_t)zend_empty_destroy,
+    /* IS_TRUE         */ (zend_rc_dtor_func_t)zend_empty_destroy,
+    /* IS_LONG         */ (zend_rc_dtor_func_t)zend_empty_destroy,
+    /* IS_DOUBLE       */ (zend_rc_dtor_func_t)zend_empty_destroy,
+    /* IS_STRING       */ (zend_rc_dtor_func_t)zend_string_destroy,
+    /* IS_ARRAY        */ (zend_rc_dtor_func_t)zend_array_destroy,
+    /* IS_OBJECT       */ (zend_rc_dtor_func_t)zend_objects_store_del,
+    /* IS_RESOURCE     */ (zend_rc_dtor_func_t)zend_list_free,
+    /* IS_REFERENCE    */ (zend_rc_dtor_func_t)zend_reference_destroy,
+    /* IS_CONSTANT_AST */ (zend_rc_dtor_func_t)zend_ast_ref_destroy
+};
+</code></pre>
+<p>这里是zend_objects_store_del，该函数会调用类对应的构析函数销毁对象：</p>
+<pre><code class="c">if (object-&gt;handlers-&gt;dtor_obj != zend_objects_destroy_object
+    || object-&gt;ce-&gt;destructor) {
+  GC_SET_REFCOUNT(object, 1);
+  object-&gt;handlers-&gt;dtor_obj(object);
+  GC_DELREF(object);
+}
+</code></pre>
+<h3 id="使用场景"><a href="#使用场景" class="headerlink" title="使用场景"></a>使用场景</h3><p>根据参考文章所说，可以用于立即触发构析函数而不需要等到代码执行完毕后统一销毁。</p>
 <hr>
-<h3 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h3><p><a href="https://www.anquanke.com/post/id/225443#h3-8" target="_blank" rel="noopener">https://www.anquanke.com/post/id/225443#h3-8</a></p>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://xz.aliyun.com/t/11843" target="_blank" rel="noopener">浅析PHP GC垃圾回收机制及常见利用方式</a></p>
 
             </div>
             <hr>
@@ -210,11 +271,7 @@ ninja -C ./out.gn/x64.debug # Debug version
                     
                       <a class="hover-with-bg" href="/tags/Web/">Web</a>
                     
-                      <a class="hover-with-bg" href="/tags/二进制/">二进制</a>
-                    
-                      <a class="hover-with-bg" href="/tags/浏览器/">浏览器</a>
-                    
-                      <a class="hover-with-bg" href="/tags/Chrome/">Chrome</a>
+                      <a class="hover-with-bg" href="/tags/PHP/">PHP</a>
                     
                   </span>
                 
@@ -226,16 +283,11 @@ ninja -C ./out.gn/x64.debug # Debug version
                 <div class="post-prevnext row">
                   <div class="post-prev col-12 col-md-6">
                     
-                      <a href="/2021/09/22/XMLDecoder反序列化漏洞/">
-                        <i class="fa fa-chevron-left"></i>
-                        <span>XMLDecoder反序列化漏洞</span>
-                      </a>
-                    
                   </div>
                   <div class="post-next col-12 col-md-6">
                     
-                      <a href="/2021/07/26/popmaster/">
-                        <span>popmaster</span>
+                      <a href="/2023/02/02/NodeJS-VM2-沙盒绕过漏洞学习/">
+                        <span>NodeJS VM2 沙盒绕过漏洞学习</span>
                         <i class="fa fa-chevron-right"></i>
                       </a>
                     
@@ -408,7 +460,7 @@ ninja -C ./out.gn/x64.debug # Debug version
     var typed = new Typed('#subtitle', {
       strings: [
         '  ',
-        "chrome issue 716044&nbsp;",
+        "PHP GC垃圾回收与反序列化&nbsp;",
       ],
       cursorChar: "_",
       typeSpeed: 70,

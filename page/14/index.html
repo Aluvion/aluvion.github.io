@@ -142,6 +142,49 @@
     
     
     <div class="col-12 col-md-12 mx-auto index-info">
+      <a href="/2019/04/18/Spring-Cloud-Config-Server-路径穿越与任意文件读取漏洞CVE-2019-3799复现/">
+        <p class="h4 index-header">Spring Cloud Config Server 路径穿越与任意文件读取漏洞 CVE-2019-3799复现</p>
+      </a>
+
+      <a href="/2019/04/18/Spring-Cloud-Config-Server-路径穿越与任意文件读取漏洞CVE-2019-3799复现/">
+        
+        
+          
+          
+        
+        <div class="index-excerpt" style="max-height: none;">
+          <div class="index-text mb-1">前言在分布式系统中，由于服务众多的关系，为了方便服务配置文件统一管理，实时更新，所以需要分布式配置中心组件，而 Spring Cloud Config 项目就是一个能解决分布式系统需求的配置管理方案。
+Spring Cloud Config 分为 server 和 client 两个部分： server 用于从 GitHub 或其他地方获取配置文件、存储，并通过 HTTP 接口的方式将它们提供给 client ， client 再通过这些配置文件来初始化自身。
+按照官方文档的说明，想要获取官方示例中的 https://github.com/spring-cloud-samples/config-repo/blob/master/test.json 文件，在配置好 server 之后， client 就可以访问 server 的 /{name}/{profile}/{label}/{path} (这里是 /foo/default/master/test.json ) HTTP 接口， server 会访问 GitHub 并将文件下载到本地，然后通过 HTTP 响应返回给 client 。
+在这个过程中，由于 server 没有对输入的 path 进行检查的原因，所以存在一个服务端目录穿越和任意文件读取的漏洞。...</div>
+        </div>
+      </a>
+
+      <div class="index-btm">
+        
+          <i class="iconfont icon-riqi2"></i>&nbsp;2019-04-18&nbsp;&nbsp;
+        
+        
+        
+          <i class="iconfont icon-tag"></i>
+          
+            <a href="/tags/Web/">Web</a>&nbsp;
+          
+            <a href="/tags/复现/">复现</a>&nbsp;
+          
+            <a href="/tags/Java/">Java</a>&nbsp;
+          
+            <a href="/tags/Spring/">Spring</a>&nbsp;
+          
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
       <a href="/2019/04/16/Nodejs-express-session-file-store库下的session伪造/">
         <p class="h4 index-header">Nodejs/express/session-file-store库下的session伪造</p>
       </a>
@@ -476,44 +519,6 @@
             <a href="/tags/Crypto/">Crypto</a>&nbsp;
           
             <a href="/tags/CTF/">CTF</a>&nbsp;
-          
-        
-      </div>
-    </div>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <div class="col-12 col-md-12 mx-auto index-info">
-      <a href="/2019/03/26/0CTF-TCTF-Web题解/">
-        <p class="h4 index-header">0CTF/TCTF2019 Web题解</p>
-      </a>
-
-      <a href="/2019/03/26/0CTF-TCTF-Web题解/">
-        
-        
-          
-          
-        
-        <div class="index-excerpt" style="max-height: none;">
-          <div class="index-text mb-1">前言这次的CTF比赛虽然只有两道Web题，但是难度还是有的，用到的知识点也很有趣，而菜鸡的我在群内大师傅的提点下总算是把题目给做出来了，这里总结一下。...</div>
-        </div>
-      </a>
-
-      <div class="index-btm">
-        
-          <i class="iconfont icon-riqi2"></i>&nbsp;2019-03-26&nbsp;&nbsp;
-        
-        
-        
-          <i class="iconfont icon-tag"></i>
-          
-            <a href="/tags/CTF/">CTF</a>&nbsp;
-          
-            <a href="/tags/Web/">Web</a>&nbsp;
-          
-            <a href="/tags/Karaf/">Karaf</a>&nbsp;
           
         
       </div>

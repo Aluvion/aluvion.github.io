@@ -16,7 +16,7 @@
   <meta name="description" content="摸鱼">
   <meta name="author" content="Aluvion">
   <meta name="keywords" content="">
-  <title>Go-gin/C++-cinatra Web开发 - Twings</title>
+  <title>Mybatis学习 - Twings</title>
 
   <link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css">
 <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
@@ -117,7 +117,7 @@
               
                 <p class="mt-3 post-meta">
                   <i class="fas fa-calendar-alt" aria-hidden="true"></i>
-                  星期一, 三月 16日 2020, 10:46 上午
+                  星期二, 四月 11日 2023, 11:46 中午
                 </p>
               
 
@@ -126,7 +126,7 @@
                   
                   <span class="post-meta">
                     <i class="far fa-chart-bar"></i>
-                    1.1k 字
+                    600 字
                   </span>
                 
 
@@ -134,7 +134,7 @@
                   
                   <span class="post-meta">
                       <i class="far fa-clock"></i>
-                      5 分钟
+                      3 分钟
                   </span>
                 
 
@@ -169,136 +169,102 @@
           <div class="post-content mx-auto" id="post">
             
             <div class="markdown-body">
-              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>做毕设的时候用到了 Go 和 C++ 开发了两个 Web 后端，顺便简单记录一下。</p>
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>学习。</p>
 <a id="more"></a>
 <hr>
-<h3 id="Go-gin"><a href="#Go-gin" class="headerlink" title="Go - gin"></a>Go - gin</h3><p>Go 的函数返回中数据和错误一般是分开的，方便错误处理。Web 开发选用的是比较轻量级的 gin 框架，这个框架的中文文档好像有点时日没有更新了，建议去看 GitHub 上的官方文档，在开发过程中用到了这些库：</p>
-<pre><code>&quot;net/http&quot;
-&quot;encoding/json&quot;
-&quot;github.com/gin-gonic/gin&quot;
-&quot;github.com/gomodule/redigo/redis&quot;
-_ &quot;github.com/go-sql-driver/mysql&quot;
-&quot;github.com/jmoiron/sqlx&quot;
-&quot;sort&quot;
-</code></pre><p>Go 的库安装也很简单，go get 就可以了，也可以自己去 GitHub 上下载。</p>
-<p>第一个 http 库是为了 set cookie 使用的，用来表示 cookie 的安全策略：</p>
-<pre><code class="go">c.SetCookie(&quot;SESSID&quot;, string(data)[:36], 3600 * 24 * 30, &quot;/api/&quot;, &quot;xxx.monster&quot;, http.SameSiteLaxMode, false, true)
+<h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>使用IDEA新建Spring Boot项目，选择安装Spring Web、Thymeleaf和MyBatis框架，由于使用的是JDK8，SpringBoot不支持JDK8，因此选用SpringBoot2。</p>
+<p>简单编写控制器框架后，在虚拟机中开启MySQL镜像：</p>
+<pre><code>docker run -id --name mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=root mysql
+</code></pre><h3 id="创建数据库"><a href="#创建数据库" class="headerlink" title="创建数据库"></a>创建数据库</h3><p>创建测试用数据库：</p>
+<pre><code class="sql">create database mybatis DEFAULT CHARSET utf8 COLLATE utf8_general_ci;
+use mybatis;
+create table data(id int(11) not null auto_increment, name varchar(255), password varchar(255), email varchar(255), primary key (id))engine=innodb default charset=utf8 COLLATE=utf8_general_ci;
 </code></pre>
-<p>第二个是 json 库，大概是这样用法：</p>
-<pre><code class="go">var session map[string]interface{}
-json.Unmarshal([]byte(data), &amp;session)
-...
-team = session[&quot;team&quot;].(string)
+<h3 id="连接数据库"><a href="#连接数据库" class="headerlink" title="连接数据库"></a>连接数据库</h3><p>设置数据库连接池，这里安装Druid：</p>
+<pre><code class="xml">&lt;dependency&gt;
+    &lt;groupId&gt;com.alibaba&lt;/groupId&gt;
+    &lt;artifactId&gt;druid-spring-boot-starter&lt;/artifactId&gt;
+    &lt;version&gt;1.2.17&lt;/version&gt;
+&lt;/dependency&gt;
 </code></pre>
-<p>data 是 json 字符串，值得一提的是从这个 session 里面取值的时候，需要加上数据类型，还有则是在我的 docker 环境(也就是 go 官方镜像)下，反序列化之后，数字类型会默认用 float64 存放，所以取值也需要用 float64 来取值。</p>
-<p>第三个是 gin，不提。第四个是 redis 库，具体做法是初始化一个连接池，需要用的时候再取出使用：</p>
-<pre><code class="go">func newPool(addr string) *redis.Pool {
-    return &amp;redis.Pool{
-        MaxIdle: 3,
-        IdleTimeout: 240 * time.Second,
-        Dial: func () (redis.Conn, error) { return redis.Dial(&quot;tcp&quot;, addr) },
-    }
-}
-...
-conn := pool.Get()
-defer conn.Close()
-encodedSession, err := redis.String(conn.Do(&quot;get&quot;, cookie))
-</code></pre>
-<p>五、六都是 MySQL 库，前面加个 _ 的意思是我们不使用包里面的成员函数，只使用构造函数，同样也是连接池的做法：</p>
-<pre><code class="go">func newDb() *sqlx.DB {
-    Db, _ := sqlx.Open(&quot;mysql&quot;, &quot;root:root@tcp(172.17.0.4:3306)/ctf?charset=utf8&quot;)
-    return Db
-}
-...
-rows, _ := db.Query(&quot;select cid from challenge where challenge.mode=?;&quot;, mode)
-data := []map[string]interface{}{}
-for rows.Next() {
-    var cidstring
-    rows.Scan(&amp;cid)
-    data = append(data, row)
-}
-rows.Close()
-</code></pre>
-<p>最后 sort 可以实现二维数组的排序：</p>
-<pre><code class="go">sort.Slice(rank, func(i, j int) bool {
-    if rank[i][&quot;score&quot;].(float64) &gt; rank[j][&quot;score&quot;].(float64) {
-        return true
-    }
-    if rank[i][&quot;score&quot;].(float64) == rank[j][&quot;score&quot;].(float64) &amp;&amp; rank[i][&quot;time&quot;].(int64) &lt; rank[j][&quot;time&quot;].(int64) {
-        return true
-    }
-    return false
-})
-</code></pre>
-<hr>
-<h3 id="C-cinatra"><a href="#C-cinatra" class="headerlink" title="C++ - cinatra"></a>C++ - cinatra</h3><p>C++ 找不到什么合适的框架，最后选用了 Cinatra，但是这个框架还不成熟，文档也缺失得不行。没事还是不要用 C++ 写 Web 后端了。</p>
-<p>Redis 使用 hiredis：</p>
-<pre><code class="c++">struct timeval timeout = {1, 500000};
-redis = redisConnectWithTimeout(&quot;172.17.0.2&quot;, 6379, timeout);
-if (redis -&gt; err) {
+<p>然后修改配置文件：</p>
+<pre><code class="properties">spring.datasource.url=jdbc:mysql://192.168.88.129:3306/mybatis?useUnicode=true&amp;characterEncoding=utf-8&amp;useSSL=false&amp;serverTimezone=UTC
+spring.datasource.username=root
+spring.datasource.password=root
 
+spring.datasource.type=com.alibaba.druid.pool.DruidDataSource
+</code></pre>
+<p>报错：</p>
+<pre><code>java.lang.ClassNotFoundException: com.mysql.jdbc.Driver
+</code></pre><p>没有MySQL的相关驱动，安装依赖：</p>
+<pre><code class="xml">&lt;dependency&gt;
+    &lt;groupId&gt;com.mysql&lt;/groupId&gt;
+    &lt;artifactId&gt;mysql-connector-j&lt;/artifactId&gt;
+    &lt;version&gt;8.0.32&lt;/version&gt;
+&lt;/dependency&gt;
+</code></pre>
+<p>在<a href="https://mybatis.org/spring-boot-starter/mybatis-spring-boot-autoconfigure/" target="_blank" rel="noopener">官方文档</a>中可以找到MyBatis的使用方法，首先根据数据库结构定义对应的数据类：</p>
+<pre><code class="java">public class DataDao {
+    private int id;
+    private String name;
+    private String password;
+    private String email;
+
+    // Getter和Setter们
 }
-...
-redisReply *reply;
-reply = (redisReply *)redisCommand(redis, &quot;GET %s&quot;, key.c_str());
-if (reply == NULL) {
-    redisFree(redis);
-    redis = NULL;
-    ...
-}else if (reply -&gt; len &lt;= 0) {
-    freeReplyObject(reply);
-    ...
+</code></pre>
+<p>然后定义查询用的SQL语句：</p>
+<pre><code class="java">@Mapper
+public interface DataMapper {
+    @Select(&quot;select * from data&quot;)
+    List&lt;DataDao&gt; selectAll();
 }
-.......
-    else if (strcmp(reply -&gt; str, &quot;OK&quot;) == 0) {
-    freeReplyObject(reply);
-    return &quot;OK&quot;;
-}
-std::string result = reply -&gt; str;
-freeReplyObject(reply);
 </code></pre>
-<p>MySQL 的写法跟 PHP 很类似，自行过滤要这么做：</p>
-<pre><code class="c++">char *escape_team = new char[team.length()];
-char *escape_password = new char[password.length()];
-mysql_real_escape_string(&amp;mysql, escape_team, team.data(), team.length());
-mysql_real_escape_string(&amp;mysql, escape_password, password.data(), password.length());
-std::string str_sql = &quot;&quot;;
-str_sql += &quot;select uid, mail from user where team=&#39;&quot;;
-str_sql += escape_team;
-str_sql += &quot;&#39; and password=&#39;&quot;;
-str_sql += escape_password;
-str_sql += &quot;&#39;;&quot;;
-</code></pre>
-<p>C++ 里面还有一种类型叫做 string_view，是 string 的一个只读视图，可以提高字符串处理性能，Cinatra 这个框架在解析 HTTP 的时候就大量用到了这个类型，从 string_view 变成 string 可以这么做：</p>
-<pre><code class="c++">std::string(cookies[&quot;SESSID&quot;].data(), cookies[&quot;SESSID&quot;].length())
-</code></pre>
-<p>C++ 里面的变长数组可以使用 vector：</p>
-<pre><code class="c++">std::vector&lt;Rank::Rank&gt; ranks;
-</code></pre>
-<p>C++ 里面没有 Go 那种可以用来表示任何数据类型的 interface，所以无法制作多种成员类型的 map。使用自定义 struct 可以解决，不过这样一来，json 就无法识别我们自己设定的结构体，所以需要给它加上序列化函数：</p>
-<pre><code class="C++">namespace Rank {
-    struct Rank {
-        int uid;
-        std::string team;
-        long long time;
-        double score;
-    };
-    void to_json(nlohmann::json&amp; j, const Rank&amp; p) {
-        j = nlohmann::json {
-            {&quot;uid&quot;, p.uid},
-            {&quot;time&quot;, p.time},
-            {&quot;team&quot;, p.team},
-            {&quot;score&quot;, p.score},
-        };
+<p>为了使用整个映射接口，还需要借助Spring的依赖注入机制：</p>
+<pre><code class="java">@Service
+public class DataService {
+    private DataMapper dataMapper;
+
+    @Autowired
+    public DataService(DataMapper dataMapper) {
+        this.dataMapper = dataMapper;
+    }
+
+    public List&lt;DataDao&gt; selectAll() {
+        return dataMapper.selectAll();
     }
 }
 </code></pre>
-<p>自定义结构体数组的排序跟 Go 差不多，sort 调用自定义函数。</p>
-<p>编译：</p>
-<pre><code class="shell">g++ main.cpp -std=c++17 -lboost_system -lpthread -lstdc++fs -luuid -lhiredis -I/usr/include/mariadb -lmysqlclient -o web
+<p>虽然依赖注入IDEA会提示错误，但是实际上不影响，可以修改警告等级关掉它，最后在控制器中查询并输出：</p>
+<pre><code class="java">@Autowired
+private DataService dataService;
+
+@GetMapping(&quot;/main&quot;)
+public String main(Model model){
+    List&lt;DataDao&gt; data = dataService.selectAll();
+    model.addAttribute(&quot;data&quot;, data);
+    return &quot;main&quot;;
+}
 </code></pre>
+<p>模板文件：</p>
+<pre><code class="html">&lt;html lang=&quot;zh-CN&quot; xmlns:th=&quot;http://www.thymeleaf.org&quot;&gt;
+    &lt;head&gt;
+        &lt;title&gt;Main&lt;/title&gt;
+    &lt;/head&gt;
+    &lt;body&gt;
+        &lt;h1&gt;main&lt;/h1&gt;
+        &lt;p th:each=&quot;data: ${data}&quot;&gt;
+            &lt;span th:text=&quot;${data.id}&quot;&gt;&lt;/span&gt;
+            &lt;span th:text=&quot;${data.name}&quot;&gt;&lt;/span&gt;
+            &lt;span th:text=&quot;${data.password}&quot;&gt;&lt;/span&gt;
+            &lt;span th:text=&quot;${data.email}&quot;&gt;&lt;/span&gt;
+        &lt;/p&gt;
+    &lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<p>可以看到查询成功。</p>
 <hr>
-<p>Orz</p>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://blog.csdn.net/syc000666/article/details/128108711" target="_blank" rel="noopener">https://blog.csdn.net/syc000666/article/details/128108711</a></p>
 
             </div>
             <hr>
@@ -309,11 +275,9 @@ str_sql += &quot;&#39;;&quot;;
                   <span>
                 <i class="iconfont icon-tag"></i>
                     
-                      <a class="hover-with-bg" href="/tags/C/">C++</a>
-                    
                       <a class="hover-with-bg" href="/tags/Web/">Web</a>
                     
-                      <a class="hover-with-bg" href="/tags/Go/">Go</a>
+                      <a class="hover-with-bg" href="/tags/Java/">Java</a>
                     
                   </span>
                 
@@ -325,16 +289,11 @@ str_sql += &quot;&#39;;&quot;;
                 <div class="post-prevnext row">
                   <div class="post-prev col-12 col-md-6">
                     
-                      <a href="/2020/03/22/CVE-2019-11043-Nginx-php-fpm-RCE漏洞复现/">
-                        <i class="fa fa-chevron-left"></i>
-                        <span>CVE-2019-11043 Nginx+php-fpm RCE漏洞复现</span>
-                      </a>
-                    
                   </div>
                   <div class="post-next col-12 col-md-6">
                     
-                      <a href="/2020/03/12/VueElectronElementUI开发自己的B站弹幕姬/">
-                        <span>VueElectronElementUI开发自己的B站弹幕姬</span>
+                      <a href="/2023/02/12/Hessian-JDK反序列化漏洞3/">
+                        <span>Hessian JDK反序列化漏洞3</span>
                         <i class="fa fa-chevron-right"></i>
                       </a>
                     
@@ -507,7 +466,7 @@ str_sql += &quot;&#39;;&quot;;
     var typed = new Typed('#subtitle', {
       strings: [
         '  ',
-        "Go-gin/C++-cinatra Web开发&nbsp;",
+        "Mybatis学习&nbsp;",
       ],
       cursorChar: "_",
       typeSpeed: 70,

@@ -4,6 +4,29 @@
   
   
   <entry>
+    <title>Dubbo generic invoke漏洞</title>
+    <link href="/2023/04/26/Dubbo-generic-invoke%E6%BC%8F%E6%B4%9E/"/>
+    <url>/2023/04/26/Dubbo-generic-invoke%E6%BC%8F%E6%B4%9E/</url>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>长期可持续化摸鱼，偶尔学习。</p><a id="more"></a><hr><h3 id="Dubbo-SpringBoot"><a href="#Dubbo-SpringBoot" class="headerlink" title="Dubbo SpringBoot"></a>Dubbo SpringBoot</h3><p>Dubbo是一个远程过程调用（RPC）框架，允许客户端远程调用服务端定义的函数。</p><p>从<a href="https://github.com/apache/dubbo-samples" target="_blank" rel="noopener">Github</a>上下载一个示例项目，在1-basic/dubbo-samples-spring-boot目录下找到示例项目，里面包括三个模块，分别是接口（服务定义者）、服务提供者（服务端）和服务消费者（客户端）：</p><pre><code>interface, provides Dubbo service definitionprovider, implements Dubbo serviceconsumer, consumes Dubbo service</code></pre><p>用IDEA打开项目，然后安装依赖，如果SpringBoot依赖有问题可以换换版本，启动发现需要连接zookeeper，不然会报错：</p><pre><code>Opening socket connection to server 127.0.0.1/127.0.0.1:2181. Will not attempt to authenticate using SASL (unknown error)Socket error occurred: 127.0.0.1/127.0.0.1:2181: Connection refused: no further information</code></pre><p>下载一个docker镜像：</p><pre><code>docker pull zookeeperdocker run -id --name zookeeper -p 2181:2181 zookeeper</code></pre><p>开启zookeeper镜像，并将zookeeper服务端口映射出来，然后修改application.yml中的zookeeper服务地址配置为虚拟机地址：</p><pre><code class="yml">address: zookeeper://${zookeeper.address:192.168.88.129}:2181</code></pre><p>可以看到dubbo服务端正常启动了，修改consumer的配置，将application.yml中的zookeeper地址配置修改为虚拟机地址，然后可以看到客户端和服务端正常通信了：</p><pre><code>Tue Apr 25 20:00:09 CST 2023 Receive result ======&gt; Hello Aluvion1634565036, i am Twings.Tue Apr 25 20:00:10 CST 2023 Receive result ======&gt; Hello Aluvion-356148887, i am Twings.Tue Apr 25 20:00:11 CST 2023 Receive result ======&gt; Hello Aluvion-2026383264, i am Twings.Tue Apr 25 20:00:12 CST 2023 Receive result ======&gt; Hello Aluvion-279126879, i am Twings.Tue Apr 25 20:00:13 CST 2023 Receive result ======&gt; Hello Aluvion-9261720, i am Twings.Tue Apr 25 20:00:14 CST 2023 Receive result ======&gt; Hello Aluvion1084163910, i am Twings.Tue Apr 25 20:00:15 CST 2023 Receive result ======&gt; Hello Aluvion699243408, i am Twings.Tue Apr 25 20:00:16 CST 2023 Receive result ======&gt; Hello Aluvion-796289112, i am Twings.</code></pre><p>由于客户端是一个反复执行的脚本，因此可以看到服务端的sayHello函数被多次执行了。</p><h3 id="CVE-2021-30179"><a href="#CVE-2021-30179" class="headerlink" title="CVE-2021-30179"></a>CVE-2021-30179</h3><h4 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h4><p>影响版本：</p><pre><code>Apache Dubbo 2.7.0 to 2.7.9Apache Dubbo 2.6.0 to 2.6.9Apache Dubbo all 2.5.x versions (官方已不再提供支持)</code></pre><p><a href="https://cn.dubbo.apache.org/zh-cn/overview/tasks/develop/generic/" target="_blank" rel="noopener">泛化调用官方文档</a>中介绍，感觉像是在没有接口的情况下，通过全限定接口名、函数名和函数类型等信息远程调用函数的方法。</p><p>仿照示例代码，给服务端加上group和version信息：</p><pre><code class="java">@DubboService(group = &quot;group1&quot;,version = &quot;1.0&quot;)</code></pre><p>再给客户端填上这些信息：</p><pre><code class="java">GenericService genericService = buildGenericService(&quot;org.apache.dubbo.springboot.demo.DemoService&quot;,        &quot;group1&quot;,&quot;1.0&quot;);//传入需要调用的方法，参数类型列表，参数列表Object result = genericService.$invoke(&quot;sayHello&quot;, new String[]{&quot;java.lang.String&quot;}, new Object[]{&quot;Aluvion&quot;});System.out.println(&quot;GenericTask Response: &quot; + result);</code></pre><p>可以看到正常的泛化调用结果：</p><pre><code>GenericTask Response: Hello Aluvion, i am Twings.</code></pre><p>一般理性而言，这样根据全限定接口名、函数名和参数类型进行函数调用的方式多半是反射，而如果这种客户端可控的反射方式没有做好过滤，可能就会导致任意函数调用或者getter/setter调用等安全问题。</p><h4 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h4><p>由于访问注册的服务，调用函数需要group和version等信息，所以一般理性而言不能直接通过这个反射方法调用危险函数。</p><p>此外，通过调试可以找到取出函数参数的处理代码在DecodeHandler类的received函数中，该函数调用decode函数解码参数，一路走到DecodeableRpcInvocation类的decode函数。</p><p>调试找到传输参数数据的请求，当待调用函数存在参数时，使用FastJson2作为反序列化器反序列化参数：</p><pre><code class="java">args = new Object[pts.length];for (int i = 0; i &lt; args.length; i++) {    args[i] = in.readObject(pts[i]);}</code></pre><p>FastJson2反序列化：</p><pre><code class="java">if (securityFilter.isCheckSerializable()) {    return (T) JSONB.parseObject(bytes, Object.class, securityFilter,        JSONReader.Feature.UseDefaultConstructorAsPossible,        JSONReader.Feature.ErrorOnNoneSerializable,        JSONReader.Feature.UseNativeObject,        JSONReader.Feature.FieldBased);}</code></pre><p>此时的bytes是一个看不懂的东西：</p><p><img src="/css/images/dubbo-generic/2023042601.png" srcset="/img/loading.gif" alt=""></p><p>经过FastJson2反序列化后是一个正常的HashMap：</p><p><img src="/css/images/dubbo-generic/2023042602.png" srcset="/img/loading.gif" alt=""></p><p>看一下反序列化过程，似乎限定了只能反序列化继承了Serializable接口的类，其他类比如Runtime就不行：</p><pre><code>cause: not support none serializable class java.lang.Runtime</code></pre><p>或许修改了客户端代码可以发送过去，不过估计服务端既然存在ErrorOnNoneSerializable这个Feature，那么也会再校验一次。</p><p>尝试传输一个TemplatesImpl对象：</p><pre><code class="java">com.alibaba.fastjson2.JSONException: autoType not support input com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl</code></pre><p>看来被黑名单拦截了，想从FastJson2入手应该不容易了。</p><p>给sayHello函数下一个断点，调试找到GenericFilter类的invoke函数，当客户端远程调用使用的是$invoke函数时就会进入该函数的处理流程：</p><pre><code class="java">String generic = inv.getAttachment(GENERIC_KEY);if (StringUtils.isBlank(generic)) {    ...}if (StringUtils.isEmpty(generic)    ...} else if (ProtocolUtils.isGsonGenericSerialization(generic)) {    ...} else if (ProtocolUtils.isJavaGenericSerialization(generic)) {    ...} else if (ProtocolUtils.isBeanGenericSerialization(generic)) {    ...} else if (ProtocolUtils.isProtobufGenericSerialization(generic)) {    ...}RpcInvocation rpcInvocation = new RpcInvocation(inv.getTargetServiceUniqueName(),    invoker.getUrl().getServiceModel(), method.getName(), invoker.getInterface().getName(), invoker.getUrl().getProtocolServiceKey(),    method.getParameterTypes(), args, inv.getObjectAttachments(),    inv.getInvoker(), inv.getAttributes(), inv instanceof RpcInvocation ? ((RpcInvocation) inv).getInvokeMode() : null);return invoker.invoke(rpcInvocation);}</code></pre><p>根据客户端setGeneric的不同，进入不同的分支用不同的方式修整函数调用的参数。</p><h5 id="raw-return"><a href="#raw-return" class="headerlink" title="raw.return"></a>raw.return</h5><p>处理方式：</p><pre><code class="java">args = PojoUtils.realize(args, params, method.getGenericParameterTypes());</code></pre><p>来到PojoUtils类的realize0函数，如果输入参数为Map类型，则会尝试重新制作一个调用主体对象：</p><pre><code class="java">Map&lt;Object, Object&gt; map;// when return type is not the subclass of return type from the signature and not an interfaceif (!type.isInterface() &amp;&amp; !type.isAssignableFrom(pojo.getClass())) {    try {        map = (Map&lt;Object, Object&gt;) type.getDeclaredConstructor().newInstance();        Map&lt;Object, Object&gt; mapPojo = (Map&lt;Object, Object&gt;) pojo;        map.putAll(mapPojo);        if (GENERIC_WITH_CLZ) {            map.remove(&quot;class&quot;);        }    } catch (Exception e) {        //ignore error        map = (Map&lt;Object, Object&gt;) pojo;    }} else {    map = (Map&lt;Object, Object&gt;) pojo;}</code></pre><p>就算服务端定义了String类型的参数，而实际输入的却是Map也没有关系，类型转换失败时会不管定义直接使用输入的参数。</p><pre><code class="java">for (Map.Entry&lt;Object, Object&gt; entry : map.entrySet()) {    Object key = entry.getKey();    if (key instanceof String) {        String name = (String) key;        Object value = entry.getValue();        if (value != null) {            Method method = getSetterMethod(dest.getClass(), name, value.getClass());            Field field = getField(dest.getClass(), name);            if (method != null) {                if (!method.isAccessible()) {                    method.setAccessible(true);                }                Type ptype = method.getGenericParameterTypes()[0];                value = realize0(value, method.getParameterTypes()[0], ptype, history);                try {                    method.invoke(dest, value);                } catch (Exception e) {                    ...                }            } else if (field != null) {                ...            }        }    }}</code></pre><p>可以看到，如果键为String类型，就会将其作为成员名尝试调用setter函数。</p><p>阅读源码，发现type来自函数参数，实际上是待调用远程函数的，因此在一般情况下并不可控。唯一可以修改该变量的地方需要在Map中存入键为class，值为String类型的类名：</p><pre><code class="java">Object className = ((Map&lt;Object, Object&gt;) pojo).get(&quot;class&quot;);if (className instanceof String) {    if (!CLASS_NOT_FOUND_CACHE.containsKey(className)) {        try {            type = DefaultSerializeClassChecker.getInstance().loadClass(ClassUtils.getClassLoader(), (String) className);        } catch (ClassNotFoundException e) {            CLASS_NOT_FOUND_CACHE.put((String) className, NOT_FOUND_VALUE);        }    }}</code></pre><p>这里的实例化与函数调用与FastJson无关，因此不会触发黑白名单之类的验证方式，但是由于实例化使用的是无参构造函数，因此需要先调用setter存入对象数据，参考文章中的JNDI注入：</p><pre><code class="java">HashMap map = new HashMap();map.put(&quot;class&quot;, &quot;com.sun.rowset.JdbcRowSetImpl&quot;);map.put(&quot;dataSourceName&quot;, &quot;1234567890&quot;);map.put(&quot;autoCommit&quot;, true);</code></pre><p>但实际上似乎不行，根据class加载类时会触发黑名单验证：</p><pre><code>Caused by: org.apache.dubbo.remoting.RemotingException: org.apache.dubbo.rpc.RpcException: java.lang.IllegalArgumentException: [Serialization Security] Serialized class com.sun.rowset.JdbcRowSetImpl is not in allow list. Current mode is `STRICT`, will disallow to deserialize it by default. Please add it into security/serialize.allowlist or follow FAQ to configure it.</code></pre><p>看来这就是漏洞修复方式。</p><h5 id="bean"><a href="#bean" class="headerlink" title="bean"></a>bean</h5><pre><code class="java">for (int i = 0; i &lt; args.length; i++) {    if (args[i] instanceof JavaBeanDescriptor) {        args[i] = JavaBeanSerializeUtil.deserialize((JavaBeanDescriptor) args[i]);    } else {        ...    }}</code></pre><p>传递一个JavaBeanDescriptor对象，同样可以调用setter：</p><pre><code class="java">Method method = getSetterMethod(result.getClass(), property, value.getClass());boolean setByMethod = false;try {    if (method != null) {        method.invoke(result, value);        setByMethod = true;    }} catch (Exception e) {    ...}</code></pre><p>加载类时同样有了黑名单：</p><pre><code class="java">DefaultSerializeClassChecker.getInstance().loadClass(loader, name);</code></pre><h5 id="nativejava"><a href="#nativejava" class="headerlink" title="nativejava"></a>nativejava</h5><p>存在原生Java反序列化点：</p><pre><code class="java">if (byte[].class == args[i].getClass()) {    try (UnsafeByteArrayInputStream is = new UnsafeByteArrayInputStream((byte[]) args[i])) {        args[i] = applicationModel.getExtensionLoader(Serialization.class)            .getExtension(GENERIC_SERIALIZATION_NATIVE_JAVA)            .deserialize(null, is).readObject();    } catch (Exception e) {        throw new RpcException(&quot;Deserialize argument [&quot; + (i + 1) + &quot;] failed.&quot;, e);    }}</code></pre><p>但是有了默认配置为不开启该模式：</p><pre><code class="java">Configuration configuration = ApplicationModel.ofNullable(applicationModel).getModelEnvironment().getConfiguration();if (!configuration.getBoolean(CommonConstants.ENABLE_NATIVE_JAVA_GENERIC_SERIALIZE, false)) {    String notice = &quot;Trigger the safety barrier! &quot; +        &quot;Native Java Serializer is not allowed by default.&quot; +        &quot;This means currently maybe being attacking by others. &quot; +        &quot;If you are sure this is a mistake, &quot; +        &quot;please set `&quot; + CommonConstants.ENABLE_NATIVE_JAVA_GENERIC_SERIALIZE + &quot;` enable in configuration! &quot; +        &quot;Before doing so, please make sure you have configure JEP290 to prevent serialization attack.&quot;;    logger.error(CONFIG_FILTER_VALIDATION_EXCEPTION, &quot;&quot;, &quot;&quot;, notice);    throw new RpcException(new IllegalStateException(notice));}</code></pre><hr><h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://xz.aliyun.com/t/10916" target="_blank" rel="noopener">Java安全-Dubbo</a></p>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>Web</tag>
+      
+      <tag>Java</tag>
+      
+      <tag>反序列化</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>Mybatis学习</title>
     <link href="/2023/04/11/Mybatis%E5%AD%A6%E4%B9%A0/"/>
     <url>/2023/04/11/Mybatis%E5%AD%A6%E4%B9%A0/</url>
@@ -1140,9 +1163,9 @@
     
     <tags>
       
-      <tag>二进制</tag>
-      
       <tag>Web</tag>
+      
+      <tag>二进制</tag>
       
       <tag>浏览器</tag>
       
@@ -1249,9 +1272,9 @@
     
     <tags>
       
-      <tag>二进制</tag>
-      
       <tag>Web</tag>
+      
+      <tag>二进制</tag>
       
       <tag>浏览器</tag>
       
@@ -1274,9 +1297,9 @@
     
     <tags>
       
-      <tag>二进制</tag>
-      
       <tag>Web</tag>
+      
+      <tag>二进制</tag>
       
       <tag>浏览器</tag>
       
@@ -1299,9 +1322,9 @@
     
     <tags>
       
-      <tag>二进制</tag>
-      
       <tag>Web</tag>
+      
+      <tag>二进制</tag>
       
       <tag>浏览器</tag>
       
@@ -1324,9 +1347,9 @@
     
     <tags>
       
-      <tag>二进制</tag>
-      
       <tag>Web</tag>
+      
+      <tag>二进制</tag>
       
       <tag>浏览器</tag>
       
@@ -2179,9 +2202,9 @@
       
       <tag>反序列化</tag>
       
-      <tag>Hessian</tag>
-      
       <tag>Dubbo</tag>
+      
+      <tag>Hessian</tag>
       
     </tags>
     
@@ -2455,9 +2478,9 @@
     
     <tags>
       
-      <tag>二进制</tag>
-      
       <tag>Web</tag>
+      
+      <tag>二进制</tag>
       
       <tag>复现</tag>
       
@@ -2480,9 +2503,9 @@
     
     <tags>
       
-      <tag>C++</tag>
-      
       <tag>Web</tag>
+      
+      <tag>C++</tag>
       
       <tag>Go</tag>
       

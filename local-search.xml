@@ -4,6 +4,48 @@
   
   
   <entry>
+    <title>Go SSTI</title>
+    <link href="/2023/06/29/Go-SSTI/"/>
+    <url>/2023/06/29/Go-SSTI/</url>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>555学习。</p><a id="more"></a><hr><h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>直接用docker搭建环境，首先下载一个golang镜像：</p><pre><code class="bash">docker pull golang</code></pre><p>开启镜像后，在/go/src目录下新建ssti模块，并初始化包管理工具，类似nodejs的npm：</p><pre><code class="bash">go mod init</code></pre><p>直接使用参考文章的测试代码，然后编译：</p><pre><code class="bash">go install ssti</code></pre><p>在/go/bin目录下找到编译好的二进制程序并运行。</p><h3 id="SSTI"><a href="#SSTI" class="headerlink" title="SSTI"></a>SSTI</h3><p>成因简单来说就是text/template模板将外来输入作为了模板代码解析，类似SQL注入、表达式注入等漏洞，而根据<a href="https://pkg.go.dev/html/template" target="_blank" rel="noopener">文档</a>，html/template模板则会过滤用户输入，但是似乎只做了XSS过滤，所以不会影响SSTI利用。</p><p>根据参考文章，主要利用方向有三个。</p><h4 id="信息泄露"><a href="#信息泄露" class="headerlink" title="信息泄露"></a>信息泄露</h4><p>模板引擎允许用户将一个存储数据的对象绑定到模板中，并在渲染时读取其中的数据，因此SSTI可以读取该对象中的数据，如：</p><pre><code>{{.Passwd}}</code></pre><p>或者打印整个对象：</p><pre><code>{{.}}</code></pre><h4 id="函数调用"><a href="#函数调用" class="headerlink" title="函数调用"></a>函数调用</h4><p>可以调用环境中定义的函数，如：</p><pre><code>{{.Secret "pwd"}}</code></pre><h4 id="XSS"><a href="#XSS" class="headerlink" title="XSS"></a>XSS</h4><p>可以通过调用输出函数打印JavaScript的方式进行XSS，如：</p><pre><code>{{with $x := "<script></script>"}}{{print $x}}{{end}}</code></pre><p>但是无法绕过模板过滤。</p><hr><h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://xz.aliyun.com/t/12642" target="_blank" rel="noopener">Go语言下的模板注入</a></p>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>Web</tag>
+      
+      <tag>Go</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>Apache Flink RCE via GET jar/plan API Endpoint</title>
+    <link href="/2023/06/02/Apache-Flink-RCE-via-GET-jar-plan-API-Endpoint/"/>
+    <url>/2023/06/02/Apache-Flink-RCE-via-GET-jar-plan-API-Endpoint/</url>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>555学习。</p><a id="more"></a><hr><h3 id="Apache-Flink"><a href="#Apache-Flink" class="headerlink" title="Apache Flink"></a>Apache Flink</h3><hr><h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>Web</tag>
+      
+      <tag>Java</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>Java原生反序列化带FastJson一起玩</title>
     <link href="/2023/05/31/Java%E5%8E%9F%E7%94%9F%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E5%B8%A6FastJson%E4%B8%80%E8%B5%B7%E7%8E%A9/"/>
     <url>/2023/05/31/Java%E5%8E%9F%E7%94%9F%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E5%B8%A6FastJson%E4%B8%80%E8%B5%B7%E7%8E%A9/</url>
@@ -23,19 +65,6 @@
       <tag>FastJSON</tag>
       
     </tags>
-    
-  </entry>
-  
-  
-  
-  <entry>
-    <title>Apache Flink RCE via GET jar/plan API Endpoint</title>
-    <link href="/2023/05/19/Apache-Flink-RCE-via-GET-jar-plan-API-Endpoint/"/>
-    <url>/2023/05/19/Apache-Flink-RCE-via-GET-jar-plan-API-Endpoint/</url>
-    
-    <content type="html"><![CDATA[]]></content>
-    
-    
     
   </entry>
   
@@ -907,9 +936,9 @@
       
       <tag>反序列化</tag>
       
-      <tag>JNDI</tag>
-      
       <tag>JRMP</tag>
+      
+      <tag>JNDI</tag>
       
     </tags>
     
@@ -1174,9 +1203,9 @@
       
       <tag>Web</tag>
       
-      <tag>Shiro</tag>
-      
       <tag>Java</tag>
+      
+      <tag>Shiro</tag>
       
       <tag>反序列化</tag>
       
@@ -1199,9 +1228,9 @@
       
       <tag>Web</tag>
       
-      <tag>Shiro</tag>
-      
       <tag>Java</tag>
+      
+      <tag>Shiro</tag>
       
     </tags>
     
@@ -1222,9 +1251,9 @@
       
       <tag>Web</tag>
       
-      <tag>Shiro</tag>
-      
       <tag>Java</tag>
+      
+      <tag>Shiro</tag>
       
     </tags>
     
@@ -2514,9 +2543,9 @@
       
       <tag>反序列化</tag>
       
-      <tag>JNDI</tag>
-      
       <tag>JRMP</tag>
+      
+      <tag>JNDI</tag>
       
     </tags>
     
@@ -2736,9 +2765,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>Python</tag>
       
@@ -2845,9 +2874,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>PHP</tag>
       
@@ -2868,9 +2897,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>前端</tag>
       
@@ -2891,9 +2920,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>前端</tag>
       
@@ -2958,9 +2987,9 @@
     
     <tags>
       
-      <tag>Crypto</tag>
-      
       <tag>Web</tag>
+      
+      <tag>Crypto</tag>
       
       <tag>Pwn</tag>
       
@@ -2983,9 +3012,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>FastCGI</tag>
       
@@ -3006,9 +3035,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>Mongodb</tag>
       
@@ -3031,9 +3060,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>Python</tag>
       
@@ -3054,13 +3083,13 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
       
-      <tag>复现</tag>
-      
       <tag>Java</tag>
+      
+      <tag>CTF</tag>
+      
+      <tag>复现</tag>
       
       <tag>表达式注入</tag>
       
@@ -3140,9 +3169,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -3163,9 +3192,9 @@
       
       <tag>Web</tag>
       
-      <tag>复现</tag>
-      
       <tag>Java</tag>
+      
+      <tag>复现</tag>
       
       <tag>Spring</tag>
       
@@ -3207,13 +3236,13 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
       
-      <tag>复现</tag>
+      <tag>CTF</tag>
       
       <tag>NodeJS</tag>
+      
+      <tag>复现</tag>
       
       <tag>前端</tag>
       
@@ -3234,9 +3263,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -3255,9 +3284,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>前端</tag>
       
@@ -3299,11 +3328,11 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
       
       <tag>Java</tag>
+      
+      <tag>CTF</tag>
       
       <tag>Spring</tag>
       
@@ -3391,9 +3420,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>Karaf</tag>
       
@@ -3623,9 +3652,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>前端</tag>
       

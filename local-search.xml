@@ -4,6 +4,25 @@
   
   
   <entry>
+    <title>学习调试Linux命令程序</title>
+    <link href="/2023/10/24/%E5%AD%A6%E4%B9%A0%E8%B0%83%E8%AF%95Linux%E5%91%BD%E4%BB%A4%E7%A8%8B%E5%BA%8Fdash/"/>
+    <url>/2023/10/24/%E5%AD%A6%E4%B9%A0%E8%B0%83%E8%AF%95Linux%E5%91%BD%E4%BB%A4%E7%A8%8B%E5%BA%8Fdash/</url>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>学习，dash即Debian系统中sh指向的系统程序，目标是学习vscode远程调试c程序的手法。</p><a id="more"></a><hr><h3 id="源码下载"><a href="#源码下载" class="headerlink" title="源码下载"></a>源码下载</h3><p>根据<a href="https://www.leavesongs.com/PENETRATION/how-I-hack-bash-through-environment-injection.html" target="_blank" rel="noopener">p牛讲述的方法</a>，可以在command-not-found找到命令对应的包，再在<a href="https://packages.ubuntu.com/" target="_blank" rel="noopener">Ubuntu Packages</a>中搜索包名得到对应包的下载地址，就可以下载到源码：</p><p><img src="/css/images/dash/01.png" srcset="/img/loading.gif" alt=""></p><p>然后解压并用Vscode打开就可以开始阅读源码了。</p><h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>启动虚拟机，准备好源码，首先允许autogen脚本，遇到问题：</p><pre><code>aclocal: not found</code></pre><p>似乎是由于没有安装automake导致的，安装一下：</p><pre><code class="bash">sudo apt-get install automake</code></pre><p>再次运行，目录下生成了configure程序，然后准备编译安装一个用于调试的dash程序，类似编译用于调试的PHP，需要加上-g参数用于添加调试信息和prefix参数避免对系统原有环境造成影响：</p><pre><code class="bash">./configure --prefix=/home/aluvion/桌面/docker/dash-0.5.11/run CFLAGS=&quot;-g&quot;</code></pre><p>最后编译安装生成命令程序dash：</p><pre><code class="bash">make &amp;&amp; make install</code></pre><p>简单测试一下：</p><p><img src="/css/images/dash/02.png" srcset="/img/loading.gif" alt=""></p><p>接下来动态调试代码有两种选择，第一种是分离源码阅读和调试，在vscode里面看源码，在Linux里用gdb动态调试。第二种就是按照vscode拓展，直接在vscode里进行动态调试，如<a href="https://blog.csdn.net/lengye7/article/details/129401570" target="_blank" rel="noopener">这篇文章</a>所讲的ssh+gdb的调试方法。</p><p>首先需要在虚拟机中安装好sshd：</p><pre><code class="bash">sudo apt-get install openssh-server</code></pre><p>然后启动：</p><pre><code class="bash">service sshd start</code></pre><p>并且在主机powershell上测试一下ssh连接：</p><p><img src="/css/images/dash/03.png" srcset="/img/loading.gif" alt=""></p><p>然后安装vscode的ssh扩展remote ssh：</p><p><img src="/css/images/dash/04.png" srcset="/img/loading.gif" alt=""></p><p>装上去之后连接ssh，</p><p><img src="/css/images/dash/05.png" srcset="/img/loading.gif" alt=""></p><p>可以通过配置SSH主机选项修改用户目录下的ssh文件，加上host和username的配置：</p><pre><code>Host remoteVM    HostName 192.168.88.129    User aluvion</code></pre><p>然后连接ssh，就可以直接打开远程主机上的源码文件夹了，然后在项目文件夹下面新建.vscode文件夹和launch.json文件，然后添加配置gdb launch：</p><p><img src="/css/images/dash/06.png" srcset="/img/loading.gif" alt=""></p><p>随便下个断点，然后修改launch.json配置：</p><pre><code class="json">{    &quot;configurations&quot;: [        {            &quot;type&quot;: &quot;cppdbg&quot;,            &quot;request&quot;: &quot;launch&quot;,            &quot;name&quot;: &quot;GDB&quot;,            &quot;program&quot;: &quot;${workspaceFolder}/run/bin/dash&quot;,            &quot;stopAtEntry&quot;: true,            &quot;args&quot;: [&quot;-c&quot;, &quot;id&quot;],            &quot;cwd&quot;: &quot;${fileDirname}&quot;,            &quot;environment&quot;: [],            &quot;MIMode&quot;: &quot;gdb&quot;,        }    ]}</code></pre><p>最后启动调试，调试环境搭建完成：</p><p><img src="/css/images/dash/07.png" srcset="/img/loading.gif" alt=""></p><hr><h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://blog.csdn.net/lengye7/article/details/129401570" target="_blank" rel="noopener">vscode的远程开发与调试——以C/Ｃ＋＋为例</a></p><p><a href="https://www.leavesongs.com/PENETRATION/how-I-hack-bash-through-environment-injection.html" target="_blank" rel="noopener">我是如何利用环境变量注入执行任意命令</a></p>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>Linux</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>2022 lineCTF Haribote Secure Note学习</title>
     <link href="/2023/10/19/2022-lineCTF-Haribote-Secure-Note%E5%AD%A6%E4%B9%A0/"/>
     <url>/2023/10/19/2022-lineCTF-Haribote-Secure-Note%E5%AD%A6%E4%B9%A0/</url>
@@ -2579,9 +2598,9 @@
       
       <tag>Web</tag>
       
-      <tag>JDBC</tag>
-      
       <tag>反序列化</tag>
+      
+      <tag>JDBC</tag>
       
       <tag>MySQL</tag>
       
@@ -3435,9 +3454,9 @@
       
       <tag>Web</tag>
       
-      <tag>NodeJS</tag>
-      
       <tag>复现</tag>
+      
+      <tag>NodeJS</tag>
       
       <tag>前端</tag>
       

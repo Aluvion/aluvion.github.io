@@ -16,7 +16,7 @@
   <meta name="description" content="摸鱼">
   <meta name="author" content="Aluvion">
   <meta name="keywords" content="">
-  <title>Java反序列化中的RMI、JRMP、JNDI、LDAP(2) - Twings</title>
+  <title>破壳漏洞调试学习 - Twings</title>
 
   <link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css">
 <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
@@ -117,7 +117,7 @@
               
                 <p class="mt-3 post-meta">
                   <i class="fas fa-calendar-alt" aria-hidden="true"></i>
-                  星期日, 二月 27日 2022, 11:37 晚上
+                  星期三, 十月 25日 2023, 8:16 晚上
                 </p>
               
 
@@ -126,7 +126,7 @@
                   
                   <span class="post-meta">
                     <i class="far fa-chart-bar"></i>
-                    990 字
+                    543 字
                   </span>
                 
 
@@ -134,7 +134,7 @@
                   
                   <span class="post-meta">
                       <i class="far fa-clock"></i>
-                      3 分钟
+                      2 分钟
                   </span>
                 
 
@@ -169,89 +169,65 @@
           <div class="post-content mx-auto" id="post">
             
             <div class="markdown-body">
-              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>乱七八糟的东西。</p>
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>学习，用上一篇里的动态调试方法调试一下CVE-2014-6271破壳漏洞。</p>
 <a id="more"></a>
 <hr>
-<h3 id="readObject"><a href="#readObject" class="headerlink" title="readObject"></a>readObject</h3><p>找一找Java里有没有其他不受黑白名单限制，又可以通过反序列化触发的反序列化点。</p>
-<p>简单来说就是存在重开InputStream操作的类，要么是可序列化类，要么存在发起连接操作，不然数据就要通过别的可序列化类传递过来，不好控制。</p>
-<p>有一些叫做getObject的函数，比如SignedObject、SealedObject，然而没有什么会调用他们的地方。</p>
-<h4 id="MarshalledObject"><a href="#MarshalledObject" class="headerlink" title="MarshalledObject"></a>MarshalledObject</h4><p>其get函数如下：</p>
-<pre><code class="java">public T get() throws IOException, ClassNotFoundException {
-    if (objBytes == null)   // must have been a null object
-        return null;
+<h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>根据漏洞影响版本和漏洞时间，在<a href="http://archive.ubuntu.com/ubuntu/pool/main/b/bash/" target="_blank" rel="noopener">Ubuntu Packages</a>里找到<a href="http://archive.ubuntu.com/ubuntu/pool/main/b/bash/bash_4.3.orig.tar.gz" target="_blank" rel="noopener">合适的版本</a>，在虚拟机中编译安装后进行测试：</p>
+<pre><code class="bash">env x=&#39;() { :;}; echo Pwn&#39; ./bash -c &quot;echo test&quot;
+</code></pre>
+<p>看到漏洞正常触发：</p>
+<p><img src="/css/images/CVE-2014-6271/01.png" srcset="/img/loading.gif" alt=""></p>
+<h3 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h3><p>配置launch.json：</p>
+<pre><code class="json">{
+    &quot;configurations&quot;: [
+        {
+            &quot;type&quot;: &quot;cppdbg&quot;,
+            &quot;request&quot;: &quot;launch&quot;,
+            &quot;name&quot;: &quot;GDB&quot;,
+            &quot;program&quot;: &quot;${workspaceFolder}/run/bin/bash&quot;,
+            &quot;stopAtEntry&quot;: false,
+            &quot;args&quot;: [&quot;-c&quot;, &quot;echo test&quot;],
+            &quot;cwd&quot;: &quot;${fileDirname}&quot;,
+            &quot;environment&quot;: [
+                {&quot;name&quot;: &quot;x&quot;, &quot;value&quot;: &quot;() { :;}; echo Pwn&quot;},
+            ],
+            &quot;MIMode&quot;: &quot;gdb&quot;,
+        }
+    ]
+}
+</code></pre>
+<p>根据漏洞payload猜测，漏洞成因应该是将函数x的内容跟待执行命令拼接在了一起执行，所以函数体外的bash指令在无需函数被调用的情况下也被一起执行了。</p>
+<p>一步步调试，找到variables.c文件下的initialize_shell_variables函数，该函数会处理环境变量，当该环境变量为自定义函数时：</p>
+<pre><code class="c">    /* If exported function, define it now.  Don&#39;t import functions from
+    the environment in privileged mode. */
+    if (privmode == 0 &amp;&amp; read_but_dont_execute == 0 &amp;&amp; STREQN (&quot;() {&quot;, string, 4))
+{
+    string_length = strlen (string);
+    temp_string = (char *)xmalloc (3 + string_length + char_index);
 
-    ByteArrayInputStream bin = new ByteArrayInputStream(objBytes);
-    // locBytes is null if no annotations
-    ByteArrayInputStream lin =
-        (locBytes == null ? null : new ByteArrayInputStream(locBytes));
-    MarshalledObjectInputStream in =
-        new MarshalledObjectInputStream(bin, lin, objectInputFilter);
-    @SuppressWarnings(&quot;unchecked&quot;)
-    T obj = (T) in.readObject();
-    in.close();
-    return obj;
-}
-</code></pre>
-<p>看起来是可控的，然而看到这里有一个碍眼的objectInputFilter，它在readObject时会被赋值：</p>
-<pre><code class="java">private void readObject(ObjectInputStream stream)
-    throws IOException, ClassNotFoundException {
-    stream.defaultReadObject();     // read in all fields
-    objectInputFilter = ObjectInputFilter.Config.getObjectInputFilter(stream);
-}
-</code></pre>
-<p>getObjectInputFilter会从原本的InputStream中取出其InputFilter：</p>
-<pre><code class="java">public static ObjectInputFilter getObjectInputFilter(ObjectInputStream var0) {
-    Objects.requireNonNull(var0, (String)&quot;inputStream&quot;);
-    return SharedSecrets.getJavaOISAccess().getObjectInputFilter(var0);
-}
-</code></pre>
-<p>所以原本反序列化流程中存在的InputFilter也会影响这里的反序列化。</p>
-<p>想要通过反序列化操作调用这里的get函数，就要调用ActivatableRef类的invoke函数，即RemoteRef接口的invoke函数，但是反序列化过程中方便触发的点位于RemoteObjectInvocationHandler函数中，需要使用动态代理，还需要代理的接口继承了Remote。</p>
-<p>整条利用链应该跟以前学习过的JRMP绕过类似，这里就不验证了。</p>
-<h4 id="RegistryImpl-Skel"><a href="#RegistryImpl-Skel" class="headerlink" title="RegistryImpl_Skel"></a>RegistryImpl_Skel</h4><p>即RMI中注册中心使用的反序列化点，该类不可序列化。</p>
-<p>当通过LocateRegistry.createRegistry创建注册中心时会实例化一个RegistryImpl对象：</p>
-<pre><code class="java">public static Registry createRegistry(int port) throws RemoteException {
-    return new RegistryImpl(port);
-}
-</code></pre>
-<p>其构造函数会开始建立监听并通过registryFilter函数注册反序列化白名单：</p>
-<pre><code class="java">public RegistryImpl(final int var1) throws RemoteException {
-    this.bindings = new Hashtable(101);
-    if (var1 == 1099 &amp;&amp; System.getSecurityManager() != null) {
-        try {
-            AccessController.doPrivileged((PrivilegedExceptionAction)(new PrivilegedExceptionAction&lt;Void&gt;() {
-                public Void run() throws RemoteException {
-                    LiveRef var1x = new LiveRef(RegistryImpl.id, var1);
-                    RegistryImpl.this.setup(new UnicastServerRef(var1x, (var0) -&gt; {
-                        return RegistryImpl.registryFilter(var0);
-                    }));
-                    return null;
-                }
-            }), (AccessControlContext)null, new SocketPermission(&quot;localhost:&quot; + var1, &quot;listen,accept&quot;));
-        } 
-        ...
-    } else {
-        LiveRef var2 = new LiveRef(id, var1);
-        this.setup(new UnicastServerRef(var2, RegistryImpl::registryFilter));
-    }
+    strcpy (temp_string, name);
+    temp_string[char_index] = &#39; &#39;;
+    strcpy (temp_string + char_index + 1, string);
 
+    if (posixly_correct == 0 || legal_identifier (name))
+    parse_and_execute (temp_string, name, SEVAL_NONINT|SEVAL_NOHIST);
+
+    ...
 }
 </code></pre>
-<h4 id="RegistryImpl-Stub"><a href="#RegistryImpl-Stub" class="headerlink" title="RegistryImpl_Stub"></a>RegistryImpl_Stub</h4><p>位于其list函数和lookup函数中，依旧是RMI中注册中心使用的反序列化点，该类不可序列化。</p>
-<p>同样受到白名单影响。</p>
-<h4 id="UnicastRef"><a href="#UnicastRef" class="headerlink" title="UnicastRef"></a>UnicastRef</h4><p>即RMI中服务端使用的反序列化点，其unmarshalValue函数中会有一个反序列化操作，用于反序列化客户端传输过来的对象。</p>
-<p>可反序列化，有两条路可以来到该反序列化点，第一是跟MarshalledObject类似，同样是调用RemoteRef接口的invoke函数，但是需要满足的条件更多，需要代理的函数返回类型不是Int、Boolean等主要类型。</p>
-<p>第二就是走正常途径，通过反序列化搞定一个RMI服务端了，听起来就不可靠。</p>
-<h4 id="DGCImpl-Skel"><a href="#DGCImpl-Skel" class="headerlink" title="DGCImpl_Skel"></a>DGCImpl_Skel</h4><p>位于dispatch函数中，即JRMPListener利用链使用的反序列化点，会受到DGCImpl类的白名单影响。</p>
-<h4 id="DGCImpl-Stub"><a href="#DGCImpl-Stub" class="headerlink" title="DGCImpl_Stub"></a>DGCImpl_Stub</h4><p>位于dirty函数中，即JRMPClient利用链使用的反序列化点，同样会受到DGCImpl类的白名单影响。</p>
-<h4 id="StreamRemoteCall"><a href="#StreamRemoteCall" class="headerlink" title="StreamRemoteCall"></a>StreamRemoteCall</h4><p>位于executeCall函数中，同样有两条路径，第一条与MarshalledObject相似，通过RemoteRef接口的invoke函数触发，即以前学习过的JRMP反序列化绕过利用链。</p>
-<p>第二条不怎么可信，走DGCImpl_Stub的clean、dirty函数会受到白名单影响，走RegistryImpl_Stub的话它的ref成员又无法通过反序列化控制。</p>
-<h3 id="触发RemoteRef接口的invoke函数"><a href="#触发RemoteRef接口的invoke函数" class="headerlink" title="触发RemoteRef接口的invoke函数"></a>触发RemoteRef接口的invoke函数</h3><p>可控触发点位于RemoteObjectInvocationHandler类中，需要用其代理一个Remote子接口中定义的函数才能触发。</p>
-<h4 id="RMIServer"><a href="#RMIServer" class="headerlink" title="RMIServer"></a>RMIServer</h4><p>存在一个getVersion函数，或许可以跟fastjson之类的会调用getter的东西一起用？</p>
-<h4 id="ActivationInstantiator"><a href="#ActivationInstantiator" class="headerlink" title="ActivationInstantiator"></a>ActivationInstantiator</h4><p>往上追又到了Activator接口的activate函数，没必要看了。</p>
-<h4 id="Activator"><a href="#Activator" class="headerlink" title="Activator"></a>Activator</h4><p>有一个activate函数，要通过RemoteRef接口的invoke函数触发。</p>
+<p>就会将环境变量名作为函数名，拼接成x(){}形式的函数构造，交由parse_and_execute函数通过解析执行的方式导入到环境中，因此函数体外的命令也混入其中被一起执行了。</p>
+<h3 id="漏洞修复"><a href="#漏洞修复" class="headerlink" title="漏洞修复"></a>漏洞修复</h3><p>简单分析<a href="https://bugzilla-attachments.redhat.com/attachment.cgi?id=941826" target="_blank" rel="noopener">修复补丁</a>，关键点：</p>
+<pre><code class="c">if (legal_identifier (name))
+    parse_and_execute (temp_string, name, SEVAL_NONINT|SEVAL_NOHIST|SEVAL_FUNCDEF|SEVAL_ONECMD);
+if (legal_identifier (temp_name))
+    parse_and_execute (temp_string, temp_name,
+                SEVAL_NONINT|SEVAL_NOHIST|SEVAL_FUNCDEF|SEVAL_ONECMD);
+</code></pre>
+<p>看起来应该是根据SEVAL_FUNCDEF和SEVAL_ONECMD这两个flag阻止了函数体外命令的执行，但还是可以将函数名构造为已知将要执行的命令，这样就能将该命令覆盖掉，从而实现命令注入，利用方法详见参考文章。</p>
 <hr>
-<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://www.antiy.com/response/CVE-2014-6271.html" target="_blank" rel="noopener">Bash远程代码执行漏洞“破壳”（CVE-2014-6271）分析</a></p>
+<p><a href="https://www.leavesongs.com/PENETRATION/how-I-hack-bash-through-environment-injection.html" target="_blank" rel="noopener">我是如何利用环境变量注入执行任意命令</a></p>
+
             </div>
             <hr>
             <div>
@@ -261,15 +237,9 @@
                   <span>
                 <i class="iconfont icon-tag"></i>
                     
-                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                      <a class="hover-with-bg" href="/tags/复现/">复现</a>
                     
-                      <a class="hover-with-bg" href="/tags/Java/">Java</a>
-                    
-                      <a class="hover-with-bg" href="/tags/反序列化/">反序列化</a>
-                    
-                      <a class="hover-with-bg" href="/tags/JNDI/">JNDI</a>
-                    
-                      <a class="hover-with-bg" href="/tags/JRMP/">JRMP</a>
+                      <a class="hover-with-bg" href="/tags/Linux/">Linux</a>
                     
                   </span>
                 
@@ -281,16 +251,11 @@
                 <div class="post-prevnext row">
                   <div class="post-prev col-12 col-md-6">
                     
-                      <a href="/2022/03/03/SpringBoot框架下的JNDI利用法探索/">
-                        <i class="fa fa-chevron-left"></i>
-                        <span>SpringBoot框架下的JNDI利用法探索</span>
-                      </a>
-                    
                   </div>
                   <div class="post-next col-12 col-md-6">
                     
-                      <a href="/2022/02/25/机器学习入门5/">
-                        <span>机器学习入门5</span>
+                      <a href="/2023/10/24/学习调试Linux命令程序dash/">
+                        <span>学习调试Linux命令程序</span>
                         <i class="fa fa-chevron-right"></i>
                       </a>
                     
@@ -463,7 +428,7 @@
     var typed = new Typed('#subtitle', {
       strings: [
         '  ',
-        "Java反序列化中的RMI、JRMP、JNDI、LDAP(2)&nbsp;",
+        "破壳漏洞调试学习&nbsp;",
       ],
       cursorChar: "_",
       typeSpeed: 70,

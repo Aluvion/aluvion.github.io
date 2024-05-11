@@ -4,6 +4,29 @@
   
   
   <entry>
+    <title>tai-e学习(2)</title>
+    <link href="/2024/05/11/tai-e%E5%AD%A6%E4%B9%A0-2/"/>
+    <url>/2024/05/11/tai-e%E5%AD%A6%E4%B9%A0-2/</url>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>用一条简单反序列化链分析的例子来加深一下理解，熟练一下使用。</p><a id="more"></a><hr><h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>根据参考文章，反序列化链与MimeType类有关，可以用Maven下载spring-core包作为待分析项目，解压后修改options.yml里面的appClassPath配置。</p><h3 id="配置入口点"><a href="#配置入口点" class="headerlink" title="配置入口点"></a>配置入口点</h3><p>与前一篇入口点在配置了注解的控制器方法的情况类似，反序列化的入口点主要为equals、hashCode和toString等常见且易触发的函数，所以需要先在onStart里添加入口点：</p><pre><code class="java">private boolean isEntryPoint(JMethod jMethod) {    return jMethod.getName().equals(&quot;equals&quot;) &amp;&amp;            jMethod.getParamCount() == 1 &amp;&amp;            jMethod.getParamType(0).getName().equals(&quot;java.lang.Object&quot;) &amp;&amp;            !jMethod.getModifiers().contains(Modifier.ABSTRACT);}@Overridepublic void onStart() {    List&lt;JClass&gt; list = solver.getHierarchy().applicationClasses().toList();    for (JClass jClass : list) {        jClass.getDeclaredMethods().forEach(jMethod-&gt;{            if (isEntryPoint(jMethod)) {                solver.addEntryPoint(new EntryPoint(jMethod, EmptyParamProvider.get()));            }        });    }}</code></pre><h3 id="sinks"><a href="#sinks" class="headerlink" title="sinks"></a>sinks</h3><p>然后需要修改sinks为Map.get方法，用来触发LazyMap.get接上反序列化，要求对象主体map为污染对象：</p><pre><code class="yml">sinks:  - { vuln: &quot;Deserialization&quot;, level: 4, method: &quot;&lt;java.util.Map: java.lang.Object get(java.lang.Object)&gt;&quot;, index: base }</code></pre><h3 id="sources"><a href="#sources" class="headerlink" title="sources"></a>sources</h3><p>最重要的一环，在反序列化中，污染源主要为不具有transient和final static修饰符的成员。因此，要配置反序列化污点分析的污染源，不能像方法输入参数那样直接在onNewCSMethod里配置，需要抓住对象拥有的每一个成员。</p><p>但是具体实现时又遇到了问题，Tai-e通过makeTaint方法配置污染源需要一个SourcePoint对象，前一篇将方法输入参数配置为污染源所需的ParamSourcePoint对象只需要一个输入参数的下标。而要将成员配置为污染源需要的是FieldSourcePoint，它需要一个LoadField对象，而这个对象在我们的流程中是不好自己创造的。</p><p>翻了翻代码，在SourceHandler类里面可以找到能借鉴的处理方法，在该类中有一个loadedFieldSources表用于保存每个函数对应的LoadField对象，后续创造FieldSourcePoint需要时再取出来使用：</p><pre><code class="java">Set&lt;LoadField&gt; loads = loadedFieldSources.get(method);if (!loads.isEmpty()) {    Context context = csMethod.getContext();    loads.forEach(load -&gt; {        Var lhs = load.getLValue();        SourcePoint sourcePoint = new FieldSourcePoint(method, load);        JField field = load.getFieldRef().resolve();        Type type = fieldSources.get(field);        Obj taint = manager.makeTaint(sourcePoint, type);        solver.addVarPointsTo(context, lhs, taint);    });}</code></pre><p>loadedFieldSources表通过onNewStmt函数进行填充，这里的fieldSources表是配置里的sources，与我们无关：</p><pre><code class="java">@Overridepublic void onNewStmt(Stmt stmt, JMethod container) {    if (handleFieldSources &amp;&amp; stmt instanceof LoadField loadField) {        // Handle field sources.        // If a {@link LoadField} loads any source fields,        // then records the {@link LoadField} statements.        JField field = loadField.getFieldRef().resolveNullable();        if (fieldSources.containsKey(field)) {            loadedFieldSources.put(container, loadField);        }    }    ...}</code></pre><p>仿照SourceHandler类，我们首先同样要在onNewStmt里填充loadedFieldSources：</p><pre><code class="java">@Overridepublic void onNewStmt(Stmt stmt, JMethod container) {    if (stmt instanceof LoadField loadField) {        loadedFieldSources.put(container, loadField);    }}</code></pre><p>然后在onNewCSMethod方法里添加污染源：</p><pre><code class="java">JMethod method = csMethod.getMethod();Set&lt;LoadField&gt; loads = loadedFieldSources.get(method);if (!loads.isEmpty()) {    Context context = csMethod.getContext();    loads.forEach(load -&gt; {        Var lhs = load.getLValue();        SourcePoint sourcePoint = new FieldSourcePoint(method, load);        JField field = load.getFieldRef().resolve();        Set&lt;Modifier&gt; modifiers = field.getModifiers();        if (!modifiers.contains(Modifier.TRANSIENT) &amp;&amp;                !(modifiers.contains(Modifier.FINAL) &amp;&amp; modifiers.contains(Modifier.STATIC))) {            Obj taint = makeTaint(field.getType(), sourcePoint);            solver.addVarPointsTo(context, lhs, taint);        }    });}</code></pre><p>最后检出了几十条链，简单观察一下发现是没有过滤掉没有继承Serializable接口的类的问题，所以再修改一下，加入继承判断：</p><pre><code class="java">private boolean isSerializable(JClass jClass) {    Collection&lt;JClass&gt; superClasses = new HashSet&lt;&gt;();    getAllSuperClasses(jClass, superClasses);    return !superClasses.stream().filter(superClass -&gt; superClass.getName().equals(&quot;java.io.Serializable&quot;)).toList().isEmpty();}private void getAllSuperClasses(JClass jClass, Collection&lt;JClass&gt; superClasses) {    JClass superClass = jClass.getSuperClass();    if (superClass != null) {        superClasses.add(superClass);        getAllSuperClasses(superClass, superClasses);    }    Collection&lt;JClass&gt; interfaces = jClass.getInterfaces();    superClasses.addAll(interfaces);    for (JClass i: interfaces) {        getAllSuperClasses(i, superClasses);    }}</code></pre><p>发现没有检测到MimeType的反序列化链，调试发现问题出在loadedFieldSources上面，里面没有parameters这个成员的信息。</p><p>仔细思考了一下，Tai-e里构造成员污染源用的是LoadField类，可能只在遇到a=b.c这种loadfield指令的时候才会构造污染源，而不是直接绑定到成员上。而onNewCSMethod又存在问题，无法捕捉到后续的MimeType函数调用，不能到时候再给要用到的成员添加污染。</p><p>因此，想搞定这个问题还需要对Tai-e有更深的理解。</p><hr><h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://xz.aliyun.com/t/14325" target="_blank" rel="noopener">Spring的新入口类反序列化触发CC链</a></p>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>Web</tag>
+      
+      <tag>Java</tag>
+      
+      <tag>代码分析</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>Java Lambda</title>
     <link href="/2024/05/05/Java-Lambda/"/>
     <url>/2024/05/05/Java-Lambda/</url>
@@ -2891,9 +2914,9 @@
       
       <tag>Web</tag>
       
-      <tag>二进制</tag>
-      
       <tag>复现</tag>
+      
+      <tag>二进制</tag>
       
       <tag>PHPFPM</tag>
       
@@ -3517,9 +3540,9 @@
       
       <tag>Web</tag>
       
-      <tag>NodeJS</tag>
-      
       <tag>复现</tag>
+      
+      <tag>NodeJS</tag>
       
       <tag>前端</tag>
       
@@ -3858,9 +3881,9 @@
     
     <tags>
       
-      <tag>二进制</tag>
-      
       <tag>复现</tag>
+      
+      <tag>二进制</tag>
       
       <tag>docker</tag>
       
@@ -3906,9 +3929,9 @@
     
     <tags>
       
-      <tag>二进制</tag>
-      
       <tag>复现</tag>
+      
+      <tag>二进制</tag>
       
       <tag>Winrar</tag>
       

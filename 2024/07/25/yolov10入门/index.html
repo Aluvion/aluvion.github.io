@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>yolov10入门 - Twings</title>
+
+  <link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css">
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+  <link rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css">
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+</head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期四, 七月 25日 2024, 11:37 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    2k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      9 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>好玩的，本来想用v8搞的，结果发现v10都用了，貌似精度也更好，那就换个环境再继续。</p>
+<a id="more"></a>
+<hr>
+<h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>先用Pycharm创建一个新环境，然后从Github上下载yolov10源码：</p>
+<pre><code class="shell">git clone https://github.com/THU-MIG/yolov10.git
+</code></pre>
+<p>将源码拉取到本地后，需要根据官方指南安装项目所需的依赖：</p>
+<pre><code class="shell">pip install -r requirements.txt
+pip install -e .
+</code></pre>
+<p>遇到版本不可寻的问题：</p>
+<pre><code>Could not find a version that satisfies the requirement opencv-python==4.9.0.80
+ERROR: No matching distribution found for opencv-python==4.9.0.80
+</code></pre><p>去仓库看了看，这个版本的opencv是存在的，再次尝试直接用pip安装opencv成功了，感觉是玄学的网络问题。</p>
+<p>yolov10环境完成后，可以再装个pyautogui用于后续的键鼠操作：</p>
+<pre><code class="shell">pip install pyautogui
+</code></pre>
+<p>貌似环境里已经有了，至此环境搭建完成。</p>
+<h3 id="训练模型"><a href="#训练模型" class="headerlink" title="训练模型"></a>训练模型</h3><p>首先在<a href="https://github.com/THU-MIG/yolov10" target="_blank" rel="noopener">官方Github</a>下载预训练模型：</p>
+<pre><code class="shell">pip install git+https://github.com/THU-MIG/yolov10.git
+</code></pre>
+<p>遇到网络问题：</p>
+<pre><code>unable to access &#39;https://github.com/THU-MIG/yolov10.git/&#39;: Failed to connect to github.com port 443
+</code></pre><p>搜索一下，找到解决方案为刷新DNS缓存，在cmd中输入命令：</p>
+<pre><code class="cmd">ipconfig/flushdns
+</code></pre>
+<p>预训练模型下载完成，根据<a href="https://huggingface.co/jameslahm/yolov10n" target="_blank" rel="noopener">官方示例</a>，简单测试一下：</p>
+<pre><code class="python"># -*- coding:utf8 -*-
+
+from ultralytics import YOLOv10
+
+model = YOLOv10.from_pretrained(&#39;jameslahm/yolov10n&#39;)
+model.predict(&quot;cat.jpg&quot;, save=True)
+</code></pre>
+<p>得到检测结果，看起来不错：</p>
+<p><img src="/css/images/yolov10/01.png" srcset="/img/loading.gif" alt=""></p>
+<p>然后进入准备的游戏游玩，同时录制完成每日委托的游玩视频，准备截图用于制作数据集，我这里录制了四天的份量，先做个简单的模型测试一下效果。</p>
+<h4 id="大地图"><a href="#大地图" class="headerlink" title="大地图"></a>大地图</h4><p>收集了67张图片，主要用于检测正在处理的委托和传送点，然后上传到<a href="https://app.roboflow.com/" target="_blank" rel="noopener">标注网站roboflow</a>进行标注</p>
+<p><img src="/css/images/yolov10/02.png" srcset="/img/loading.gif" alt=""></p>
+<p>一张张图片打开进行标注：</p>
+<p><img src="/css/images/yolov10/03.png" srcset="/img/loading.gif" alt=""></p>
+<p>标注完成后，按照推荐比例生成训练集，验证集和测试集：</p>
+<p><img src="/css/images/yolov10/04.png" srcset="/img/loading.gif" alt=""></p>
+<p>最后导出到本地：</p>
+<p><img src="/css/images/yolov10/05.png" srcset="/img/loading.gif" alt=""></p>
+<p>开始训练：</p>
+<pre><code class="python"># -*- coding:utf8 -*-
+
+from ultralytics import YOLOv10
+
+model = YOLOv10.from_pretrained(&#39;jameslahm/yolov10n&#39;)
+model.train(data=&quot;../../../../datasets/data.yaml&quot;, epochs=500, imgsz=640, device=0, batch=16)
+</code></pre>
+<p>但是在使用CUDA时发生问题：</p>
+<pre><code>ValueError: Invalid CUDA &#39;device=0&#39; requested. Use &#39;device=cpu&#39; or pass valid CUDA device(s) if available, i.e. &#39;device=0&#39; or &#39;device=0,1,2,3&#39; for Multi-GPU.
+</code></pre><p>在网上搜索得到<a href="https://blog.csdn.net/xiaoxian666/article/details/133710946" target="_blank" rel="noopener">解决方法</a>，应该是安装的torch为CPU版本导致的，需要卸载重装。</p>
+<p>卸载：</p>
+<pre><code class="shell">pip uninstall torch torchvision torchaudio
+</code></pre>
+<p>找到对应版本重装：</p>
+<pre><code class="shell">pip install torch==2.3.0 torchvision==0.18.0 torchaudio==2.3.0 --index-url https://download.pytorch.org/whl/cu118
+</code></pre>
+<p>要下载挺久的，完成后重新开始训练，遇到新的问题：</p>
+<pre><code>CUDNN_BACKEND_EXECUTION_PLAN_DESCRIPTOR: cudnnFinalize Descriptor Failed cudnn_status
+</code></pre><p>看起来可能是没有安装CUDNN导致的，尝试去<a href="https://developer.nvidia.com/cudnn-downloads?target_os=Windows&amp;target_arch=x86_64&amp;target_version=Agnostic&amp;cuda_version=12" target="_blank" rel="noopener">官方网站</a>下载安装一下，根据<a href="https://blog.csdn.net/tyyhmtyyhm/article/details/136840339" target="_blank" rel="noopener">参考文章</a>，将文件解压到CUDA文件夹后，可以使用CUDA\v12.0\extras\demo_suite目录下的deviceQuery程序验证安装：</p>
+<pre><code class="shell">PS C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.0\extras\demo_suite&gt; .\deviceQuery.exe
+C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.0\extras\demo_suite\deviceQuery.exe Starting...
+
+ CUDA Device Query (Runtime API) version (CUDART static linking)
+
+Detected 1 CUDA Capable device(s)
+
+...
+
+deviceQuery, CUDA Driver = CUDART, CUDA Driver Version = 12.0, CUDA Runtime Version = 12.0, NumDevs = 1, Device0 = NVIDIA GeForce RTX 3060 Laptop GPU
+Result = PASS
+PS C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.0\extras\demo_suite&gt; .\bandwidthTest.exe
+[CUDA Bandwidth Test] - Starting...
+Running on...
+...
+
+Result = PASS
+
+NOTE: The CUDA Samples are not meant for performance measurements. Results may vary when GPU Boost is enabled.
+</code></pre>
+<p>据说获得两个Result = PASS就是CUDNN环境配置完成的标志。</p>
+<p>再次开始训练，仔细看问题仍然存在异常类型为CUDNN_BACKEND_EXECUTION_PLAN_DESCRIPTOR：</p>
+<pre><code>CUDNN_BACKEND_EXECUTION_PLAN_DESCRIPTOR
+</code></pre><p>那就不是CUDNN的问题，搜索找到<a href="https://blog.csdn.net/weixin_47894469/article/details/139416673" target="_blank" rel="noopener">参考文章</a>，据说是Pytorch 2.3.0的问题，需要进行卸载重装降低版本，或者更新到2.3.1版本：</p>
+<pre><code class="shell">pip install --upgrade torch
+</code></pre>
+<p>发生警告：</p>
+<pre><code>torchvision 0.18.0+cu118 requires torch==2.3.0+cu118, but you have torch 2.3.1 which is incompatible.
+torchaudio 2.3.0+cu118 requires torch==2.3.0+cu118, but you have torch 2.3.1 which is incompatible.
+</code></pre><p>看来要把这两个依赖也一起升级才行：</p>
+<pre><code class="shell">pip install --upgrade torchvision torchaudio
+</code></pre>
+<p>完成，将torchaudio更新到2.3.1版本，torchvision更新到0.18.1：</p>
+<pre><code>Successfully installed torchaudio-2.3.1 torchvision-0.18.1
+</code></pre><p>再次开始训练，结果问题又回来了：</p>
+<pre><code>ValueError: Invalid CUDA &#39;device=0&#39; requested. Use &#39;device=cpu&#39; or pass valid CUDA device(s) if available, i.e. &#39;device=0&#39; or &#39;device=0,1,2,3&#39; for Multi-GPU.
+</code></pre><p>问题在于更新后的torch又变回了CPU版本的：</p>
+<pre><code>Ultralytics YOLOv8.1.34 🚀 Python-3.9.13 torch-2.3.1+cpu 
+</code></pre><p>卸载后去掉前面的版本指定重新安装：</p>
+<pre><code class="shell">pip install torch==2.3.1 torchvision==0.18.1 torchaudio==2.3.1 --index-url https://download.pytorch.org/whl/cu118
+</code></pre>
+<p>再次遇到问题：</p>
+<pre><code>ERROR: THESE PACKAGES DO NOT MATCH THE HASHES FROM THE REQUIREMENTS FILE. If you have updated the package versions, please update the hashes. Otherwise, examine the package contents carefully; someone may
+have tampered with them.
+</code></pre><p>清除一下pip缓存再继续：</p>
+<pre><code class="shell">pip cache purge
+</code></pre>
+<p>问题依然存在，但是他文件还没下载完就在校验哈希，怀疑网络之类的问题导致的，尝试使用浏览器下载，等完成后再自行校验哈希。</p>
+<p>下载完成后校验哈希，计算出哈希与torch官网给出的哈希一致：</p>
+<pre><code class="shell">PS C:\Users\Twings\Downloads&gt; Get-FileHash .\torch-2.3.1+cu118-cp39-cp39-win_amd64.whl -Algorithm sha256
+
+Algorithm       Hash                                                                   Path
+---------       ----                                                                   ----
+SHA256          78C9E0206F40A9F12C0369B2737D78D1998244238384286FD5492B39299059A7
+</code></pre>
+<p>使用pip安装whl，然后继续安装torchvision等剩余依赖，全部完成后再次开始训练，发现总是有问题：</p>
+<pre><code>RuntimeError: 
+        An attempt has been made to start a new process before the
+        current process has finished its bootstrapping phase.
+</code></pre><p>搜索一下，给train方法添加workers=0的参数可以解决，继续训练，训练终于正常可以进行了，训练完成：</p>
+<pre><code>Validating runs\detect\train15\weights\best.pt...
+Ultralytics YOLOv8.1.34 🚀 Python-3.9.13 torch-2.3.1+cu118 CUDA:0 (NVIDIA GeForce RTX 3060 Laptop GPU, 6144MiB)
+YOLOv10n summary (fused): 285 layers, 2696366 parameters, 0 gradients, 8.2 GFLOPs
+                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100%|██████████| 1/1 [00:00&lt;00:00,  5.34it/s]
+                   all         13         27      0.842        0.4      0.333      0.217
+                 daily         13          9      0.271          1      0.616      0.402
+             far daily         13          4      0.941          1      0.995      0.653
+    state of the seven         13          4          1          0      0.037       0.02
+              teleport         13          7          1          0     0.0102    0.00509
+        under teleport         13          3          1          0    0.00653    0.00326
+Speed: 0.5ms preprocess, 5.2ms inference, 0.0ms loss, 0.0ms postprocess per image
+Results saved to runs\detect\train15
+</code></pre><p>训练完成后，使用训练好的模型对验证集进行测试：</p>
+<pre><code class="python">model_path = &quot;runs/detect/train15/weights/best.pt&quot;
+validateImg_path = &quot;datasets/valid/images&quot;
+model = YOLOv10(model_path)
+for img in os.listdir(validateImg_path):
+    if img.endswith(&quot;.jpg&quot;):
+        img_path = os.path.join(validateImg_path, img)
+        results = model.predict(img_path, save=True)
+</code></pre>
+<p>效果：</p>
+<p><img src="/css/images/yolov10/06.png" srcset="/img/loading.gif" alt=""></p>
+<p>感觉上训练效果很差，看来需要修改一下训练集数量和生成方法。</p>
+<p>因为roboflow是个外网网站，使用起来没那么方便，所以这次使用的是本地标注工具labelimg，安装一下：</p>
+<pre><code class="shell">pip install labelimg -i https://pypi.tuna.tsinghua.edu.cn/simple
+</code></pre>
+<p>创建好数据集目录：</p>
+<p><img src="/css/images/yolov10/07.png" srcset="/img/loading.gif" alt=""></p>
+<p>使用命令打开软件进行标注：</p>
+<pre><code class="shell">labelimg JPEGImages classes.txt
+</code></pre>
+<p>完成后，将数据集分割成训练集、验证集和测试集，配置好yaml文件，然后开始训练，遇到问题：</p>
+<pre><code>WARNING ⚠️ no labels found in detect set, can not compute metrics without labels
+</code></pre><p>又回去看了看参考文章，应该是数据集格式的问题，现在的格式为voc格式的xml文件，需要转化为yolo格式的txt文件。</p>
+<p>训练完之后测试了一下，感觉大部分检测效果还行，但是其中一类应该是由于样本量太少的原因检测不出来：</p>
+<pre><code>                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100%|██████████| 1/1 [00:00&lt;00:00,  5.74it/s]
+                   all          5        162      0.782      0.582      0.645      0.408
+                 daily          5         12          1          0      0.107     0.0608
+             the_seven          5         15      0.659      0.933      0.903      0.645
+              teleport          5        102      0.796      0.833      0.874      0.503
+        under_teleport          5         33      0.673      0.561      0.694      0.422
+</code></pre><p>贴一张预测结果图：</p>
+<p><img src="/css/images/yolov10/08.png" srcset="/img/loading.gif" alt=""></p>
+<hr>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://huggingface.co/jameslahm/yolov10n" target="_blank" rel="noopener">官方手册</a></p>
+<p><a href="https://app.roboflow.com/" target="_blank" rel="noopener">标注网站roboflow</a></p>
+<p><a href="https://blog.csdn.net/yohnyang/article/details/131353572" target="_blank" rel="noopener">深度学习（10）之Roboflow 使用详解：数据集标注、训练及下载</a></p>
+<p><a href="https://zhuanlan.zhihu.com/p/699842844" target="_blank" rel="noopener">YOLOv10 正式发布！原理、部署、应用一站式齐全</a></p>
+<p><a href="https://blog.csdn.net/qq_67105081/article/details/137545156" target="_blank" rel="noopener">目标检测：yolov8(ultralytics)训练自己的数据集，新手小白也能学会训练模型，一看就会</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Python/">Python</a>
+                    
+                      <a class="hover-with-bg" href="/tags/机器学习/">机器学习</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2024/07/01/Python-yolov8学习/">
+                        <span>Python yolov8学习</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js"></script>
+<script src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js"></script>
+<script src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js"></script>
+<script src="/js/main.js"></script>
+
+
+  <script src="/js/lazyload.js"></script>
+
+
+
+  
+  <script src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js"></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "yolov10入门&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js"></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script src="/js/local-search.js"></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js"></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

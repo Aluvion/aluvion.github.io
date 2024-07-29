@@ -16,7 +16,7 @@
   <meta name="description" content="摸鱼">
   <meta name="author" content="Aluvion">
   <meta name="keywords" content="">
-  <title>Winrar远程代码执行漏洞复现 - Twings</title>
+  <title>关于Java17下面的类加载问题 - Twings</title>
 
   <link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css">
 <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
@@ -117,7 +117,7 @@
               
                 <p class="mt-3 post-meta">
                   <i class="fas fa-calendar-alt" aria-hidden="true"></i>
-                  星期五, 三月 1日 2019, 12:04 中午
+                  星期一, 七月 29日 2024, 10:25 晚上
                 </p>
               
 
@@ -126,7 +126,7 @@
                   
                   <span class="post-meta">
                     <i class="far fa-chart-bar"></i>
-                    450 字
+                    1.1k 字
                   </span>
                 
 
@@ -134,7 +134,7 @@
                   
                   <span class="post-meta">
                       <i class="far fa-clock"></i>
-                      1 分钟
+                      5 分钟
                   </span>
                 
 
@@ -169,28 +169,85 @@
           <div class="post-content mx-auto" id="post">
             
             <div class="markdown-body">
-              <p>最近出现的有名的Winrar的一个漏洞，成因是Winrar在处理ACE文件的时候处理不当，存在一个目录穿越漏洞，攻击者可以通过精心构造的压缩包，在受害人解压的时候实现任意文件写入。</p>
-<p>因为这个漏洞网上已经有了很多的相关文章，复现过程也没有什么坑，所以我就从简复现一下。</p>
-<p>因为我的电脑上的Winrar已经更新的原因，这里我采用win7的虚拟机进行复现。</p>
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>就像以前看到过的，Java8以后的一些版本对反射操作做了限制，比如Java9就对反射操作进行了一定程度的WARNING。</p>
+<p>这里学习一下具体的限制版本和绕过方式，顺带一说的是，IDEA切换Maven项目的Java版本时，也要记得把pom.xml里面的改一下。</p>
 <a id="more"></a>
 <hr>
-<p>首先我们要生成一个ACE压缩文件，这里需要用到一个Winace软件，将恶意文件压缩进去，这里用putty作为测试：</p>
-<p><img src="/css/images/2019311.png" srcset="/img/loading.gif" alt=""></p>
-<p>这里为了目录穿越要选择 store full path 选项。</p>
-<p>压缩完成会得到一个ace文件，接下来我们就需要修改这个文件，来将文件名修改成一个带有目录穿越符号的恶意文件名。</p>
-<p>github上面有一个项目可以提取ace文件的一些信息，可以使用 git clone <a href="https://github.com/droe/acefile" target="_blank" rel="noopener">https://github.com/droe/acefile</a> 来进行下载，我们生成的ace文件信息如下：</p>
-<p><img src="/css/images/2019313.png" srcset="/img/loading.gif" alt=""></p>
-<p>我们修改文件名的同时也要修改的参数是这几个：crc、size、filename的长度。</p>
-<p>相对于文件中的地方从前往后就是：</p>
-<p><img src="/css/images/2019312.png" srcset="/img/loading.gif" alt=""></p>
-<p>我们使用010Editor进行修改，按顺序修改文件名、filename长度、size、crc，具体的修改操作可以参考下面的链接。</p>
-<p>修改结束后：</p>
-<p><img src="/css/images/2019314.png" srcset="/img/loading.gif" alt=""></p>
-<p>然后将修改后的ace文件放入虚拟机桌面进行解压，成功看到putty出现在启动文件夹中！</p>
+<h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>搞两个版本的Java，分别是Java11和Java17。</p>
+<h3 id="Java11"><a href="#Java11" class="headerlink" title="Java11"></a>Java11</h3><p>首先，反射使用TemplatesImpl加载类依旧行得通，计算器正常弹出，只是会发生大量WARNING：</p>
+<pre><code class="java">public static void main(String[] args) {
+    try {
+        Class&lt;?&gt; cls = Class.forName(&quot;com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl&quot;);
+        Object templates = cls.getConstructor().newInstance();
+        Class&lt;?&gt; cls2 = Class.forName(&quot;com.sun.org.apache.xalan.internal.xsltc.trax.TransformerFactoryImpl&quot;);
+        Object factory = cls2.getConstructor().newInstance();
+        setField(templates, &quot;_name&quot;, &quot;Twings&quot;);
+        setField(templates, &quot;_bytecodes&quot;, new byte[][]{getBytes()});
+        setField(templates, &quot;_tfactory&quot;, factory);
+        Method m = cls.getDeclaredMethod(&quot;getOutputProperties&quot;);
+        m.invoke(templates);
+    }catch (Exception e) {
+        log.info(e.getMessage());
+    }
+}
+
+private static byte[] getBytes() {
+    return Base64.getDecoder().decode(&quot;yv66vgAAADQAIwoAAwAOBwAPBwAQBwARAQAGPGluaXQ+AQADKClWAQAEQ29kZQEAD0xpbmVOdW1iZXJUYWJsZQEAEkxvY2FsVmFyaWFibGVUYWJsZQEABHRoaXMBABtMb3JnL2V4YW1wbGUvVGVzdEphdmFzc2lzdDsBAApTb3VyY2VGaWxlAQASVGVzdEphdmFzc2lzdC5qYXZhDAAFAAYBABlvcmcvZXhhbXBsZS9UZXN0SmF2YXNzaXN0AQAQamF2YS9sYW5nL09iamVjdAEAFGphdmEvaW8vU2VyaWFsaXphYmxlAQAIPGNsaW5pdD4BABFqYXZhL2xhbmcvUnVudGltZQcAEwEACmdldFJ1bnRpbWUBABUoKUxqYXZhL2xhbmcvUnVudGltZTsMABUAFgoAFAAXAQAIY2FsYy5leGUIABkBAARleGVjAQAnKExqYXZhL2xhbmcvU3RyaW5nOylMamF2YS9sYW5nL1Byb2Nlc3M7DAAbABwKABQAHQEADVN0YWNrTWFwVGFibGUBAEBjb20vc3VuL29yZy9hcGFjaGUveGFsYW4vaW50ZXJuYWwveHNsdGMvcnVudGltZS9BYnN0cmFjdFRyYW5zbGV0BwAgCgAhAA4AIQACACEAAQAEAAAAAgABAAUABgABAAcAAAAvAAEAAQAAAAUqtwAisQAAAAIACAAAAAYAAQAAAAUACQAAAAwAAQAAAAUACgALAAAACAASAAYAAQAHAAAAJAADAAIAAAAPpwADAUy4ABgSGrYAHlexAAAAAQAfAAAAAwABAwABAAwAAAACAA0=&quot;);
+}
+</code></pre>
+<p>WARNING：</p>
+<pre><code>WARNING: An illegal reflective access operation has occurred
+WARNING: Illegal reflective access by org.example.Main (file:/D:/Java1.8/Unsafe/Unsafe/target/classes/) to constructor com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl()
+WARNING: Please consider reporting this to the maintainers of org.example.Main
+WARNING: Use --illegal-access=warn to enable warnings of further illegal reflective access operations
+WARNING: All illegal access operations will be denied in a future release
+</code></pre><p>该版本下Unsafe类去除了defineClass函数，只能通过defineAnonymousClass函数来加载类字节码：</p>
+<pre><code class="java">Class&lt;?&gt; cls = Class.forName(&quot;sun.misc.Unsafe&quot;);
+Field field = getField(cls, &quot;theUnsafe&quot;);
+Object unSafe = field.get(null);
+Method method = unSafe.getClass().getDeclaredMethod(&quot;defineAnonymousClass&quot;, Class.class, byte[].class, Object[].class);
+Class&lt;?&gt; c = (Class&lt;?&gt;)method.invoke(unSafe, new Object[]{Runtime.class, getBytes(), null});
+c.newInstance();
+</code></pre>
+<p>以前在Java9行得通，但是在Java11.0.23版本下出现了问题：</p>
+<pre><code>Host class java/lang/Runtime and anonymous class org/example/TestJavassist are in different packages
+</code></pre><p>看起来是待加载类和hostClass参数所属包不同导致的，应该可以通过修改待加载类的所属包来解决，但如果直接修改包名为java.lang来匹配就会遇到问题：</p>
+<pre><code>Prohibited package name: java.lang
+</code></pre><p>解决方法一是修改类加载的hostClass或者在已知环境的条件下修改待加载类的包：</p>
+<pre><code class="java">Class&lt;?&gt; cls = Class.forName(&quot;sun.misc.Unsafe&quot;);
+Field field = getField(cls, &quot;theUnsafe&quot;);
+Object unSafe = field.get(null);
+Method method = unSafe.getClass().getDeclaredMethod(&quot;defineAnonymousClass&quot;, Class.class, byte[].class, Object[].class);
+Class&lt;?&gt; c = (Class&lt;?&gt;)method.invoke(unSafe, new Object[]{Main.class, getBytes(), null});
+c.newInstance();
+</code></pre>
+<p>另一个方法好像也可以用于Java17的绕过，所以在下一部分再研究。</p>
+<h3 id="Java17"><a href="#Java17" class="headerlink" title="Java17"></a>Java17</h3><p>在该版本下，TemplatesImpl类也无法直接使用了，会爆出异常：</p>
+<pre><code>信息: class org.example.Main cannot access class com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl (in module java.xml) because module java.xml does not export com.sun.org.apache.xalan.internal.xsltc.trax to unnamed module @4dd8dc3
+</code></pre><p>可以看出，Java17加强了对反射的限制，禁止了跨模块的反射访问。根据参考文章的说法，现在采用的是强封装，所有反射在访问java.*包下非public属性和函数时，将抛出InaccessibleObjectException异常。</p>
+<p>而且Unsafe中的defineClass函数和defineAnonymousClass函数都被移除了，不能直接进行类加载，但是根据参考文章，此时官方还预留了sun.misc和sun.reflect两个包，这两个包仍然可以可以被反射调用，所以就有一种可能性，这两个包内存在某个类，通过反射调用它的某个函数可以绕过模块限制。</p>
+<p>此时我们需要使用ClassLoader的defineClass函数进行类加载，所以我们就需要想办法让此时正在运行的代码（如Main函数）与ClassLoader属于同一个包，比如修改当前代码所属的包。</p>
+<p>而Unsafe类正好有这个功能：</p>
+<pre><code class="java">Class&lt;?&gt; unSafe=Class.forName(&quot;sun.misc.Unsafe&quot;);
+Field unSafeField=unSafe.getDeclaredField(&quot;theUnsafe&quot;);
+unSafeField.setAccessible(true);
+Unsafe unSafeClass = (Unsafe) unSafeField.get(null);
+Module baseModule = Object.class.getModule();
+Class&lt;?&gt; currentClass= Main.class;
+long addr = unSafeClass.objectFieldOffset(Class.class.getDeclaredField(&quot;module&quot;));
+unSafeClass.getAndSetObject(currentClass, addr, baseModule);
+Method defineClass = ClassLoader.class.getDeclaredMethod(&quot;defineClass&quot;, String.class, byte[].class, int.class, int.class);
+defineClass.setAccessible(true);
+byte[] bytes = getBytes();
+Class&lt;?&gt; calc= (Class&lt;?&gt;) defineClass.invoke(ClassLoader.getSystemClassLoader(), &quot;org.example.TestJavassist&quot;, bytes, 0, bytes.length);
+calc.newInstance();
+</code></pre>
+<p>需要注意的是，字节码需要重新生成，去掉TemplatesImpl使用时加上的superClass。</p>
+<p>可以看到，虽然可以进行类加载，但是由于模块隔离，想要调用TemplatesImpl等类的函数就需要先获得其module并改写当前类，然而这种方法又需要反射其Class和Field，看起来好像没什么办法。</p>
+<p>至于对反序列化的影响，改日再学习。</p>
 <hr>
-<p>参考文章：</p>
-<p><a href="https://mp.weixin.qq.com/s?__biz=Mzg5MTA3NTg2MA%3D%3D&amp;mid=2247483812&amp;idx=1&amp;sn=91a32ac6a6eeb62798e08cbb74016042&amp;scene=45#wechat_redirect" target="_blank" rel="noopener">https://mp.weixin.qq.com/s?__biz=Mzg5MTA3NTg2MA%3D%3D&amp;mid=2247483812&amp;idx=1&amp;sn=91a32ac6a6eeb62798e08cbb74016042&amp;scene=45#wechat_redirect</a></p>
-<p><a href="https://www.freebuf.com/column/196660.html" target="_blank" rel="noopener">https://www.freebuf.com/column/196660.html</a></p>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://xz.aliyun.com/t/15035?time__1311=GqjxuiqiuDgDlxGgx%2BxCqiKfdb82Ypo3x#toc-3" target="_blank" rel="noopener">浅析高版本JDK反射类加载问题</a></p>
+<p><a href="https://xz.aliyun.com/t/14048?time__1311=GqAxuDRD0GK7qGNPeeqBKWtkKGCAsa4D#toc-2" target="_blank" rel="noopener">从一道题初接触RASP</a></p>
 
             </div>
             <hr>
@@ -201,11 +258,9 @@
                   <span>
                 <i class="iconfont icon-tag"></i>
                     
-                      <a class="hover-with-bg" href="/tags/二进制/">二进制</a>
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
                     
-                      <a class="hover-with-bg" href="/tags/复现/">复现</a>
-                    
-                      <a class="hover-with-bg" href="/tags/Winrar/">Winrar</a>
+                      <a class="hover-with-bg" href="/tags/Java/">Java</a>
                     
                   </span>
                 
@@ -217,16 +272,11 @@
                 <div class="post-prevnext row">
                   <div class="post-prev col-12 col-md-6">
                     
-                      <a href="/2019/03/04/Nexus-Repository-Manager-3-CVE-2019-7238-IDEA远程调试/">
-                        <i class="fa fa-chevron-left"></i>
-                        <span>Nexus Repository Manager 3 CVE-2019-7238 IDEA远程调试</span>
-                      </a>
-                    
                   </div>
                   <div class="post-next col-12 col-md-6">
                     
-                      <a href="/2019/02/27/GoogleCTF2018-beginners-js_safe_1/">
-                        <span>GoogleCTF2018-beginners-js_safe_1</span>
+                      <a href="/2024/07/25/yolov10入门/">
+                        <span>yolov10入门</span>
                         <i class="fa fa-chevron-right"></i>
                       </a>
                     
@@ -399,7 +449,7 @@
     var typed = new Typed('#subtitle', {
       strings: [
         '  ',
-        "Winrar远程代码执行漏洞复现&nbsp;",
+        "关于Java17下面的类加载问题&nbsp;",
       ],
       cursorChar: "_",
       typeSpeed: 70,

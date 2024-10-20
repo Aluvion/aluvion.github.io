@@ -281,6 +281,29 @@
   
   
   <entry>
+    <title>RustWeb开发入门</title>
+    <link href="/2023/10/15/RustWeb%E5%BC%80%E5%8F%91%E5%85%A5%E9%97%A8/"/>
+    <url>/2023/10/15/RustWeb%E5%BC%80%E5%8F%91%E5%85%A5%E9%97%A8/</url>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>学学用Rocket框架搞一搞web开发。</p><a id="more"></a><hr><h3 id="Optional和Result"><a href="#Optional和Result" class="headerlink" title="Optional和Result"></a>Optional和Result</h3><p>先补一下之前漏掉的重要内容，Rust的错误处理。</p><h4 id="主动报错panic"><a href="#主动报错panic" class="headerlink" title="主动报错panic"></a>主动报错panic</h4><p>相当于PHP下面的exit函数，调用之后会打印错误信息，然后退出程序：</p><pre><code class="Rust">fn main() {    for n in 1..=100 {        match n {            1 =&gt; println!(&quot;One!!!0x{:x}&quot;, n),            2 | 4 | 6 | 8 =&gt; println!(&quot;Two!!!0x{:x}&quot;, n),            20..=30 =&gt; println!(&quot;Three!!!0x{:x}&quot;, n),            _ =&gt; panic!(&quot;No!&quot;),        }    }}</code></pre><p>结果：</p><pre><code>PS D:\Code\Rust\study&gt; .\index.exeOne!!!0x1Two!!!0x2thread &#39;main&#39; panicked at .\index.rs:9:18:No!</code></pre><h4 id="空值检查Optional"><a href="#空值检查Optional" class="headerlink" title="空值检查Optional"></a>空值检查Optional</h4><p>大部分语言以空值为对象调用函数都会发生一个空指针错误，在Java语言下一般会事先通过判断值是否为null的方式（如!=或者Optional）来规避这种错误，而在Rust语言下，这种情况可以用Option加上match匹配的方式来解决：</p><pre><code class="Rust">fn get_data(i: u8) -&gt; Option&lt;String&gt;{    if i &lt; 3 {        Some(i.to_string())    }else {        None    }}fn check(data: Option&lt;String&gt;) {    match data {        Some(inner) =&gt; println!(&quot;Number: {}.&quot;, inner),        None =&gt; println!(&quot;None.&quot;),    }}fn main() {    for n in 1..=3 {        let res: Option&lt;String&gt; = get_data(n);        check(res);    }}</code></pre><p>Option里面只有两种类型，代表有数值的Some和代表空值的None。</p><h4 id="错误检查Result"><a href="#错误检查Result" class="headerlink" title="错误检查Result"></a>错误检查Result</h4><p>除了空指针问题，代码运行时还经常会遇到错误，比如字符串转换为数字的格式错误，此时就可以用Result：</p><pre><code class="Rust">use std::num::ParseIntError;fn get_number(s: &amp;str) -&gt; Result&lt;i32, ParseIntError&gt; {    let n = match s.parse::&lt;i32&gt;() {        Ok(n)  =&gt; n,        Err(e) =&gt; return Err(e),    };    Ok(n + 1)}fn print(res: Result&lt;i32, ParseIntError&gt;) {    match res {        Ok(n)  =&gt; println!(&quot;n is {}&quot;, n),        Err(e) =&gt; println!(&quot;Error: {}&quot;, e),    }}fn main() {    print(get_number(&quot;01234&quot;));    print(get_number(&quot;no&quot;));}</code></pre><p>Result里面同样也只有两种类型，代表执行正常的Ok和代表执行异常的Err，如果执行异常，可以在match中使用return语句提前跳出函数返回结果。</p><h4 id=""><a href="#" class="headerlink" title="?"></a>?</h4><p>也是提前返回的功能，遇到问题时会返回一个Err：</p><pre><code class="Rust">use std::num::ParseIntError;fn get_number(s1: &amp;str, s2: &amp;str) -&gt; Result&lt;i32, ParseIntError&gt; {    let n1 = s1.parse::&lt;i32&gt;()?;    let n2 = s2.parse::&lt;i32&gt;()?;    Ok(n1 + n2)}fn print(res: Result&lt;i32, ParseIntError&gt;) {    match res {        Ok(n)  =&gt; println!(&quot;n is {}&quot;, n),        Err(e) =&gt; println!(&quot;Error: {}&quot;, e),    }}fn main() {    print(get_number(&quot;01234&quot;, &quot;43210&quot;));    print(get_number(&quot;no&quot;, &quot;1&quot;));}</code></pre><h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>开始学习Rocker Web开发，首先要用包管理工具cargo创建一个新的项目：</p><pre><code class="shell">cargo new rocket-web --bin</code></pre><p>注意项目名不要与rocket一致，然后安装rocket依赖：</p><pre><code class="shell">cargo add rocket</code></pre><h3 id="Hello-World"><a href="#Hello-World" class="headerlink" title="Hello World"></a>Hello World</h3><p>直接复制黏贴到main.rs里面测试一下：</p><pre><code class="Rust">#[macro_use] extern crate rocket;#[get(&quot;/&quot;)]fn index() -&gt; &amp;&#39;static str {    &quot;Hello, world!&quot;}#[launch]fn rocket() -&gt; _ {    rocket::build().mount(&quot;/&quot;, routes![index])}</code></pre><p>然后编译：</p><pre><code class="shell">cargo build</code></pre><p>第一次编译要把依赖都编译了，还挺久的，然后运行：</p><pre><code class="shell">.\target\debug\rocket-web.exe</code></pre><p>或者用cargo run命令也可以，Hello World运行成功，还有一些日志记录：</p><pre><code>GET / text/html:   &gt;&gt; Matched: (index) GET /   &gt;&gt; Outcome: Success(200 OK)   &gt;&gt; Response succeeded.GET /favicon.ico image/avif:   &gt;&gt; No matching routes for GET /favicon.ico image/avif.   &gt;&gt; No 404 catcher registered. Using Rocket default.   &gt;&gt; Response succeeded.</code></pre><h3 id="JSON"><a href="#JSON" class="headerlink" title="JSON"></a>JSON</h3><p>先在项目里引入一下序列化、反序列化和JSON：</p><pre><code class="Rust">use rocket::serde::{Deserialize, Serialize, json::Json};</code></pre><p>但是出现问题：</p><pre><code>unresolved import `rocket::serde::json`</code></pre><p>serde是Rust序列化、反序列化框架，根据rocket的<a href="https://rocket.rs/guide/v0.5/requests/#json" target="_blank" rel="noopener">官方文档</a>的描述，想要使用rocket的serde框架，需要修改配置文件Cargo.toml，将dependencies下面的内容改为：</p><pre><code class="toml">rocket = { version = &quot;0.5.1&quot;, features = [&quot;json&quot;] }serde = { version = &quot;1.0&quot;, features = [&quot;derive&quot;] }serde_json = &quot;1.0&quot;</code></pre><p>然后再次build就没问题了，根据<a href="https://course.rs/cargo/reference/features/intro.html" target="_blank" rel="noopener">官方文档</a>，features为条件编译，可选择项目需要的依赖。</p><p>解决了依赖引入问题，然后定义一个结构体和一个接收JSON格式数据的路由：</p><pre><code class="Rust">#[macro_use] extern crate rocket;use rocket::serde::{Deserialize, Serialize, json::Json};#[derive(Debug, Deserialize, Serialize)]#[serde(crate = &quot;rocket::serde&quot;)]struct User&lt;&#39;a&gt; {    uid: u8,    username: &amp;&#39;a str,    password: &amp;&#39;a str,    login_status: bool}#[get(&quot;/&quot;)]fn index() -&gt; &amp;&#39;static str {    &quot;Hello, world!&quot;}#[post(&quot;/login&quot;, data = &quot;&lt;user&gt;&quot;)]fn login(user: Json&lt;User&gt;) -&gt; Json&lt;User&gt; {    println!(&quot;Received user: {:?}&quot;, user);    Json(User {        uid: user.uid,        username: user.username,        password: user.password,        login_status: user.login_status,    })}#[launch]fn rocket() -&gt; _ {    rocket::build().mount(&quot;/&quot;, routes![index])                    .mount(&quot;/&quot;, routes![login])}</code></pre><p>接受一个JSON数据，然后原样返回。</p><h3 id="Cookies"><a href="#Cookies" class="headerlink" title="Cookies"></a>Cookies</h3><p>有登录自然就要有保存登陆状态的功能，在Rocket框架中可以靠加密cookie的方式来实现：</p><pre><code class="Rust">#[macro_use] extern crate rocket;use rocket::serde::{Deserialize, Serialize, json::Json};use rocket::http::CookieJar;use serde_json;#[derive(Debug, Deserialize, Serialize)]#[serde(crate = &quot;rocket::serde&quot;)]struct User&lt;&#39;a&gt; {    uid: u8,    username: &amp;&#39;a str,    password: &amp;&#39;a str,    status: bool}#[get(&quot;/&quot;)]fn index(cookies: &amp;CookieJar&lt;&gt;) -&gt; Json&lt;bool&gt; {    let login_status: bool;    login_status = match cookies.get_private(&quot;user&quot;) {        Some(cookie) =&gt; match serde_json::from_str::&lt;User&gt;(cookie.value()) {            Ok(user) =&gt; user.username == &quot;admin&quot;,            Err(_) =&gt; false        },        None =&gt; false    };    Json(login_status)}#[post(&quot;/login&quot;, data = &quot;&lt;input_user&gt;&quot;)]fn login&lt;&#39;a&gt;(cookies: &amp;CookieJar&lt;&#39;a&gt;, input_user: Json&lt;User&lt;&#39;a&gt;&gt;) -&gt; Json&lt;User&lt;&#39;a&gt;&gt; {    println!(&quot;Received user: {:?}&quot;, input_user);    let user = User {        uid: input_user.uid,        username: input_user.username,        password: input_user.password,        status: true,    };    match serde_json::to_string(&amp;user) {        Ok(json_str) =&gt; cookies.add_private((&quot;user&quot;, json_str)),        Err(e) =&gt; println!(&quot;Error: {}&quot;, e),    }    Json(user)}#[get(&quot;/logout&quot;)]fn logout&lt;&#39;a&gt;(cookies: &amp;CookieJar&lt;&#39;_&gt;) -&gt; Json&lt;bool&gt; {    cookies.remove_private(&quot;user&quot;);    Json(true)}#[launch]fn rocket() -&gt; _ {    rocket::build().mount(&quot;/&quot;, routes![index])                    .mount(&quot;/&quot;, routes![login])                    .mount(&quot;/&quot;, routes![logout])}</code></pre><h3 id="文件上传"><a href="#文件上传" class="headerlink" title="文件上传"></a>文件上传</h3><p>他的FileName总是不带后缀名，麻烦：</p><pre><code class="rust">#[post(&quot;/upload&quot;, data = &quot;&lt;upload_file&gt;&quot;)]async fn upload&lt;&#39;a&gt;(cookies: &amp;CookieJar&lt;&#39;a&gt;, upload_file: Form&lt;Upload&lt;&#39;a&gt;&gt;) -&gt; Status {    if !check_login(cookies) {        return Status::Unauthorized    }    let upload_struct: Upload&lt;&#39;a&gt;= upload_file.into_inner();    let mut temp_file: TempFile = upload_struct.file;    let saved_name: &amp;str;    match temp_file.raw_name() {        Some(file_name) =&gt; saved_name = file_name.dangerous_unsafe_unsanitized_raw().as_str(),        None =&gt; return Status::InternalServerError    };    match temp_file.persist_to(Path::new(&quot;C:/test&quot;).join(saved_name)).await {        Ok(_) =&gt; println!(&quot;Upload Successfully&quot;),        Err(e) =&gt; println!(&quot;Error: {}&quot;, e),    };    println!(&quot;Title: {}&quot;, upload_struct.category);    Status::Accepted}</code></pre><h3 id="文件下载"><a href="#文件下载" class="headerlink" title="文件下载"></a>文件下载</h3><p>由于需要输出文件，所以返回类型不太一样：</p><pre><code class="rust">#[post(&quot;/download&quot;, data = &quot;&lt;download&gt;&quot;)]async fn download&lt;&#39;a&gt;(cookies: &amp;CookieJar&lt;&#39;a&gt;, download: Json&lt;Download&lt;&#39;a&gt;&gt;) -&gt; Result&lt;NamedFile, Status&gt; {    if !check_login(cookies) {        return Err(Status::Unauthorized)    }    println!(&quot;Received download request: {:?}&quot;, download);    NamedFile::open(Path::new(&quot;C:/test&quot;).join(download.category).join(download.file_name)).await.map_err(|_| Status::NotFound)}</code></pre><hr><p><a href="https://rustwiki.org/zh-CN/rust-by-example/error/option_unwrap.html" target="_blank" rel="noopener">官方文档-错误管理</a></p><p><a href="https://kaisery.github.io/trpl-zh-cn/ch01-03-hello-cargo.html" target="_blank" rel="noopener">官方文档-cargo</a></p><p><a href="https://blog.vgot.net/archives/rust-some.html" target="_blank" rel="noopener">Rust 学习之 Some、Option、Result</a></p><p><a href="https://www.cnblogs.com/timefiles/p/18082863" target="_blank" rel="noopener">Rust Rocket简单入门</a></p><p><a href="https://rocket.rs/guide/v0.5/requests/#json" target="_blank" rel="noopener">Rocket JSON</a></p><p><a href="https://course.rs/cargo/reference/features/intro.html" target="_blank" rel="noopener">官方文档-features</a></p>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>Web</tag>
+      
+      <tag>Rust</tag>
+      
+      <tag>Rocket</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>BUU XSS COURSE 1</title>
     <link href="/2023/10/14/BUU-XSS-COURSE-1/"/>
     <url>/2023/10/14/BUU-XSS-COURSE-1/</url>
@@ -3693,9 +3716,9 @@
       
       <tag>Web</tag>
       
-      <tag>NodeJS</tag>
-      
       <tag>复现</tag>
+      
+      <tag>NodeJS</tag>
       
       <tag>前端</tag>
       
@@ -3812,9 +3835,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Crypto</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -3856,9 +3879,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Crypto</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     

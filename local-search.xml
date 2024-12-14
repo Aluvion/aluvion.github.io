@@ -4,6 +4,31 @@
   
   
   <entry>
+    <title>tai-e指针分析学习(1)</title>
+    <link href="/2024/12/12/tai-e%E6%8C%87%E9%92%88%E5%88%86%E6%9E%90%E5%AD%A6%E4%B9%A0/"/>
+    <url>/2024/12/12/tai-e%E6%8C%87%E9%92%88%E5%88%86%E6%9E%90%E5%AD%A6%E4%B9%A0/</url>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>之前学习过tai-e的污点分析功能，不是很好用，现在学习一下基础的指针分析功能，看看能不能自己搞污点分析模块。</p><p>要搞这里的练习，最好先读一下网站上的课件文档，了解一下它的程序分析设计思路。</p><a id="more"></a><hr><h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>搭建IDEA+Java17的代码环境，然后打开<a href="https://tai-e.pascal-lab.net/intro/setup.html" target="_blank" rel="noopener">Tai-e课程作业</a>，去<a href="https://github.com/pascal-lab/Tai-e-assignments" target="_blank" rel="noopener">tai-e作业仓库</a>下载待分析的Java项目，再使用IDEA打开A1任务。</p><p>在Setting中搜索Gradle，将Build and run using和Run tests using这两栏内容改为IDEA，再继续构建测试项目。</p><p>下载gradle-7.4-bin.zip时遇到了问题connect timeout，打算更换国内镜像的时候又可以正常下载了，那就不管了，解决方法参考<a href="https://blog.csdn.net/laterstage/article/details/134490652" target="_blank" rel="noopener">gradle8.0或者其他版本下载太慢或者time out超时（完美解决方法）</a>和<a href="https://blog.csdn.net/weixin_44712778/article/details/113105671" target="_blank" rel="noopener">gradle：Connection timed out 问题解决</a>。</p><h3 id="A1"><a href="#A1" class="headerlink" title="A1"></a>A1</h3><p>A1名为活跃变量分析和迭代求解器，用于判断一个变量v的值在程序执行路径中是否会被使用。</p><h4 id="作业测试机制分析"><a href="#作业测试机制分析" class="headerlink" title="作业测试机制分析"></a>作业测试机制分析</h4><p>按照作文文档所说，项目入口点为Assignment类里面调用的Main.main函数：</p><pre><code>Usage: -cp &lt;CLASS_PATH&gt; -m &lt;CLASS_NAME&gt;</code></pre><p>可以在程序运行参数里填入待分析类路径和待分析类名。</p><p>但看了后面的作业内容，发现作业的运行和结果校验用的不是这个Assignment类，而是JUnit测试框架，找到项目里的测试类LiveVarTest：</p><pre><code class="Java">public class LiveVarTest {    void testLV(String inputClass) {        Tests.test(inputClass, &quot;src/test/resources/dataflow/livevar&quot;,                LiveVariableAnalysis.ID, &quot;strongly:false&quot;);    }    @Test    public void testAssign() {        testLV(&quot;Assign&quot;);    }    @Test    public void testBranch() {        testLV(&quot;Branch&quot;);    }    @Test    public void testBranchLoop() {        testLV(&quot;BranchLoop&quot;);    }    @Test    public void Array() {        testLV(&quot;Array&quot;);    }    @Test    public void Fibonacci() {        testLV(&quot;Fibonacci&quot;);    }    @Test    public void Reference() {        testLV(&quot;Reference&quot;);    }}</code></pre><p>6个Test标注的测试方法对应的就是src/test/resources/dataflow/livevar目录下面的6个测试用的待分析类以及期望的分析结果，JUnit会对比得到的输出结果和期望的分析结果，并打印结果不一致的地方。</p><p>比如待分析文件Array.java：</p><pre><code class="Java">class Array {    int sum(int arr[]) {        int result = 0;        for (int i = 0; i &lt; arr.length; i++) {            result += arr[i];        }        return result;    }}</code></pre><p>它的期望分析结果就是Array-livevar-expected.txt：</p><pre><code>-------------------- &lt;Array: void &lt;init&gt;()&gt; (livevar) --------------------[0@L1] invokespecial %this.&lt;java.lang.Object: void &lt;init&gt;()&gt;(); [][1@L1] return; []-------------------- &lt;Array: int sum(int[])&gt; (livevar) --------------------[0@L4] result = 0; [arr, result][1@L5] i = 0; [arr, i, result][2@L5] nop; [arr, i, result][3@L5] temp$0 = arr.length; [arr, i, result, temp$0][4@L5] if (i &lt; temp$0) goto 6; [arr, i, result][5@L5] goto 13; [result][6@L5] nop; [arr, i, result][7@L6] temp$4 = arr[i]; [arr, i, result, temp$4][8@L6] result = result + temp$4; [arr, i, result][9@L6] nop; [arr, i, result][10@L5] %intconst0 = 1; [%intconst0, arr, i, result][11@L5] i = i + %intconst0; [arr, i, result][12@L5] goto 2; [arr, i, result][13@L5] nop; [result][14@L8] return result; []</code></pre><p>每一个测试方法都会走到testLV函数，再进入Tests.test方法，可以看到其中也调用了Main.main方法进行tai-e指针分析，因此直接在IDEA中运行LiveVarTest类就可以开始测试，得到全错的检查结果：</p><pre><code>java.lang.AssertionError: Mismatches of analysis &quot;livevar&quot;:&lt;Array: void &lt;init&gt;()&gt; [0@L1] invokespecial %this.&lt;java.lang.Object: void &lt;init&gt;()&gt;(); expected: [], given: null&lt;Array: void &lt;init&gt;()&gt; [1@L1] return; expected: [], given: null&lt;Array: int sum(int[])&gt; [0@L4] result = 0; expected: [arr, result], given: null&lt;Array: int sum(int[])&gt; [1@L5] i = 0; expected: [arr, i, result], given: null&lt;Array: int sum(int[])&gt; [2@L5] nop; expected: [arr, i, result], given: null&lt;Array: int sum(int[])&gt; [3@L5] temp$0 = arr.length; expected: [arr, i, result, temp$0], given: null&lt;Array: int sum(int[])&gt; [4@L5] if (i &lt; temp$0) goto 6; expected: [arr, i, result], given: null&lt;Array: int sum(int[])&gt; [5@L5] goto 13; expected: [result], given: null&lt;Array: int sum(int[])&gt; [6@L5] nop; expected: [arr, i, result], given: null&lt;Array: int sum(int[])&gt; [7@L6] temp$4 = arr[i]; expected: [arr, i, result, temp$4], given: null&lt;Array: int sum(int[])&gt; [8@L6] result = result + temp$4; expected: [arr, i, result], given: null&lt;Array: int sum(int[])&gt; [9@L6] nop; expected: [arr, i, result], given: null&lt;Array: int sum(int[])&gt; [10@L5] %intconst0 = 1; expected: [%intconst0, arr, i, result], given: null&lt;Array: int sum(int[])&gt; [11@L5] i = i + %intconst0; expected: [arr, i, result], given: null&lt;Array: int sum(int[])&gt; [12@L5] goto 2; expected: [arr, i, result], given: null&lt;Array: int sum(int[])&gt; [13@L5] nop; expected: [result], given: null&lt;Array: int sum(int[])&gt; [14@L8] return result; expected: [], given: null</code></pre><h4 id="作业分析"><a href="#作业分析" class="headerlink" title="作业分析"></a>作业分析</h4><p>我们要做的就是根据项目中已有的接口或者抽象类，实现自己的分析的方法，补全空缺LiveVariableAnalysis类的代码完成分析：</p><pre><code class="Java">public class LiveVariableAnalysis extends        AbstractDataflowAnalysis&lt;Stmt, SetFact&lt;Var&gt;&gt; {    public static final String ID = &quot;livevar&quot;;    public LiveVariableAnalysis(AnalysisConfig config) {        super(config);    }    @Override    public boolean isForward() {        return false;    }    @Override    public SetFact&lt;Var&gt; newBoundaryFact(CFG&lt;Stmt&gt; cfg) {        // TODO - finish me        return null;    }    @Override    public SetFact&lt;Var&gt; newInitialFact() {        // TODO - finish me        return null;    }    @Override    public void meetInto(SetFact&lt;Var&gt; fact, SetFact&lt;Var&gt; target) {        // TODO - finish me    }    @Override    public boolean transferNode(Stmt stmt, SetFact&lt;Var&gt; in, SetFact&lt;Var&gt; out) {        // TODO - finish me        return false;    }}</code></pre><p>可以看到，其中四个方法都是空的，需要我们将其逻辑补充完全来完成代码分析，我们可以在父接口DataflowAnalysis中找到补充代码的参考。</p><p>首先是newBoundaryFact方法，该方法的注释为：</p><pre><code class="java">/** * @return new fact in boundary conditions, i.e., the fact for * entry (exit) node in forward (backward) analysis. */</code></pre><p>初始化边界向量，对于活跃变量分析的后向分析方式，简单来说就是在程序的exit点将所有变量设定为不活跃，或者说将活跃变量设定为一个空集合。</p><p>然后是newInitialFact方法，该方法的注释为：</p><pre><code class="java">/** * @return new initial fact for non-boundary nodes. */</code></pre><p>初始化CFG图中每个节点的向量，对于活跃变量分析的后向分析方式，简单来说就是将所有变量设定为不活跃，或者说将活跃变量设定为一个空集合。</p><p>meetInto方法，该方法的注释为：</p><pre><code class="java">/** * Meets a fact into another (target) fact. * This function will be used to handle control-flow confluences. */</code></pre><p>用于处理CFG图中由循环导致的环、由条件跳转等语句导致的多边指向同点的情况，将多个节点的活跃变量集合进行合并。而根据参考文章，在Taie中for、while、switch这些隐含了控制流跳转的语句类型，都被转换为了If语句。</p><p>transferNode方法，该方法的注释为：</p><pre><code class="java">/** * Node Transfer function for the analysis. * The function transfers data-flow from in (out) fact to out (in) fact * for forward (backward) analysis. * * @return true if the transfer changed the out (in) fact, otherwise false. */</code></pre><p>用于处理遍历CFG图节点时，每个节点的活跃变量变化情况，并返回一个布尔代表该节点的活跃变量集合相比上次迭代是否发生了变化，当所有节点的活跃变量集合相比上次迭代都无变化时就代表得到了一个最小不动点，程序分析得到了一个精确度较高的结果。</p><p>此外代填充的还有Solver类中的一个方法initializeBackward和IterativeSolver类中的一个方法doSolveBackward，通过调试可以发现前面Analysis类中的四个方法并不会被调用，因此我们还需要在这两个方法中使用Analysis类。</p><p>具体调用顺序为solve-&gt;initialize-&gt;initializeBackward，然后再solve-&gt;doSolve-&gt;doSolveBackward，因此这两个方法的功能分别为：initializeBackward方法负责调用newBoundaryFact和newInitialFact初始化节点的进、出活跃变量集合，doSolveBackward方法负责调用meetInto和transferNode修改每个节点的活跃变量集合。</p><h4 id="代码补全"><a href="#代码补全" class="headerlink" title="代码补全"></a>代码补全</h4><p>首先先阅读源码，看看要用到的几个类如CFG、DataflowResult有什么方法可用。</p><h5 id="DataflowResult"><a href="#DataflowResult" class="headerlink" title="DataflowResult"></a>DataflowResult</h5><p>类的描述为：</p><pre><code>An object which manages the data-flow facts associated with nodes.</code></pre><p>一个管理着所有节点数据流动的类，里面有两个Map，存储着每个CFG节点对应的出、入活跃变量集合：</p><pre><code class="java">private final Map&lt;Node, Fact&gt; inFacts = new LinkedHashMap&lt;&gt;();private final Map&lt;Node, Fact&gt; outFacts = new LinkedHashMap&lt;&gt;();</code></pre><p>还有某个节点的这两种活跃变量集合对应的getter和setter。</p><h5 id="CFG"><a href="#CFG" class="headerlink" title="CFG"></a>CFG</h5><p>接口的描述为：</p><pre><code>Representation of a control-flow graph of a method.</code></pre><p>代表一个源代码方法的控制流图，父接口为Graph，主要用于获取节点相关的信息，如出入口节点、各节点的前驱后继和与之相连的边等等。</p><p>可以通过CFG接口遍历整个CFG。</p><h5 id="Stmt"><a href="#Stmt" class="headerlink" title="Stmt"></a>Stmt</h5><p>代表代码块/代码行/代码片段，有两个重要方法：</p><pre><code class="java">/** * @return the (optional) left-value expression defined in this Stmt. * In Tai-e IR, each Stmt can define at most one expression. */Optional&lt;LValue&gt; getDef();/** * @return a list of right-value expressions used in this Stmt. */List&lt;RValue&gt; getUses();</code></pre><p>简单调试打印一下可以看到，Assign的源码为：</p><pre><code class="java">class Assign {    int assign(int a, int b, int c) {        int d = a + b;        b = d;        c = a;        return b;    }}</code></pre><p>这两个方法获取到的数据主要为：</p><pre><code>[+]pascal.taie.ir.stmt.Binary: Optional[d], [a, b, a + b][+]pascal.taie.ir.stmt.Copy: Optional[b], [d][+]pascal.taie.ir.stmt.Copy: Optional[c], [a][+]pascal.taie.ir.stmt.Return: Optional.empty, [b]</code></pre><p>简单来说就是一个获取等号左边的表达式（如果存在），一个获取等号右边（或者return等语句的返回值）的表达式。</p><p>说是表达式，但看结果一般都会返回一个Var，其他语句比如invoke等后面看到了再学习。</p><h5 id="newBoundaryFact-newInitialFact"><a href="#newBoundaryFact-newInitialFact" class="headerlink" title="newBoundaryFact/newInitialFact"></a>newBoundaryFact/newInitialFact</h5><p>两个方法都是相同处理方式，各个节点的出入活跃变量结合都初始化为空就行：</p><pre><code class="java">@Overridepublic SetFact&lt;Var&gt; newBoundaryFact(CFG&lt;Stmt&gt; cfg) {    return new SetFact&lt;&gt;();}@Overridepublic SetFact&lt;Var&gt; newInitialFact() {    return new SetFact&lt;&gt;();}</code></pre><h5 id="meetInto"><a href="#meetInto" class="headerlink" title="meetInto"></a>meetInto</h5><p>当程序分析在各个节点间跳转时，可能存在多条边指向同一个节点的情况，所以要用该方法将多个活跃变量集合并在一起取并集：</p><p>可以用SetFact类的union方法，里面会再调用Set的addAll方法：</p><pre><code class="java">@Overridepublic void meetInto(SetFact&lt;Var&gt; fact, SetFact&lt;Var&gt; target) {    target.union(fact);}</code></pre><h5 id="transferNode"><a href="#transferNode" class="headerlink" title="transferNode"></a>transferNode</h5><p>该方法用于遍历节点中的代码块，同时根据出/入数据集合和代码内容得到入/出数据集合。</p><p>对于活跃变量分析的后向分析方式而言，要做的就是对每一个节点，根据其出口活跃变量集合和代码内容，得到一个入口活跃变量集合，最后判断迭代是否到达了不动点：</p><pre><code class="java">@Overridepublic boolean transferNode(Stmt stmt, SetFact&lt;Var&gt; in, SetFact&lt;Var&gt; out) {    // 复制一个out集合，根据代码块求出新的in集合，用于后面对比，看看相比上次迭代有无变动    SetFact&lt;Var&gt; newIn = new SetFact&lt;&gt;();    newIn.union(out);    if (stmt.getDef().isPresent()) {        // 如果该代码块中重新定义了变量v，则要将其从活跃变量集合中删去        LValue def = stmt.getDef().get();        if (def instanceof Var) {            newIn.remove((Var)def);        }    }    for (RValue use: stmt.getUses()) {        if (use instanceof Var) {            // 如果该代码块中使用了变量v,则要将其加入活跃变量集合中            newIn.add((Var)use);        }    }    // 对比看看相比上次迭代有无变动并返回结果，若有改动则还需要修改该节点的in集合    if (!in.equals(newIn)) {        in.set(newIn);        return true;    }    return false;}</code></pre><h5 id="initializeBackward"><a href="#initializeBackward" class="headerlink" title="initializeBackward"></a>initializeBackward</h5><p>调用newBoundaryFact和newInitialFact方法来初始化每个节点的活跃变量集合：</p><pre><code class="java">protected void initializeBackward(CFG&lt;Node&gt; cfg, DataflowResult&lt;Node, Fact&gt; result) {    for (Node node: cfg.getNodes()) {        if (cfg.isExit(node)) {            result.setInFact(node, analysis.newBoundaryFact(cfg));            result.setOutFact(node, analysis.newBoundaryFact(cfg));        }else {            result.setInFact(node, analysis.newInitialFact());            result.setOutFact(node, analysis.newInitialFact());        }    }}</code></pre><h5 id="doSolveBackward"><a href="#doSolveBackward" class="headerlink" title="doSolveBackward"></a>doSolveBackward</h5><p>调用meetInto和transferNode方法来处理每个节点的活跃变量变化：</p><pre><code class="java">@Overrideprotected void doSolveBackward(CFG&lt;Node&gt; cfg, DataflowResult&lt;Node, Fact&gt; result) {    boolean fixed = false;    while (!fixed) {        fixed = true;        for (Node node: cfg.getNodes()) {            // 遍历所有节点，            for (Node succ: cfg.getSuccsOf(node)) {                analysis.meetInto(result.getInFact(succ), result.getOutFact(node));            }            if (analysis.transferNode(node, result.getInFact(node), result.getOutFact(node))) {                fixed = false;            }        }    }}</code></pre><p>方法名为后向分析，出入集合的处理方式确实是后向，但实际节点到下一节点的处理顺序其实是前向分析，原因有二。</p><p>其一是StmtCFG类的getNodes方法使用了自定义的comparator创建了一个正向的TreeSet，反序搞起来比较麻烦。</p><p>其二是无论从哪个块开始，最终总会达到同一结果并终止，因为所有节点的初始出入集相同，从入口到出口的顺序相同，且每个节点都有固定的remove和add，每条路径上无论是前向还是后向，所经过的所有节点上的remove和add也是一样的。</p><h5 id="流程分析"><a href="#流程分析" class="headerlink" title="流程分析"></a>流程分析</h5><p>以Assign这个test为例，打印一下迭代过程中，每个节点产生的出入活跃变量集合。</p><p>首先是第一次，两个括号里的分别是入和出活跃变量集合：</p><pre><code>[+]Line 4: d = a + b[a, b][][+]Line 5: b = d[d][][+]Line 6: c = a[a][][+]Line 7: return b[b][]</code></pre><p>第二次：</p><pre><code>[+]Line 4: d = a + b[a, b][d][+]Line 5: b = d[a, d][a][+]Line 6: c = a[a, b][b][+]Line 7: return b[b][]</code></pre><p>第三次：</p><pre><code>[+]Line 4: d = a + b[a, b][a, d][+]Line 5: b = d[a, d][a, b][+]Line 6: c = a[a, b][b][+]Line 7: return b[b][]</code></pre><hr><p><a href="https://tai-e.pascal-lab.net/intro/setup.html" target="_blank" rel="noopener">Tai-e课程作业</a></p><p><a href="https://zhuanlan.zhihu.com/p/608650217" target="_blank" rel="noopener">软件分析课程实验-A1-活跃变量分析和迭代求解器</a></p><p><a href="https://meizjm3i.github.io/2022/07/09/taie-1/" target="_blank" rel="noopener">Taie-食用指南(一)</a></p><p><a href="https://www.cnblogs.com/LittleHann/p/16313553.html" target="_blank" rel="noopener">南京大学 静态软件分析（static program analyzes）– Data Flow Analysis：Foundation 学习笔记 </a></p><p><a href="https://blog.wohin.me/posts/nju-program-analysis-a1/" target="_blank" rel="noopener">南大软分实验笔记｜A1 存活变量分析与迭代求解器</a></p>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>Web</tag>
+      
+      <tag>Java</tag>
+      
+      <tag>Tai-e</tag>
+      
+      <tag>指针分析</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>复习vue3.0+ElementUI</title>
     <link href="/2024/10/25/%E5%A4%8D%E4%B9%A0vue3-0-ElementUI/"/>
     <url>/2024/10/25/%E5%A4%8D%E4%B9%A0vue3-0-ElementUI/</url>
@@ -316,9 +341,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>XSS</tag>
       
@@ -339,9 +364,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -360,9 +385,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -381,9 +406,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -3266,9 +3291,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>Python</tag>
       
@@ -3375,9 +3400,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>PHP</tag>
       
@@ -3398,9 +3423,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>前端</tag>
       
@@ -3421,9 +3446,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>前端</tag>
       
@@ -3488,9 +3513,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>Crypto</tag>
+      
+      <tag>Web</tag>
       
       <tag>Pwn</tag>
       
@@ -3513,9 +3538,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>FastCGI</tag>
       
@@ -3536,9 +3561,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>Mongodb</tag>
       
@@ -3561,9 +3586,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>Python</tag>
       
@@ -3584,9 +3609,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>Java</tag>
       
@@ -3670,9 +3695,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -3737,13 +3762,13 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
       
-      <tag>NodeJS</tag>
+      <tag>Web</tag>
       
       <tag>复现</tag>
+      
+      <tag>NodeJS</tag>
       
       <tag>前端</tag>
       
@@ -3768,9 +3793,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -3789,9 +3814,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>前端</tag>
       
@@ -3833,9 +3858,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>Java</tag>
       
@@ -3925,9 +3950,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>Karaf</tag>
       
@@ -4157,9 +4182,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>前端</tag>
       

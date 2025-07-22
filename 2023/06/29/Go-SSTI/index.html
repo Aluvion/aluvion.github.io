@@ -282,28 +282,28 @@
 
 <hr>
 <h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>直接用docker搭建环境，首先下载一个golang镜像：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker pull golang</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">docker pull golang<br></code></pre></td></tr></table></figure>
 
 <p>开启镜像后，在&#x2F;go&#x2F;src目录下新建ssti模块，并初始化包管理工具，类似nodejs的npm：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">go mod init</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">go mod init<br></code></pre></td></tr></table></figure>
 
 <p>直接使用参考文章的测试代码，然后编译：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">go install ssti</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">go install ssti<br></code></pre></td></tr></table></figure>
 
 <p>在&#x2F;go&#x2F;bin目录下找到编译好的二进制程序并运行。</p>
 <h3 id="SSTI"><a href="#SSTI" class="headerlink" title="SSTI"></a>SSTI</h3><p>成因简单来说就是text&#x2F;template模板将外来输入作为了模板代码解析，类似SQL注入、表达式注入等漏洞，而根据<a href="https://pkg.go.dev/html/template">文档</a>，html&#x2F;template模板则会过滤用户输入，但是似乎只做了XSS过滤，所以不会影响SSTI利用。</p>
 <p>根据参考文章，主要利用方向有三个。</p>
 <h4 id="信息泄露"><a href="#信息泄露" class="headerlink" title="信息泄露"></a>信息泄露</h4><p>模板引擎允许用户将一个存储数据的对象绑定到模板中，并在渲染时读取其中的数据，因此SSTI可以读取该对象中的数据，如：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;&#123;.Passwd&#125;&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight handlebars"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs handlebars"><span class="hljs-template-variable">&#123;&#123;<span class="hljs-name">.Passwd</span>&#125;&#125;</span><br></code></pre></td></tr></table></figure>
 
 <p>或者打印整个对象：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;&#123;.&#125;&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight crystal"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs crystal"><span class="hljs-template-variable">&#123;&#123;.&#125;&#125;</span><br></code></pre></td></tr></table></figure>
 
 <h4 id="函数调用"><a href="#函数调用" class="headerlink" title="函数调用"></a>函数调用</h4><p>可以调用环境中定义的函数，如：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;&#123;.Secret &quot;pwd&quot;&#125;&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight handlebars"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs handlebars"><span class="hljs-template-variable">&#123;&#123;<span class="hljs-name">.Secret</span> <span class="hljs-string">&quot;pwd&quot;</span>&#125;&#125;</span><br></code></pre></td></tr></table></figure>
 
 <h4 id="XSS"><a href="#XSS" class="headerlink" title="XSS"></a>XSS</h4><p>可以通过调用输出函数打印JavaScript的方式进行XSS，如：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;&#123;with $x := &quot;&lt;script&gt;&lt;/script&gt;&quot;&#125;&#125;&#123;&#123;print $x&#125;&#125;&#123;&#123;end&#125;&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight handlebars"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs handlebars"><span class="hljs-template-variable">&#123;&#123;<span class="hljs-name"><span class="hljs-built_in">with</span></span> $x <span class="hljs-attr">:</span>= <span class="hljs-string">&quot;&lt;script&gt;&lt;/script&gt;&quot;</span>&#125;&#125;</span><span class="hljs-template-variable">&#123;&#123;<span class="hljs-name">print</span> $x&#125;&#125;</span><span class="hljs-template-variable">&#123;&#123;<span class="hljs-name">end</span>&#125;&#125;</span><br></code></pre></td></tr></table></figure>
 
 <p>但是无法绕过模板过滤。</p>
 <hr>

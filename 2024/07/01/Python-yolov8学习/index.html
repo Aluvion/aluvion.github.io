@@ -287,32 +287,32 @@
 
 <hr>
 <h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><h4 id="cuda"><a href="#cuda" class="headerlink" title="cuda"></a>cuda</h4><p>据说GPU计算比CPU快，为了用GPU训练模型，需要按照显卡信息找到支持的CUDA版本，在powershell中输入命令：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nvidia-smi</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">nvidia-smi<br></code></pre></td></tr></table></figure>
 
 <p>看到我的显卡支持的CUDA最高为12.0：</p>
 <p><img src="/css/images/yolov8/01.png" srcset="/img/loading.gif" lazyload></p>
 <p>再到<a href="https://developer.nvidia.com/cuda-toolkit-archive">nvidia网站</a>上找到<a href="https://developer.download.nvidia.com/compute/cuda/12.0.0/local_installers/cuda_12.0.0_527.41_windows.exe">对应版本的CUDA</a>下载安装。</p>
 <p>默认安装，安装到C盘，装完之后看了一眼，占了几个G，也不大。</p>
 <p>在powershell中输入命令：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nvcc -V</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">nvcc -V<br></code></pre></td></tr></table></figure>
 
 <p>看到按照完成：</p>
 <p><img src="/css/images/yolov8/02.png" srcset="/img/loading.gif" lazyload></p>
 <h4 id="pytorch"><a href="#pytorch" class="headerlink" title="pytorch"></a>pytorch</h4><p>在<a href="https://pytorch.org/">官方网站</a>上找到安装命令，不过这里没有适合CUDA 12.0版本的，所以安装的CUDA 11.8：</p>
 <p><img src="/css/images/yolov8/03.png" srcset="/img/loading.gif" lazyload></p>
 <p>命令：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118<br></code></pre></td></tr></table></figure>
 
 <p>然后等待安装完成。</p>
-<h4 id="ultralytics"><a href="#ultralytics" class="headerlink" title="ultralytics"></a>ultralytics</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip install ultralytics</span><br></pre></td></tr></table></figure>
+<h4 id="ultralytics"><a href="#ultralytics" class="headerlink" title="ultralytics"></a>ultralytics</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">pip install ultralytics<br></code></pre></td></tr></table></figure>
 
 <h4 id="yolov8"><a href="#yolov8" class="headerlink" title="yolov8"></a>yolov8</h4><p>在<a href="https://github.com/ultralytics/ultralytics/">Github</a>上下载yolov8源码，根据参考文章，v8.1.0比较稳定。</p>
 <p>下载之后解压，在Github找到权重文件yolov8n.pt，再弄一张测试用图片放到项目根目录，再将整个yolov8源代码目录放到Pycharm项目里面，然后用Pycharm打开。</p>
 <p>用一个简单的python脚本测试环境：</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># -*- coding:utf8 -*-</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">from</span> ultralytics <span class="keyword">import</span> YOLO</span><br><span class="line"></span><br><span class="line">model = YOLO(<span class="string">&quot;./ultralytics-8.1.0/yolov8n.pt&quot;</span>)</span><br><span class="line">source = <span class="string">&quot;./ultralytics-8.1.0/cat.jpg&quot;</span></span><br><span class="line">model.predict(source, save=<span class="literal">True</span>, imgsz=<span class="number">640</span>, conf=<span class="number">0.2</span>)</span><br></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># -*- coding:utf8 -*-</span><br><br><span class="hljs-keyword">from</span> ultralytics <span class="hljs-keyword">import</span> YOLO<br><br>model = YOLO(<span class="hljs-string">&quot;./ultralytics-8.1.0/yolov8n.pt&quot;</span>)<br>source = <span class="hljs-string">&quot;./ultralytics-8.1.0/cat.jpg&quot;</span><br>model.predict(source, save=<span class="hljs-literal">True</span>, imgsz=<span class="hljs-number">640</span>, conf=<span class="hljs-number">0.2</span>)<br></code></pre></td></tr></table></figure>
 
 <p>运行耗时挺短的，结果：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">image 1/1 D:\Genshin\ultralytics-8.1.0\cat.jpg: 416x640 1 cat, 115.5ms</span><br><span class="line">Speed: 3.0ms preprocess, 115.5ms inference, 1.0ms postprocess per image at shape (1, 3, 416, 640)</span><br><span class="line">Results saved to runs\detect\predict2</span><br></pre></td></tr></table></figure>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">image</span> <span class="hljs-number">1</span>/<span class="hljs-number">1</span> D:\Genshin\ultralytics-<span class="hljs-number">8</span>.<span class="hljs-number">1</span>.<span class="hljs-number">0</span>\cat.jpg: <span class="hljs-number">416</span>x640 <span class="hljs-number">1</span> cat, <span class="hljs-number">115</span>.<span class="hljs-number">5</span>ms<br><span class="hljs-attribute">Speed</span>: <span class="hljs-number">3</span>.<span class="hljs-number">0</span>ms preprocess, <span class="hljs-number">115</span>.<span class="hljs-number">5</span>ms inference, <span class="hljs-number">1</span>.<span class="hljs-number">0</span>ms postprocess per image at shape (<span class="hljs-number">1</span>, <span class="hljs-number">3</span>, <span class="hljs-number">416</span>, <span class="hljs-number">640</span>)<br><span class="hljs-attribute">Results</span> saved to runs\detect\predict2<br></code></pre></td></tr></table></figure>
 
 <p>在目录下找到结果图片：</p>
 <p><img src="/css/images/yolov8/04.jpg" srcset="/img/loading.gif" lazyload></p>

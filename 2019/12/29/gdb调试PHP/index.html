@@ -301,7 +301,7 @@
 <hr>
 <h3 id="2020-05-11"><a href="#2020-05-11" class="headerlink" title="2020&#x2F;05&#x2F;11"></a>2020&#x2F;05&#x2F;11</h3><p>下载源码后，加上 prefix 然后 configure(好像不加 debug 也可以，调试时没有符号表的话就加上)，make，make install，最后用 gdb 调试 bin 目录下的 php。</p>
 <p>如果调试过程中变量和流程不太对劲，可以在 configure 那一步加上 -O0。</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./configure --prefix /home/aluvion/桌面/php7.4.2 CFLAGS=&quot;-g3 -O0 -gdwarf-4&quot;</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">./configure --prefix /home/aluvion/桌面/php7.4.2 CFLAGS=&quot;-g3 -O0 -gdwarf-4&quot;<br></code></pre></td></tr></table></figure>
 
 <hr>
 <p>Orz</p>

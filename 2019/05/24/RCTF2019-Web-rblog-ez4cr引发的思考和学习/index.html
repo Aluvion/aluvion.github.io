@@ -293,12 +293,12 @@
 <h3 id="Chrome-XSS-Auditor"><a href="#Chrome-XSS-Auditor" class="headerlink" title="Chrome XSS Auditor"></a>Chrome XSS Auditor</h3><p>XSS Auditor 是 Chrome 用来防范反射型 XSS 的一种机制，主要工作原理就是字符串匹配，在语法解析阶段，Chrome 会逐一扫描文档中的标签，然后检查这些标签中的属性，如果检查到危险的属性就会跟 URL 进行比较，如果 URL 中含有同样的危险数据，XSS Auditor 就会认为这是一个反射型 XSS，并加以拦截。</p>
 <p>XSS Auditor 有两种模式，block 和 filter，block 模式下拦截会丢给你一个异常页面，filter 模式则会将它觉得恶意的代码替换掉。</p>
 <p>Chrome 在 57 版本的时候将默认模式设置为了 block，在 74 版本又将默认模式设置回了 filter。开发者也可以通过：</p>
-<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">X-XSS-Protection</span><span class="punctuation">: </span>1; mode=block</span><br></pre></td></tr></table></figure>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs http"><span class="hljs-attribute">X-XSS-Protection</span><span class="hljs-punctuation">: </span>1; mode=block<br></code></pre></td></tr></table></figure>
 
 <p>这样子的 HTTP 返回头来设置 Chrome 的拦截模式。</p>
 <p>一个拦截的栗子：</p>
 <p>解析器解析：</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">iframe</span> <span class="attr">src</span>=<span class="string">&quot;x&quot;</span> <span class="attr">onerror</span>=<span class="string">&quot;alert(1)&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">iframe</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs html"><span class="hljs-tag">&lt;<span class="hljs-name">iframe</span> <span class="hljs-attr">src</span>=<span class="hljs-string">&quot;x&quot;</span> <span class="hljs-attr">onerror</span>=<span class="hljs-string">&quot;alert(1)&quot;</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">iframe</span>&gt;</span><br></code></pre></td></tr></table></figure>
 
 <ol>
 <li><p>依次检查标签 iframe 是否包含恶意属性，src&#x2F;onerror</p>
@@ -308,7 +308,7 @@
 <li><p>onerror 中含有脚本，检查 URL 是否包含</p>
 </li>
 <li><p>如果出现在 URL 中，认为存在安全问题，将过滤：</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">iframe</span> <span class="attr">src</span>=<span class="string">&quot;x&quot;</span> <span class="attr">onerror</span>=<span class="string">&quot;alert(1)&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">iframe</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs html"><span class="hljs-tag">&lt;<span class="hljs-name">iframe</span> <span class="hljs-attr">src</span>=<span class="hljs-string">&quot;x&quot;</span> <span class="hljs-attr">onerror</span>=<span class="hljs-string">&quot;alert(1)&quot;</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">iframe</span>&gt;</span><br></code></pre></td></tr></table></figure>
 </li>
 <li><p>中止 iframe 标签检查</p>
 </li>

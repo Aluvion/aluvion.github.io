@@ -283,7 +283,7 @@
 
 <hr>
 <h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>按照node就不提了，整一个文件夹，注意不要有中文，然后进入：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">npm init</span><br><span class="line">npm install crc</span><br><span class="line">npm install express</span><br><span class="line">npm install express-session</span><br><span class="line">npm install session-file-store</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs shell">npm init<br>npm install crc<br>npm install express<br>npm install express-session<br>npm install session-file-store<br></code></pre></td></tr></table></figure>
 
 <p>然后在文件夹根目录新建两个脚本，文件夹构造如下：</p>
 <ul>
@@ -296,10 +296,10 @@
 </ul>
 <p>源码分析、测试脚本和伪造脚本见参考文章，我这里就不提了，我只简略讲一下基本的原理和利用方式。</p>
 <h3 id="express-session-file-store的session机制"><a href="#express-session-file-store的session机制" class="headerlink" title="express&#x2F;session-file-store的session机制"></a>express&#x2F;session-file-store的session机制</h3><p>跟PHP的session机制类似，后端会在cookie中设置这么一个字符串：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">connect.sid=s%3A_2siNd07lCEGNvn6yxOlhSFa9C8i8p68.T71VavO4yRXNmPQqcOtnU8mq4T68A1S6MLxsGwXWPTA</span><br></pre></td></tr></table></figure>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs ini"><span class="hljs-attr">connect.sid</span>=s%<span class="hljs-number">3</span>A_2siNd07lCEGNvn6yxOlhSFa9C8i8p68.T71VavO4yRXNmPQqcOtnU8mq4T68A1S6MLxsGwXWPTA<br></code></pre></td></tr></table></figure>
 
 <p>其中分为两部分，前一半_2siNd07lCEGNvn6yxOlhSFa9C8i8p68拼接上session文件后缀.json即为session文件的文件名（类比PHP的session_id），后一半则是为了防止篡改的session签名（这么看起来比PHP安全一点），session的数据以json的形式存放在文件中：</p>
-<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span><span class="attr">&quot;cookie&quot;</span><span class="punctuation">:</span><span class="punctuation">&#123;</span><span class="attr">&quot;originalMaxAge&quot;</span><span class="punctuation">:</span><span class="literal"><span class="keyword">null</span></span><span class="punctuation">,</span><span class="attr">&quot;expires&quot;</span><span class="punctuation">:</span><span class="literal"><span class="keyword">null</span></span><span class="punctuation">,</span><span class="attr">&quot;httpOnly&quot;</span><span class="punctuation">:</span><span class="literal"><span class="keyword">true</span></span><span class="punctuation">,</span><span class="attr">&quot;path&quot;</span><span class="punctuation">:</span><span class="string">&quot;/&quot;</span><span class="punctuation">&#125;</span><span class="punctuation">,</span><span class="attr">&quot;views&quot;</span><span class="punctuation">:</span><span class="number">3</span><span class="punctuation">,</span><span class="attr">&quot;__lastAccess&quot;</span><span class="punctuation">:</span><span class="number">1555414820955</span><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs json"><span class="hljs-punctuation">&#123;</span><span class="hljs-attr">&quot;cookie&quot;</span><span class="hljs-punctuation">:</span><span class="hljs-punctuation">&#123;</span><span class="hljs-attr">&quot;originalMaxAge&quot;</span><span class="hljs-punctuation">:</span><span class="hljs-literal"><span class="hljs-keyword">null</span></span><span class="hljs-punctuation">,</span><span class="hljs-attr">&quot;expires&quot;</span><span class="hljs-punctuation">:</span><span class="hljs-literal"><span class="hljs-keyword">null</span></span><span class="hljs-punctuation">,</span><span class="hljs-attr">&quot;httpOnly&quot;</span><span class="hljs-punctuation">:</span><span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">,</span><span class="hljs-attr">&quot;path&quot;</span><span class="hljs-punctuation">:</span><span class="hljs-string">&quot;/&quot;</span><span class="hljs-punctuation">&#125;</span><span class="hljs-punctuation">,</span><span class="hljs-attr">&quot;views&quot;</span><span class="hljs-punctuation">:</span><span class="hljs-number">3</span><span class="hljs-punctuation">,</span><span class="hljs-attr">&quot;__lastAccess&quot;</span><span class="hljs-punctuation">:</span><span class="hljs-number">1555414820955</span><span class="hljs-punctuation">&#125;</span><br></code></pre></td></tr></table></figure>
 
 <p>所以我们想要伪造session就需要两个条件：</p>
 <ul>
@@ -307,13 +307,13 @@
 </ul>
 <p>其中文件读取用于获取session和secret key，文件写入用于伪造session。因为对session文件名不加过滤的原因，所以我们可以目录穿越来将任意一个json文件作为我们的session文件。</p>
 <h3 id="session伪造"><a href="#session伪造" class="headerlink" title="session伪造"></a>session伪造</h3><p>开启index.js，我们可以在根目录新建一个Twings.json，然后修改它的views数据为2333，访问web拿到cookie：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">connect.sid=s%3AZRWxkZ_YnFJVxnu2VLsmExw8dB-5VQpI.n7g20vCqJXgp8oynXxWpmtDx1hwWLCX0mChALVLuZpg</span><br></pre></td></tr></table></figure>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">connect</span>.sid=s%<span class="hljs-number">3</span>AZRWxkZ_YnFJVxnu2VLsmExw8dB-<span class="hljs-number">5</span>VQpI.n7g20vCqJXgp8oynXxWpmtDx1hwWLCX0mChALVLuZpg<br></code></pre></td></tr></table></figure>
 
 <p>在伪造脚本中填入..&#x2F;Twings和secret key，运行得到伪造的cookie：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">connect.sid=s%3A..%2FTwings.39KjN3NBcdgX8ypFt44YToAa1PQ6JlrcO1ugfHwWPyA</span><br></pre></td></tr></table></figure>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">connect</span>.sid=s%<span class="hljs-number">3</span>A..%<span class="hljs-number">2</span>FTwings.<span class="hljs-number">39</span>KjN3NBcdgX8ypFt44YToAa1PQ6JlrcO1ugfHwWPyA<br></code></pre></td></tr></table></figure>
 
 <p>修改cookie，即可看到session伪造成功：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;p&gt;views: 2334&lt;/p&gt;</span><br></pre></td></tr></table></figure>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-section">&lt;p&gt;</span><span class="hljs-attribute">views</span>: <span class="hljs-number">2334</span>&lt;/p&gt;<br></code></pre></td></tr></table></figure>
 
 <hr>
 <p>作者水平有限，如有错误请指出Orz</p>

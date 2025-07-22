@@ -282,7 +282,7 @@
 
 <hr>
 <h3 id="不会起名"><a href="#不会起名" class="headerlink" title="不会起名"></a>不会起名</h3><p>随便弄个Xstream项目，然后用CodeQL建立数据库：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">codeql database create java-database --language=java --command=&#x27;mvn clean install&#x27;</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">codeql database create java-database --language=java --command=&#x27;mvn clean install&#x27;<br></code></pre></td></tr></table></figure>
 
 <p>分析之前要下载好依赖源码，如果mvn打包时遇到编译环境之类的问题，可以参考<a href="https://www.cnblogs.com/lick468/p/10465866.html">这篇文章</a>，如果遇到缺少包可以参考<a href="https://blog.csdn.net/zyxwvuuvwxyz/article/details/78411575">这篇</a>。</p>
 <hr>

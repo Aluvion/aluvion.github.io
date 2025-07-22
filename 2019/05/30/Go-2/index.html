@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>Go(2) - Twings</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期四, 五月 30日 2019, 7:45 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    1.2k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      5 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>填坑…</p>
+<p>Go 有一点比较要注意的就是大小写了。</p>
+<span id="more"></span>
+
+<hr>
+<h3 id="先填一下-Go-语法的坑吧"><a href="#先填一下-Go-语法的坑吧" class="headerlink" title="先填一下 Go 语法的坑吧"></a>先填一下 Go 语法的坑吧</h3><p>把简单的手册读完，就这样吧，我读的是菜鸟教程 2333。</p>
+<hr>
+<h3 id="请求"><a href="#请求" class="headerlink" title="请求"></a>请求</h3><h4 id="请求-URL"><a href="#请求-URL" class="headerlink" title="请求 URL"></a>请求 URL</h4><p>request.URL 是个指向 url.URL 结构体的指针，而这个结构体中存放了请求 URL 相关的数据，比如 request.URL.Path。</p>
+<h4 id="请求头"><a href="#请求头" class="headerlink" title="请求头"></a>请求头</h4><p>请求头存放在 request.Header 中，遍历输出一下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> key, value := <span class="keyword">range</span> request.Header &#123;</span><br><span class="line">	fmt.Fprintln(writer, key, <span class="string">&quot;: &quot;</span>, value)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>大致就是这样：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">Accept :  [text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8]</span><br><span class="line">Accept-Language :  [zh-CN,zh;q=0.8,en-US;q=0.5,en;q=0.3]</span><br><span class="line">Accept-Encoding :  [gzip, deflate]</span><br><span class="line">Cookie :  [csrftoken=J8qkz9Ebk6VDXsf4T1rkTmJ39T3uiOe0zD4j4tm9xOe5K8ATfcioJPu7sQKBGTPO]</span><br><span class="line">Connection :  [keep-alive]</span><br><span class="line">Upgrade-Insecure-Requests :  [1]</span><br><span class="line">User-Agent :  [Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:56.0) Gecko/20100101 Firefox/56.0]</span><br></pre></td></tr></table></figure>
+
+<p>可以使用 [] 或者 Get() 来取值。</p>
+<h4 id="请求-body"><a href="#请求-body" class="headerlink" title="请求 body"></a>请求 body</h4><p>body 存放在 request.Body 中，是一个 io.ReadCloser 接口，同时包含了 reader 和 closer 接口，我们要获取 body 的内容就需要调用 Read 方法，从 Body 中读取固定长度的字节放进 make 方法创建的语言切片中：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">len</span> := request.ContentLength</span><br><span class="line">body := <span class="built_in">make</span>([]<span class="type">byte</span>, <span class="built_in">len</span>)</span><br><span class="line">request.Body.Read(body)</span><br><span class="line">request.Body.Close()</span><br><span class="line">fmt.Fprintf(writer, <span class="type">string</span>(body))</span><br></pre></td></tr></table></figure>
+
+<p>可以得到未经过处理的 body，想要获取 POST 提交的表单还有内置的方法，不需要我们自己去解析。</p>
+<h5 id="Form"><a href="#Form" class="headerlink" title="Form"></a>Form</h5><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">request.ParseForm()</span><br><span class="line">fmt.Fprintln(writer, request.Form[<span class="string">&quot;a&quot;</span>][<span class="number">0</span>], request.Form[<span class="string">&quot;a&quot;</span>][<span class="number">1</span>])</span><br><span class="line">fmt.Fprintln(writer, request.Form)</span><br></pre></td></tr></table></figure>
+
+<p>这种方式不分 GET 和 POST，比如我们 GET 提交 a&#x3D;456&amp;a&#x3D;0，POST 提交 a&#x3D;123&amp;b&#x3D;abc&amp;a&#x3D;789，结果就是：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">123 789</span><br><span class="line">map[a:[123 789 456 0] b:[abc]]</span><br></pre></td></tr></table></figure>
+
+<p>它会将相同键值的合并到一起。</p>
+<h5 id="PostForm"><a href="#PostForm" class="headerlink" title="PostForm"></a>PostForm</h5><p>如果只想要 POST 的数据，就使用 PostForm 方法：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">request.ParseForm()</span><br><span class="line">fmt.Fprintln(writer, request.PostForm)</span><br></pre></td></tr></table></figure>
+
+<p>结果就只剩下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">map[a:[123 789] b:[abc]]</span><br></pre></td></tr></table></figure>
+
+<h5 id="MultipartForm"><a href="#MultipartForm" class="headerlink" title="MultipartForm"></a>MultipartForm</h5><p>这种类型要自己写太麻烦了，所以整个简单的表单：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">form</span> <span class="attr">action</span>=<span class="string">&quot;http://***/register?myname=Twings&quot;</span> <span class="attr">method</span>=<span class="string">&quot;POST&quot;</span> <span class="attr">enctype</span>=<span class="string">&quot;multipart/form-data&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&quot;text&quot;</span> <span class="attr">name</span>=<span class="string">&quot;myname&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&quot;file&quot;</span> <span class="attr">name</span>=<span class="string">&quot;myfile&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&quot;submit&quot;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>然后：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">request.ParseMultipartForm(<span class="number">1024</span>)</span><br><span class="line">fmt.Fprintln(writer, request.MultipartForm)</span><br></pre></td></tr></table></figure>
+
+<p>效果如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&amp;&#123;map[myname:[Aluvion]] map[myfile:[0xc00007e820]]&#125;</span><br></pre></td></tr></table></figure>
+
+<p>MultipartForm 只会接受 POST 的数据，而且文本数据和文件会分开放在两个 map 里面。</p>
+<h5 id="FormValue、Form、PostFormValue、PostForm"><a href="#FormValue、Form、PostFormValue、PostForm" class="headerlink" title="FormValue、Form、PostFormValue、PostForm"></a>FormValue、Form、PostFormValue、PostForm</h5><p>比较方便的取值方法，会自动解析 multipart&#x2F;form-data 或者 application&#x2F;x-www-form-urlencoded 编码方式的表单（1.12 版本的 go 中好像可以自动解析了）使用方式类似这样：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">fmt.Fprintln(writer, request.FormValue(<span class="string">&quot;myname&quot;</span>))</span><br></pre></td></tr></table></figure>
+
+<p>Form 会返回整个表单，而 FormValue 只会按顺序返回一个我们需要的键的值。</p>
+<p>Form 会从 GET 和 POST 中取值。</p>
+<p>感觉上来说，GET 的数据用多路复用器来获取比较好，POST 的可以用 PostFormValue。</p>
+<h5 id="文件上传"><a href="#文件上传" class="headerlink" title="文件上传"></a>文件上传</h5><p>要引入 io&#x2F;io.util 包，比较麻烦的方法，不过可以上传多个文件：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">request.ParseMultipartForm(<span class="number">1024</span>)</span><br><span class="line">fileHeader := request.MultipartForm.File[<span class="string">&quot;myfile&quot;</span>][<span class="number">0</span>]</span><br><span class="line">file, err := fileHeader.Open()</span><br><span class="line"><span class="keyword">if</span> err == <span class="literal">nil</span> &#123;</span><br><span class="line">    data, err := ioutil.ReadAll(file)</span><br><span class="line">    <span class="keyword">if</span> err == <span class="literal">nil</span> &#123;</span><br><span class="line">        fmt.Fprintln(writer, <span class="type">string</span>(data))</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>比较简单的方法，类似 FormValue：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">file, _, err := request.FormFile(<span class="string">&quot;myfile&quot;</span>)</span><br><span class="line"><span class="keyword">if</span> err == <span class="literal">nil</span> &#123;</span><br><span class="line">    data, err := ioutil.ReadAll(file)</span><br><span class="line">    <span class="keyword">if</span> err == <span class="literal">nil</span> &#123;</span><br><span class="line">        fmt.Fprintln(writer, <span class="type">string</span>(data))</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>获取完文件还有别的操作，比如大小校验、文件类型校验、写入文件等等，这里留坑。</p>
+<h5 id="JSON"><a href="#JSON" class="headerlink" title="JSON"></a>JSON</h5><p>留个坑。</p>
+<h3 id="响应"><a href="#响应" class="headerlink" title="响应"></a>响应</h3><p>ResponseWriter 接口有三种用来处理响应的方法：</p>
+<ul>
+<li>Write 用于处理响应主体</li>
+<li>WriteHeader 用于处理响应码</li>
+<li>Header 用于处理响应头</li>
+</ul>
+<p>如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">html := <span class="string">`&lt;html&gt;</span></span><br><span class="line"><span class="string">        &lt;head&gt;</span></span><br><span class="line"><span class="string">        	&lt;title&gt;Hello World!&lt;/title&gt;</span></span><br><span class="line"><span class="string">        &lt;/head&gt;</span></span><br><span class="line"><span class="string">        &lt;body&gt;</span></span><br><span class="line"><span class="string">        	&lt;h1&gt;Hello World!&lt;/h1&gt;</span></span><br><span class="line"><span class="string">        &lt;/body&gt;</span></span><br><span class="line"><span class="string">        &lt;/html&gt;`</span></span><br><span class="line">writer.Header().Set(<span class="string">&quot;FLAG&quot;</span>, <span class="string">&quot;flag&#123;0123456789&#125;&quot;</span>)</span><br><span class="line">writer.WriteHeader(<span class="number">233</span>)</span><br><span class="line">writer.Write([]<span class="type">byte</span>(html))</span><br></pre></td></tr></table></figure>
+
+<p>响应主体还是使用模板比较好一点啊。</p>
+<h3 id="Cookie"><a href="#Cookie" class="headerlink" title="Cookie"></a>Cookie</h3><p>Go 的 Cookie 是一个结构体，要设置 Cookie 可以先设置一个 http.Cookie 结构体，然后用 Header 将 Cookie Set 到客户端：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">cookie1 := http.Cookie&#123;</span><br><span class="line">    Name: <span class="string">&quot;HINT1&quot;</span>,</span><br><span class="line">    Value: <span class="string">&quot;FLAG is not here&quot;</span>,</span><br><span class="line">    HttpOnly: <span class="literal">true</span>,</span><br><span class="line">&#125;</span><br><span class="line">cookie2 := http.Cookie&#123;</span><br><span class="line">    Name: <span class="string">&quot;HINT2&quot;</span>,</span><br><span class="line">    Value: <span class="string">&quot;FLAG in db&quot;</span>,</span><br><span class="line">    HttpOnly: <span class="literal">true</span>,</span><br><span class="line">&#125;</span><br><span class="line">writer.Header().Set(<span class="string">&quot;Set-Cookie&quot;</span>, cookie1.String())</span><br><span class="line">writer.Header().Add(<span class="string">&quot;Set-Cookie&quot;</span>, cookie2.String())</span><br></pre></td></tr></table></figure>
+
+<p>用 Add 可以继续第二个 Cookie，或者使用 http.SetCookie：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">http.SetCookie(writer, &amp;cookie1)</span><br><span class="line">http.SetCookie(writer, &amp;cookie2)</span><br></pre></td></tr></table></figure>
+
+<p>Go 想要获取 Cookie 也有两种方法，一种是简单粗暴的 Header[“Cookie”] &#x2F; Header.Get(“Cookie”)，另一种比较简单，是内置的 request.Cookie 方法，Cookies 方法获得的则是全部 Cookie，得到的是一个指向 Cookie 结构体的指针：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">cookie1, err := request.Cookie(<span class="string">&quot;HINT1&quot;</span>)</span><br><span class="line"><span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> err == http.ErrNoCookie &#123;</span><br><span class="line">        fmt.Fprintln(writer, <span class="string">&quot;No Cookie1&quot;</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    cookie2, err := request.Cookie(<span class="string">&quot;HINT2&quot;</span>)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> err == http.ErrNoCookie &#123;</span><br><span class="line">            fmt.Fprintln(writer, <span class="string">&quot;No Cookie2&quot;</span>)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        html := cookie1.Value + cookie2.Value</span><br><span class="line">        writer.Write([]<span class="type">byte</span>(html))</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Go 的 base64 编码，引入 encoding&#x2F;base64 包，然后：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">base64.URLEncoding.EncodeToString()</span><br></pre></td></tr></table></figure>
+
+<hr>
+<p>Orz</p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Go/">Go</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2019/12/26/code-break2018-picklecode-Django%E8%BF%9C%E7%A8%8B%E8%B0%83%E8%AF%95/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>code-break2018-picklecode+Django远程调试</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2019/05/30/Docker-%E5%AE%98%E6%96%B9%E9%95%9C%E5%83%8F%E4%BD%BF%E7%94%A8/">
+                        <span>Docker-官方镜像使用</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "Go(2)&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

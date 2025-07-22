@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>tai-e学习(1) - Twings</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期日, 四月 28日 2024, 10:06 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    3k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      14 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>以前研究过使用Java-Parser和ASM框架自己搞底层分析的原始工作方式，现在学习一下底层使用tai-e工具，自己只需要实现上层分析规则的分析方式。</p>
+<span id="more"></span>
+
+<hr>
+<h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>在<a href="https://github.com/pascal-lab/Tai-e/tree/master">官方Github</a>里可以找到两种安装方式，一种是像参考文章一样，自行下载并编译整个tai-e项目，将自己的代码写入到tai-e里面去，这里采用的是第二种方法，使用maven将tai-e作为工具导入：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependencies</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>net.pascal-lab<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>tai-e<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">version</span>&gt;</span>0.2.2<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependencies</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>发现tai-e需要java17，从Oracle下载后发现我的IDEA 2020已经退版本了，不支持java17，只能又弄一个IDEA 2023，也算是跟上时代了。</p>
+<p>然后引入依赖，通过Main.mian调用就能使用tai-e开始代码分析了。</p>
+<h3 id="加载配置"><a href="#加载配置" class="headerlink" title="加载配置"></a>加载配置</h3><p>新建一个目录放两个配置文件options.yml和taint-config.yml，taint-config.yml配置由options.yml负责引入，taint-config文件里面的污点分析规则可以借用官方和参考文章的。然后在程序启动参数中加上options.yml：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">--options-file=D:\Java1.8\Tai-e\src\main\resources\options.yml</span><br></pre></td></tr></table></figure>
+
+<p>不带参数启动时tai-e会在output目录下写入一个默认的options.yml配置文件，我们自己的options.yml配置文件可以从这里复制过来，改改就能用了。</p>
+<p>测试用例是参考文章给出的java-sec-code：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">git clone https://github.com/JoyChou93/java-sec-code.git</span><br><span class="line">cd java-sec-code &amp;&amp; mvn clean package</span><br></pre></td></tr></table></figure>
+
+<p>简单看一下代码，可以知道这是个简单的测试各种漏洞的项目，污染从控制器方法的输入参数流入到漏洞函数中。</p>
+<p>改一下options.yml配置：</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">appClassPath:</span> <span class="string">E:\Code\java-sec-code\target\classes</span></span><br><span class="line"><span class="string">...</span></span><br><span class="line"><span class="attr">analyses:</span></span><br><span class="line">  <span class="attr">pta:</span> <span class="string">taint-config:taint-config.yml</span></span><br><span class="line"><span class="string">...</span></span><br></pre></td></tr></table></figure>
+
+<p>运行发现报错：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Exception in thread &quot;main&quot; java.lang.RuntimeException: Failed to locate Java library.</span><br><span class="line">Please clone submodule &#x27;java-benchmarks&#x27; by command:</span><br><span class="line">&#x27;git submodule update --init --recursive&#x27; (if you are running Tai-e)</span><br><span class="line">or &#x27;git clone https://github.com/pascal-lab/java-benchmarks&#x27; (if you are using Tai-e as a dependency),</span><br><span class="line">then put it in Tai-e&#x27;s working directory.</span><br></pre></td></tr></table></figure>
+
+<p>看来是maven引入的tai-e并不完整，缺少了某些工具或者依赖，根据提示补充一下：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">git clone https://github.com/pascal-lab/Tai-e.git</span><br><span class="line">cd Tai-e/ &amp;&amp; git submodule update --init --recursive</span><br></pre></td></tr></table></figure>
+
+<p>看到目录下多了一个java-benchmarks目录，再回去看一下报错地点研究一下导入方式：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// check existence of JREs</span></span><br><span class="line"><span class="type">File</span> <span class="variable">jreDir</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">File</span>(JREs);</span><br><span class="line"><span class="keyword">if</span> (!jreDir.exists()) &#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">RuntimeException</span>(<span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">            Failed to locate Java library.</span></span><br><span class="line"><span class="string">            Please clone submodule &#x27;java-benchmarks&#x27; by command:</span></span><br><span class="line"><span class="string">            &#x27;git submodule update --init --recursive&#x27; (if you are running Tai-e)</span></span><br><span class="line"><span class="string">            or &#x27;git clone https://github.com/pascal-lab/java-benchmarks&#x27; (if you are using Tai-e as a dependency),</span></span><br><span class="line"><span class="string">            then put it in Tai-e&#x27;s working directory.&quot;&quot;&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>JREs定义为：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">String</span> <span class="variable">JREs</span> <span class="operator">=</span> <span class="string">&quot;java-benchmarks/JREs&quot;</span>;</span><br></pre></td></tr></table></figure>
+
+<p>简单来说就是按路径加载jar，将整个目录拖到我们项目里面就行了。</p>
+<p>然后又遇到了下一个问题：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Exception in thread &quot;main&quot; java.lang.RuntimeException: couldn&#x27;t find class: org.springframework.boot.web.support.SpringBootServletInitializer (are your class path and class name given properly?)</span><br></pre></td></tr></table></figure>
+
+<p>看起来是待分析目录classes里面没有spring相关代码导致的，此时也有两种解法，第一种就是把spring等用到的依赖都加入到待分析目录中，但是由于我们的代码分析仅限于待分析项目本身，因此这样做会导致大量的无效分析。</p>
+<p>第二种方法就是找一找配置项，或许可以找到无视ClassNotFound异常的配置，在Options类中找到–allow-phantom配置项看起来跟类加载有关：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">description = <span class="string">&quot;Allow Tai-e to process phantom references, i.e.,&quot;</span> +</span><br><span class="line">        <span class="string">&quot; the referenced classes that are not found in the class paths&quot;</span> +</span><br><span class="line">        <span class="string">&quot; (default: $&#123;DEFAULT-VALUE&#125;)&quot;</span>,</span><br></pre></td></tr></table></figure>
+
+<p>简单调试一下，看到分析过程中加载类时，会根据该配置项决定是否只加载类的标识，否则则会加载body：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">boolean</span> <span class="variable">onlySignatures</span></span><br><span class="line">    <span class="operator">=</span> sc.isPhantom() || (no_bodies_for_excluded &amp;&amp; scene.isExcluded(sc) &amp;&amp; !scene.isBasicClass(sc.getName()));</span><br></pre></td></tr></table></figure>
+
+<p>因此在options.yml中修改allowPhantom为true再运行，还有问题：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Exception in thread &quot;main&quot; pascal.taie.config.ConfigException: taint-config.yml is neither a file nor a directory</span><br></pre></td></tr></table></figure>
+
+<p>路径配置有问题，修改一下就行，运行成功，不过没有检测到污染路径。</p>
+<h3 id="代码分析"><a href="#代码分析" class="headerlink" title="代码分析"></a>代码分析</h3><h4 id="添加entryPoint"><a href="#添加entryPoint" class="headerlink" title="添加entryPoint"></a>添加entryPoint</h4><p>众所周知，一次污染分析由程序入口entryPoints、污染源sources、污染终点sinks和污染传播规则transfers组成。而分析不出污染路径的原因可以回到代码里面去找，按照官方所说，污点分析是从属于指针分析的一个插件：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">In Tai-e, taint analysis is designed and implemented as a plugin of pointer analysis framework. To enable taint analysis, simply start pointer analysis with option taint-config</span><br></pre></td></tr></table></figure>
+
+<p>在tai-e源码中也可以找到污点分析类的定义，这是一个继承了Plugin接口的插件：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">TaintAnalysis</span> <span class="keyword">implements</span> <span class="title class_">Plugin</span></span><br></pre></td></tr></table></figure>
+
+<p>来到指针分析类PointerAnalysis中，可以看到setPlugin函数根据配置项taint-config加载了污点分析插件：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (options.getString(<span class="string">&quot;taint-config&quot;</span>) != <span class="literal">null</span>) &#123;</span><br><span class="line">    plugin.addPlugin(<span class="keyword">new</span> <span class="title class_">TaintAnalysis</span>());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>此外还可以加载我们配置的插件：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">addPlugins(plugin, (List&lt;String&gt;) options.get(<span class="string">&quot;plugins&quot;</span>));</span><br></pre></td></tr></table></figure>
+
+<p>除此之外还有一些默认加载的插件：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">CompositePlugin</span> <span class="variable">plugin</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">CompositePlugin</span>();</span><br><span class="line">...</span><br><span class="line">plugin.addPlugin(</span><br><span class="line">        <span class="keyword">new</span> <span class="title class_">AnalysisTimer</span>(),</span><br><span class="line">        <span class="keyword">new</span> <span class="title class_">EntryPointHandler</span>(),</span><br><span class="line">        <span class="keyword">new</span> <span class="title class_">ClassInitializer</span>(),</span><br><span class="line">        <span class="keyword">new</span> <span class="title class_">ThreadHandler</span>(),</span><br><span class="line">        <span class="keyword">new</span> <span class="title class_">NativeModeller</span>(),</span><br><span class="line">        <span class="keyword">new</span> <span class="title class_">ExceptionAnalysis</span>()</span><br><span class="line">);</span><br><span class="line">...</span><br><span class="line">solver.setPlugin(plugin);</span><br></pre></td></tr></table></figure>
+
+<p>可以看到跟污点分析强相关的插件EntryPointHandler：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onStart</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="comment">// process program main method</span></span><br><span class="line">    <span class="type">JMethod</span> <span class="variable">main</span> <span class="operator">=</span> World.get().getMainMethod();</span><br><span class="line">    <span class="keyword">if</span> (main != <span class="literal">null</span>) &#123;</span><br><span class="line">        solver.addEntryPoint(<span class="keyword">new</span> <span class="title class_">EntryPoint</span>(main,</span><br><span class="line">                <span class="keyword">new</span> <span class="title class_">DeclaredParamProvider</span>(main, solver.getHeapModel(), <span class="number">1</span>)));</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// process implicit entries</span></span><br><span class="line">    <span class="keyword">if</span> (solver.getOptions().getBoolean(<span class="string">&quot;implicit-entries&quot;</span>)) &#123;</span><br><span class="line">        <span class="keyword">for</span> (JMethod entry : World.get().getImplicitEntries()) &#123;</span><br><span class="line">            solver.addEntryPoint(<span class="keyword">new</span> <span class="title class_">EntryPoint</span>(entry, EmptyParamProvider.get()));</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>所有被集成到CompositePlugin里面的插件，都会在加载完插件的后续流程中被逐个调用onStart函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// PointerAnalysis.runAnalysis()</span></span><br><span class="line">setPlugin(solver, options);</span><br><span class="line">solver.solve();</span><br><span class="line"></span><br><span class="line"><span class="comment">// DefaultSolver</span></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">solve</span><span class="params">()</span> &#123;</span><br><span class="line">    initialize();</span><br><span class="line">    analyze();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">initialize</span><span class="params">()</span> &#123;</span><br><span class="line">    ...</span><br><span class="line">    plugin.onStart();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// CompositePlugin</span></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onStart</span><span class="params">()</span> &#123;</span><br><span class="line">    allPlugins.forEach(Plugin::onStart);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>显而易见，将项目中的main函数作为程序入口添加到了污点分析流程中，那么污点分析没有结果的原因也明白了，Spring项目的程序入口与一般程序不同，应该将控制器里面的方法作为程序入口来分析。</p>
+<p>题外话，这里加载的入口点除了main函数，还有依据implicit-entries配置项加载的implicit entries，这是一些看起来与污点分析不怎么相关的函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> <span class="keyword">static</span> <span class="keyword">final</span> List&lt;String&gt; implicitEntries = List.of(</span><br><span class="line">        <span class="string">&quot;&lt;java.lang.System: void initializeSystemClass()&gt;&quot;</span>,</span><br><span class="line">        <span class="string">&quot;&lt;java.lang.Thread: void &lt;init&gt;(java.lang.ThreadGroup,java.lang.Runnable)&gt;&quot;</span>,</span><br><span class="line">        <span class="string">&quot;&lt;java.lang.Thread: void &lt;init&gt;(java.lang.ThreadGroup,java.lang.String)&gt;&quot;</span>,</span><br><span class="line">        <span class="string">&quot;&lt;java.lang.Thread: void exit()&gt;&quot;</span>,</span><br><span class="line">        <span class="string">&quot;&lt;java.lang.ThreadGroup: void &lt;init&gt;()&gt;&quot;</span>,</span><br><span class="line">        <span class="string">&quot;&lt;java.lang.ThreadGroup: void &lt;init&gt;(java.lang.ThreadGroup,java.lang.String)&gt;&quot;</span>,</span><br><span class="line">        <span class="string">&quot;&lt;java.lang.ThreadGroup: void uncaughtException(java.lang.Thread,java.lang.Throwable)&gt;&quot;</span>,</span><br><span class="line">        <span class="string">&quot;&lt;java.lang.ClassLoader: void &lt;init&gt;()&gt;&quot;</span>,</span><br><span class="line">        <span class="string">&quot;&lt;java.lang.ClassLoader: java.lang.Class loadClassInternal(java.lang.String)&gt;&quot;</span>,</span><br><span class="line">        <span class="string">&quot;&lt;java.lang.ClassLoader: void checkPackageAccess(java.lang.Class,java.security.ProtectionDomain)&gt;&quot;</span>,</span><br><span class="line">        <span class="string">&quot;&lt;java.lang.ClassLoader: void addClass(java.lang.Class)&gt;&quot;</span>,</span><br><span class="line">        <span class="string">&quot;&lt;java.lang.ClassLoader: long findNative(java.lang.ClassLoader,java.lang.String)&gt;&quot;</span>,</span><br><span class="line">        <span class="string">&quot;&lt;java.security.PrivilegedActionException: void &lt;init&gt;(java.lang.Exception)&gt;&quot;</span></span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+
+<p>总而言之，参考TaintAnalysis的写法，我们可以自定义一个Plugin，在onStart函数中向污点分析里加入新的程序入口，然后通过配置将我们的Plugin添加到污点分析流程里面去。</p>
+<p>有个问题是TaintAnalysis中有一个manager成员，其类型TaintAnalysis类不是一个public类，但是在规则编写中又有很重要的作用。主要有两种方法，或者修改包名，或者使用反射，这里我采用反射：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> Solver solver;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> Object manager;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setSolver</span><span class="params">(Solver solver)</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>.solver = solver;</span><br><span class="line">    initManager(solver);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">initManager</span><span class="params">(Solver solver)</span> &#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        Constructor&lt;?&gt; ctr = Class.forName(<span class="string">&quot;pascal.taie.analysis.pta.plugin.taint.TaintManager&quot;</span>).</span><br><span class="line">                getDeclaredConstructors()[<span class="number">0</span>];</span><br><span class="line">        ctr.setAccessible(<span class="literal">true</span>);</span><br><span class="line">        <span class="built_in">this</span>.manager = ctr.newInstance(solver.getHeapModel());</span><br><span class="line">    &#125;<span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">        <span class="comment">// pass</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后在onStart函数中添加entryPoint，直接使用参考文章给出的代码就行，将所有注明了Mapping注解的函数都视为程序入口。</p>
+<p>再次运行，发现还是没有结果，测试后发现问题在于taint-config中的call-site-mode配置，定位到SinkHandler函数，调试得知在该配置为false的情况下结果数量为0，此时进入这一段代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">sinks.forEach(sink -&gt; &#123;</span><br><span class="line">    <span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> sink.index();</span><br><span class="line">    result.getCallGraph()</span><br><span class="line">            .edgesInTo(sink.method())</span><br><span class="line">            ...</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<p>经过调试，发现原因在于构造出的调用图中没有executeQuery的被调用边，原因不明。</p>
+<p>尝试在Plugin的onNewCallEdge函数下断点调试，结果发现数量太多了根本看不过来，而且前面的都是Static函数。于是换个做法，在自己写的Plugin里面过滤好CallSite再调试：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onNewCallEdge</span><span class="params">(Edge&lt;CSCallSite, CSMethod&gt; edge)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (edge.getCallSite().toString().contains(<span class="string">&quot;jdbc_ps_vuln&quot;</span>)) &#123;</span><br><span class="line">        System.out.println(edge.getCallee().toString());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>发现流程中确实没有出现executeQuery的被调用边，还需要再往上。</p>
+<p>观察分析流程，看到待分析实体都放在workList队列中，然后找到该队列的CallEdgeEntry类型实体由DefaultSolver类的addCallEdge函数添加，可以看到该函数只有两处调用，一处是Static函数调用，另一处再往上找到processCall函数和analyze函数，发现还是没有结果。</p>
+<p>观察了一下与jdbc_ps_vuln函数相关的调用边：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">[]:&lt;java.lang.Class: java.lang.Class forName(java.lang.String)&gt;</span><br><span class="line">[]:&lt;java.sql.DriverManager: java.sql.Connection getConnection(java.lang.String,java.lang.String,java.lang.String)&gt;</span><br><span class="line">[]:&lt;java.lang.String: java.lang.String format(java.lang.String,java.lang.Object[])&gt;</span><br><span class="line">[]:&lt;java.lang.StringBuilder: void &lt;init&gt;()&gt;</span><br><span class="line">[]:&lt;java.lang.StringBuilder: java.lang.StringBuilder append(java.lang.String)&gt;</span><br><span class="line">[]:&lt;java.lang.StringBuilder: java.lang.String toString()&gt;</span><br><span class="line">[]:&lt;java.lang.StringBuilder: void &lt;init&gt;()&gt;</span><br><span class="line">[]:&lt;java.lang.StringBuilder: java.lang.StringBuilder append(java.lang.String)&gt;</span><br><span class="line">[]:&lt;java.lang.StringBuilder: java.lang.StringBuilder append(java.lang.String)&gt;</span><br><span class="line">[]:&lt;java.lang.Throwable: java.lang.String toString()&gt;</span><br><span class="line">[]:&lt;java.lang.StringBuilder: java.lang.StringBuilder append(java.lang.String)&gt;</span><br><span class="line">[]:&lt;java.lang.StringBuilder: java.lang.String toString()&gt;</span><br></pre></td></tr></table></figure>
+
+<p>不是静态函数就是JDK自带的一些类函数，不知道底层字节码分析是怎么写的，以后再看。其他的函数调用没有形成边，而是被放到了reachableMethods里面，通过callSiteMode配置来访问：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (callSiteMode) &#123;</span><br><span class="line">    MultiMap&lt;JMethod, Sink&gt; sinkMap = sinks.stream()</span><br><span class="line">            .collect(MultiMapCollector.get(Sink::method, s -&gt; s));</span><br><span class="line">    <span class="comment">// scan all reachable call sites to search sink calls</span></span><br><span class="line">    result.getCallGraph()</span><br><span class="line">            .reachableMethods()</span><br><span class="line">            .filter(m -&gt; !m.isAbstract())</span><br><span class="line">            .flatMap(m -&gt; m.getIR().invokes(<span class="literal">false</span>))</span><br><span class="line">            .forEach(callSite -&gt; &#123;</span><br><span class="line">                <span class="type">JMethod</span> <span class="variable">callee</span> <span class="operator">=</span> callSite.getMethodRef().resolveNullable();</span><br><span class="line">                <span class="keyword">if</span> (callee == <span class="literal">null</span>) &#123;</span><br><span class="line">                    <span class="keyword">return</span>;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">for</span> (Sink sink : sinkMap.get(callee)) &#123;</span><br><span class="line">                    <span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> sink.index();</span><br><span class="line">                    <span class="type">Var</span> <span class="variable">arg</span> <span class="operator">=</span> InvokeUtils.getVar(callSite, i);</span><br><span class="line">                    <span class="type">SinkPoint</span> <span class="variable">sinkPoint</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">SinkPoint</span>(callSite, i);</span><br><span class="line">                    result.getPointsToSet(arg)</span><br><span class="line">                            .stream()</span><br><span class="line">                            .filter(manager::isTaint)</span><br><span class="line">                            .map(manager::getSourcePoint)</span><br><span class="line">                            .map(sourcePoint -&gt; <span class="keyword">new</span> <span class="title class_">TaintFlow</span>(sourcePoint, sinkPoint))</span><br><span class="line">                            .forEach(taintFlows::add);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>使用Graphviz处理生成文件，就可以看到图形化的污染流。</p>
+<h4 id="添加sources"><a href="#添加sources" class="headerlink" title="添加sources"></a>添加sources</h4><p>总结一下发现，MyPlugin中按照Mapping注解添加了大量的entryPoint，但还没有为这些方法的输入参数配置为对应的污染源source，在taint-config中手动写这么多sources过于繁琐，可以考虑用跟添加entryPoint类似的方式，在Plugin里设置sources。</p>
+<p>因为我们要添加的sources为方法参数类型，所以可以参考SourceHandler中的handleParamSource函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">handleParamSource</span><span class="params">(CSMethod csMethod)</span> &#123;</span><br><span class="line">    <span class="type">JMethod</span> <span class="variable">method</span> <span class="operator">=</span> csMethod.getMethod();</span><br><span class="line">    <span class="keyword">if</span> (paramSources.containsKey(method)) &#123;</span><br><span class="line">        <span class="type">Context</span> <span class="variable">context</span> <span class="operator">=</span> csMethod.getContext();</span><br><span class="line">        <span class="type">IR</span> <span class="variable">ir</span> <span class="operator">=</span> method.getIR();</span><br><span class="line">        paramSources.get(method).forEach(source -&gt; &#123;</span><br><span class="line">            <span class="type">int</span> <span class="variable">index</span> <span class="operator">=</span> source.index();</span><br><span class="line">            <span class="type">Var</span> <span class="variable">param</span> <span class="operator">=</span> ir.getParam(index);</span><br><span class="line">            <span class="type">SourcePoint</span> <span class="variable">sourcePoint</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ParamSourcePoint</span>(method, index);</span><br><span class="line">            <span class="type">Type</span> <span class="variable">type</span> <span class="operator">=</span> source.type();</span><br><span class="line">            <span class="type">Obj</span> <span class="variable">taint</span> <span class="operator">=</span> manager.makeTaint(sourcePoint, type);</span><br><span class="line">            solver.addVarPointsTo(context, param, taint);</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>大抄特抄参考文章和SourceHandler：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onNewCSMethod</span><span class="params">(CSMethod csMethod)</span> &#123;</span><br><span class="line">    <span class="type">JMethod</span> <span class="variable">method</span> <span class="operator">=</span> csMethod.getMethod();</span><br><span class="line">    <span class="type">boolean</span> <span class="variable">isMappingMethod</span> <span class="operator">=</span> !method.getAnnotations()</span><br><span class="line">            .stream().filter(</span><br><span class="line">                    annotation -&gt; annotation.getType().matches(<span class="string">&quot;org.springframework.web.bind.annotation.\\w+Mapping&quot;</span>)</span><br><span class="line">            ).toList().isEmpty();</span><br><span class="line">    <span class="keyword">if</span>(!isMappingMethod)&#123;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="type">Context</span> <span class="variable">context</span> <span class="operator">=</span> csMethod.getContext();</span><br><span class="line">    <span class="type">IR</span> <span class="variable">ir</span> <span class="operator">=</span> method.getIR();</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; ir.getParams().size(); i++) &#123;</span><br><span class="line">        <span class="type">Var</span> <span class="variable">param</span> <span class="operator">=</span> ir.getParam(i);</span><br><span class="line">        <span class="type">SourcePoint</span> <span class="variable">sourcePoint</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ParamSourcePoint</span>(method, i);</span><br><span class="line">        <span class="type">Obj</span> <span class="variable">taint</span> <span class="operator">=</span> makeTaint(param, sourcePoint);</span><br><span class="line">        solver.addVarPointsTo(context, param, taint);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> Obj <span class="title function_">makeTaint</span><span class="params">(Var param, SourcePoint sourcePoint)</span> &#123;</span><br><span class="line">    <span class="type">Obj</span> <span class="variable">taint</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="type">Type</span> <span class="variable">type</span> <span class="operator">=</span> param.getType();</span><br><span class="line">        <span class="type">Method</span> <span class="variable">makeTaint</span> <span class="operator">=</span> manager.getClass().getDeclaredMethod(<span class="string">&quot;makeTaint&quot;</span>,</span><br><span class="line">                SourcePoint.class, Type.class);</span><br><span class="line">        makeTaint.setAccessible(<span class="literal">true</span>);</span><br><span class="line">        taint = (Obj)makeTaint.invoke(manager, sourcePoint, type);</span><br><span class="line">    &#125;<span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">        <span class="comment">// pass</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> taint;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>最后生成的图片打开直接卡烂，笑死。</p>
+<hr>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://github.com/pascal-lab/Tai-e/tree/master">官方Github</a></p>
+<p><a href="https://xz.aliyun.com/t/13775">使用太阿（Tai-e）进行静态代码安全分析（spring-boot篇一）</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Java/">Java</a>
+                    
+                      <a class="hover-with-bg" href="/tags/%E4%BB%A3%E7%A0%81%E5%88%86%E6%9E%90/">代码分析</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2024/05/05/Java-Lambda/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>Java Lambda</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2023/10/25/%E7%A0%B4%E5%A3%B3%E6%BC%8F%E6%B4%9E%E8%B0%83%E8%AF%95%E5%AD%A6%E4%B9%A0/">
+                        <span>破壳漏洞调试学习</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "tai-e学习(1)&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

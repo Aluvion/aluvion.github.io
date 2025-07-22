@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>机器学习入门1 - Twings</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期三, 十二月 8日 2021, 12:50 凌晨
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    786 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      3 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> 学！先看了看西瓜书，一大堆的计算看的脑壳疼。</p>
+<p>参考教材为机器学习实战。</p>
+<span id="more"></span>
+
+<hr>
+<h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><h4 id="anconda"><a href="#anconda" class="headerlink" title="anconda"></a>anconda</h4><p>先整个<a href="https://www.anaconda.com/products/individual">anaconda</a>用来管理python环境，选择的版本是python3.9，Windows环境下在Anaconda Powershell Prompt执行命令验证安装：</p>
+<p><img src="/css/images/ml1/2021120801.png" srcset="/img/loading.gif"></p>
+<p>然后创建一个新的环境：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">conda create -n myenv sqlite</span><br></pre></td></tr></table></figure>
+
+<p>这里创建一个python3的环境：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">conda create -n ml python=3</span><br></pre></td></tr></table></figure>
+
+<p>然后激活：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">conda activate ml</span><br></pre></td></tr></table></figure>
+
+<p>通过list命令查看环境内安装的包：</p>
+<p><img src="/css/images/ml1/2021120802.png" srcset="/img/loading.gif"></p>
+<p>在环境内使用的python为安装的3.10版本：</p>
+<p><img src="/css/images/ml1/2021120803.png" srcset="/img/loading.gif"></p>
+<p>最后通过deactivate命令退出环境：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">conda deactivate</span><br></pre></td></tr></table></figure>
+
+<h4 id="tensorflow"><a href="#tensorflow" class="headerlink" title="tensorflow"></a>tensorflow</h4><p><a href="https://tensorflow.google.cn/install/pip">安装参考</a>，激活环境，先用search命令搜索一下可用的包：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">conda search tensorflow</span><br></pre></td></tr></table></figure>
+
+<p>结果似乎没看到适合python3.10版本的包：</p>
+<p><img src="/css/images/ml1/2021120804.png" srcset="/img/loading.gif"></p>
+<p>谨慎起见换个环境，退出环境后用remove命令删除环境：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">conda remove -n ml --all</span><br></pre></td></tr></table></figure>
+
+<p>验证删除完成：</p>
+<p><img src="/css/images/ml1/2021120805.png" srcset="/img/loading.gif"></p>
+<p>create一个新的环境，这次限定python版本为3.9：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">conda create -n ml python=3.9</span><br></pre></td></tr></table></figure>
+
+<p>再次进入环境，使用conda install安装2.6.0版本的tensorflow：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">conda install tensorflow=2.6.0</span><br></pre></td></tr></table></figure>
+
+<p>最后用list命令验证一下安装，import一下做个简单测试：</p>
+<p><img src="/css/images/ml1/2021120806.png" srcset="/img/loading.gif"></p>
+<p>看起来没什么问题了。</p>
+<h4 id="keras"><a href="#keras" class="headerlink" title="keras"></a>keras</h4><p>同样install一下就好了：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">conda install keras</span><br></pre></td></tr></table></figure>
+
+<p>之后发现tensorflow好像自带了keras，又卸了。</p>
+<h3 id="numpy矩阵操作"><a href="#numpy矩阵操作" class="headerlink" title="numpy矩阵操作"></a>numpy矩阵操作</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> numpy <span class="keyword">import</span> *</span><br><span class="line"></span><br><span class="line">mat = mat(random.rand(<span class="number">4</span>, <span class="number">4</span>))</span><br><span class="line"><span class="built_in">print</span>(mat)</span><br><span class="line">invMat = mat.I</span><br><span class="line"><span class="built_in">print</span>(invMat)</span><br><span class="line">myEye = mat * invMat</span><br><span class="line"><span class="built_in">print</span>(myEye)</span><br><span class="line">itsEye = eye(<span class="number">4</span>, <span class="number">4</span>)</span><br><span class="line"><span class="built_in">print</span>(itsEye)</span><br><span class="line"><span class="built_in">print</span>(myEye - itsEye)</span><br></pre></td></tr></table></figure>
+
+<p>运算时会存在计算误差。</p>
+<h3 id="k-近邻算法-kNN"><a href="#k-近邻算法-kNN" class="headerlink" title="k-近邻算法 kNN"></a>k-近邻算法 kNN</h3><p>简单的分类算法，<a href="https://zhuanlan.zhihu.com/p/235382275">参考</a>，数据集可以在<a href="http://archive.ics.uci.edu/ml/machine-learning-databases/wine/">这里</a>下载。</p>
+<p>首先是读取文件成一个矩阵：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">file2matrix</span>(<span class="params">filename</span>):</span><br><span class="line">    f = <span class="built_in">open</span>(filename, <span class="string">&quot;rb&quot;</span>)</span><br><span class="line">    arrayoflines = f.readlines()</span><br><span class="line">    numberoflines = <span class="built_in">len</span>(arrayoflines)</span><br><span class="line">    mymat = zeros((numberoflines, <span class="number">13</span>))</span><br><span class="line">    labels = []</span><br><span class="line">    index = <span class="number">0</span></span><br><span class="line">    <span class="keyword">for</span> line <span class="keyword">in</span> arrayoflines:</span><br><span class="line">        line = line.strip()</span><br><span class="line">        listfromline = line.split(<span class="string">b&quot;,&quot;</span>)</span><br><span class="line">        mymat[index,:] = listfromline[<span class="number">1</span>:]</span><br><span class="line">        labels.append(<span class="built_in">int</span>(listfromline[<span class="number">0</span>]))</span><br><span class="line">        index += <span class="number">1</span></span><br><span class="line">    <span class="keyword">return</span> mymat, labels</span><br></pre></td></tr></table></figure>
+
+<p>然后为了不让数值较大的属性在计算距离的时候产生更大的影响，得做一下归一化处理：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">autoNorm</span>(<span class="params">dataSet</span>):</span><br><span class="line">    minvalue = dataSet.<span class="built_in">min</span>(<span class="number">0</span>)</span><br><span class="line">    maxvalue = dataSet.<span class="built_in">max</span>(<span class="number">0</span>)</span><br><span class="line">    ranges = maxvalue - minvalue</span><br><span class="line">    normdataset = zeros(shape(dataSet))</span><br><span class="line">    numberofrow = dataSet.shape[<span class="number">0</span>]</span><br><span class="line">    normdataset = dataSet - tile(minvalue, (numberofrow, <span class="number">1</span>))</span><br><span class="line">    normdataset = normdataset / tile(ranges, (numberofrow, <span class="number">1</span>))</span><br><span class="line">    <span class="keyword">return</span> normdataset</span><br></pre></td></tr></table></figure>
+
+<p>然后就是将数据集分成训练集和测试集两部分：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">trainRatio = <span class="number">0.7</span></span><br><span class="line">myMat, labels = file2matrix(<span class="string">&quot;E:/dataSet/kNN/wine.data&quot;</span>)</span><br><span class="line">myMat = autoNorm(myMat)</span><br><span class="line">index = <span class="number">0</span></span><br><span class="line">trainIndex = <span class="number">0</span></span><br><span class="line">testIndex = <span class="number">0</span></span><br><span class="line">rowNumber = myMat.shape[<span class="number">0</span>]</span><br><span class="line">trainMat = zeros((rowNumber, <span class="number">13</span>))</span><br><span class="line">trainLabels = []</span><br><span class="line">testMat = zeros((rowNumber, <span class="number">13</span>))</span><br><span class="line">testLabels = []</span><br><span class="line"><span class="keyword">for</span> data <span class="keyword">in</span> myMat:</span><br><span class="line">    <span class="keyword">if</span> random.randint(<span class="number">1</span>, <span class="number">10</span>) &lt;= <span class="number">10</span> * trainRatio:</span><br><span class="line">        trainMat[trainIndex] = data</span><br><span class="line">        trainLabels.append(labels[index])</span><br><span class="line">        trainIndex += <span class="number">1</span></span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        testMat[testIndex] = data</span><br><span class="line">        testLabels.append(labels[index])</span><br><span class="line">        testIndex += <span class="number">1</span></span><br><span class="line">    index += <span class="number">1</span></span><br><span class="line">trainMat = trainMat[~(trainMat==<span class="number">0</span>).<span class="built_in">all</span>(<span class="number">1</span>)] <span class="comment"># 删除多余的空行</span></span><br><span class="line">testMat = testMat[~(testMat==<span class="number">0</span>).<span class="built_in">all</span>(<span class="number">1</span>)]</span><br></pre></td></tr></table></figure>
+
+<p>要用kNN算法好像得装scikit-learn，装一个先。再进行训练测试：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">kNN = KNeighborsClassifier(<span class="number">20</span>)</span><br><span class="line">kNN.fit(trainMat, trainLabels)</span><br><span class="line">predictResult = kNN.predict(testMat)</span><br><span class="line">errorCount = <span class="number">0</span></span><br><span class="line">index = <span class="number">0</span></span><br><span class="line"><span class="keyword">for</span> result <span class="keyword">in</span> predictResult:</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;the classifier came back, with: %d, the real answer is: %d&quot;</span> % (predictResult[index] ,testLabels[index]))</span><br><span class="line">    <span class="keyword">if</span> (predictResult[index] != testLabels[index]): </span><br><span class="line">        errorCount += <span class="number">1.0</span></span><br><span class="line">    index += <span class="number">1</span></span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;the total error rate is: %f&quot;</span> % (errorCount / <span class="built_in">float</span>(testMat.shape[<span class="number">0</span>])))</span><br></pre></td></tr></table></figure>
+
+<p>选用的k为20，最后的结果：</p>
+<p><img src="/css/images/ml1/2021120807.png" srcset="/img/loading.gif"></p>
+<p>看起来还行。</p>
+<h3 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h3><p>简单易懂的算法，但是数据集大起来就很难办了。</p>
+<h3 id="坏耶"><a href="#坏耶" class="headerlink" title="坏耶"></a>坏耶</h3><p>电脑里的pycharm没有python3.9的代码提示，不清楚原因，可能pycharm版本低了也可能配置没调好。</p>
+<hr>
+<h3 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h3><p><a href="https://www.jianshu.com/p/62f155eb6ac5">安装Anaconda1</a>、<a href="https://www.jianshu.com/p/62f155eb6ac5">安装Anaconda2</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/">机器学习</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2021/12/08/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E5%85%A5%E9%97%A82/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>机器学习入门2</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2021/11/11/CVE-2020-13933-Shiro%E8%AE%A4%E8%AF%81%E7%BB%95%E8%BF%87/">
+                        <span>CVE-2020-13933 Shiro认证绕过</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "机器学习入门1&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

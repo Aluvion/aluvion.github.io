@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>Rust后端开发入门 - Twings</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期三, 十月 9日 2024, 4:29 下午
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    1.6k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      8 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>无。</p>
+<span id="more"></span>
+
+<hr>
+<h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>懒得开虚拟机了，所以不打算弄远程开发，先去<a href="https://www.rust-lang.org/zh-CN/">官网网站</a>搞一个Windows的开发环境，后续再弄Linux的部署环境，安装完成后输入版本查询命令验证安装：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">PS C:\Users\admin&gt; rustup -V</span><br><span class="line">rustup 1.27.1 (54dd3d00f 2024-04-24)</span><br><span class="line">info: This is the version for the rustup toolchain manager, not the rustc compiler.</span><br><span class="line">info: The currently active `rustc` version is `rustc 1.81.0 (eeb90cda1 2024-09-04)`</span><br></pre></td></tr></table></figure>
+
+<h3 id="Hello-World"><a href="#Hello-World" class="headerlink" title="Hello World"></a>Hello World</h3><p>从<a href="https://kaisery.github.io/trpl-zh-cn/ch01-02-hello-world.html">官方文档</a>找到Hello World的栗子，先简单学习一手。</p>
+<p>感觉文档问题很大，不先讲函数等等语法，先讲数组元组又讲它们怎么作为函数参数和返回值来用，返回语句还没有return，刚看到的时候懵了一下。</p>
+<p>首先是新建一个Rust代码文件index.rs，然后写上hello world：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;Hello WOrld!&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>函数调用加了个感叹号，有点稀奇，再编译成可执行文件：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rustc .\index.rs</span><br></pre></td></tr></table></figure>
+
+<p>看到生成了一个exe可执行文件和一个pdb文件，运行exe文件即可输出Hello World：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">PS D:\Code\Rust\study&gt; .\index.exe</span><br><span class="line">Hello WOrld!</span><br></pre></td></tr></table></figure>
+
+<p>看了下文档，println还支持参数代入和数字前缀填充等等功能：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;Hello World, No.&#123;n:&gt;0wid$&#125; &#123;0&#125;!&quot;</span>, <span class="string">&quot;Twings&quot;</span>, n=<span class="number">1</span>, wid=<span class="number">6</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>得到结果：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">PS D:\Code\Rust\study&gt; .\index.exe</span><br><span class="line">Hello World, No.000001 Twings!</span><br></pre></td></tr></table></figure>
+
+<h3 id="结构体-类"><a href="#结构体-类" class="headerlink" title="结构体(类)"></a>结构体(类)</h3><p>Rust的类即结构体：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#[derive(Debug)]</span></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">Person</span>&lt;<span class="symbol">&#x27;a</span>&gt;&#123;</span><br><span class="line">    name: &amp;<span class="symbol">&#x27;a</span> <span class="type">str</span>, </span><br><span class="line">    age: <span class="type">u8</span>, </span><br><span class="line">    birthday: &amp;<span class="symbol">&#x27;a</span> <span class="type">str</span>, </span><br><span class="line">    power: <span class="type">i32</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">name</span> = <span class="string">&quot;Pite&quot;</span>;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">age</span> = <span class="number">28</span>;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">birthday</span> = <span class="string">&quot;20770707&quot;</span>;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">power</span> = <span class="number">5000</span>;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">pite</span> = Person&#123;name, age, birthday, power&#125;;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;&#123;:?&#125;&quot;</span>, pite);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通过配置#[derive(Debug)]可以打印结构体方便查看内容，打印结果：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">PS D:\Code\Rust\study&gt; .\index.exe     </span><br><span class="line">Person &#123; name: &quot;Pite&quot;, age: 28, birthday: &quot;20770707&quot;, power: 5000 &#125;</span><br></pre></td></tr></table></figure>
+
+<p>也可以用更简洁一点的实例化方式：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> <span class="variable">pite</span> = Person&#123;</span><br><span class="line">    name: <span class="string">&quot;Pite&quot;</span>, </span><br><span class="line">    age: <span class="number">28</span>, </span><br><span class="line">    birthday: <span class="string">&quot;20770707&quot;</span>, </span><br><span class="line">    power: <span class="number">5000</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>也可以通过定义函数的方式，给每种结构体自定义自己的打印方式：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">use</span> std::fmt::&#123;<span class="keyword">self</span>, Formatter, Display&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">Person</span>&lt;<span class="symbol">&#x27;a</span>&gt;&#123;</span><br><span class="line">    name: &amp;<span class="symbol">&#x27;a</span> <span class="type">str</span>, </span><br><span class="line">    age: <span class="type">u8</span>, </span><br><span class="line">    birthday: &amp;<span class="symbol">&#x27;a</span> <span class="type">str</span>, </span><br><span class="line">    power: <span class="type">i32</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span>&lt;<span class="symbol">&#x27;a</span>&gt; Display <span class="keyword">for</span> <span class="title class_">Person</span>&lt;<span class="symbol">&#x27;a</span>&gt; &#123;</span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">fmt</span>(&amp;<span class="keyword">self</span>, f: &amp;<span class="keyword">mut</span> Formatter) <span class="punctuation">-&gt;</span> fmt::<span class="type">Result</span> &#123;</span><br><span class="line">        <span class="built_in">write!</span>(f, <span class="string">&quot;&#123;&#125;, age: &#123;&#125;, birthday: &#123;&#125;, power: &#123;&#125;&quot;</span>,</span><br><span class="line">               <span class="keyword">self</span>.name, <span class="keyword">self</span>.age, <span class="keyword">self</span>.birthday, <span class="keyword">self</span>.power)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">name</span> = <span class="string">&quot;Pite&quot;</span>;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">age</span> = <span class="number">28</span>;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">birthday</span> = <span class="string">&quot;20770707&quot;</span>;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">power</span> = <span class="number">5000</span>;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">pite</span> = Person&#123;name, age, birthday, power&#125;;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;&#123;&#125;&quot;</span>, pite);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>输出结果：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">PS D:\Code\Rust\study&gt; .\index.exe</span><br><span class="line">Pite, age: 28, birthday: 20770707 , power: 5000</span><br></pre></td></tr></table></figure>
+
+<p>既然有类(结构体)，那么自然也会有接口和类方法，Rust中的接口就是trait特质，可以在特质中定义抽象接口：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">mod</span> my_mod&#123;</span><br><span class="line">    <span class="keyword">use</span> std::fmt::&#123;<span class="keyword">self</span>, Formatter, Display&#125;;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">pub</span> <span class="keyword">trait</span> <span class="title class_">Animal</span>&lt;<span class="symbol">&#x27;a</span>, T&gt; &#123;</span><br><span class="line">        <span class="keyword">fn</span> <span class="title function_">new</span>(name: &amp;<span class="symbol">&#x27;a</span> <span class="type">str</span>, age: <span class="type">u8</span>, birthday: &amp;<span class="symbol">&#x27;a</span> <span class="type">str</span>, power: <span class="type">i32</span>, secret: T) <span class="punctuation">-&gt;</span> <span class="keyword">Self</span>;</span><br><span class="line">        <span class="keyword">fn</span> <span class="title function_">get_name</span>(&amp;<span class="keyword">self</span>) <span class="punctuation">-&gt;</span> &amp;<span class="symbol">&#x27;a</span> <span class="type">str</span>;</span><br><span class="line">        <span class="keyword">fn</span> <span class="title function_">get_age</span>(&amp;<span class="keyword">self</span>) <span class="punctuation">-&gt;</span> <span class="type">u8</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">pub</span> <span class="keyword">struct</span> <span class="title class_">Person</span>&lt;<span class="symbol">&#x27;a</span>, T&gt; &#123;</span><br><span class="line">        name: &amp;<span class="symbol">&#x27;a</span> <span class="type">str</span>, </span><br><span class="line">        age: <span class="type">u8</span>, </span><br><span class="line">        birthday: &amp;<span class="symbol">&#x27;a</span> <span class="type">str</span>, </span><br><span class="line">        power: <span class="type">i32</span>,</span><br><span class="line">        secret: T</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">impl</span>&lt;<span class="symbol">&#x27;a</span>, T&gt; Person&lt;<span class="symbol">&#x27;a</span>, T&gt; &#123;</span><br><span class="line">        <span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">get_secret</span>(&amp;<span class="keyword">self</span>) <span class="punctuation">-&gt;</span> &amp;T &#123;</span><br><span class="line">            &amp;<span class="keyword">self</span>.secret</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">impl</span>&lt;<span class="symbol">&#x27;a</span>, T&gt; Animal&lt;<span class="symbol">&#x27;a</span>, T&gt; <span class="keyword">for</span> <span class="title class_">Person</span>&lt;<span class="symbol">&#x27;a</span>, T&gt; &#123;</span><br><span class="line">        <span class="keyword">fn</span> <span class="title function_">new</span>(name: &amp;<span class="symbol">&#x27;a</span> <span class="type">str</span>, age: <span class="type">u8</span>, birthday: &amp;<span class="symbol">&#x27;a</span> <span class="type">str</span>, power: <span class="type">i32</span>, secret: T) <span class="punctuation">-&gt;</span> <span class="keyword">Self</span> &#123;</span><br><span class="line">            Person&#123;</span><br><span class="line">                name: name,</span><br><span class="line">                age: age,</span><br><span class="line">                birthday: birthday,</span><br><span class="line">                power: power,</span><br><span class="line">                secret: secret</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">fn</span> <span class="title function_">get_name</span>(&amp;<span class="keyword">self</span>) <span class="punctuation">-&gt;</span> &amp;<span class="symbol">&#x27;a</span> <span class="type">str</span> &#123;</span><br><span class="line">            <span class="keyword">self</span>.name</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">fn</span> <span class="title function_">get_age</span>(&amp;<span class="keyword">self</span>) <span class="punctuation">-&gt;</span> <span class="type">u8</span> &#123;</span><br><span class="line">            <span class="keyword">self</span>.age</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">pub</span> <span class="keyword">struct</span> <span class="title class_">Secret</span>&lt;<span class="symbol">&#x27;a</span>&gt; &#123;</span><br><span class="line">        <span class="keyword">pub</span> content: &amp;<span class="symbol">&#x27;a</span> <span class="type">str</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">impl</span>&lt;<span class="symbol">&#x27;a</span>, T: Display&gt; Display <span class="keyword">for</span> <span class="title class_">Person</span>&lt;<span class="symbol">&#x27;a</span>, T&gt; &#123;</span><br><span class="line">        <span class="keyword">fn</span> <span class="title function_">fmt</span>(&amp;<span class="keyword">self</span>, f: &amp;<span class="keyword">mut</span> Formatter) <span class="punctuation">-&gt;</span> fmt::<span class="type">Result</span> &#123;</span><br><span class="line">            <span class="built_in">write!</span>(f, <span class="string">&quot;&#123;&#125;, age: &#123;&#125;, birthday: &#123;&#125;, power: &#123;&#125;, secret: &#123;&#125;&quot;</span>,</span><br><span class="line">                <span class="keyword">self</span>.name, <span class="keyword">self</span>.age, <span class="keyword">self</span>.birthday, <span class="keyword">self</span>.power, <span class="keyword">self</span>.secret)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">impl</span>&lt;<span class="symbol">&#x27;a</span>&gt; Display <span class="keyword">for</span> <span class="title class_">Secret</span>&lt;<span class="symbol">&#x27;a</span>&gt; &#123;</span><br><span class="line">        <span class="keyword">fn</span> <span class="title function_">fmt</span>(&amp;<span class="keyword">self</span>, f: &amp;<span class="keyword">mut</span> Formatter) <span class="punctuation">-&gt;</span> fmt::<span class="type">Result</span> &#123;</span><br><span class="line">            <span class="built_in">write!</span>(f, <span class="string">&quot;/*&#123;&#125;*/&quot;</span>,</span><br><span class="line">                <span class="keyword">self</span>.content)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">use</span> my_mod::Animal;</span><br><span class="line"></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">pite</span>: my_mod::Person&lt;my_mod::Secret&gt; = my_mod::Animal::<span class="title function_ invoke__">new</span>(</span><br><span class="line">        <span class="string">&quot;Pite&quot;</span>, </span><br><span class="line">        <span class="number">28</span>, </span><br><span class="line">        <span class="string">&quot;20770707&quot;</span>, </span><br><span class="line">        <span class="number">5000</span>,</span><br><span class="line">        my_mod::Secret&#123;content: <span class="string">&quot;No way!&quot;</span>&#125;</span><br><span class="line">    );</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;&#123;&#125;&quot;</span>, pite);</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;&#123;&#125;, &#123;&#125;, &#123;&#125;&quot;</span>, pite.<span class="title function_ invoke__">get_name</span>(), pite.<span class="title function_ invoke__">get_age</span>(), pite.<span class="title function_ invoke__">get_secret</span>());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>trait中定义的方法与trait本身具有相同的可见性配置(pub)。</p>
+<p>搞了个模块+泛型+结构体+特质+方法的代码，一直debug，搞得头都大了，几个主要的bug：</p>
+<ol>
+<li><p>模块内定义的特质，模块外调用其方法是要先使用use引入</p>
+</li>
+<li><p>Display打印结构体时，除了该结构体本身，结构体中的结构体也要实现Display方法</p>
+</li>
+<li><p>乱七八糟的泛型和生命周期定义</p>
+</li>
+</ol>
+<h3 id="变量"><a href="#变量" class="headerlink" title="变量"></a>变量</h3><p>类型、枚举和生命周期先略过，等要用到再说。</p>
+<p>变量以let关键字进行定义，虽然是强类型语言，但是编译时编译器会自行推断一些变量类型：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">a</span> = <span class="string">&quot;abc&quot;</span>;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">b</span> = <span class="number">2333</span>;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">c</span> = <span class="number">2333.333</span>;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;An string: &#123;:?&#125;&quot;</span>, a);</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;A integer: &#123;:?&#125;&quot;</span>, b);</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;A integer too: &#123;:?&#125;&quot;</span>, c <span class="keyword">as</span> <span class="type">u32</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>输出：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">PS D:\Code\Rust\study&gt; .\index.exe</span><br><span class="line">An string: &quot;abc&quot;</span><br><span class="line">A integer: 2333        </span><br><span class="line">A integer too: 2333  </span><br></pre></td></tr></table></figure>
+
+<p>在rust中，变量默认是不可修改的：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">a</span> = <span class="number">777</span>;</span><br><span class="line">    a = <span class="number">4396</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>尝试修改变量就会在编译时报错，无法为一个不可变变量赋值两次：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">error[E0384]: cannot assign twice to immutable variable `a`</span><br></pre></td></tr></table></figure>
+
+<p>此时就需要将其定义为可变变量：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut </span><span class="variable">a</span> = <span class="number">777</span>;</span><br><span class="line">    a = <span class="number">4396</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这样就不会有问题。</p>
+<h3 id="流程控制"><a href="#流程控制" class="headerlink" title="流程控制"></a>流程控制</h3><h4 id="if条件判断"><a href="#if条件判断" class="headerlink" title="if条件判断"></a>if条件判断</h4><p>条件判断略过。</p>
+<h4 id="循环"><a href="#循环" class="headerlink" title="循环"></a>循环</h4><p>循环语句用的是loop：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">x</span> = <span class="number">9u32</span>;</span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut </span><span class="variable">y</span> = <span class="number">0u32</span>;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">res</span> = <span class="keyword">loop</span> &#123;</span><br><span class="line">        y += <span class="number">1</span>;</span><br><span class="line">        <span class="keyword">if</span> x * y == <span class="number">81</span> &#123;</span><br><span class="line">            <span class="keyword">break</span> x + y;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;0x&#123;:x&#125;&quot;</span>, res);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>结果：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">PS D:\Code\Rust\study&gt; .\index.exe</span><br><span class="line">0x12</span><br></pre></td></tr></table></figure>
+
+<p>loop循环可以按标签分层，还可以中断循环的同时返回一个值。</p>
+<p>还有while循环，略过。</p>
+<p>for循环稍有不同：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="keyword">for</span> <span class="variable">n</span> <span class="keyword">in</span> <span class="number">1</span>..=<span class="number">100</span> &#123;</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;0x&#123;:x&#125;&quot;</span>, n);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>用..&#x3D;代替了其他语言下面的：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">a=<span class="number">0</span>;a&lt;=<span class="number">100</span>;a++</span><br></pre></td></tr></table></figure>
+
+<h4 id="match模式匹配"><a href="#match模式匹配" class="headerlink" title="match模式匹配"></a>match模式匹配</h4><p>类似其它语言的switch语句：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="keyword">for</span> <span class="variable">n</span> <span class="keyword">in</span> <span class="number">1</span>..=<span class="number">100</span> &#123;</span><br><span class="line">        <span class="keyword">match</span> n &#123;</span><br><span class="line">            <span class="number">1</span> =&gt; <span class="built_in">println!</span>(<span class="string">&quot;One!!!0x&#123;:x&#125;&quot;</span>, n),</span><br><span class="line">            <span class="number">2</span> | <span class="number">4</span> | <span class="number">6</span> | <span class="number">8</span> =&gt; <span class="built_in">println!</span>(<span class="string">&quot;Two!!!0x&#123;:x&#125;&quot;</span>, n),</span><br><span class="line">            <span class="number">20</span>..=<span class="number">30</span> =&gt; <span class="built_in">println!</span>(<span class="string">&quot;Three!!!0x&#123;:x&#125;&quot;</span>, n),</span><br><span class="line">            _ =&gt; <span class="built_in">println!</span>(<span class="string">&quot;None!!!0x&#123;:x&#125;&quot;</span>, n),</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>除了匹配某个确定的值，还可以设置多个值、区间和默认。</p>
+<hr>
+<p><a href="https://www.rust-lang.org/zh-CN/">官网网址</a></p>
+<p><a href="https://kaisery.github.io/trpl-zh-cn/ch01-02-hello-world.html">官方文档</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Rust/">Rust</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2024/10/15/RustWeb%E5%BC%80%E5%8F%91%E5%85%A5%E9%97%A8/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>RustWeb开发入门</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2024/08/16/Python%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93/">
+                        <span>Python原型链污染</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "Rust后端开发入门&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

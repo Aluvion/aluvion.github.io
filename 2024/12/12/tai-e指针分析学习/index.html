@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>tai-e指针分析学习(1) - Twings</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期四, 十二月 12日 2024, 4:30 下午
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    3.4k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      15 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>之前学习过tai-e的污点分析功能，不是很好用，现在学习一下基础的指针分析功能，看看能不能自己搞污点分析模块。</p>
+<p>要搞这里的练习，最好先读一下网站上的课件文档，了解一下它的程序分析设计思路。</p>
+<span id="more"></span>
+
+<hr>
+<h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>搭建IDEA+Java17的代码环境，然后打开<a href="https://tai-e.pascal-lab.net/intro/setup.html">Tai-e课程作业</a>，去<a href="https://github.com/pascal-lab/Tai-e-assignments">tai-e作业仓库</a>下载待分析的Java项目，再使用IDEA打开A1任务。</p>
+<p>在Setting中搜索Gradle，将Build and run using和Run tests using这两栏内容改为IDEA，再继续构建测试项目。</p>
+<p>下载gradle-7.4-bin.zip时遇到了问题connect timeout，打算更换国内镜像的时候又可以正常下载了，那就不管了，解决方法参考<a href="https://blog.csdn.net/laterstage/article/details/134490652">gradle8.0或者其他版本下载太慢或者time out超时（完美解决方法）</a>和<a href="https://blog.csdn.net/weixin_44712778/article/details/113105671">gradle：Connection timed out 问题解决</a>。</p>
+<h3 id="A1"><a href="#A1" class="headerlink" title="A1"></a>A1</h3><p>A1名为活跃变量分析和迭代求解器，用于判断一个变量v的值在程序执行路径中是否会被使用。</p>
+<h4 id="作业测试机制分析"><a href="#作业测试机制分析" class="headerlink" title="作业测试机制分析"></a>作业测试机制分析</h4><p>按照作文文档所说，项目入口点为Assignment类里面调用的Main.main函数：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Usage: -cp &lt;CLASS_PATH&gt; -m &lt;CLASS_NAME&gt;</span><br></pre></td></tr></table></figure>
+
+<p>可以在程序运行参数里填入待分析类路径和待分析类名。</p>
+<p>但看了后面的作业内容，发现作业的运行和结果校验用的不是这个Assignment类，而是JUnit测试框架，找到项目里的测试类LiveVarTest：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">LiveVarTest</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">void</span> <span class="title function_">testLV</span><span class="params">(String inputClass)</span> &#123;</span><br><span class="line">        Tests.test(inputClass, <span class="string">&quot;src/test/resources/dataflow/livevar&quot;</span>,</span><br><span class="line">                LiveVariableAnalysis.ID, <span class="string">&quot;strongly:false&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">testAssign</span><span class="params">()</span> &#123;</span><br><span class="line">        testLV(<span class="string">&quot;Assign&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">testBranch</span><span class="params">()</span> &#123;</span><br><span class="line">        testLV(<span class="string">&quot;Branch&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">testBranchLoop</span><span class="params">()</span> &#123;</span><br><span class="line">        testLV(<span class="string">&quot;BranchLoop&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">Array</span><span class="params">()</span> &#123;</span><br><span class="line">        testLV(<span class="string">&quot;Array&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">Fibonacci</span><span class="params">()</span> &#123;</span><br><span class="line">        testLV(<span class="string">&quot;Fibonacci&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">Reference</span><span class="params">()</span> &#123;</span><br><span class="line">        testLV(<span class="string">&quot;Reference&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>6个Test标注的测试方法对应的就是src&#x2F;test&#x2F;resources&#x2F;dataflow&#x2F;livevar目录下面的6个测试用的待分析类以及期望的分析结果，JUnit会对比得到的输出结果和期望的分析结果，并打印结果不一致的地方。</p>
+<p>比如待分析文件Array.java：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Array</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="type">int</span> <span class="title function_">sum</span><span class="params">(<span class="type">int</span> arr[])</span> &#123;</span><br><span class="line">        <span class="type">int</span> <span class="variable">result</span> <span class="operator">=</span> <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; arr.length; i++) &#123;</span><br><span class="line">            result += arr[i];</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> result;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>它的期望分析结果就是Array-livevar-expected.txt：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">-------------------- &lt;Array: void &lt;init&gt;()&gt; (livevar) --------------------</span><br><span class="line">[0@L1] invokespecial %this.&lt;java.lang.Object: void &lt;init&gt;()&gt;(); []</span><br><span class="line">[1@L1] return; []</span><br><span class="line"></span><br><span class="line">-------------------- &lt;Array: int sum(int[])&gt; (livevar) --------------------</span><br><span class="line">[0@L4] result = 0; [arr, result]</span><br><span class="line">[1@L5] i = 0; [arr, i, result]</span><br><span class="line">[2@L5] nop; [arr, i, result]</span><br><span class="line">[3@L5] temp$0 = arr.length; [arr, i, result, temp$0]</span><br><span class="line">[4@L5] if (i &lt; temp$0) goto 6; [arr, i, result]</span><br><span class="line">[5@L5] goto 13; [result]</span><br><span class="line">[6@L5] nop; [arr, i, result]</span><br><span class="line">[7@L6] temp$4 = arr[i]; [arr, i, result, temp$4]</span><br><span class="line">[8@L6] result = result + temp$4; [arr, i, result]</span><br><span class="line">[9@L6] nop; [arr, i, result]</span><br><span class="line">[10@L5] %intconst0 = 1; [%intconst0, arr, i, result]</span><br><span class="line">[11@L5] i = i + %intconst0; [arr, i, result]</span><br><span class="line">[12@L5] goto 2; [arr, i, result]</span><br><span class="line">[13@L5] nop; [result]</span><br><span class="line">[14@L8] return result; []</span><br></pre></td></tr></table></figure>
+
+<p>每一个测试方法都会走到testLV函数，再进入Tests.test方法，可以看到其中也调用了Main.main方法进行tai-e指针分析，因此直接在IDEA中运行LiveVarTest类就可以开始测试，得到全错的检查结果：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">java.lang.AssertionError: Mismatches of analysis &quot;livevar&quot;:</span><br><span class="line">&lt;Array: void &lt;init&gt;()&gt; [0@L1] invokespecial %this.&lt;java.lang.Object: void &lt;init&gt;()&gt;(); expected: [], given: null</span><br><span class="line">&lt;Array: void &lt;init&gt;()&gt; [1@L1] return; expected: [], given: null</span><br><span class="line">&lt;Array: int sum(int[])&gt; [0@L4] result = 0; expected: [arr, result], given: null</span><br><span class="line">&lt;Array: int sum(int[])&gt; [1@L5] i = 0; expected: [arr, i, result], given: null</span><br><span class="line">&lt;Array: int sum(int[])&gt; [2@L5] nop; expected: [arr, i, result], given: null</span><br><span class="line">&lt;Array: int sum(int[])&gt; [3@L5] temp$0 = arr.length; expected: [arr, i, result, temp$0], given: null</span><br><span class="line">&lt;Array: int sum(int[])&gt; [4@L5] if (i &lt; temp$0) goto 6; expected: [arr, i, result], given: null</span><br><span class="line">&lt;Array: int sum(int[])&gt; [5@L5] goto 13; expected: [result], given: null</span><br><span class="line">&lt;Array: int sum(int[])&gt; [6@L5] nop; expected: [arr, i, result], given: null</span><br><span class="line">&lt;Array: int sum(int[])&gt; [7@L6] temp$4 = arr[i]; expected: [arr, i, result, temp$4], given: null</span><br><span class="line">&lt;Array: int sum(int[])&gt; [8@L6] result = result + temp$4; expected: [arr, i, result], given: null</span><br><span class="line">&lt;Array: int sum(int[])&gt; [9@L6] nop; expected: [arr, i, result], given: null</span><br><span class="line">&lt;Array: int sum(int[])&gt; [10@L5] %intconst0 = 1; expected: [%intconst0, arr, i, result], given: null</span><br><span class="line">&lt;Array: int sum(int[])&gt; [11@L5] i = i + %intconst0; expected: [arr, i, result], given: null</span><br><span class="line">&lt;Array: int sum(int[])&gt; [12@L5] goto 2; expected: [arr, i, result], given: null</span><br><span class="line">&lt;Array: int sum(int[])&gt; [13@L5] nop; expected: [result], given: null</span><br><span class="line">&lt;Array: int sum(int[])&gt; [14@L8] return result; expected: [], given: null</span><br></pre></td></tr></table></figure>
+
+<h4 id="作业分析"><a href="#作业分析" class="headerlink" title="作业分析"></a>作业分析</h4><p>我们要做的就是根据项目中已有的接口或者抽象类，实现自己的分析的方法，补全空缺LiveVariableAnalysis类的代码完成分析：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">LiveVariableAnalysis</span> <span class="keyword">extends</span></span><br><span class="line">        <span class="title class_">AbstractDataflowAnalysis</span>&lt;Stmt, SetFact&lt;Var&gt;&gt; &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">String</span> <span class="variable">ID</span> <span class="operator">=</span> <span class="string">&quot;livevar&quot;</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">LiveVariableAnalysis</span><span class="params">(AnalysisConfig config)</span> &#123;</span><br><span class="line">        <span class="built_in">super</span>(config);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">isForward</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> SetFact&lt;Var&gt; <span class="title function_">newBoundaryFact</span><span class="params">(CFG&lt;Stmt&gt; cfg)</span> &#123;</span><br><span class="line">        <span class="comment">// TODO - finish me</span></span><br><span class="line">        <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> SetFact&lt;Var&gt; <span class="title function_">newInitialFact</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="comment">// TODO - finish me</span></span><br><span class="line">        <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">meetInto</span><span class="params">(SetFact&lt;Var&gt; fact, SetFact&lt;Var&gt; target)</span> &#123;</span><br><span class="line">        <span class="comment">// TODO - finish me</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">transferNode</span><span class="params">(Stmt stmt, SetFact&lt;Var&gt; in, SetFact&lt;Var&gt; out)</span> &#123;</span><br><span class="line">        <span class="comment">// TODO - finish me</span></span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到，其中四个方法都是空的，需要我们将其逻辑补充完全来完成代码分析，我们可以在父接口DataflowAnalysis中找到补充代码的参考。</p>
+<p>首先是newBoundaryFact方法，该方法的注释为：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@return</span> new fact in boundary conditions, i.e., the fact for</span></span><br><span class="line"><span class="comment"> * entry (exit) node in forward (backward) analysis.</span></span><br><span class="line"><span class="comment"> */</span></span><br></pre></td></tr></table></figure>
+
+<p>初始化边界向量，对于活跃变量分析的后向分析方式，简单来说就是在程序的exit点将所有变量设定为不活跃，或者说将活跃变量设定为一个空集合。</p>
+<p>然后是newInitialFact方法，该方法的注释为：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@return</span> new initial fact for non-boundary nodes.</span></span><br><span class="line"><span class="comment"> */</span></span><br></pre></td></tr></table></figure>
+
+<p>初始化CFG图中每个节点的向量，对于活跃变量分析的后向分析方式，简单来说就是将所有变量设定为不活跃，或者说将活跃变量设定为一个空集合。</p>
+<p>meetInto方法，该方法的注释为：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Meets a fact into another (target) fact.</span></span><br><span class="line"><span class="comment"> * This function will be used to handle control-flow confluences.</span></span><br><span class="line"><span class="comment"> */</span></span><br></pre></td></tr></table></figure>
+
+<p>用于处理CFG图中由循环导致的环、由条件跳转等语句导致的多边指向同点的情况，将多个节点的活跃变量集合进行合并。而根据参考文章，在Taie中for、while、switch这些隐含了控制流跳转的语句类型，都被转换为了If语句。</p>
+<p>transferNode方法，该方法的注释为：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Node Transfer function for the analysis.</span></span><br><span class="line"><span class="comment"> * The function transfers data-flow from in (out) fact to out (in) fact</span></span><br><span class="line"><span class="comment"> * for forward (backward) analysis.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@return</span> true if the transfer changed the out (in) fact, otherwise false.</span></span><br><span class="line"><span class="comment"> */</span></span><br></pre></td></tr></table></figure>
+
+<p>用于处理遍历CFG图节点时，每个节点的活跃变量变化情况，并返回一个布尔代表该节点的活跃变量集合相比上次迭代是否发生了变化，当所有节点的活跃变量集合相比上次迭代都无变化时就代表得到了一个最小不动点，程序分析得到了一个精确度较高的结果。</p>
+<p>此外代填充的还有Solver类中的一个方法initializeBackward和IterativeSolver类中的一个方法doSolveBackward，通过调试可以发现前面Analysis类中的四个方法并不会被调用，因此我们还需要在这两个方法中使用Analysis类。</p>
+<p>具体调用顺序为solve-&gt;initialize-&gt;initializeBackward，然后再solve-&gt;doSolve-&gt;doSolveBackward，因此这两个方法的功能分别为：initializeBackward方法负责调用newBoundaryFact和newInitialFact初始化节点的进、出活跃变量集合，doSolveBackward方法负责调用meetInto和transferNode修改每个节点的活跃变量集合。</p>
+<h4 id="代码补全"><a href="#代码补全" class="headerlink" title="代码补全"></a>代码补全</h4><p>首先先阅读源码，看看要用到的几个类如CFG、DataflowResult有什么方法可用。</p>
+<h5 id="DataflowResult"><a href="#DataflowResult" class="headerlink" title="DataflowResult"></a>DataflowResult</h5><p>类的描述为：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">An object which manages the data-flow facts associated with nodes.</span><br></pre></td></tr></table></figure>
+
+<p>一个管理着所有节点数据流动的类，里面有两个Map，存储着每个CFG节点对应的出、入活跃变量集合：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Map&lt;Node, Fact&gt; inFacts = <span class="keyword">new</span> <span class="title class_">LinkedHashMap</span>&lt;&gt;();</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Map&lt;Node, Fact&gt; outFacts = <span class="keyword">new</span> <span class="title class_">LinkedHashMap</span>&lt;&gt;();</span><br></pre></td></tr></table></figure>
+
+<p>还有某个节点的这两种活跃变量集合对应的getter和setter。</p>
+<h5 id="CFG"><a href="#CFG" class="headerlink" title="CFG"></a>CFG</h5><p>接口的描述为：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Representation of a control-flow graph of a method.</span><br></pre></td></tr></table></figure>
+
+<p>代表一个源代码方法的控制流图，父接口为Graph，主要用于获取节点相关的信息，如出入口节点、各节点的前驱后继和与之相连的边等等。</p>
+<p>可以通过CFG接口遍历整个CFG。</p>
+<h5 id="Stmt"><a href="#Stmt" class="headerlink" title="Stmt"></a>Stmt</h5><p>代表代码块&#x2F;代码行&#x2F;代码片段，有两个重要方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@return</span> the (optional) left-value expression defined in this Stmt.</span></span><br><span class="line"><span class="comment"> * In Tai-e IR, each Stmt can define at most one expression.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line">Optional&lt;LValue&gt; <span class="title function_">getDef</span><span class="params">()</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@return</span> a list of right-value expressions used in this Stmt.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line">List&lt;RValue&gt; <span class="title function_">getUses</span><span class="params">()</span>;</span><br></pre></td></tr></table></figure>
+
+<p>简单调试打印一下可以看到，Assign的源码为：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Assign</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="type">int</span> <span class="title function_">assign</span><span class="params">(<span class="type">int</span> a, <span class="type">int</span> b, <span class="type">int</span> c)</span> &#123;</span><br><span class="line">        <span class="type">int</span> <span class="variable">d</span> <span class="operator">=</span> a + b;</span><br><span class="line">        b = d;</span><br><span class="line">        c = a;</span><br><span class="line">        <span class="keyword">return</span> b;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这两个方法获取到的数据主要为：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">[+]pascal.taie.ir.stmt.Binary: Optional[d], [a, b, a + b]</span><br><span class="line">[+]pascal.taie.ir.stmt.Copy: Optional[b], [d]</span><br><span class="line">[+]pascal.taie.ir.stmt.Copy: Optional[c], [a]</span><br><span class="line">[+]pascal.taie.ir.stmt.Return: Optional.empty, [b]</span><br></pre></td></tr></table></figure>
+
+<p>简单来说就是一个获取等号左边的表达式（如果存在），一个获取等号右边（或者return等语句的返回值）的表达式。</p>
+<p>说是表达式，但看结果一般都会返回一个Var，其他语句比如invoke等后面看到了再学习。</p>
+<h5 id="newBoundaryFact-newInitialFact"><a href="#newBoundaryFact-newInitialFact" class="headerlink" title="newBoundaryFact&#x2F;newInitialFact"></a>newBoundaryFact&#x2F;newInitialFact</h5><p>两个方法都是相同处理方式，各个节点的出入活跃变量结合都初始化为空就行：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> SetFact&lt;Var&gt; <span class="title function_">newBoundaryFact</span><span class="params">(CFG&lt;Stmt&gt; cfg)</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">SetFact</span>&lt;&gt;();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> SetFact&lt;Var&gt; <span class="title function_">newInitialFact</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">SetFact</span>&lt;&gt;();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h5 id="meetInto"><a href="#meetInto" class="headerlink" title="meetInto"></a>meetInto</h5><p>当程序分析在各个节点间跳转时，可能存在多条边指向同一个节点的情况，所以要用该方法将多个活跃变量集合并在一起取并集：</p>
+<p>可以用SetFact类的union方法，里面会再调用Set的addAll方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">meetInto</span><span class="params">(SetFact&lt;Var&gt; fact, SetFact&lt;Var&gt; target)</span> &#123;</span><br><span class="line">    target.union(fact);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h5 id="transferNode"><a href="#transferNode" class="headerlink" title="transferNode"></a>transferNode</h5><p>该方法用于遍历节点中的代码块，同时根据出&#x2F;入数据集合和代码内容得到入&#x2F;出数据集合。</p>
+<p>对于活跃变量分析的后向分析方式而言，要做的就是对每一个节点，根据其出口活跃变量集合和代码内容，得到一个入口活跃变量集合，最后判断迭代是否到达了不动点：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">transferNode</span><span class="params">(Stmt stmt, SetFact&lt;Var&gt; in, SetFact&lt;Var&gt; out)</span> &#123;</span><br><span class="line">    <span class="comment">// 复制一个out集合，根据代码块求出新的in集合，用于后面对比，看看相比上次迭代有无变动</span></span><br><span class="line">    SetFact&lt;Var&gt; newIn = <span class="keyword">new</span> <span class="title class_">SetFact</span>&lt;&gt;();</span><br><span class="line">    newIn.union(out);</span><br><span class="line">    <span class="keyword">if</span> (stmt.getDef().isPresent()) &#123;</span><br><span class="line">        <span class="comment">// 如果该代码块中重新定义了变量v，则要将其从活跃变量集合中删去</span></span><br><span class="line">        <span class="type">LValue</span> <span class="variable">def</span> <span class="operator">=</span> stmt.getDef().get();</span><br><span class="line">        <span class="keyword">if</span> (def <span class="keyword">instanceof</span> Var) &#123;</span><br><span class="line">            newIn.remove((Var)def);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">for</span> (RValue use: stmt.getUses()) &#123;</span><br><span class="line">        <span class="keyword">if</span> (use <span class="keyword">instanceof</span> Var) &#123;</span><br><span class="line">            <span class="comment">// 如果该代码块中使用了变量v,则要将其加入活跃变量集合中</span></span><br><span class="line">            newIn.add((Var)use);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 对比看看相比上次迭代有无变动并返回结果，若有改动则还需要修改该节点的in集合</span></span><br><span class="line">    <span class="keyword">if</span> (!in.equals(newIn)) &#123;</span><br><span class="line">        in.set(newIn);</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h5 id="initializeBackward"><a href="#initializeBackward" class="headerlink" title="initializeBackward"></a>initializeBackward</h5><p>调用newBoundaryFact和newInitialFact方法来初始化每个节点的活跃变量集合：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">initializeBackward</span><span class="params">(CFG&lt;Node&gt; cfg, DataflowResult&lt;Node, Fact&gt; result)</span> &#123;</span><br><span class="line">    <span class="keyword">for</span> (Node node: cfg.getNodes()) &#123;</span><br><span class="line">        <span class="keyword">if</span> (cfg.isExit(node)) &#123;</span><br><span class="line">            result.setInFact(node, analysis.newBoundaryFact(cfg));</span><br><span class="line">            result.setOutFact(node, analysis.newBoundaryFact(cfg));</span><br><span class="line">        &#125;<span class="keyword">else</span> &#123;</span><br><span class="line">            result.setInFact(node, analysis.newInitialFact());</span><br><span class="line">            result.setOutFact(node, analysis.newInitialFact());</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h5 id="doSolveBackward"><a href="#doSolveBackward" class="headerlink" title="doSolveBackward"></a>doSolveBackward</h5><p>调用meetInto和transferNode方法来处理每个节点的活跃变量变化：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">doSolveBackward</span><span class="params">(CFG&lt;Node&gt; cfg, DataflowResult&lt;Node, Fact&gt; result)</span> &#123;</span><br><span class="line">    <span class="type">boolean</span> <span class="variable">fixed</span> <span class="operator">=</span> <span class="literal">false</span>;</span><br><span class="line">    <span class="keyword">while</span> (!fixed) &#123;</span><br><span class="line">        fixed = <span class="literal">true</span>;</span><br><span class="line">        <span class="keyword">for</span> (Node node: cfg.getNodes()) &#123;</span><br><span class="line">            <span class="comment">// 遍历所有节点，</span></span><br><span class="line">            <span class="keyword">for</span> (Node succ: cfg.getSuccsOf(node)) &#123;</span><br><span class="line">                analysis.meetInto(result.getInFact(succ), result.getOutFact(node));</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> (analysis.transferNode(node, result.getInFact(node), result.getOutFact(node))) &#123;</span><br><span class="line">                fixed = <span class="literal">false</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>方法名为后向分析，出入集合的处理方式确实是后向，但实际节点到下一节点的处理顺序其实是前向分析，原因有二。</p>
+<p>其一是StmtCFG类的getNodes方法使用了自定义的comparator创建了一个正向的TreeSet，反序搞起来比较麻烦。</p>
+<p>其二是无论从哪个块开始，最终总会达到同一结果并终止，因为所有节点的初始出入集相同，从入口到出口的顺序相同，且每个节点都有固定的remove和add，每条路径上无论是前向还是后向，所经过的所有节点上的remove和add也是一样的。</p>
+<h5 id="流程分析"><a href="#流程分析" class="headerlink" title="流程分析"></a>流程分析</h5><p>以Assign这个test为例，打印一下迭代过程中，每个节点产生的出入活跃变量集合。</p>
+<p>首先是第一次，两个括号里的分别是入和出活跃变量集合：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">[+]Line 4: d = a + b[a, b][]</span><br><span class="line">[+]Line 5: b = d[d][]</span><br><span class="line">[+]Line 6: c = a[a][]</span><br><span class="line">[+]Line 7: return b[b][]</span><br></pre></td></tr></table></figure>
+
+<p>第二次：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">[+]Line 4: d = a + b[a, b][d]</span><br><span class="line">[+]Line 5: b = d[a, d][a]</span><br><span class="line">[+]Line 6: c = a[a, b][b]</span><br><span class="line">[+]Line 7: return b[b][]</span><br></pre></td></tr></table></figure>
+
+<p>第三次：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">[+]Line 4: d = a + b[a, b][a, d]</span><br><span class="line">[+]Line 5: b = d[a, d][a, b]</span><br><span class="line">[+]Line 6: c = a[a, b][b]</span><br><span class="line">[+]Line 7: return b[b][]</span><br></pre></td></tr></table></figure>
+
+<hr>
+<p><a href="https://tai-e.pascal-lab.net/intro/setup.html">Tai-e课程作业</a></p>
+<p><a href="https://zhuanlan.zhihu.com/p/608650217">软件分析课程实验-A1-活跃变量分析和迭代求解器</a></p>
+<p><a href="https://meizjm3i.github.io/2022/07/09/taie-1/">Taie-食用指南(一)</a></p>
+<p><a href="https://www.cnblogs.com/LittleHann/p/16313553.html">南京大学 静态软件分析（static program analyzes）– Data Flow Analysis：Foundation 学习笔记 </a></p>
+<p><a href="https://blog.wohin.me/posts/nju-program-analysis-a1/">南大软分实验笔记｜A1 存活变量分析与迭代求解器</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Java/">Java</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Tai-e/">Tai-e</a>
+                    
+                      <a class="hover-with-bg" href="/tags/%E6%8C%87%E9%92%88%E5%88%86%E6%9E%90/">指针分析</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2025/02/28/struts%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>CVE-2023-50164(S2-066)学习</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2024/10/25/%E5%A4%8D%E4%B9%A0vue3-0-ElementUI/">
+                        <span>复习vue3.0+ElementUI</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "tai-e指针分析学习(1)&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

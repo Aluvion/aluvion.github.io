@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>Java Lambda - Twings</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期日, 五月 5日 2024, 11:03 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    1.3k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      5 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>无。</p>
+<span id="more"></span>
+
+<hr>
+<h3 id="Lambda"><a href="#Lambda" class="headerlink" title="Lambda"></a>Lambda</h3><p>闭包函数，取代匿名内部类，用于实现判断、过滤、排序等功能：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">Consumer&lt;String&gt; consumer = System.out::println;</span><br><span class="line">consumer.accept(<span class="string">&quot;Hello World!&quot;</span>);</span><br><span class="line"></span><br><span class="line">List&lt;String&gt; list = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;&gt;() &#123;&#123;</span><br><span class="line">    add(<span class="string">&quot;1&quot;</span>);</span><br><span class="line">    add(<span class="string">&quot;2&quot;</span>);</span><br><span class="line">    add(<span class="string">&quot;3&quot;</span>);</span><br><span class="line">&#125;&#125;;</span><br><span class="line">list.forEach(System.out::print);</span><br></pre></td></tr></table></figure>
+
+<p>此外，还有Predicate、Function、Supplier等多种功能接口。</p>
+<h3 id="MethodHandle"><a href="#MethodHandle" class="headerlink" title="MethodHandle"></a>MethodHandle</h3><p>Java Lambda的实现与MethodHandle有关，这是一种类似反射中Method的东西，指向一个函数的具体实现，同样可以通过它进行反射函数调用：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Main</span> <span class="variable">main</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Main</span>();</span><br><span class="line"><span class="type">MethodType</span> <span class="variable">methodType</span> <span class="operator">=</span> MethodType.methodType(<span class="keyword">void</span>.class);</span><br><span class="line">MethodHandles.<span class="type">Lookup</span> <span class="variable">lookup</span> <span class="operator">=</span> MethodHandles.publicLookup();</span><br><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="type">MethodHandle</span> <span class="variable">methodHandle</span> <span class="operator">=</span> lookup.findVirtual(main.getClass(), <span class="string">&quot;test&quot;</span>, methodType);</span><br><span class="line">    methodHandle.invoke(main);</span><br><span class="line">&#125;<span class="keyword">catch</span> (Throwable e) &#123;</span><br><span class="line">    System.out.println(e.getMessage());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="类字节码分析"><a href="#类字节码分析" class="headerlink" title="类字节码分析"></a>类字节码分析</h3><p>整个测试用类如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Main</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">        <span class="type">Main</span> <span class="variable">main</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Main</span>();</span><br><span class="line">        <span class="type">MethodType</span> <span class="variable">methodType</span> <span class="operator">=</span> MethodType.methodType(<span class="keyword">void</span>.class);</span><br><span class="line">        MethodHandles.<span class="type">Lookup</span> <span class="variable">lookup</span> <span class="operator">=</span> MethodHandles.publicLookup();</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="type">MethodHandle</span> <span class="variable">methodHandle</span> <span class="operator">=</span> lookup.findVirtual(main.getClass(), <span class="string">&quot;test&quot;</span>, methodType);</span><br><span class="line">            methodHandle.invoke(main);</span><br><span class="line">        &#125;<span class="keyword">catch</span> (Throwable e) &#123;</span><br><span class="line">            System.out.println(e.getMessage());</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">test</span><span class="params">()</span> &#123;</span><br><span class="line">        Consumer&lt;String&gt; consumer = System.out::println;</span><br><span class="line">        consumer.accept(<span class="string">&quot;Hello World!&quot;</span>);</span><br><span class="line"></span><br><span class="line">        List&lt;Integer&gt; list = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;&gt;() &#123;&#123;</span><br><span class="line">            add(<span class="number">1</span>);</span><br><span class="line">            add(<span class="number">2</span>);</span><br><span class="line">            add(<span class="number">3</span>);</span><br><span class="line">        &#125;&#125;;</span><br><span class="line">        list.stream().filter(i -&gt; i &gt; <span class="number">1</span>).forEach(System.out::print);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>先看比较简单的Consumer接口调用，观察test函数第一部分的字节码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"> <span class="number">0</span> getstatic #<span class="number">48</span> &lt;java/lang/System.out : Ljava/io/PrintStream;&gt;</span><br><span class="line"> <span class="number">3</span> dup</span><br><span class="line"> <span class="number">4</span> invokestatic #<span class="number">64</span> &lt;java/util/Objects.requireNonNull : (Ljava/lang/Object;)Ljava/lang/Object;&gt;</span><br><span class="line"> <span class="number">7</span> pop</span><br><span class="line"> <span class="number">8</span> invokedynamic #<span class="number">70</span> &lt;accept, BootstrapMethods #<span class="number">0</span>&gt;</span><br><span class="line"><span class="number">13</span> astore_1</span><br><span class="line"><span class="number">14</span> aload_1</span><br><span class="line"><span class="number">15</span> ldc #<span class="number">74</span> &lt;Hello World!&gt;</span><br><span class="line"><span class="number">17</span> invokeinterface #<span class="number">76</span> &lt;java/util/function/Consumer.accept : (Ljava/lang/Object;)V&gt; count <span class="number">2</span></span><br></pre></td></tr></table></figure>
+
+<p>首先通过getstatic指令拿到了System.out.PrintStream这个println静态函数所属的类，然后dup复制再用invokestatic指令保证其不为空，接着是是与lambda强相关的invokedynamic指令。该指令指向的常量池#70包括一段常量池信息#71和一个Bootstrap方法#0：</p>
+<p><img src="/css/images/java_lambda/01.png" srcset="/img/loading.gif"></p>
+<p>常量池信息#71是一段NameAndType类型的信息，包含方法名和方法描述符，看起来分别是待调用的接口函数名accept，接口具体实现即println有关的类PrintStream，以及接口名Consumer，具体用处尚不清楚。</p>
+<p>Bootstrap方法#0包含一个MethodHandle相关的常量池信息#144，和三个输入参数：</p>
+<p><img src="/css/images/java_lambda/02.png" srcset="/img/loading.gif"></p>
+<p>MethodHandle如上文所说，指向的是一个函数的具体实现，这里的两个MethodHandle中PrintStream.println是Consumer接口的具体实现，那么常量池信息#144指向的MethodHandle就是将这些杂乱数据合并的工具：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;java/lang/invoke/LambdaMetafactory.metafactory : (Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;&gt;</span><br></pre></td></tr></table></figure>
+<p>该MethodHandle实际上是LambdaMetafactory类的metafactory函数，该函数有多个输入参数，这些参数的意义可以从定义和注释中一窥一二：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> CallSite <span class="title function_">metafactory</span><span class="params">(MethodHandles.Lookup caller,</span></span><br><span class="line"><span class="params">                                    String interfaceMethodName,</span></span><br><span class="line"><span class="params">                                    MethodType factoryType,</span></span><br><span class="line"><span class="params">                                    MethodType interfaceMethodType,</span></span><br><span class="line"><span class="params">                                    MethodHandle implementation,</span></span><br><span class="line"><span class="params">                                    MethodType dynamicMethodType)</span></span><br></pre></td></tr></table></figure>
+
+<p>从注释里可以看到这些函数的具体含义，caller看起来是虚拟机自动处理的参数，其他参数可以通过调试的方式看到具体数据，基本都是前面常量池中看到的数据：</p>
+<p><img src="/css/images/java_lambda/03.png" srcset="/img/loading.gif"></p>
+<p>该函数返回一个CallSite对象，继续调试，进入InnerClassLambdaMetafactory类的buildCallSite函数。该函数首先调用spinInnerClass函数，在generateInnerClass函数中创造了一个匿名内部类，最后将接口的具体实现写入到内存中：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Forward the SAM method</span></span><br><span class="line"><span class="type">MethodVisitor</span> <span class="variable">mv</span> <span class="operator">=</span> cw.visitMethod(ACC_PUBLIC, interfaceMethodName,</span><br><span class="line">                                    interfaceMethodType.toMethodDescriptorString(), <span class="literal">null</span>, <span class="literal">null</span>);</span><br><span class="line"><span class="keyword">new</span> <span class="title class_">ForwardingMethodGenerator</span>(mv).generate(interfaceMethodType);</span><br></pre></td></tr></table></figure>
+
+<p>根据参考文章，可以使用运行配置将这些内存匿名类打印出来：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">-Djdk.internal.lambda.dumpProxyClasses=&lt;path&gt;</span><br></pre></td></tr></table></figure>
+
+<p>结果如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> org.example;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.io.PrintStream;</span><br><span class="line"><span class="keyword">import</span> java.util.function.Consumer;</span><br><span class="line"></span><br><span class="line"><span class="comment">// $FF: synthetic class</span></span><br><span class="line"><span class="keyword">final</span> <span class="keyword">class</span> <span class="title class_">Main$$Lambda$14</span> <span class="keyword">implements</span> <span class="title class_">Consumer</span> &#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> PrintStream arg$<span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> Main$$Lambda$<span class="number">14</span>(PrintStream var1) &#123;</span><br><span class="line">        <span class="built_in">this</span>.arg$<span class="number">1</span> = var1;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">accept</span><span class="params">(Object var1)</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.arg$<span class="number">1.</span>println((String)var1);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>实际上就是一个继承并实现了Consumer接口的匿名类，我们在代码中写的lambda表达式都会被写入到accept函数中，后面字节码在接口调用时就能触发。</p>
+<p>最后实例化为一个ConstantCallSite对象返回，并将一个MethodHandle绑定到该CallSite里：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">MethodHandle</span> <span class="variable">mh</span> <span class="operator">=</span> caller.findConstructor(innerClass, constructorType);</span><br><span class="line"><span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">ConstantCallSite</span>(mh.asType(factoryType));</span><br></pre></td></tr></table></figure>
+
+<p>在经过一系列底层代码后，会调用MethodHandle的invokeBasic方法，得到对应的Consumer对象，并其将作为指令结果压入栈中。</p>
+<p>在后续的指令中，会通过invokeinterface指令调用该对象的accept函数，从而调用到我们写的lambda表达式。</p>
+<p>然后是第二部分，在filter中写的稍微复杂一点的lambda表达式，其主要的差别在于Bootstrap方法：</p>
+<p><img src="/css/images/java_lambda/04.png" srcset="/img/loading.gif"></p>
+<p>与前一个Bootstrap方法不同，前一个Bootstrap方法的MethodHandle直接使用的是PrintStream.println，而这一个Bootstrap方法使用的是一个匿名函数，该函数的字节码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"> <span class="number">0</span> aload_0</span><br><span class="line"> <span class="number">1</span> invokevirtual #<span class="number">105</span> &lt;java/lang/Integer.intValue : ()I&gt;</span><br><span class="line"> <span class="number">4</span> iconst_1</span><br><span class="line"> <span class="number">5</span> if_icmple <span class="number">12</span> (+<span class="number">7</span>)</span><br><span class="line"> <span class="number">8</span> iconst_1</span><br><span class="line"> <span class="number">9</span> <span class="keyword">goto</span> <span class="number">13</span> (+<span class="number">4</span>)</span><br><span class="line"><span class="number">12</span> iconst_0</span><br><span class="line"><span class="number">13</span> ireturn</span><br></pre></td></tr></table></figure>
+
+<p>实际上就是用我们写的lambda表达式生成的一个匿名函数，其他操作都差不多。</p>
+<hr>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://blog.csdn.net/yubao0723/article/details/129275300">Java Lambda表达式详解</a></p>
+<p><a href="https://zhuanlan.zhihu.com/p/350884967">同事：Lambda都不懂，你还写什么Java</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Java/">Java</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2024/05/11/tai-e%E5%AD%A6%E4%B9%A0-2/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>tai-e学习(2)</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2024/04/28/tai-e%E5%AD%A6%E4%B9%A0-1/">
+                        <span>tai-e学习(1)</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "Java Lambda&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

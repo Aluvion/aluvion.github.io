@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>PHP从编译到执行 - Twings</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期一, 六月 8日 2020, 10:30 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    2.6k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      11 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>读了读编译原理，用一句简单的 PHP 代码来理一遍 PHP 的编译执行过程。</p>
+<span id="more"></span>
+
+<hr>
+<h3 id="简单的测试脚本"><a href="#简单的测试脚本" class="headerlink" title="简单的测试脚本"></a>简单的测试脚本</h3><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="variable">$Twings</span> = <span class="number">2333</span>;</span><br></pre></td></tr></table></figure>
+
+<h3 id="总览"><a href="#总览" class="headerlink" title="总览"></a>总览</h3><p>PHP 的编译执行大概是这么一个流程：</p>
+<ol>
+<li>读入代码字符串，词法分析得到 token 和 value。</li>
+<li>语法分析 token，建立 AST 树。</li>
+<li>遍历分析 AST 树，将数据写入内存，并生成 op_array。</li>
+<li>遍历 op_array，根据 opcode 调用不同的 handler 执行操作。</li>
+</ol>
+<h3 id="入口"><a href="#入口" class="headerlink" title="入口"></a>入口</h3><p>直接从 zend.c 的 zend_execute_scripts 函数开始看：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">ZEND_API <span class="type">int</span> <span class="title function_">zend_execute_scripts</span><span class="params">(<span class="type">int</span> type, zval *retval, <span class="type">int</span> file_count, ...)</span> <span class="comment">/* &#123;&#123;&#123; */</span></span><br><span class="line">&#123;</span><br><span class="line">	...</span><br><span class="line">	<span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; file_count; i++) &#123;</span><br><span class="line">		file_handle = va_arg(files, zend_file_handle *);</span><br><span class="line">		<span class="keyword">if</span> (!file_handle) &#123;</span><br><span class="line">			<span class="keyword">continue</span>;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		op_array = zend_compile_file(file_handle, type);</span><br><span class="line">		...</span><br><span class="line">		<span class="keyword">if</span> (op_array) &#123;</span><br><span class="line">			zend_execute(op_array, retval);</span><br><span class="line">			zend_exception_restore();</span><br><span class="line">			...</span><br><span class="line">			destroy_op_array(op_array);</span><br><span class="line">			efree_size(op_array, <span class="keyword">sizeof</span>(zend_op_array));</span><br><span class="line">		&#125;</span><br><span class="line">		...</span><br><span class="line">	&#125;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>一般来说这里会编译执行 3 个文件，分别是 auto_prepend_file、要执行的 PHP 文件 和 auto_append_file。</p>
+<p>这里的 zend_compile_file 是个全局函数，指向的是 compile_file 函数：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">zend_compile_file = compile_file;</span><br></pre></td></tr></table></figure>
+
+<p>compile_file 先调用 open_file_for_scanning 做好词法分析前的准备（比如设置词法分析的 state 为 INITIAL），再调用 zend_compile 开始编译：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">ZEND_API zend_op_array *<span class="title function_">compile_file</span><span class="params">(zend_file_handle *file_handle, <span class="type">int</span> type)</span></span><br><span class="line">&#123;</span><br><span class="line">	zend_lex_state original_lex_state;</span><br><span class="line">	zend_op_array *op_array = <span class="literal">NULL</span>;</span><br><span class="line">	zend_save_lexical_state(&amp;original_lex_state);</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (open_file_for_scanning(file_handle)==FAILURE) &#123;</span><br><span class="line">		...</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		op_array = zend_compile(ZEND_USER_FUNCTION);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	zend_restore_lexical_state(&amp;original_lex_state);</span><br><span class="line">	<span class="keyword">return</span> op_array;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>zend_compile 函数里面就是总览里面提到的 1-3 的处理过程了，首先是调用 zendparse 开始词法分析。</p>
+<h3 id="词法分析"><a href="#词法分析" class="headerlink" title="词法分析"></a>词法分析</h3><p>PHP 的编译采用的是 re2c 词法分析 + Bison 语法分析。在默认情况下，调用 yyparse 开始语法分析，而 yyparse 则不断调用 yylex 从代码字符串中获取 token 和 value 再加以分析，而在 PHP 中这两个函数则分别被替换成了 zendparse 和 zendlex。所以在调用 zendparse 开始语法分析之后，Bison 会调用 zendlex 开始词法分析：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> ZEND_FASTCALL <span class="title function_">zendlex</span><span class="params">(zend_parser_stack_elem *elem)</span> <span class="comment">/* &#123;&#123;&#123; */</span></span><br><span class="line">&#123;</span><br><span class="line">	zval zv;</span><br><span class="line">	<span class="type">int</span> ret;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (CG(increment_lineno)) &#123;</span><br><span class="line">		CG(zend_lineno)++;</span><br><span class="line">		CG(increment_lineno) = <span class="number">0</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	ret = lex_scan(&amp;zv, elem);</span><br><span class="line">	ZEND_ASSERT(!EG(exception) || ret == T_ERROR);</span><br><span class="line">	<span class="keyword">return</span> ret;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里的 zend_parser_stack_elem 结构体实际上是用来存放 value 的，因为后面语法分析才会用到所以这里暂且不提。</p>
+<p>zendlex 调用 lex_scan，后面就是词法分析的语法了，很长这里就不贴了，如果想要自己看最好看 .l 的 re2c 规则文件（匹配规则使用正则表达式，还是挺好看的，简单来说规则就是：&lt;state&gt; 正则表达式 { 匹配后返回 token 的处理代码 } ），如果看 re2c 编译后的 c 文件，里面的代码逻辑简直不能看的。</p>
+<p>结合测试代码和词法规则，我们可以得出分析的过程：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*!re2c</span></span><br><span class="line"><span class="comment">LNUM	[0-9]+(_[0-9]+)*</span></span><br><span class="line"><span class="comment">LABEL	[a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*</span></span><br><span class="line"><span class="comment">TOKENS [;:,.\[\]()|^&amp;+-/*=%!~$&lt;&gt;?@]</span></span><br><span class="line"><span class="comment">NEWLINE (&quot;\r&quot;|&quot;\n&quot;|&quot;\r\n&quot;)</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="comment">// &lt;?php\n</span></span><br><span class="line">&lt;INITIAL&gt;<span class="string">&quot;&lt;?php&quot;</span>([ \t]|&#123;NEWLINE&#125;) &#123;</span><br><span class="line">	HANDLE_NEWLINE(yytext[yyleng<span class="number">-1</span>]);</span><br><span class="line">	BEGIN(ST_IN_SCRIPTING);</span><br><span class="line">	RETURN_OR_SKIP_TOKEN(T_OPEN_TAG);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// $Twings</span></span><br><span class="line">&lt;ST_IN_SCRIPTING,ST_DOUBLE_QUOTES,ST_HEREDOC,ST_BACKQUOTE,ST_VAR_OFFSET&gt;<span class="string">&quot;$&quot;</span>&#123;LABEL&#125; &#123;</span><br><span class="line">	RETURN_TOKEN_WITH_STR(T_VARIABLE, <span class="number">1</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// = </span></span><br><span class="line">&lt;ST_IN_SCRIPTING&gt;&#123;TOKENS&#125; &#123;</span><br><span class="line">	RETURN_TOKEN(yytext[<span class="number">0</span>]);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 2333</span></span><br><span class="line">&lt;ST_IN_SCRIPTING&gt;&#123;LNUM&#125; &#123;</span><br><span class="line">	...</span><br><span class="line">	RETURN_TOKEN_WITH_VAL(T_LNUMBER);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// ;</span></span><br><span class="line">&lt;ST_IN_SCRIPTING&gt;&#123;TOKENS&#125; &#123;</span><br><span class="line">	RETURN_TOKEN(yytext[<span class="number">0</span>]);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>匹配到 &#x3D; 和 ; 会直接返回字符的，没有什么其他操作。</p>
+<p>在匹配到 &lt;?php\n 的 open tag 之后，会将 state 改写为 ST_IN_SCRIPTING 用于下一次的匹配，然后返回一个代表 open tag 的 token（一般是一个整型数）。</p>
+<p>然后开始匹配变量 $Twings，这里符合的匹配规则是 “$”{LABEL}（LABEL 其实就是 PHP 的合法变量名构成），这个规则除了返回 token，还会用变量名生成一个 AST 节点存储在前面提到的 zend_parser_stack_elem 里面，在后面的语法分析部分会作为子节点组装成一个完整的操作节点：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> RETURN_TOKEN_WITH_STR(_token, _offset) do &#123; \</span></span><br><span class="line"><span class="meta">		token = _token; \</span></span><br><span class="line"><span class="meta">		offset = _offset; \</span></span><br><span class="line"><span class="meta">		goto emit_token_with_str; \</span></span><br><span class="line"><span class="meta">	&#125; while (0)</span></span><br><span class="line">...</span><br><span class="line">emit_token_with_str:</span><br><span class="line">	zend_copy_value(zendlval, (yytext + offset), (yyleng - offset));</span><br><span class="line"></span><br><span class="line">emit_token_with_val:</span><br><span class="line">	<span class="keyword">if</span> (PARSER_MODE()) &#123;</span><br><span class="line">		ZEND_ASSERT(Z_TYPE_P(zendlval) != IS_UNDEF);</span><br><span class="line">		elem-&gt;ast = zend_ast_create_zval_with_lineno(zendlval, start_line);</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+<p>elem -&gt; ast 的生成代码如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">ZEND_API zend_ast * ZEND_FASTCALL <span class="title function_">zend_ast_create_zval_with_lineno</span><span class="params">(zval *zv, <span class="type">uint32_t</span> lineno)</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> zend_ast_create_zval_int(zv, <span class="number">0</span>, lineno);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> zend_always_inline zend_ast * <span class="title function_">zend_ast_create_zval_int</span><span class="params">(zval *zv, <span class="type">uint32_t</span> attr, <span class="type">uint32_t</span> lineno)</span> &#123;</span><br><span class="line">	zend_ast_zval *ast;</span><br><span class="line"></span><br><span class="line">	ast = zend_ast_alloc(<span class="keyword">sizeof</span>(zend_ast_zval));</span><br><span class="line">	ast-&gt;kind = ZEND_AST_ZVAL;</span><br><span class="line">	ast-&gt;attr = attr;</span><br><span class="line">	ZVAL_COPY_VALUE(&amp;ast-&gt;val, zv);</span><br><span class="line">	Z_LINENO(ast-&gt;val) = lineno;</span><br><span class="line">	<span class="keyword">return</span> (zend_ast *) ast;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到本来是个存放着 zval 的 zend_ast_zval 结构体，返回的时候为了适应 AST 树节点结构体而转换为了 zend_ast 类型的指针。</p>
+<p>后半 LNUM 的操作里面有八进制和下划线的一些处理，想知道的可以自行阅读源码。</p>
+<p>词法分析的过程大致如上，获取到 token 之后，接下来就是语法分析了。</p>
+<h3 id="语法分析"><a href="#语法分析" class="headerlink" title="语法分析"></a>语法分析</h3><p>同样地，想要阅读源码建议看 zend_language_parser.y 里面 Bison 编译前的代码，更加人类可读一点。</p>
+<p>在开头部分可以看到很多用 %token 声明的 token，比如说前面解析出的 T_VARIABLE：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">%token &lt;ast&gt; T_VARIABLE  <span class="string">&quot;variable (T_VARIABLE)&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>&lt;ast&gt; 指 T_VARIABLE 的类型为 ast，其实就是前面提到的用 union 声明的 _zend_parser_stack_elem 结构体里面的 ast 成员，这个结构体里面声明的就是语法分析里面 token 要用的类型：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">union</span> _<span class="title">zend_parser_stack_elem</span> &#123;</span></span><br><span class="line">	zend_ast *ast;</span><br><span class="line">	zend_string *str;</span><br><span class="line">	zend_ulong num;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">char</span> *ptr;</span><br><span class="line">&#125; zend_parser_stack_elem;</span><br></pre></td></tr></table></figure>
+
+<p>zend_ast 的定义如下，主要的就是操作码和子节点两个成员：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> _<span class="title">zend_ast</span> &#123;</span></span><br><span class="line">	zend_ast_kind kind; <span class="comment">/* Type of the node (ZEND_AST_* enum constant) */</span></span><br><span class="line">	zend_ast_attr attr; <span class="comment">/* Additional attribute, use depending on node type */</span></span><br><span class="line">	<span class="type">uint32_t</span> lineno;    <span class="comment">/* Line number */</span></span><br><span class="line">	zend_ast *child[<span class="number">1</span>]; <span class="comment">/* Array of children (using struct hack) */</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>双引号里面的是这个 token 人类可读的字面表示。</p>
+<p>语法规则跟词法分析里面的相似，同样是匹配 + 处理，不同的是语法分析里面还有套娃匹配。</p>
+<p>阅读规则，我们可以得出分析的过程：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line">start:</span><br><span class="line">	top_statement_list	&#123; CG(ast) = $<span class="number">1</span>; &#125;</span><br><span class="line">;</span><br><span class="line"></span><br><span class="line">top_statement_list:</span><br><span class="line">		top_statement_list top_statement &#123; $$ = zend_ast_list_add($<span class="number">1</span>, $<span class="number">2</span>); &#125;</span><br><span class="line">	|	<span class="comment">/* empty */</span> &#123; $$ = zend_ast_create_list(<span class="number">0</span>, ZEND_AST_STMT_LIST); &#125;</span><br><span class="line">;</span><br><span class="line"></span><br><span class="line">top_statement:</span><br><span class="line">		statement							&#123; $$ = $<span class="number">1</span>; &#125;</span><br><span class="line">	|	...</span><br><span class="line">;</span><br><span class="line"></span><br><span class="line">statement:</span><br><span class="line">		...</span><br><span class="line">	|	expr <span class="string">&#x27;;&#x27;</span> &#123; $$ = $<span class="number">1</span>; &#125;</span><br><span class="line">	|	...</span><br><span class="line">;</span><br><span class="line"></span><br><span class="line">expr:</span><br><span class="line">		...</span><br><span class="line">	|	variable <span class="string">&#x27;=&#x27;</span> expr</span><br><span class="line">			&#123; $$ = zend_ast_create(ZEND_AST_ASSIGN, $<span class="number">1</span>, $<span class="number">3</span>); &#125;</span><br><span class="line">	|	scalar &#123; $$ = $<span class="number">1</span>; &#125;</span><br><span class="line">	|	...</span><br><span class="line">;</span><br><span class="line"></span><br><span class="line">variable:</span><br><span class="line">		callable_variable</span><br><span class="line">			&#123; $$ = $<span class="number">1</span>; &#125;</span><br><span class="line">	|	...</span><br><span class="line">;</span><br><span class="line"></span><br><span class="line">callable_variable:</span><br><span class="line">		simple_variable</span><br><span class="line">			&#123; $$ = zend_ast_create(ZEND_AST_VAR, $<span class="number">1</span>); &#125;</span><br><span class="line">	|	...</span><br><span class="line">;</span><br><span class="line"></span><br><span class="line">simple_variable:</span><br><span class="line">		T_VARIABLE			&#123; $$ = $<span class="number">1</span>; &#125;</span><br><span class="line">	|	....</span><br><span class="line">;</span><br><span class="line"></span><br><span class="line">scalar:</span><br><span class="line">		T_LNUMBER 	&#123; $$ = $<span class="number">1</span>; &#125;</span><br><span class="line">	|</span><br><span class="line">;</span><br></pre></td></tr></table></figure>
+
+<p>$$ 代表本次处理完成后返回给上一级的值，$1 代表匹配规则中第一个符号的值。</p>
+<p>这样看来就比较直观了，递归套娃，expr 中调用 zend_ast_create_list，用之前词法分析生成的两个 AST 节点组装成一个 ASSIGN 操作的节点，因为 ASSIGN 操作需要 2 个操作数，所以最后调用的其实是 zend_ast_create_2 函数：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">ZEND_API zend_ast * ZEND_FASTCALL <span class="title function_">zend_ast_create_2</span><span class="params">(zend_ast_kind kind, zend_ast *child1, zend_ast *child2)</span> &#123;</span><br><span class="line">	zend_ast *ast;</span><br><span class="line">	<span class="type">uint32_t</span> lineno;</span><br><span class="line"></span><br><span class="line">	ZEND_ASSERT(kind &gt;&gt; ZEND_AST_NUM_CHILDREN_SHIFT == <span class="number">2</span>);</span><br><span class="line">	ast = zend_ast_alloc(zend_ast_size(<span class="number">2</span>));</span><br><span class="line">	ast-&gt;kind = kind;</span><br><span class="line">	ast-&gt;attr = <span class="number">0</span>;</span><br><span class="line">	ast-&gt;child[<span class="number">0</span>] = child1;</span><br><span class="line">	ast-&gt;child[<span class="number">1</span>] = child2;</span><br><span class="line">	<span class="keyword">if</span> (child1) &#123;</span><br><span class="line">		lineno = zend_ast_get_lineno(child1);</span><br><span class="line">	&#125; <span class="keyword">else</span> <span class="keyword">if</span> (child2) &#123;</span><br><span class="line">		lineno = zend_ast_get_lineno(child2);</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		lineno = CG(zend_lineno);</span><br><span class="line">	&#125;</span><br><span class="line">	ast-&gt;lineno = lineno;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> ast;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>简单来说就是将操作码和两个子节点放进一个新的节点里。完成一整部分代码（top_statement）的分析之后，会将这一部分生成的节点挂到前面（top_statement_list）生成的 AST 树的子节点上，后面通过遍历这棵树来依次处理这些 AST 节点。</p>
+<h3 id="遍历-AST-树"><a href="#遍历-AST-树" class="headerlink" title="遍历 AST 树"></a>遍历 AST 树</h3><p>zend_compile 在调用 zendparse 完成语法分析之后，会调用 zend_compile_top_stmt 开始处理 AST 树：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">zend_compile_top_stmt</span><span class="params">(zend_ast *ast)</span> <span class="comment">/* &#123;&#123;&#123; */</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="keyword">if</span> (!ast) &#123;</span><br><span class="line">		<span class="keyword">return</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (ast-&gt;kind == ZEND_AST_STMT_LIST) &#123;</span><br><span class="line">		zend_ast_list *<span class="built_in">list</span> = zend_ast_get_list(ast);</span><br><span class="line">		<span class="type">uint32_t</span> i;</span><br><span class="line">		<span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; <span class="built_in">list</span>-&gt;children; ++i) &#123;</span><br><span class="line">			zend_compile_top_stmt(<span class="built_in">list</span>-&gt;child[i]);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (ast-&gt;kind == ZEND_AST_FUNC_DECL) &#123;</span><br><span class="line">		...</span><br><span class="line">	&#125; <span class="keyword">else</span> <span class="keyword">if</span> (ast-&gt;kind == ZEND_AST_CLASS) &#123;</span><br><span class="line">		...</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		zend_compile_stmt(ast);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> (ast-&gt;kind != ZEND_AST_NAMESPACE &amp;&amp; ast-&gt;kind != ZEND_AST_HALT_COMPILER) &#123;</span><br><span class="line">		zend_verify_namespace();</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果是根节点，则遍历它的子节点重新调用本函数。</p>
+<p>如果是 ASSIGN 类型的节点，则经过 zend_compile_stmt 和 zend_compile_expr 函数的 switch 之后会调用 zend_compile_assign：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">zend_compile_assign</span><span class="params">(znode *result, zend_ast *ast)</span> <span class="comment">/* &#123;&#123;&#123; */</span></span><br><span class="line">&#123;</span><br><span class="line">	zend_ast *var_ast = ast-&gt;child[<span class="number">0</span>];</span><br><span class="line">	zend_ast *expr_ast = ast-&gt;child[<span class="number">1</span>];</span><br><span class="line"></span><br><span class="line">	znode var_node, expr_node;</span><br><span class="line">	zend_op *opline;</span><br><span class="line">	<span class="type">uint32_t</span> offset;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (is_this_fetch(var_ast)) &#123;</span><br><span class="line">		zend_error_noreturn(E_COMPILE_ERROR, <span class="string">&quot;Cannot re-assign $this&quot;</span>);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	zend_ensure_writable_variable(var_ast);</span><br><span class="line"></span><br><span class="line">	<span class="keyword">switch</span> (var_ast-&gt;kind) &#123;</span><br><span class="line">		<span class="keyword">case</span> ZEND_AST_VAR:</span><br><span class="line">			offset = zend_delayed_compile_begin();</span><br><span class="line">			zend_delayed_compile_var(&amp;var_node, var_ast, BP_VAR_W, <span class="number">0</span>);</span><br><span class="line">			zend_compile_expr(&amp;expr_node, expr_ast);</span><br><span class="line">			zend_delayed_compile_end(offset);</span><br><span class="line">			zend_emit_op(result, ZEND_ASSIGN, &amp;var_node, &amp;expr_node);</span><br><span class="line">			<span class="keyword">return</span>;</span><br><span class="line">		<span class="keyword">case</span> ZEND_AST_STATIC_PROP:</span><br><span class="line">			...</span><br><span class="line">		<span class="keyword">case</span> ZEND_AST_DIM:</span><br><span class="line">			...</span><br><span class="line">		<span class="keyword">case</span> ZEND_AST_PROP:</span><br><span class="line">			...</span><br><span class="line">		<span class="keyword">case</span> ZEND_AST_ARRAY:</span><br><span class="line">			...</span><br><span class="line">		EMPTY_SWITCH_DEFAULT_CASE();</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>主要看 case ZEND_AST_VAR 里面的处理，这里调用 zend_emit_op 将 AST 节点处理成了 opcode，其结构体为 zend_op，里面存放了该 opcode 的处理函数（用于最后执行相应的操作）、操作码、操作数的值和类型等数据：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> _<span class="title">zend_op</span> &#123;</span></span><br><span class="line">	<span class="type">const</span> <span class="type">void</span> *handler;</span><br><span class="line">	znode_op op1;</span><br><span class="line">	znode_op op2;</span><br><span class="line">	znode_op result;</span><br><span class="line">	<span class="type">uint32_t</span> extended_value;</span><br><span class="line">	<span class="type">uint32_t</span> lineno;</span><br><span class="line">	zend_uchar opcode;</span><br><span class="line">	zend_uchar op1_type;</span><br><span class="line">	zend_uchar op2_type;</span><br><span class="line">	zend_uchar result_type;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>顺带一提的是这里 var_node 的类型，即 op1_type 表示的是 cv（编译期缓存），还有就是这个时候，opcode 中的处理函数还是空的，赋值操作还在后面。然后将这个 opcode 放入 opcode 数组中：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> zend_op *<span class="title function_">zend_emit_op</span><span class="params">(znode *result, zend_uchar opcode, znode *op1, znode *op2)</span> <span class="comment">/* &#123;&#123;&#123; */</span></span><br><span class="line">&#123;</span><br><span class="line">	zend_op *opline = get_next_op();</span><br><span class="line">	opline-&gt;opcode = opcode;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (op1 != <span class="literal">NULL</span>) &#123;</span><br><span class="line">		SET_NODE(opline-&gt;op1, op1);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (op2 != <span class="literal">NULL</span>) &#123;</span><br><span class="line">		SET_NODE(opline-&gt;op2, op2);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (result) &#123;</span><br><span class="line">		zend_make_var_result(result, opline);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> opline;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>opcode 数组的结构体比较长，这里就不贴了。</p>
+<p>zend_compile_top_stmt 遍历完 AST 树生成 opcode 之后，会调用 pass_two 函数为每个 opcode 加上处理函数，因为查找的方式比较复杂，这里就不提了，想要研究的可以自行阅读 zend_vm_execute.h 的 zend_vm_get_opcode_handler_ex 函数。</p>
+<h3 id="执行"><a href="#执行" class="headerlink" title="执行"></a>执行</h3><p>这时回到 zend_execute_scripts 函数中，生成 op_array，即 opcode 数组之后，会调用 zend_execute 开始执行，因为这个函数代码量过大，这里只简单叙述一下。</p>
+<p>opcode 的执行过程是一个死循环，每次调用该 opcode 的处理函数之后会对返回值 ret 进行判断，如果  &lt;&#x3D; 0 就会终止循环，而 zend_compile 函数在调用 zend_compile_top_stmt 处理完 AST 树之后，还会调用 zend_emit_final_return 在末尾加上一个 opcode 用于终止循环。</p>
+<p>在测试脚本中只有一个 opcode，相应的处理函数是 ZEND_ASSIGN_SPEC_CV_CONST_RETVAL_UNUSED_HANDLER：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL <span class="title function_">ZEND_ASSIGN_SPEC_CV_CONST_RETVAL_UNUSED_HANDLER</span><span class="params">(ZEND_OPCODE_HANDLER_ARGS)</span></span><br><span class="line">&#123;</span><br><span class="line">	USE_OPLINE</span><br><span class="line"></span><br><span class="line">	zval *value;</span><br><span class="line">	zval *variable_ptr;</span><br><span class="line"></span><br><span class="line">	SAVE_OPLINE();</span><br><span class="line">	value = RT_CONSTANT(opline, opline-&gt;op2);</span><br><span class="line">	variable_ptr = EX_VAR(opline-&gt;op1.var);</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (IS_CV == IS_VAR &amp;&amp; UNEXPECTED(Z_ISERROR_P(variable_ptr))) &#123;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (UNEXPECTED(<span class="number">0</span>)) &#123;</span><br><span class="line">			ZVAL_NULL(EX_VAR(opline-&gt;result.var));</span><br><span class="line">		&#125;</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		value = zend_assign_to_variable(variable_ptr, value, IS_CONST, EX_USES_STRICT_TYPES());</span><br><span class="line">		<span class="keyword">if</span> (UNEXPECTED(<span class="number">0</span>)) &#123;</span><br><span class="line">			ZVAL_COPY(EX_VAR(opline-&gt;result.var), value);</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="comment">/* zend_assign_to_variable() always takes care of op2, never free it! */</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	ZEND_VM_NEXT_OPCODE_CHECK_EXCEPTION();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在执行结束之后，会调用 ZEND_VM_NEXT_OPCODE_EX 移动 opcode 指针指向下一条 opcode。</p>
+<hr>
+<h3 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h3><p>简单理了一遍过程，以后有时间再看看其他感兴趣的东西，比如变量哈希表如何存放，函数定义与执行，函数递归等等。</p>
+<hr>
+<p>参考：</p>
+<p><a href="https://www.php.cn/php-weizijiaocheng-357239.html">https://www.php.cn/php-weizijiaocheng-357239.html</a></p>
+<p><a href="https://www.kancloud.cn/nickbai/php7/363255">https://www.kancloud.cn/nickbai/php7/363255</a></p>
+<p><a href="https://www.bookstack.cn/read/php-internals/0.md">https://www.bookstack.cn/read/php-internals/0.md</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                      <a class="hover-with-bg" href="/tags/PHP/">PHP</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2020/06/16/Python%E4%BB%8E%E7%BC%96%E8%AF%91%E5%88%B0%E6%89%A7%E8%A1%8C/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>Python从编译到执行</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2020/05/20/unserialize%E6%97%B6PHP%E5%B9%B2%E4%BA%86%E4%BB%80%E4%B9%88/">
+                        <span>unserialize时PHP干了什么</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "PHP从编译到执行&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

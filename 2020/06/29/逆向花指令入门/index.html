@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>逆向花指令入门 - Twings</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期一, 六月 29日 2020, 3:20 下午
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    958 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      4 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>之前 De1CTF 的 web 扩展题，当时下载扩展 IDA 打开，然后看着反编译代码就懵了，不知道是个什么逻辑。</p>
+<p>后来才知道题目是加入了简单的花指令来干扰 IDA 的分析，看了 writeup 之后打算自己动手解一下。</p>
+<span id="more"></span>
+
+<hr>
+<h3 id="分析"><a href="#分析" class="headerlink" title="分析"></a>分析</h3><p>分析工具：IDA 7.0</p>
+<p>下载扩展：<a href="https://raw.githubusercontent.com/De1ta-team/De1CTF2020/master/writeup/web/mixtrue/docker.zip">https://raw.githubusercontent.com/De1ta-team/De1CTF2020/master/writeup/web/mixtrue/docker.zip</a></p>
+<p>用 IDA 打开，按照开发 PHP 扩展的经验直接定位到 zif_Minclude 函数，F5 反编译一下，结果看到：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> __fastcall <span class="title function_">zif_Minclude</span><span class="params">(zend_execute_data *execute_data, zval *return_value)</span></span><br><span class="line">&#123;</span><br><span class="line">  ((<span class="type">void</span> (__fastcall *)(zend_execute_data *, zval *, zend_execute_data *))l2)(execute_data, return_value, execute_data);</span><br><span class="line">  JUMPOUT(*(_QWORD *)&amp;byte_1245);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这反编译出来的代码跟印象中的 PHP 扩展代码完全不一样，回去看反编译前的指令，看到一个红色错误：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">zif_Minclude    endp ; sp-analysis failed</span><br></pre></td></tr></table></figure>
+
+<p>说明这里可能存在花指令或者其他东西影响了 IDA 的分析，可以看到 IDA 看到 call l2，将 l2 当作了一个函数，然后认为函数返回之后的下一条指令是：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">db 0EAh</span><br></pre></td></tr></table></figure>
+
+<p>这样一来反编译出来的代码就完全错误了，而机器执行的代码还是正常的，所以这里的花指令可以自己看汇编代码理清流程来去除，像我这样对汇编、栈和函数调用不是很熟悉的人就只能用 gdb 调试 php 扩展来看了。</p>
+<p>修改 php.ini 加载扩展，然后 gdb 调试，要提一点的是 php 加载 so 扩展是运行时加载，所以给扩展里的函数要下断点需要在调用该函数之前让 php 停下来，比如在前面加个 var_dump 然后给 php_var_dump 下个断点，再在运行触发断点的时候给该函数下断点。</p>
+<p>看一遍就会发现，根源就在于 call 之后的地方：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">pop     rax</span><br><span class="line">add     rax, 8</span><br><span class="line">push    rax</span><br></pre></td></tr></table></figure>
+
+<p>这里 pop 出来的其实是 call l2 之后的返回地址，即 0x245，而修改之后再入栈则相当于将返回地址改为了 0x24D，而 IDA 静态分析不会发现返回地址被更改了，所以还是 0x245 的错误地址。</p>
+<p>所以要去除这里的花指令，就是将 0x22E 到 0x24D 的指令都 nop 掉，然后 undefined，重新创建函数。</p>
+<p>这时会发现另一个问题：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">.text:00000000000012E2: The function has undefined instruction/data at the specified address.</span><br></pre></td></tr></table></figure>
+
+<p>定位过去看看，是一段无法识别的跳转指令，因为它的操作数需要四个字节的数据作为跳转的地址，而后面的数据已经被识别为了 next 标签的指令，这里我们将它直接 nop 掉，然后再创建。</p>
+<p>然后发现，另外一个地址出现了同样的错误，阅读汇编代码之后会发现是个相同的花指令，去除之后再创建，可以发现创建成功了，再 F5 反编译：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> __fastcall <span class="title function_">zif_Minclude</span><span class="params">(zend_execute_data *execute_data, zval *return_value)</span></span><br><span class="line">&#123;</span><br><span class="line">  zval *v2; <span class="comment">// r12</span></span><br><span class="line">  <span class="type">unsigned</span> __int64 v3; <span class="comment">// rsi</span></span><br><span class="line">  FILE *v4; <span class="comment">// rbx</span></span><br><span class="line">  __int64 v5; <span class="comment">// rax</span></span><br><span class="line">  <span class="type">void</span> *src; <span class="comment">// [rsp+0h] [rbp-98h]</span></span><br><span class="line">  <span class="type">size_t</span> n; <span class="comment">// [rsp+8h] [rbp-90h]</span></span><br><span class="line">  <span class="type">char</span> dest; <span class="comment">// [rsp+10h] [rbp-88h]</span></span><br><span class="line">  <span class="type">int</span> v9; <span class="comment">// [rsp+70h] [rbp-28h]</span></span><br><span class="line">  <span class="type">char</span> *v10; <span class="comment">// [rsp+74h] [rbp-24h]</span></span><br><span class="line"></span><br><span class="line">  v2 = return_value;</span><br><span class="line">  <span class="built_in">memset</span>(&amp;dest, <span class="number">0</span>, <span class="number">0x60u</span>LL);</span><br><span class="line">  v9 = <span class="number">0</span>;</span><br><span class="line">  v10 = &amp;dest;</span><br><span class="line">  <span class="keyword">if</span> ( (<span class="type">unsigned</span> <span class="type">int</span>)zend_parse_parameters(execute_data-&gt;This.u2.next, <span class="string">&quot;s&quot;</span>, &amp;src, &amp;n) != <span class="number">-1</span> )</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="built_in">memcpy</span>(&amp;dest, src, n);</span><br><span class="line">    php_printf(<span class="string">&quot;%s&quot;</span>, &amp;dest);</span><br><span class="line">    php_printf(<span class="string">&quot;&lt;br&gt;&quot;</span>, &amp;dest);</span><br><span class="line">    v3 = (<span class="type">unsigned</span> __int64)<span class="string">&quot;rb&quot;</span>;</span><br><span class="line">    v4 = fopen(&amp;dest, <span class="string">&quot;rb&quot;</span>);</span><br><span class="line">    <span class="keyword">if</span> ( v4 )</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="keyword">while</span> ( !feof(v4) )</span><br><span class="line">      &#123;</span><br><span class="line">        v3 = (<span class="type">unsigned</span> <span class="type">int</span>)fgetc(v4);</span><br><span class="line">        php_printf(<span class="string">&quot;%c&quot;</span>, v3);</span><br><span class="line">      &#125;</span><br><span class="line">      php_printf(<span class="string">&quot;\n&quot;</span>, v3);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">    &#123;</span><br><span class="line">      php_printf(<span class="string">&quot;no file\n&quot;</span>, <span class="string">&quot;rb&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    v5 = zend_strpprintf(<span class="number">0LL</span>, <span class="string">&quot;True&quot;</span>);</span><br><span class="line">    v2-&gt;value.lval = v5;</span><br><span class="line">    v2-&gt;u1.type_info = (*(_BYTE *)(v5 + <span class="number">5</span>) &amp; <span class="number">2u</span>) &lt; <span class="number">1</span> ? <span class="number">5126</span> : <span class="number">6</span>;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到已经是正常的代码了。</p>
+<hr>
+<p>参考文章：</p>
+<p><a href="https://wizardforcel.gitbooks.io/re-for-beginners/content/Part-III/Chapter-50.html">https://wizardforcel.gitbooks.io/re-for-beginners/content/Part-III/Chapter-50.html</a></p>
+<p><a href="https://www.52pojie.cn/thread-1068444-1-1.html">https://www.52pojie.cn/thread-1068444-1-1.html</a></p>
+<p><a href="https://www.anquanke.com/post/id/208682">https://www.anquanke.com/post/id/208682</a></p>
+<p><a href="https://xuanxuanblingbling.github.io/ctf/pwn/2020/05/05/mixture/">https://xuanxuanblingbling.github.io/ctf/pwn/2020/05/05/mixture/</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/CTF/">CTF</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Re/">Re</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2020/07/02/MySQL-JDBC-%E5%AE%A2%E6%88%B7%E7%AB%AF%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>MySQL JDBC 客户端反序列化</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2020/06/23/%E5%AE%89%E8%A3%85vld%E6%89%A9%E5%B1%95%E6%9F%A5%E7%9C%8Bopcode/">
+                        <span>安装vld扩展查看opcode</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "逆向花指令入门&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

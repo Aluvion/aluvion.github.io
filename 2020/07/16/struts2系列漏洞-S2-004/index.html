@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>struts2系列漏洞 S2-004/ClassLoader - Twings</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期四, 七月 16日 2020, 11:50 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    1.8k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      8 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>  经典 Java 软件漏洞 struts 系列，准备一个个看过去。</p>
+<span id="more"></span>
+
+<hr>
+<h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>struts 2.0.11.1 + tomcat7，源码部分不需要改变。</p>
+<h3 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h3><p>阅读<a href="https://cwiki.apache.org/confluence/display/WW/S2-004">官方通告</a>，漏洞原因在于 struts2 在读取静态文件时进行了一次 URL 解码，所以可以通过将 ..&#x2F; 进行两次 URL 编码从而列目录或者访问其他目录中的文件。</p>
+<p>测试 payload：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://localhost:8080/struts/..%252f</span><br></pre></td></tr></table></figure>
+
+<p>可以看到列出了 tomcat 的 lib 目录，读取 class 文件：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://localhost:8080/struts/..%252f..%252f..%252fWEB-INF/classes/com/example/struts2/LoginAction.class/</span><br></pre></td></tr></table></figure>
+
+<h3 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h3><p>在官方通告中已经明确指出了漏洞存在的类为 FilterDispatcher，我们直接调试即可，找到漏洞方法 doFilter：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (serveStatic &amp;&amp; resourcePath.startsWith(<span class="string">&quot;/struts&quot;</span>)) &#123;</span><br><span class="line">    <span class="type">String</span> <span class="variable">name</span> <span class="operator">=</span> resourcePath.substring(<span class="string">&quot;/struts&quot;</span>.length());</span><br><span class="line">    findStaticResource(name, request, response);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在访问前缀为 &#x2F;struts 时，会去掉前缀然后调用 findStaticResource：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (!name.endsWith(<span class="string">&quot;.class&quot;</span>)) &#123;</span><br><span class="line">    <span class="keyword">for</span> (String pathPrefix : pathPrefixes) &#123;</span><br><span class="line">    	<span class="type">InputStream</span> <span class="variable">is</span> <span class="operator">=</span> findInputStream(name, pathPrefix);</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>访问的静态文件不能以 .class 结尾，其实这个限制没有什么用，然后遍历配置好的静态文件目录并调用 findInputStream，tomcat7 的环境下一共有三个目录：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">org/apache/struts2/static/</span><br><span class="line">template/</span><br><span class="line">org/apache/struts2/interceptor/debugging/</span><br></pre></td></tr></table></figure>
+
+<p>官方给的 payload 只有其中的 template 能触发漏洞，在 findInputStream 方法中：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> InputStream <span class="title function_">findInputStream</span><span class="params">(String name, String packagePrefix)</span> <span class="keyword">throws</span> IOException &#123;</span><br><span class="line">    String resourcePath;</span><br><span class="line">    <span class="keyword">if</span> (packagePrefix.endsWith(<span class="string">&quot;/&quot;</span>) &amp;&amp; name.startsWith(<span class="string">&quot;/&quot;</span>)) &#123;</span><br><span class="line">    	resourcePath = packagePrefix + name.substring(<span class="number">1</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    	resourcePath = packagePrefix + name;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    resourcePath = URLDecoder.decode(resourcePath, encoding);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> ClassLoaderUtil.getResourceAsStream(resourcePath, getClass());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>将访问的路径跟目录拼接在一起，然后 URL 解码，再调用 getResourceAsStream 开始读取文件，就造成了目录遍历漏洞。</p>
+<h3 id="漏洞修复"><a href="#漏洞修复" class="headerlink" title="漏洞修复"></a>漏洞修复</h3><p>加上了 URL.getFile 和 endWith 来判断后缀。</p>
+<h3 id="其他的思考"><a href="#其他的思考" class="headerlink" title="其他的思考"></a>其他的思考</h3><h4 id="为什么-LoginAction-class-后面加上一个-还能读取到文件"><a href="#为什么-LoginAction-class-后面加上一个-还能读取到文件" class="headerlink" title="为什么 LoginAction.class 后面加上一个 &#x2F; 还能读取到文件"></a>为什么 LoginAction.class 后面加上一个 &#x2F; 还能读取到文件</h4><p>因为最后会调用 WinNTFileSystem 类的 normalize 方法对路径进行调整：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> String <span class="title function_">normalize</span><span class="params">(String path)</span> &#123;</span><br><span class="line">    <span class="type">int</span> <span class="variable">n</span> <span class="operator">=</span> path.length();</span><br><span class="line">    <span class="type">char</span> <span class="variable">slash</span> <span class="operator">=</span> <span class="built_in">this</span>.slash;</span><br><span class="line">    <span class="type">char</span> <span class="variable">altSlash</span> <span class="operator">=</span> <span class="built_in">this</span>.altSlash;</span><br><span class="line">    <span class="type">char</span> <span class="variable">prev</span> <span class="operator">=</span> <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; n; i++) &#123;</span><br><span class="line">        <span class="type">char</span> <span class="variable">c</span> <span class="operator">=</span> path.charAt(i);</span><br><span class="line">        <span class="keyword">if</span> (c == altSlash)</span><br><span class="line">        <span class="keyword">return</span> normalize(path, n, (prev == slash) ? i - <span class="number">1</span> : i);</span><br><span class="line">        <span class="keyword">if</span> ((c == slash) &amp;&amp; (prev == slash) &amp;&amp; (i &gt; <span class="number">1</span>))</span><br><span class="line">        <span class="keyword">return</span> normalize(path, n, i - <span class="number">1</span>);</span><br><span class="line">        <span class="keyword">if</span> ((c == <span class="string">&#x27;:&#x27;</span>) &amp;&amp; (i &gt; <span class="number">1</span>))</span><br><span class="line">        <span class="keyword">return</span> normalize(path, n, <span class="number">0</span>);</span><br><span class="line">        prev = c;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (prev == slash) <span class="keyword">return</span> normalize(path, n, n - <span class="number">1</span>);</span><br><span class="line">    <span class="keyword">return</span> path;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>会消除掉最后面的所有 &#x2F;。</p>
+<h4 id="为什么回退一次目录会访问到-tomcat-的-lib-目录"><a href="#为什么回退一次目录会访问到-tomcat-的-lib-目录" class="headerlink" title="为什么回退一次目录会访问到 tomcat 的 lib 目录"></a>为什么回退一次目录会访问到 tomcat 的 lib 目录</h4><p>调试可以发现，findResource 可以用来获取类，而根据资源路径获取资源的顺序是一个从最底层 WebappClassLoader 开始（即 getResource 方法中调用的 Thread.currentThread().getContextClassLoader().getResource(resourceName)），再到最高层，后面逐级下降的顺序（后面就遵循双亲委派）。</p>
+<p>而此时的路径为 template&#x2F;..&#x2F;，首先会交给 WebappClassLoader 来获取资源，而 WebappClassLoader 负责的是项目中的用户类，获取资源的根目录为 WEB-INF&#x2F;classes，这时候会调用 WebappClassLoader  的 findResource 来处理：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">ResourceEntry</span> <span class="variable">entry</span> <span class="operator">=</span> (ResourceEntry)<span class="built_in">this</span>.resourceEntries.get(name);</span><br><span class="line"><span class="keyword">if</span> (entry == <span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">this</span>.securityManager != <span class="literal">null</span>) &#123;</span><br><span class="line">        PrivilegedAction&lt;ResourceEntry&gt; dp = <span class="keyword">new</span> <span class="title class_">WebappClassLoader</span>.PrivilegedFindResourceByName(name, name);</span><br><span class="line">        entry = (ResourceEntry)AccessController.doPrivileged(dp);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    	entry = <span class="built_in">this</span>.findResourceInternal(name, name);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在缓存的 resourceEntries 哈希表未命中的情况下，会调用 findResourceInternal 进行下一步处理：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">String</span> <span class="variable">fullPath</span> <span class="operator">=</span> <span class="built_in">this</span>.repositories[i] + path;</span><br><span class="line"><span class="type">Object</span> <span class="variable">lookupResult</span> <span class="operator">=</span> <span class="built_in">this</span>.resources.lookup(fullPath);</span><br></pre></td></tr></table></figure>
+
+<p>这里的 repositories 只有唯一的 &#x2F;WEB-INF&#x2F;classes&#x2F;，在跟资源路径拼接后会调用 lookup 开始获取资源，到了 FileDirContext 类的 file 方法中，经过 canonicalize0 方法的处理后会获得处理后的路径为 D:\Java1.8\struts2\target\struts2\WEB-INF\classes，然后就发生了一个问题：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">String</span> <span class="variable">fileAbsPath</span> <span class="operator">=</span> file.getAbsolutePath();</span><br><span class="line"><span class="keyword">if</span> (fileAbsPath.endsWith(<span class="string">&quot;.&quot;</span>)) &#123;</span><br><span class="line">    fileAbsPath = fileAbsPath + <span class="string">&quot;/&quot;</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">String</span> <span class="variable">absPath</span> <span class="operator">=</span> <span class="built_in">this</span>.normalize(fileAbsPath);</span><br><span class="line">canPath = <span class="built_in">this</span>.normalize(canPath);</span><br><span class="line"><span class="keyword">if</span> (<span class="built_in">this</span>.absoluteBase.length() &lt; absPath.length() &amp;&amp; <span class="built_in">this</span>.absoluteBase.length() &lt; canPath.length()) &#123;</span><br><span class="line">    absPath = absPath.substring(<span class="built_in">this</span>.absoluteBase.length() + <span class="number">1</span>);</span><br><span class="line">    <span class="keyword">if</span> (absPath == <span class="literal">null</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (absPath.equals(<span class="string">&quot;&quot;</span>)) &#123;</span><br><span class="line">        absPath = <span class="string">&quot;/&quot;</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    canPath = canPath.substring(<span class="built_in">this</span>.absoluteBase.length() + <span class="number">1</span>);</span><br><span class="line">    <span class="keyword">if</span> (canPath.equals(<span class="string">&quot;&quot;</span>)) &#123;</span><br><span class="line">        canPath = <span class="string">&quot;/&quot;</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (!canPath.equals(absPath)) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>但是这里的 absPath 的最后面是会有一个 &#x2F; 的，这就导致了获取到的 file 永远是空的，也就是说 WebappClassLoader 这里是获取不到资源的，接下来就会委派给最高层的 ExtClassloader，可以阅读一下<a href="https://www.jianshu.com/p/b8e331840961">这篇文章</a>，我们继续调试，给 ClassLoader 类的 getResource 方法和 URLClassPath 类的 findResource 方法下断点，会发现这是一个循环比较的过程：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> URL <span class="title function_">findResource</span><span class="params">(String var1, <span class="type">boolean</span> var2)</span> &#123;</span><br><span class="line">    <span class="type">int</span>[] var4 = <span class="built_in">this</span>.getLookupCache(var1);</span><br><span class="line"></span><br><span class="line">    URLClassPath.Loader var3;</span><br><span class="line">    <span class="keyword">for</span>(<span class="type">int</span> <span class="variable">var5</span> <span class="operator">=</span> <span class="number">0</span>; (var3 = <span class="built_in">this</span>.getNextLoader(var4, var5)) != <span class="literal">null</span>; ++var5) &#123;</span><br><span class="line">        <span class="type">URL</span> <span class="variable">var6</span> <span class="operator">=</span> var3.findResource(var1, var2);</span><br><span class="line">        <span class="keyword">if</span> (var6 != <span class="literal">null</span>) &#123;</span><br><span class="line">        	<span class="keyword">return</span> var6;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">&#125;</span><br><span class="line">...</span><br><span class="line">URL <span class="title function_">findResource</span><span class="params">(String var1, <span class="type">boolean</span> var2)</span> &#123;</span><br><span class="line">    <span class="type">Resource</span> <span class="variable">var3</span> <span class="operator">=</span> <span class="built_in">this</span>.getResource(var1, var2);</span><br><span class="line">    <span class="keyword">return</span> var3 != <span class="literal">null</span> ? var3.getURL() : <span class="literal">null</span>;</span><br><span class="line">&#125;</span><br><span class="line">...</span><br><span class="line">Resource <span class="title function_">getResource</span><span class="params">(String var1, <span class="type">boolean</span> var2)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">this</span>.metaIndex != <span class="literal">null</span> &amp;&amp; !<span class="built_in">this</span>.metaIndex.mayContain(var1)) &#123;</span><br><span class="line">    	<span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">...</span><br><span class="line">Resource <span class="title function_">getResource</span><span class="params">(String var1, <span class="type">boolean</span> var2)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">this</span>.isClassOnlyJar &amp;&amp; !var1.endsWith(<span class="string">&quot;.class&quot;</span>)) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>但是因为路径不是 .class 结尾的，所以最后都会失败。</p>
+<p>ExtClassloader 无法获取资源，就会交给它的孩子 AppClassLoader， AppClassLoader 同样使用 JarLoader，也同样找不到，这两个 classloader 都是从 Jar 中获取资源的。</p>
+<p>接下来交给 URLClassLoader，它可以从文件夹中获取资源，根目录在 tomcat 的 lib 目录，而在它的 getResource 方法中：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">Resource <span class="title function_">getResource</span><span class="params">(<span class="keyword">final</span> String var1, <span class="type">boolean</span> var2)</span> &#123;</span><br><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="type">URL</span> <span class="variable">var4</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">URL</span>(<span class="built_in">this</span>.getBaseURL(), <span class="string">&quot;.&quot;</span>);</span><br><span class="line">    <span class="keyword">final</span> <span class="type">URL</span> <span class="variable">var3</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">URL</span>(<span class="built_in">this</span>.getBaseURL(), ParseUtil.encodePath(var1, <span class="literal">false</span>));</span><br><span class="line">    <span class="keyword">if</span> (!var3.getFile().startsWith(var4.getFile())) &#123;</span><br><span class="line">    	<span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (var2) &#123;</span><br><span class="line">            URLClassPath.check(var3);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">final</span> File var5;</span><br><span class="line">        <span class="keyword">if</span> (var1.indexOf(<span class="string">&quot;..&quot;</span>) != -<span class="number">1</span>) &#123;</span><br><span class="line">            var5 = (<span class="keyword">new</span> <span class="title class_">File</span>(<span class="built_in">this</span>.dir, var1.replace(<span class="string">&#x27;/&#x27;</span>, File.separatorChar))).getCanonicalFile();</span><br><span class="line">            <span class="keyword">if</span> (!var5.getPath().startsWith(<span class="built_in">this</span>.dir.getPath())) &#123;</span><br><span class="line">            	<span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">        	&#125;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        	var5 = <span class="keyword">new</span> <span class="title class_">File</span>(<span class="built_in">this</span>.dir, var1.replace(<span class="string">&#x27;/&#x27;</span>, File.separatorChar));</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> var5.exists() ? <span class="keyword">new</span> <span class="title class_">Resource</span>() &#123;...&#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>this.dir、this.getBaseURL() 就是 tomcat 的 lib 目录，调用 getCanonicalFile 之后，最后返回的就是 lib 这个目录的资源，所以我们就会读取到 lib 目录下的文件名。</p>
+<p>同理，template&#x2F; 上向上跳一级，所以我们如果向上跳 4、5 级，同样可以访问到 tomcat 的 lib 目录，只不过这时触发的路径就不是 template 了，而是其他两个配置好的目录：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">org/apache/struts2/static/</span><br><span class="line">org/apache/struts2/interceptor/debugging/</span><br></pre></td></tr></table></figure>
+
+<p>继续思考，为什么回退两级会是 404？</p>
+<p>首先，确定最下面的 WebappClassLoader 肯定也会因为前面说的路径匹配不上而没有东西，上面两级 JarLoader 的肯定是没有东西的，所以直接去看 URLClassLoader，上面两个 org&#x2F;apache 的目录肯定是访问不到文件的，所以直接看 template，错误发生在这里：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">URL</span> <span class="variable">var4</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">URL</span>(<span class="built_in">this</span>.getBaseURL(), <span class="string">&quot;.&quot;</span>);</span><br><span class="line"><span class="keyword">final</span> <span class="type">URL</span> <span class="variable">var3</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">URL</span>(<span class="built_in">this</span>.getBaseURL(), ParseUtil.encodePath(var1, <span class="literal">false</span>));</span><br><span class="line"><span class="keyword">if</span> (!var3.getFile().startsWith(var4.getFile())) &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>因为 template&#x2F; 往上跳了两级，所以这里的 var3 会跳到 lib 上一级的 tomcat 目录，跳出根目录导致没有东西。</p>
+<p>剩下的跳 &gt;5 次就比较简单了，6、7 次的时候，两个 4、5 级的目录加上 WEB-INF 和 classes 刚好 6、7 次，所以 WebappClassLoader 获取资源时刚好跳到根目录，即 IDEA 的编译目录 &#x2F;D:&#x2F;Java1.8&#x2F;struts2&#x2F;target&#x2F;struts2，而用来切割然后比较的根目录 absoluteBase 为 D:\Java1.8\struts2\target\struts2，所以 canPath 会在切割完之后为空，而代码会加上一个 &#x2F;，所以就跟 absPath 相同了，也就可以目录穿越访问到项目根目录了。</p>
+<hr>
+<p>参考文章：</p>
+<p><a href="https://blog.csdn.net/how_interesting/article/details/80091472">https://blog.csdn.net/how_interesting/article/details/80091472</a></p>
+<p><a href="https://xz.aliyun.com/t/7967">https://xz.aliyun.com/t/7967</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Java/">Java</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Struts2/">Struts2</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2020/07/18/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-007/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>struts2系列漏洞 S2-007</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2020/07/16/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-003-S2-005/">
+                        <span>struts2系列漏洞 S2-003/S2-005</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "struts2系列漏洞 S2-004/ClassLoader&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

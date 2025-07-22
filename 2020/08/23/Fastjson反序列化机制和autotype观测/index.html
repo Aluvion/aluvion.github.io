@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>Fastjson反序列化机制和autotype观测 - Twings</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期日, 八月 23日 2020, 8:50 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    5.1k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      22 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> 只知道 Fastjson 的大致反序列化机制，所以打算以两个 autotype 绕过漏洞为基础深入读一读源码。</p>
+<p>其实 Fastjson 反序列化漏洞的利用限制还是有的，除了对 Fastjson 本身的版本有要求，还对其他依赖、JDK 版本等有要求，因为 Java 中能实现 RCE 的方法其实不多：反射、JNDI、TemplatesImpl 等。</p>
+<span id="more"></span>
+
+<hr>
+<h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>用的是 SpringBoot 搭建 web 服务，然后 maven 下载 Fastjson 依赖，再写一个方便测试的类（因为 JDK 版本较高，JNDI 无法触发）：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.example.json.evil;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.io.IOException;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Evil</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setCmd</span><span class="params">(String cmd)</span> <span class="keyword">throws</span> IOException &#123;</span><br><span class="line">        Runtime.getRuntime().exec(cmd);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>为了复现黑名单绕过，还需要手动加入黑名单：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ParserConfig.getGlobalInstance().addDeny(<span class="string">&quot;com.example.json.evil&quot;</span>);</span><br></pre></td></tr></table></figure>
+
+<h3 id="Fastjson-反序列化漏洞"><a href="#Fastjson-反序列化漏洞" class="headerlink" title="Fastjson 反序列化漏洞"></a>Fastjson 反序列化漏洞</h3><p>因为要反序列化成对象，所以给其属性赋值的时候，在私有属性等情况下，就需要访问他们的 getter 和 setter。</p>
+<p>而如果这些 getter 和 setter 中存在危险操作，就会导致漏洞。</p>
+<h3 id="autotype"><a href="#autotype" class="headerlink" title="autotype"></a>autotype</h3><p>autotype 是 Fastjson 中的一个重要机制，粗略来说就是用于设置能否将 JSON 反序列化成对象。</p>
+<p>但是其实从源码实现来看，即使没有开启 autoype，也有一些情况下是可以反序列化出对象来的，具体的情况在后面再分析。</p>
+<h3 id="远古版本-Fastjson-1-2-10"><a href="#远古版本-Fastjson-1-2-10" class="headerlink" title="远古版本 Fastjson &lt; 1.2.10"></a>远古版本 Fastjson &lt; 1.2.10</h3><p>autotype 默认开启，没有反序列化黑名单。</p>
+<h3 id="Fastjson-1-2-25"><a href="#Fastjson-1-2-25" class="headerlink" title="Fastjson &lt; 1.2.25"></a>Fastjson &lt; 1.2.25</h3><p>autotype 默认开启，反序列化黑名单中只有一个不是用于漏洞利用的类 java.lang.Thread，可以为所欲为。</p>
+<h3 id="Fastjson-1-2-25-1"><a href="#Fastjson-1-2-25-1" class="headerlink" title="Fastjson 1.2.25"></a>Fastjson 1.2.25</h3><p>autotype 默认关闭，增加了 checkAutoType 函数，反序列化对象之前要经过 checkAutoType 函数的检验。</p>
+<p>而且增加了白名单和黑名单，以白名单优先级最高，白名单如果允许就不检测黑名单与危险类，否则继续检测黑名单与危险类。</p>
+<h3 id="1-2-25"><a href="#1-2-25" class="headerlink" title="1.2.25 &lt;&#x3D;  Fastjson  &lt;&#x3D;  1.2.41 checkAutoType 黑名单绕过"></a>1.2.25 &lt;&#x3D;  Fastjson  &lt;&#x3D;  1.2.41 checkAutoType 黑名单绕过</h3><p>不断地增加黑名单，还有某些逻辑漏洞的修复。</p>
+<p>这期间发生了一次 checkAutoType 黑名单绕过，我们先来看看 1.2.41 版本下 checkAutoType 的黑名单校验：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (autoTypeSupport || expectClass != <span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; acceptList.length; ++i) &#123;</span><br><span class="line">        <span class="type">String</span> <span class="variable">accept</span> <span class="operator">=</span> acceptList[i];</span><br><span class="line">        <span class="keyword">if</span> (className.startsWith(accept)) &#123;</span><br><span class="line">            clazz = TypeUtils.loadClass(typeName, defaultClassLoader, <span class="literal">false</span>);</span><br><span class="line">            <span class="keyword">if</span> (clazz != <span class="literal">null</span>) &#123;</span><br><span class="line">           	 	<span class="keyword">return</span> clazz;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; denyList.length; ++i) &#123;</span><br><span class="line">        <span class="type">String</span> <span class="variable">deny</span> <span class="operator">=</span> denyList[i];</span><br><span class="line">        <span class="keyword">if</span> (className.startsWith(deny) &amp;&amp; TypeUtils.getClassFromMapping(typeName) == <span class="literal">null</span>) &#123;</span><br><span class="line">        	<span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">JSONException</span>(<span class="string">&quot;autoType is not support. &quot;</span> + typeName);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到对类名的校验用的是 startsWith，所以只要在前面加一些不会影响到类加载的字符就能绕过黑名单的校验。</p>
+<p>而往下看到加载类时使用的 TypeUtils.loadClass 函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> Class&lt;?&gt; loadClass(String className, ClassLoader classLoader, <span class="type">boolean</span> cache) &#123;</span><br><span class="line">    <span class="keyword">if</span>(className == <span class="literal">null</span> || className.length() == <span class="number">0</span>)&#123;</span><br><span class="line">    	<span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    Class&lt;?&gt; clazz = mappings.get(className);</span><br><span class="line">    <span class="keyword">if</span>(clazz != <span class="literal">null</span>)&#123;</span><br><span class="line">    	<span class="keyword">return</span> clazz;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span>(className.charAt(<span class="number">0</span>) == <span class="string">&#x27;[&#x27;</span>)&#123;</span><br><span class="line">        Class&lt;?&gt; componentType = loadClass(className.substring(<span class="number">1</span>), classLoader);</span><br><span class="line">        <span class="keyword">return</span> Array.newInstance(componentType, <span class="number">0</span>).getClass();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span>(className.startsWith(<span class="string">&quot;L&quot;</span>) &amp;&amp; className.endsWith(<span class="string">&quot;;&quot;</span>))&#123;</span><br><span class="line">        <span class="type">String</span> <span class="variable">newClassName</span> <span class="operator">=</span> className.substring(<span class="number">1</span>, className.length() - <span class="number">1</span>);</span><br><span class="line">        <span class="keyword">return</span> loadClass(newClassName, classLoader);</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到当类名以 L 开头以 ; 结尾时，会将这两个字符去掉然后重新调用 loadClass 进行加载，所以不会影响类的加载。</p>
+<p>而在类名前面加上 L 之后就不会触发 startsWith 的校验，也就绕过了黑名单，例如：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span><span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span><span class="string">&quot;Lcom.example.json.evil.Evil;&quot;</span><span class="punctuation">,</span><span class="attr">&quot;cmd&quot;</span><span class="punctuation">:</span><span class="string">&quot;calc&quot;</span><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>至于为什么会有这种奇怪的处理，L 和 ; 这一对字符其实是 JVM 字节码中用来表示类名的：<a href="https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.3">https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.3</a> ，Fastjson 对这种类名的表达方式也做了处理。</p>
+<h3 id="Fastjson-1-2-42-checkAutoType-黑名单绕过"><a href="#Fastjson-1-2-42-checkAutoType-黑名单绕过" class="headerlink" title="Fastjson 1.2.42 checkAutoType 黑名单绕过"></a>Fastjson 1.2.42 checkAutoType 黑名单绕过</h3><p>黑白名单改成了十进制的 HashCode，无法直观地看出类名包名，想要找出就需要本地有很多依赖然后跑脚本计算 HashCode 了。 </p>
+<p>而与此同时，发生了第二次 checkAutoType 黑名单绕过（其实就是上一次修复不到位），看看 1.2.42 版本下的 checkAutoType 的黑名单校验：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> ((((BASIC</span><br><span class="line">       ^ className.charAt(<span class="number">0</span>))</span><br><span class="line">      * PRIME)</span><br><span class="line">     ^ className.charAt(className.length() - <span class="number">1</span>))</span><br><span class="line">    * PRIME == <span class="number">0x9198507b5af98f0L</span>)</span><br><span class="line">&#123;</span><br><span class="line">    className = className.substring(<span class="number">1</span>, className.length() - <span class="number">1</span>);</span><br><span class="line">&#125;</span><br><span class="line">...</span><br><span class="line"><span class="keyword">if</span> (autoTypeSupport || expectClass != <span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="type">long</span> <span class="variable">hash</span> <span class="operator">=</span> h3;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">3</span>; i &lt; className.length(); ++i) &#123;</span><br><span class="line">        hash ^= className.charAt(i);</span><br><span class="line">        hash *= PRIME;</span><br><span class="line">        <span class="keyword">if</span> (Arrays.binarySearch(acceptHashCodes, hash) &gt;= <span class="number">0</span>) &#123;</span><br><span class="line">            clazz = TypeUtils.loadClass(typeName, defaultClassLoader, <span class="literal">false</span>);</span><br><span class="line">            <span class="keyword">if</span> (clazz != <span class="literal">null</span>) &#123;</span><br><span class="line">            	<span class="keyword">return</span> clazz;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (Arrays.binarySearch(denyHashCodes, hash) &gt;= <span class="number">0</span> &amp;&amp; TypeUtils.getClassFromMapping(typeName) == <span class="literal">null</span>) &#123;</span><br><span class="line">        	<span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">JSONException</span>(<span class="string">&quot;autoType is not support. &quot;</span> + typeName);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面一段代码对第一个和最后一个字符做了校验，虽然写成了 hash 的样子让人看不懂，但是调试一遍就能知道这里就是去掉了 L 和 ; 这一对字符，用于修补前面的黑名单绕过。</p>
+<p>但是仔细一思考，他只做了一次去除，那双写不就饶过了吗，例如：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span><span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span><span class="string">&quot;LLcom.example.json.evil.Evil;;&quot;</span><span class="punctuation">,</span><span class="attr">&quot;cmd&quot;</span><span class="punctuation">:</span><span class="string">&quot;calc&quot;</span><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="Fastjson-1-2-43-checkAutoType-黑名单绕过"><a href="#Fastjson-1-2-43-checkAutoType-黑名单绕过" class="headerlink" title="Fastjson 1.2.43 checkAutoType 黑名单绕过"></a>Fastjson 1.2.43 checkAutoType 黑名单绕过</h3><p>发生了第三次 checkAutoType 黑名单绕过（跟上一次相比换了个方式），看看 1.2.43 版本下的 checkAutoType，黑名单校验就不看了，没有什么变化，看看对 L 和 ; 绕过的处理：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> ((((BASIC</span><br><span class="line">    ^ className.charAt(<span class="number">0</span>))</span><br><span class="line">    * PRIME)</span><br><span class="line">    ^ className.charAt(className.length() - <span class="number">1</span>))</span><br><span class="line">    * PRIME == <span class="number">0x9198507b5af98f0L</span>)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">if</span> ((((BASIC</span><br><span class="line">        ^ className.charAt(<span class="number">0</span>))</span><br><span class="line">        * PRIME)</span><br><span class="line">        ^ className.charAt(<span class="number">1</span>))</span><br><span class="line">        * PRIME == <span class="number">0x9195c07b5af5345L</span>)</span><br><span class="line">    &#123;</span><br><span class="line">    	<span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">JSONException</span>(<span class="string">&quot;autoType is not support. &quot;</span> + typeName);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 9195c07b5af5345</span></span><br><span class="line">    className = className.substring(<span class="number">1</span>, className.length() - <span class="number">1</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>简单来说就是做了两次套娃校验，看到一对就去掉，看到两对就直接抛出异常，所以 L 和 ; 这对字符已经无法用来绕过了。</p>
+<p>但是除了这对字节码字符，loadClass 还对字节码中的数组，即 [ 做了特殊处理：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span>(className.charAt(<span class="number">0</span>) == <span class="string">&#x27;[&#x27;</span>)&#123;</span><br><span class="line">    Class&lt;?&gt; componentType = loadClass(className.substring(<span class="number">1</span>), classLoader);</span><br><span class="line">    <span class="keyword">return</span> Array.newInstance(componentType, <span class="number">0</span>).getClass();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>当序列化数据为一个对象数组的时候，最前面会是一个 L 字符，所以也可以用来绕过，例如：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span><span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span><span class="string">&quot;[com.example.json.evil.Evil&quot;</span><span class="punctuation">[</span><span class="punctuation">&#123;</span><span class="attr">&quot;cmd&quot;</span><span class="punctuation">:</span><span class="string">&quot;calc&quot;</span><span class="punctuation">&#125;</span><span class="punctuation">]</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="Fastjson-1-2-44-checkAutoType-黑名单绕过修复"><a href="#Fastjson-1-2-44-checkAutoType-黑名单绕过修复" class="headerlink" title="Fastjson 1.2.44 checkAutoType 黑名单绕过修复"></a>Fastjson 1.2.44 checkAutoType 黑名单绕过修复</h3><p>合并了对上面提到的绕过方式的修复：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">final</span> <span class="type">long</span> <span class="variable">h1</span> <span class="operator">=</span> (BASIC ^ className.charAt(<span class="number">0</span>)) * PRIME;</span><br><span class="line"><span class="keyword">if</span> (h1 == <span class="number">0xaf64164c86024f1aL</span>) &#123; <span class="comment">// [</span></span><br><span class="line">	<span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">JSONException</span>(<span class="string">&quot;autoType is not support. &quot;</span> + typeName);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> ((h1 ^ className.charAt(className.length() - <span class="number">1</span>)) * PRIME == <span class="number">0x9198507b5af98f0L</span>) &#123;</span><br><span class="line">	<span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">JSONException</span>(<span class="string">&quot;autoType is not support. &quot;</span> + typeName);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>[ 开头或者 L 开头 ; 结尾都会抛出异常，上述的绕过方式都不好使了。</p>
+<h3 id="1-2-44"><a href="#1-2-44" class="headerlink" title="1.2.44 &lt;&#x3D;  Fastjson  &lt;&#x3D;  1.2.46"></a>1.2.44 &lt;&#x3D;  Fastjson  &lt;&#x3D;  1.2.46</h3><p>增加黑名单。</p>
+<h3 id="Fastjson-1-2-47-autotype-绕过"><a href="#Fastjson-1-2-47-autotype-绕过" class="headerlink" title="Fastjson 1.2.47 autotype 绕过"></a>Fastjson 1.2.47 autotype 绕过</h3><p>这个版本下发生了第一次 autotype 的绕过，在没有开启 autotype 的情况下也可以像远古版本一样为所欲为。</p>
+<p>简单先理一遍 checkAutoType 的处理顺序：</p>
+<ol>
+<li>之前黑名单绕过的修复</li>
+<li>开启 autoTypeSupport 或者 expectClass 不为空时的黑白名单（白名单直接返回）</li>
+<li>尝试从缓存 Map 中加载类，若成功且无 expectClass 时可以直接返回</li>
+<li>尝试从 deserializers 中加载类，若成功且无 expectClass 时可以直接返回</li>
+<li>未开启 autoTypeSupport 时的黑白名单</li>
+<li>加载类</li>
+<li>expectClass 校验和注解校验，如果通过则返回</li>
+<li>未开启 autoTypeSupport 则抛出异常</li>
+</ol>
+<p>我们可以看到，在未开启 autoTypeSupport 时，如果我们能够向缓存 Map 中写入一个恶意类，那我们就可以绕过 autotype 反序列化任意一个类。而在开启 autoTypeSupport 的情况下，反而会被前面的黑名单校验所拦截。</p>
+<p>观察缓存 Map 的写入，可以发现能控制得写入只有 TypeUtils 类得 loadClass 函数一个地方：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">try</span>&#123;</span><br><span class="line">    <span class="keyword">if</span>(classLoader != <span class="literal">null</span>)&#123;</span><br><span class="line">        clazz = classLoader.loadClass(className);</span><br><span class="line">        <span class="keyword">if</span> (cache) &#123;</span><br><span class="line">        	mappings.put(className, clazz);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> clazz;</span><br><span class="line">    &#125;</span><br><span class="line">&#125; <span class="keyword">catch</span>(Throwable e)&#123;</span><br><span class="line">    e.printStackTrace();</span><br><span class="line">    <span class="comment">// skip</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">try</span>&#123;</span><br><span class="line">    <span class="type">ClassLoader</span> <span class="variable">contextClassLoader</span> <span class="operator">=</span> Thread.currentThread().getContextClassLoader();</span><br><span class="line">    <span class="keyword">if</span>(contextClassLoader != <span class="literal">null</span> &amp;&amp; contextClassLoader != classLoader)&#123;</span><br><span class="line">        clazz = contextClassLoader.loadClass(className);</span><br><span class="line">        <span class="keyword">if</span> (cache) &#123;</span><br><span class="line">        	mappings.put(className, clazz);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> clazz;</span><br><span class="line">    &#125;</span><br><span class="line">&#125; <span class="keyword">catch</span>(Throwable e)&#123;</span><br><span class="line">	<span class="comment">// skip</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在参数 cache 为 true 的情况下，会对加载的类进行缓存。</p>
+<p>全局搜索 TypeUtils.loadClass 可以看到其他地方的可控类加载操作同样只有一个地方：MiscCodec 类的 deserialze 函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (clazz == Class.class) &#123;</span><br><span class="line">	<span class="keyword">return</span> (T) TypeUtils.loadClass(strVal, parser.getConfig().getDefaultClassLoader());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里调用的 loadClass 为：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> Class&lt;?&gt; loadClass(String className, ClassLoader classLoader) &#123;</span><br><span class="line">    <span class="keyword">return</span> loadClass(className, classLoader, <span class="literal">true</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>所以 cache 默认为 true，会将加载到的类加入缓存，以后反序列化的时候就会在黑名单校验之前返回加载的类。加载类本来没有什么问题，因为不会触发 setter 和 getter，但是加入缓存就导致了这次 autotype 的绕过。</p>
+<p>clazz 和 strVal 各是什么数据暂且不提，我们可以看到 MiscCodec 类实现了 ObjectDeserializer 接口，很明显是一个反序列化器。</p>
+<p>观察 parseObject 的调用栈，在 checkAutoType 加载类结束之后，会获取反序列化器然后进行反序列化，将 JSON 中的数据还原到加载到的类中：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">ObjectDeserializer</span> <span class="variable">deserializer</span> <span class="operator">=</span> config.getDeserializer(clazz);</span><br><span class="line"><span class="type">Class</span> <span class="variable">deserClass</span> <span class="operator">=</span> deserializer.getClass();</span><br><span class="line"><span class="keyword">if</span> (JavaBeanDeserializer.class.isAssignableFrom(deserClass)</span><br><span class="line">        &amp;&amp; deserClass != JavaBeanDeserializer.class</span><br><span class="line">        &amp;&amp; deserClass != ThrowableDeserializer.class) &#123;</span><br><span class="line">    <span class="built_in">this</span>.setResolveStatus(NONE);</span><br><span class="line">&#125;</span><br><span class="line"><span class="type">Object</span> <span class="variable">obj</span> <span class="operator">=</span> deserializer.deserialze(<span class="built_in">this</span>, clazz, fieldName);</span><br><span class="line"><span class="keyword">return</span> obj;</span><br></pre></td></tr></table></figure>
+
+<p>config.getDeserializer 是从 ParserConfig 中获取的，类与反序列化器的对应关系可以看其 initDeserializers 函数，比如：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">deserializers.put(Class.class, MiscCodec.instance);</span><br></pre></td></tr></table></figure>
+
+<p>如果我们输入的 @type 为 java.lang.Class，我们就可以进入 MiscCodec 类的 deserialze 函数，而同时由于 Class 存在于 deserializers 中，换句话说也可以当作一个特别的白名单类，是可以直接加载的。</p>
+<p>回头看 deserialze 函数，clazz 来自 @type，而 strVal 来自 val，所以：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span><span class="attr">&quot;payload1&quot;</span><span class="punctuation">:</span><span class="punctuation">&#123;</span><span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span><span class="string">&quot;java.lang.Class&quot;</span><span class="punctuation">,</span><span class="attr">&quot;val&quot;</span><span class="punctuation">:</span><span class="string">&quot;com.example.json.evil.Evil&quot;</span><span class="punctuation">&#125;</span><span class="punctuation">,</span><span class="attr">&quot;payload2&quot;</span><span class="punctuation">:</span><span class="punctuation">&#123;</span><span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span><span class="string">&quot;com.example.json.evil.Evil&quot;</span><span class="punctuation">,</span><span class="attr">&quot;cmd&quot;</span><span class="punctuation">:</span><span class="string">&quot;calc&quot;</span><span class="punctuation">&#125;</span><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>至于为什么在 @type 为 java.lang.Class 的情况下会加载 val 中的类，可以从 MiscCodec 这个反序列化器上寻找答案。</p>
+<p>跟一般类中会包含一些属性，所以使用的反序列化器会调用 setter 来进行赋值等操作不同，这个反序列化器中的类比较特殊，我们简单看几个其他的类的反序列化操作：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (clazz == UUID.class) &#123;</span><br><span class="line">	<span class="keyword">return</span> (T) UUID.fromString(strVal);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (clazz == URI.class) &#123;</span><br><span class="line">	<span class="keyword">return</span> (T) URI.create(strVal);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (clazz == URL.class) &#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">    	<span class="keyword">return</span> (T) <span class="keyword">new</span> <span class="title class_">URL</span>(strVal);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (MalformedURLException e) &#123;</span><br><span class="line">    	<span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">JSONException</span>(<span class="string">&quot;create url error&quot;</span>, e);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (clazz == Pattern.class) &#123;</span><br><span class="line">	<span class="keyword">return</span> (T) Pattern.compile(strVal);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (clazz == Locale.class) &#123;</span><br><span class="line">	<span class="keyword">return</span> (T) TypeUtils.toLocale(strVal);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (clazz == SimpleDateFormat.class) &#123;</span><br><span class="line">    <span class="type">SimpleDateFormat</span> <span class="variable">dateFormat</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">SimpleDateFormat</span>(strVal, lexer.getLocale());</span><br><span class="line">    dateFormat.setTimeZone(lexer.getTimeZone());</span><br><span class="line">    <span class="keyword">return</span> (T) dateFormat;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看出，这些类都是 Java 中代表某种信息的类（UUID、URI、时间、地域、类信息等），对于这些类来说，他们的信息在序列化和反序列化中一般通过一个字符串就可以表达（UUID、URI、固定格式的时间地域、类名等），序列化时将这些信息写成字符串，反序列化时通过这个字符串进行还原（Class 要将类名还原成某个具体类的描述对象，所以要加载那个类）。我们观察这个反序列化器的序列化函数 write，可以看到 SimpleDateFormat 类的序列化过程中写入了一个 val 键：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (objClass == SimpleDateFormat.class) &#123;</span><br><span class="line">    <span class="type">String</span> <span class="variable">pattern</span> <span class="operator">=</span> ((SimpleDateFormat) object).toPattern();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (out.isEnabled(SerializerFeature.WriteClassName)) &#123;</span><br><span class="line">        <span class="keyword">if</span> (object.getClass() != fieldType) &#123;</span><br><span class="line">            out.write(<span class="string">&#x27;&#123;&#x27;</span>);</span><br><span class="line">            out.writeFieldName(JSON.DEFAULT_TYPE_KEY);</span><br><span class="line">            serializer.write(object.getClass().getName());</span><br><span class="line">            out.writeFieldValue(<span class="string">&#x27;,&#x27;</span>, <span class="string">&quot;val&quot;</span>, pattern);</span><br><span class="line">            out.write(<span class="string">&#x27;&#125;&#x27;</span>);</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    strVal = pattern;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>而因为这些类都使用同一个反序列化器的反序列化函数，所以为了统一，这些类的反序列化取值就可以从 val 中取。</p>
+<h3 id="Fastjson-1-2-47-autotype-绕过修复"><a href="#Fastjson-1-2-47-autotype-绕过修复" class="headerlink" title="Fastjson 1.2.47 autotype 绕过修复"></a>Fastjson 1.2.47 autotype 绕过修复</h3><p>修改了 MiscCodec 反序列化器处理 Class 的代码：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">if (clazz == Class.class) &#123;</span><br><span class="line">	return (T) TypeUtils.loadClass(strVal, parser.getConfig().getDefaultClassLoader(), false);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>不将该类加入缓存。</p>
+<h3 id="1-2-48"><a href="#1-2-48" class="headerlink" title="1.2.48 &lt;&#x3D;  Fastjson  &lt;&#x3D;  1.2.67"></a>1.2.48 &lt;&#x3D;  Fastjson  &lt;&#x3D;  1.2.67</h3><p>增加黑名单。</p>
+<h3 id="Fastjson-1-2-67-autotype-绕过"><a href="#Fastjson-1-2-67-autotype-绕过" class="headerlink" title="Fastjson 1.2.67 autotype 绕过"></a>Fastjson 1.2.67 autotype 绕过</h3><p>简单总结一下在 autoTypeSupport 未开启时能加载到并返回的类：</p>
+<ul>
+<li><p>acceptHashCodes 中的数组类型用户白名单，满足条件直接返回：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(!internalWhite) &amp;&amp; (autoTypeSupport || expectClassFlag)</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>TypeUtils.mappings 中的内部白名单类（包括 Exception、UUID 等类），符合 expectClass 才能返回</p>
+</li>
+<li><p>deserializers 中的白名单（包括 Class、String 等基础类），符合 expectClass 才能返回</p>
+</li>
+<li><p>typeMapping 中存在的类（默认为空，相当于一个哈希表类型的用户白名单，可以从一个 typeName 映射到某一个类），符合 expectClass 才能返回</p>
+</li>
+<li><p>internalWhite 中的内部白名单，符合 expectClass 才能返回</p>
+</li>
+<li><p>acceptHashCodes 中的数组类型用户白名单，满足条件直接返回：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">!autoTypeSupport</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>加载类要满足条件：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">autoTypeSupport || jsonType || expectClassFlag</span><br></pre></td></tr></table></figure>
+
+<p>返回类要满足条件：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (jsonType) &#123;</span><br><span class="line">    TypeUtils.addMapping(typeName, clazz);</span><br><span class="line">    <span class="keyword">return</span> clazz;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (ClassLoader.class.isAssignableFrom(clazz) <span class="comment">// classloader is danger</span></span><br><span class="line">    || javax.sql.DataSource.class.isAssignableFrom(clazz) <span class="comment">// dataSource can load jdbc driver</span></span><br><span class="line">    || javax.sql.RowSet.class.isAssignableFrom(clazz) <span class="comment">//</span></span><br><span class="line">   ) &#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">JSONException</span>(<span class="string">&quot;autoType is not support. &quot;</span> + typeName);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (expectClass != <span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="keyword">if</span> (expectClass.isAssignableFrom(clazz)) &#123;</span><br><span class="line">        TypeUtils.addMapping(typeName, clazz);</span><br><span class="line">        <span class="keyword">return</span> clazz;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">JSONException</span>(<span class="string">&quot;type not match. &quot;</span> + typeName + <span class="string">&quot; -&gt; &quot;</span> + expectClass.getName());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<p>大致就以上级几种情况，而其中存在利用可能的就更少了，基本上只有最后一条，满足 jsonType 或者 expectClassFlag。</p>
+<p>先看 jsonType：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">String</span> <span class="variable">resource</span> <span class="operator">=</span> typeName.replace(<span class="string">&#x27;.&#x27;</span>, <span class="string">&#x27;/&#x27;</span>) + <span class="string">&quot;.class&quot;</span>;</span><br><span class="line"><span class="keyword">if</span> (defaultClassLoader != <span class="literal">null</span>) &#123;</span><br><span class="line">	is = defaultClassLoader.getResourceAsStream(resource);</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">	is = ParserConfig.class.getClassLoader().getResourceAsStream(resource);</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">if</span> (is != <span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="type">ClassReader</span> <span class="variable">classReader</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ClassReader</span>(is, <span class="literal">true</span>);</span><br><span class="line">    <span class="type">TypeCollector</span> <span class="variable">visitor</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">TypeCollector</span>(<span class="string">&quot;&lt;clinit&gt;&quot;</span>, <span class="keyword">new</span> <span class="title class_">Class</span>[<span class="number">0</span>]);</span><br><span class="line">    classReader.accept(visitor);</span><br><span class="line">    jsonType = visitor.hasJsonType();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其实就是判断该类中是否有 JSONType 注解，存在该注解的类可以在 autoTypeSupport 未开启的情况下反序列化。这种做法很好理解，因为有这个注解的类，肯定是用户自己实现的可以进行 JSON 序列化反序列化的类，属于可以信任的白名单类，所以这个也不可控了。</p>
+<p>再看 expectClassFlag，这个版本的 checkAutoType 中的 expectClassFlag 实际上是个 expectClass 的黑名单一样的东西：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">final</span> <span class="type">boolean</span> expectClassFlag;</span><br><span class="line"><span class="keyword">if</span> (expectClass == <span class="literal">null</span>) &#123;</span><br><span class="line">	expectClassFlag = <span class="literal">false</span>;</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (expectClass == Object.class</span><br><span class="line">            || expectClass == Serializable.class</span><br><span class="line">            || expectClass == Cloneable.class</span><br><span class="line">            || expectClass == Closeable.class</span><br><span class="line">            || expectClass == EventListener.class</span><br><span class="line">            || expectClass == Iterable.class</span><br><span class="line">            || expectClass == Collection.class</span><br><span class="line">    	) &#123;</span><br><span class="line">    	expectClassFlag = <span class="literal">false</span>;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    	expectClassFlag = <span class="literal">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>当 expectClassFlag 为 true 时，可以在未开启 autoTypeSupport 的情况下加载类。</p>
+<p>我们都知道 expectClass 可以来自 parseObject 解析函数的第二个参数，但是这个参数是不可控的，我们还需要寻找其他地方输入的 expectClass 才有可能实现绕过。</p>
+<p>全局搜索 checkAutoType 的调用，且第二个参数不为 null，可以找到三处调用，第一处位于 ThrowableDeserializer 的 deserialze 函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (JSON.DEFAULT_TYPE_KEY.equals(key)) &#123;</span><br><span class="line">    <span class="keyword">if</span> (lexer.token() == JSONToken.LITERAL_STRING) &#123;</span><br><span class="line">        <span class="type">String</span> <span class="variable">exClassName</span> <span class="operator">=</span> lexer.stringVal();</span><br><span class="line">        exClass = parser.getConfig().checkAutoType(exClassName, Throwable.class, lexer.getFeatures());</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    	<span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">JSONException</span>(<span class="string">&quot;syntax error&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    lexer.nextToken(JSONToken.COMMA);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到我们可以通过指定第二个 @type 来触发这里的 checkAutoType（第一个 @type 用于获取该反序列化器）。</p>
+<p>我们再看看如何进入 ThrowableDeserializer 这个反序列化器，代码在 ParserConfig 类的 getDeserializer 函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">else</span> <span class="keyword">if</span> (Throwable.class.isAssignableFrom(clazz)) &#123;</span><br><span class="line">	deserializer = <span class="keyword">new</span> <span class="title class_">ThrowableDeserializer</span>(<span class="built_in">this</span>, clazz);</span><br><span class="line">&#125; </span><br><span class="line">...</span><br><span class="line"><span class="keyword">else</span> &#123;</span><br><span class="line">	deserializer = createJavaBeanDeserializer(clazz, type);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到第一个 @type 需要为 Throwable 的子类，翻一翻 TypeUtils.mappings，里面正好有一个类 Exception，所以可以用这个类作为跳板完成攻击，例如：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span><span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span><span class="string">&quot;java.lang.Exception&quot;</span><span class="punctuation">,</span><span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span><span class="string">&quot;com.example.json.evil.Evil&quot;</span><span class="punctuation">,</span><span class="attr">&quot;cmd&quot;</span><span class="punctuation">:</span><span class="string">&quot;calc&quot;</span><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>因为传入了 expectClass，所以第二个类也需要是 Throwable 的子类，我这里给测试类继承了 Exception。</p>
+<p>第二处位于 JavaBeanDeserializer 类的 deserialzeArrayMapping 函数，要进入这个反序列化器就需要在调用 getDeserializer 获取反序列化器的时候不满足所有条件，进入到最后的 createJavaBeanDeserializer 函数调用中，翻一翻，里面也正好有一个接口 AutoCloseable 可以利用。再看怎么进入 deserialzeArrayMapping 函数，在 deserialze 函数中：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (token == JSONToken.LBRACKET) &#123;</span><br><span class="line">    <span class="keyword">final</span> <span class="type">int</span> <span class="variable">mask</span> <span class="operator">=</span> Feature.SupportArrayToBean.mask;</span><br><span class="line">    <span class="type">boolean</span> <span class="variable">isSupportArrayToBean</span> <span class="operator">=</span> (beanInfo.parserFeatures &amp; mask) != <span class="number">0</span> <span class="comment">//</span></span><br><span class="line">                                    || lexer.isEnabled(Feature.SupportArrayToBean) <span class="comment">//</span></span><br><span class="line">                                    || (features &amp; mask) != <span class="number">0</span></span><br><span class="line">                                    ;</span><br><span class="line">    <span class="keyword">if</span> (isSupportArrayToBean) &#123;</span><br><span class="line">    	<span class="keyword">return</span> deserialzeArrayMapping(parser, type, fieldName, object);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>需要一个中括号，还需要 isSupportArrayToBean 为 true，而这个变量需要 parseObject 解析时传入一个 Feature.SupportArrayToBean 参数，或者写入注解：<a href="https://www.ctolib.com/docs-FastJson-c-fastjson-beantoarray.html">https://www.ctolib.com/docs-FastJson-c-fastjson-beantoarray.html</a> ，所以这条路是走不通的。</p>
+<p>第三处位于 JavaBeanDeserializer 类的 deserialze 函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> ((typeKey != <span class="literal">null</span> &amp;&amp; typeKey.equals(key))</span><br><span class="line">	|| JSON.DEFAULT_TYPE_KEY == key) &#123;</span><br><span class="line">    lexer.nextTokenWithColon(JSONToken.LITERAL_STRING);</span><br><span class="line">    <span class="keyword">if</span> (lexer.token() == JSONToken.LITERAL_STRING) &#123;</span><br><span class="line">        <span class="type">String</span> <span class="variable">typeName</span> <span class="operator">=</span> lexer.stringVal();</span><br><span class="line">        lexer.nextToken(JSONToken.COMMA);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (typeName.equals(beanInfo.typeName)|| parser.isEnabled(Feature.IgnoreAutoType)) &#123;</span><br><span class="line">            <span class="keyword">if</span> (lexer.token() == JSONToken.RBRACE) &#123;</span><br><span class="line">                lexer.nextToken();</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">continue</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        <span class="type">ObjectDeserializer</span> <span class="variable">deserializer</span> <span class="operator">=</span> getSeeAlso(config, <span class="built_in">this</span>.beanInfo, typeName);</span><br><span class="line">        Class&lt;?&gt; userType = <span class="literal">null</span>;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (deserializer == <span class="literal">null</span>) &#123;</span><br><span class="line">            Class&lt;?&gt; expectClass = TypeUtils.getClass(type);</span><br><span class="line">            userType = config.checkAutoType(typeName, expectClass, lexer.getFeatures());</span><br><span class="line">            deserializer = parser.getConfig().getDeserializer(userType);</span><br><span class="line">        &#125;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>跟 Throwable 的一样，需要两个 @type，第二个同样需要实现 AutoCloseable 接口，例如：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span><span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span><span class="string">&quot;java.lang.AutoCloseable&quot;</span><span class="punctuation">,</span><span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span><span class="string">&quot;com.example.json.evil.Evil&quot;</span><span class="punctuation">,</span><span class="attr">&quot;cmd&quot;</span><span class="punctuation">:</span><span class="string">&quot;calc&quot;</span><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>至于为什么 expectClass 可以绕过 autotype，因为 expectClass 也是一种用户白名单，这次的问题在于内部可使用的 expectClass 子类较多，里面存在可以利用的危险类。</p>
+<h3 id="Fastjson-1-2-68-autotype-绕过修复"><a href="#Fastjson-1-2-68-autotype-绕过修复" class="headerlink" title="Fastjson 1.2.68 autotype 绕过修复"></a>Fastjson 1.2.68 autotype 绕过修复</h3><p>加入了 safemode，当 safemode 开启时，checkAutoType 会直接抛出异常：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">final</span> <span class="type">int</span> <span class="variable">safeModeMask</span> <span class="operator">=</span> Feature.SafeMode.mask;</span><br><span class="line"><span class="type">boolean</span> <span class="variable">safeMode</span> <span class="operator">=</span> <span class="built_in">this</span>.safeMode</span><br><span class="line">    || (features &amp; safeModeMask) != <span class="number">0</span></span><br><span class="line">    || (JSON.DEFAULT_PARSER_FEATURE &amp; safeModeMask) != <span class="number">0</span>;</span><br><span class="line"><span class="keyword">if</span> (safeMode) &#123;</span><br><span class="line">	<span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">JSONException</span>(<span class="string">&quot;safeMode not support autoType : &quot;</span> + typeName);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>@type 这个特殊键完全无用了。</p>
+<p>增加黑名单，还减掉了一个未知的黑名单。</p>
+<h3 id="题外话"><a href="#题外话" class="headerlink" title="题外话"></a>题外话</h3><p>当使用 parseObject 解析 JSON，且传入了 expectClass 时，类加载完成后会有这样一个验证：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (expectClass != <span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="keyword">if</span> (expectClass.isAssignableFrom(clazz)) &#123;</span><br><span class="line">    	<span class="keyword">return</span> clazz;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    	<span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">JSONException</span>(<span class="string">&quot;type not match. &quot;</span> + typeName + <span class="string">&quot; -&gt; &quot;</span> + expectClass.getName());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>用于校验 @type 里面写的和 parseObject 里面写的 expectClass 类之间是不是父子类、接口与其实现之间的关系，而一般开发者写入代码的 expectClass 会是自写类，所以在这种情况下，基于 setter 和  getter 的 Fastjson 利用链基本是无法触发的。想要利用的话，要不该类可以直接利用或连接到其他函数，要不 expectClass 是某一个子类&#x2F;实现中存在危险操作的类&#x2F;接口（Throwable、AutoCloseable）。</p>
+<h3 id="题外话-2"><a href="#题外话-2" class="headerlink" title="题外话 2"></a>题外话 2</h3><p>关于 setter 和 getter 的调用，可以观察 JavaBeaninfo 类的 bulid 函数，这里会获取 getter 和 setter 然后加入 fieldList，加入 setter 的代码入下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">add(fieldList, <span class="keyword">new</span> <span class="title class_">FieldInfo</span>(propertyName, method, field, clazz, type, ordinal, serialzeFeatures, parserFeatures,</span><br><span class="line">                    annotation, fieldAnnotation, <span class="literal">null</span>, genericInfo));</span><br></pre></td></tr></table></figure>
+
+<p>setter 自然是都会调用的，主要看 getter 的调用要求：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// getter 名长度</span></span><br><span class="line"><span class="keyword">if</span> (methodName.length() &lt; <span class="number">4</span>) &#123;</span><br><span class="line">	<span class="keyword">continue</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// getter 不为静态</span></span><br><span class="line"><span class="keyword">if</span> (Modifier.isStatic(method.getModifiers())) &#123;</span><br><span class="line">    <span class="keyword">continue</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// getter 以 get 开头，且第四位字符为大写</span></span><br><span class="line"><span class="keyword">if</span> (builderClass == <span class="literal">null</span> &amp;&amp; methodName.startsWith(<span class="string">&quot;get&quot;</span>) &amp;&amp; Character.isUpperCase(methodName.charAt(<span class="number">3</span>))) &#123;</span><br><span class="line">    </span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// getter 无参数</span></span><br><span class="line"><span class="keyword">if</span> (method.getParameterTypes().length != <span class="number">0</span>) &#123;</span><br><span class="line">    <span class="keyword">continue</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 返回类型</span></span><br><span class="line"><span class="keyword">if</span> (Collection.class.isAssignableFrom(method.getReturnType()) <span class="comment">//</span></span><br><span class="line">    || Map.class.isAssignableFrom(method.getReturnType()) <span class="comment">//</span></span><br><span class="line">    || AtomicBoolean.class == method.getReturnType() <span class="comment">//</span></span><br><span class="line">    || AtomicInteger.class == method.getReturnType() <span class="comment">//</span></span><br><span class="line">    || AtomicLong.class == method.getReturnType() <span class="comment">//</span></span><br><span class="line">   ) &#123;</span><br><span class="line">    </span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 没有 setter</span></span><br><span class="line"><span class="type">Field</span> <span class="variable">field</span> <span class="operator">=</span> TypeUtils.getField(clazz, propertyName, declaredFields);</span><br><span class="line"><span class="keyword">if</span> (field != <span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="type">JSONField</span> <span class="variable">fieldAnnotation</span> <span class="operator">=</span> TypeUtils.getAnnotation(field, JSONField.class);</span><br><span class="line">    <span class="keyword">if</span> (fieldAnnotation != <span class="literal">null</span> &amp;&amp; !fieldAnnotation.deserialize()) &#123;</span><br><span class="line">        <span class="keyword">continue</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>实际上当 parseObject 没有传入 expectClass 时，getter 会全部被调用，这个时候的返回值为 JSONObject，parse 解析完成后还会调用 toJSON：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Object</span> <span class="variable">obj</span> <span class="operator">=</span> parse(text);</span><br><span class="line"><span class="keyword">if</span> (obj <span class="keyword">instanceof</span> JSONObject) &#123;</span><br><span class="line">	<span class="keyword">return</span> (JSONObject) obj;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> (JSONObject) JSON.toJSON(obj);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>而 toJSON 会获取所有的 getter：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// toJSON</span></span><br><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">    Map&lt;String, Object&gt; values = javaBeanSerializer.getFieldValuesMap(javaObject);</span><br><span class="line">    <span class="keyword">for</span> (Map.Entry&lt;String, Object&gt; entry : values.entrySet()) &#123;</span><br><span class="line">    	json.put(entry.getKey(), toJSON(entry.getValue(), config));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">...</span><br><span class="line"><span class="comment">// getFieldValuesMap</span></span><br><span class="line"><span class="keyword">for</span> (FieldSerializer getter : sortedGetters) &#123;</span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (getter.fieldInfo.unwrapped) &#123;</span><br><span class="line">        <span class="type">Object</span> <span class="variable">unwrappedValue</span> <span class="operator">=</span> getter.getPropertyValue(object);</span><br><span class="line">        <span class="type">Object</span> <span class="variable">map1</span> <span class="operator">=</span> JSON.toJSON(unwrappedValue);</span><br><span class="line">        <span class="keyword">if</span> (map1 <span class="keyword">instanceof</span> Map) &#123;</span><br><span class="line">            map.putAll((Map) map1);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            map.put(getter.fieldInfo.name, getter.getPropertyValue(object));</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        map.put(getter.fieldInfo.name, getter.getPropertyValue(object));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">return</span> map;</span><br></pre></td></tr></table></figure>
+
+<p>放入 map 时会调用 getPropertyValue：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> Object <span class="title function_">getPropertyValue</span><span class="params">(Object object)</span> <span class="keyword">throws</span> InvocationTargetException, IllegalAccessException &#123;</span><br><span class="line">    <span class="type">Object</span> <span class="variable">propertyValue</span> <span class="operator">=</span>  fieldInfo.get(object);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line">...</span><br><span class="line"><span class="keyword">public</span> Object <span class="title function_">get</span><span class="params">(Object javaObject)</span> <span class="keyword">throws</span> IllegalAccessException, InvocationTargetException &#123;</span><br><span class="line">    <span class="keyword">return</span> method != <span class="literal">null</span></span><br><span class="line">            ? method.invoke(javaObject)</span><br><span class="line">            : field.get(javaObject);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>反射调用 getter。</p>
+<h3 id="题外话-3"><a href="#题外话-3" class="headerlink" title="题外话 3"></a>题外话 3</h3><p>使用 $ref 扩展攻击面，在使用 parse 解析时也可以调用任意 getter：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span><span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span><span class="string">&quot;java.lang.AutoCloseable&quot;</span><span class="punctuation">,</span><span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span><span class="string">&quot;com.example.json.evil.Evil&quot;</span><span class="punctuation">,</span><span class="attr">&quot;cmd&quot;</span><span class="punctuation">:</span><span class="string">&quot;calc&quot;</span><span class="punctuation">,</span><span class="attr">&quot;result&quot;</span><span class="punctuation">:</span><span class="punctuation">&#123;</span><span class="attr">&quot;$ref&quot;</span><span class="punctuation">:</span><span class="string">&quot;$.result&quot;</span><span class="punctuation">&#125;</span><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<hr>
+<p>参考文章：</p>
+<p><a href="https://paper.seebug.org/1192">Fastjson 反序列化漏洞史 &#x2F; 历代 payload</a></p>
+<p><a href="https://paper.seebug.org/1155/">Fastjson 1.2.66 的 4 个 payload</a></p>
+<p><a href="https://xz.aliyun.com/t/8140">触发漏洞需要的条件（autoTypeSupport、parse 与 parseObject）</a></p>
+<p><a href="https://paper.seebug.org/1274">Fastjson 的 getter、setter 调用</a></p>
+<p><a href="https://b1ue.cn/archives/348.html">发现者的 Fastjson 1.2.68 autotype bypass</a> 和 <a href="https://b1ue.cn/archives/382.html">挖掘思路</a></p>
+<p><a href="https://y4er.com/post/fastjson-bypass-autotype-1268/">Fastjson 1.2.68 分析2</a></p>
+<p><a href="https://www.colabug.com/2020/0808/7601917/">Fastjson 1.2.68 autotype 一个不常见的 bypass poc</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Java/">Java</a>
+                    
+                      <a class="hover-with-bg" href="/tags/%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/">反序列化</a>
+                    
+                      <a class="hover-with-bg" href="/tags/FastJSON/">FastJSON</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2020/09/01/WebLogic-Coherence-%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>(WebLogic)Coherence 反序列化漏洞</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2020/08/19/%E7%94%A8%E4%B8%80%E4%B8%AA%E7%BC%93%E5%86%B2%E5%8C%BA%E6%BA%A2%E5%87%BA-bug-%E7%BB%95%E8%BF%87-php7-4-3-disable-functions/">
+                        <span>用一个缓冲区溢出 bug 绕过 php7.4.3 disable_functions</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "Fastjson反序列化机制和autotype观测&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

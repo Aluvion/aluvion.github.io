@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>GoogleCTF2018-beginners-js_safe_1 - Twings</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期三, 二月 27日 2019, 10:50 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    1.1k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      5 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <p>最近听群里师傅提起GoogleCTF，正好我没有做这个比赛，于是打算近期将题目复现一下。</p>
+<p>题目环境地址：<a href="https://github.com/google/google-ctf">https://github.com/google/google-ctf</a></p>
+<hr>
+<p>这一题是一道 JS 代码审计、调试的题目，代码很简单，只有一个HTML文件，主要的功能就是输入一个字符串，运行 JS 代码之后告诉你这个字符串是否正确，一般来说这个字符串就是 flag 了。</p>
+<span id="more"></span>
+
+<p>因为主要代码不多，所以我就直接贴上来了</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">async function x(password) &#123;</span><br><span class="line">    // TODO: check if they can just use Google to get the password once they understand how this works.</span><br><span class="line">    var code = &#x27;&lt;GENERATED CODE&gt;&#x27;</span><br><span class="line">    var env = &#123;</span><br><span class="line">        a: (x,y) =&gt; x[y],</span><br><span class="line">        b: (x,y) =&gt; Function.constructor.apply.apply(x, y),</span><br><span class="line">        c: (x,y) =&gt; x+y,</span><br><span class="line">        d: (x) =&gt; String.fromCharCode(x),</span><br><span class="line">        e: 0,</span><br><span class="line">        f: 1,</span><br><span class="line">        g: new TextEncoder().encode(password),</span><br><span class="line">        h: 0,</span><br><span class="line">    &#125;;</span><br><span class="line">    for (var i = 0; i &lt; code.length; i += 4) &#123;</span><br><span class="line">        var [lhs, fn, arg1, arg2] = code.substr(i, 4);</span><br><span class="line">        try &#123;</span><br><span class="line">            env[lhs] = env[fn](env[arg1], env[arg2]);</span><br><span class="line">        &#125; catch(e) &#123;</span><br><span class="line">            env[lhs] = new env[fn](env[arg1], env[arg2]);</span><br><span class="line">        &#125;</span><br><span class="line">        if (env[lhs] instanceof Promise) env[lhs] = await env[lhs];</span><br><span class="line">    &#125;</span><br><span class="line">    return !env.h;</span><br><span class="line">&#125;</span><br><span class="line">const alg = &#123; name: &#x27;AES-CBC&#x27;, iv: Uint8Array.from([211,42,178,197,55,212,108,85,255,21,132,210,209,137,37,24])&#125;;</span><br><span class="line">const secret = Uint8Array.from([26,151,171,117,143,168,228,24,197,212,192,15,242,175,113,59,102,57,120,172,50,64,201,73,39,92,100,64,172,223,46,189,65,120,223,15,34,96,132,7,53,63,227,157,15,37,126,106]);</span><br><span class="line">async function open_safe() &#123;</span><br><span class="line">  keyhole.disabled = true;</span><br><span class="line">  password = /^CTF&#123;([0-9a-zA-Z_@!?-]+)&#125;$/.exec(keyhole.value);</span><br><span class="line">  if (!password || !(await x(password[1]))) return document.body.className = &#x27;denied&#x27;;</span><br><span class="line">  document.body.className = &#x27;granted&#x27;;</span><br><span class="line">  const pwHash = await crypto.subtle.digest(&#x27;SHA-256&#x27;, new TextEncoder().encode(password[1])); </span><br><span class="line">  const key = await crypto.subtle.importKey(&#x27;raw&#x27;, pwHash, alg, false, [&#x27;decrypt&#x27;]);</span><br><span class="line">  content.value = new TextDecoder(&quot;utf-8&quot;).decode(await crypto.subtle.decrypt(alg, key, secret))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其中code变量是generate.py生成的一个1000+长度的字符串，而keyhole.value即我们的输入字符串。</p>
+<p>简单审计一下代码，首先我们要输入一个CTF{xxxxxxx}格式的字符串，而字符串中间的xxxxxx则会储存在env[g]中，然后 javascript 代码遍历code字符串，不停地给env[lhs]赋予新值，最后如果env[h]为0，就会返回”granted”，flag就是这个时候我们输入的那个字符串。</p>
+<p>因为一共进行了几百次循环，所以为了减少工作量，我们可以找到env[g]首次出现的地方（因为前面的处理都跟我们的输入无关，是每次都相同的），然后从那里开始，这里我使用CTF{Twings}作为测试。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">if(/g/.test(code.substr(i,4)))&#123;</span><br><span class="line">    console.log(i);</span><br><span class="line">    break;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>一个简单的正则表达式，得到的 i 为876，于是：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (i &gt;= <span class="number">876</span>) &#123;</span><br><span class="line">	<span class="variable language_">console</span>.<span class="title function_">log</span>(i + <span class="string">&quot;: env[&quot;</span> + lhs + <span class="string">&quot;] = &quot;</span> + env[fn] + <span class="string">&quot;(&quot;</span> + env[arg1] + <span class="string">&quot;, &quot;</span> + env[arg2] + <span class="string">&quot;)&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>把处理的过程都打印出来看看都是些什么东西。我们可以看到 i&#x3D;884 的时候对我们的输入做了一些处理：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">884</span>: env[ѹ] = <span class="function">(<span class="params">x,y</span>) =&gt;</span> <span class="title class_">Function</span>.<span class="property">constructor</span>.<span class="property">apply</span>.<span class="title function_">apply</span>(x, y)(<span class="keyword">function</span> <span class="title function_">digest</span>(<span class="params"></span>) &#123; [native code] &#125;, [object <span class="title class_">SubtleCrypto</span>],sha-<span class="number">256</span>,<span class="number">84</span>,<span class="number">119</span>,<span class="number">105</span>,<span class="number">110</span>,<span class="number">103</span>,<span class="number">115</span>)</span><br></pre></td></tr></table></figure>
+<p>后面那一串数字即我们输入的 Twings 字符串的ASCII值，看起来似乎是进行了SHA256加密，我们打印一下结果看一下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[[Uint8Array]]: Uint8Array(32) [61, 220, 43, 215, 224, 93, 96, 98, 53, 26, 246, 255, 102, 104, 78, 67, 15, 189, 227, 8, 243, 191, 171, 129, 99, 53, 248, 87, 25, 151, 243, 173]</span><br><span class="line">byteLength: 32</span><br></pre></td></tr></table></figure>
+
+<p>而生成结果中正好存放着它的SHA256哈希，看来这个猜想没有错，我们继续往下看。</p>
+<p>我们可以看到，从 i&#x3D;960 开始，代码会遍历这个哈希，并将它的各个字符跟一个固定字符串的各个字符轮流进行异或，再将异或结果与env[h]进行或运算，并将或运算的结果存入env[h]中。而env[h]的初始值为0，也就是说，如果我们要最后env[h]的值为0，我们就需要输入一个SHA256哈希值跟这个固定字符串相同的字符串，来让异或的结果一直为0。</p>
+<p>我们先将这个字符串提取出来：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">var flag = [];</span><br><span class="line">if (lhs == &quot;҂&quot;) &#123;</span><br><span class="line">	flag.push(env[arg1][1]);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>结果是：[230, 104, 96, 84, 111, 24, 205, 187, 205, 134, 179, 94, 24, 181, 37, 191, 252, 103, 247, 114, 198, 80, 206, 223, 227, 255, 122, 0, 38, 250, 29, 238]，转化为十六进制即e66860546f18cdbbcd86b35e18b525bffc67f772c650cedfe3ff7a0026fa1dee，谷歌这个哈希即可得到正确的flag：CTF{Passw0rd!}</p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/CTF/">CTF</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                      <a class="hover-with-bg" href="/tags/%E5%89%8D%E7%AB%AF/">前端</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2019/03/01/Winrar%E8%BF%9C%E7%A8%8B%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>Winrar远程代码执行漏洞复现</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2019/02/26/CVE-2019-1003000%E5%A4%8D%E7%8E%B0/">
+                        <span>CVE-2019-1003000复现</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "GoogleCTF2018-beginners-js_safe_1&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

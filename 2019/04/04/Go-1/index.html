@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>Go(1) - Twings</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期四, 四月 4日 2019, 10:50 上午
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    1.4k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      6 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>开个go的坑，填坑时间不定。</p>
+<span id="more"></span>
+
+<hr>
+<h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>系统：docker+Ubuntu18.04镜像</p>
+<p>安装golang：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">apt-get update</span><br><span class="line">apt-get install golang</span><br></pre></td></tr></table></figure>
+
+<p>在Ubuntu18.04下即可安装1.10版本的golang，如果需要最新版本的可以去<a href="https://golang.org/dl/%EF%BC%88%E9%9C%80%E8%A6%81%E7%BF%BB%E5%A2%99%EF%BC%89%EF%BC%8C%E6%88%96%E8%80%85%E7%9B%B4%E6%8E%A5wget%E4%B8%8B%E8%BD%BD%EF%BC%8C%E7%84%B6%E5%90%8E%E8%A7%A3%E5%8E%8B%E3%80%81%E5%BB%BA%E7%AB%8B%E5%B7%A5%E4%BD%9C%E7%9B%AE%E5%BD%95%E5%B9%B6%E9%85%8D%E7%BD%AE%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F%EF%BC%9A">https://golang.org/dl/（需要翻墙），或者直接wget下载，然后解压、建立工作目录并配置环境变量：</a></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">cd /opt</span><br><span class="line">wget https://dl.google.com/go/go1.12.1.linux-amd64.tar.gz</span><br><span class="line">tar zxvf go1.12.1.linux-amd64.tar.gz</span><br><span class="line">cd</span><br><span class="line">mkdir -p golang/src golang/bin</span><br><span class="line">echo &quot;export GOROOT=/opt/go&quot; &gt;&gt; .bashrc</span><br><span class="line">echo &quot;export GOPATH=/root/golang&quot; &gt;&gt; .bashrc</span><br><span class="line">source .bashrc</span><br><span class="line">echo &quot;export PATH=$GOPATH/bin:$GOROOT/bin:$PATH&quot; &gt;&gt; .bashrc</span><br><span class="line">source .bashrc</span><br></pre></td></tr></table></figure>
+
+<p>然后export一下即可看到：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">declare -x GOPATH=&quot;/root/golang&quot;</span><br><span class="line">declare -x GOROOT=&quot;/opt/go&quot;</span><br><span class="line">declare -x PATH=&quot;/root/golang/bin:/opt/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin&quot;</span><br></pre></td></tr></table></figure>
+
+<p>最后运行go version，看到golang版本：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">go version go1.12.1 linux/amd64</span><br></pre></td></tr></table></figure>
+
+<p>安装完成。</p>
+<hr>
+<h3 id="Hello-World-Go-Web-服务器"><a href="#Hello-World-Go-Web-服务器" class="headerlink" title="Hello  World &amp;&amp; Go Web 服务器"></a>Hello  World &amp;&amp; Go Web 服务器</h3><p>在GOPATH&#x2F;src下新建一个目录hello_word，然后新建go源代码文件，代码如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">package main</span><br><span class="line"></span><br><span class="line">import (</span><br><span class="line">    &quot;fmt&quot;</span><br><span class="line">    &quot;net/http&quot;</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">func handler(writer http.ResponseWriter, request *http.Request) &#123;</span><br><span class="line">    fmt.Fprintf(writer, &quot;Hello World, %s!&quot;, request.URL.Path[1:])</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func main() &#123;</span><br><span class="line">    http.HandleFunc(&quot;/index&quot;, handler)</span><br><span class="line">    http.ListenAndServe(&quot;:80&quot;, nil)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>很简单的逻辑，服务端监听80端口，然后把对&#x2F;index的访问请求都交给handler来处理，而handler则获取我们的请求URL，然后格式化进Hello World字符串中作为响应，我们编译运行：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">go install hello_world</span><br><span class="line">$GOPATH/bin/hello_world</span><br></pre></td></tr></table></figure>
+
+<p>浏览器打开即可看到效果。</p>
+<hr>
+<h3 id="多路复用-更多的Server配置"><a href="#多路复用-更多的Server配置" class="headerlink" title="多路复用 &amp;&amp; 更多的Server配置"></a>多路复用 &amp;&amp; 更多的Server配置</h3><p>我们还可以通过Server结构体对服务器进行更多的配置，写法如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">server := http.Server &#123;</span><br><span class="line">	Addr: &quot;0.0.0.0:80&quot;,</span><br><span class="line">&#125;</span><br><span class="line">server.ListenAndServe()</span><br></pre></td></tr></table></figure>
+
+<p>Server结构的配置选项如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">type Server struct &#123;</span><br><span class="line">    Addr            string</span><br><span class="line">    Handler         Handler</span><br><span class="line">    ReadTimeout     time.Duration</span><br><span class="line">    WriteTimeout    time.Duration</span><br><span class="line">    MaxHeaderBytes  int</span><br><span class="line">    TLSConfig       *tls.Config</span><br><span class="line">    TLSNextProto    map[string]func(*Server, *tls.Conn, Handler)</span><br><span class="line">    ConnState       func(net.Conn, ConnStats)</span><br><span class="line">    ErrorLog        *log.Logger</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Handler参数的默认值为DefaultServeMux多路复用处理器，它是ServeMux结构（多路复用器）的一个实例，具备处理器的特征（ServeHTTP方法），它的作用是根据请求的URL的不同，将请求交付不同的处理器来进行处理，如果我们将它覆盖为一个普通的处理器，无论我们访问什么地址，服务器返回的响应都是相同的。利用多路复用器，我们就可以通过配置http.HandleFunc或者http.Handle来根据请求地址分发请求到不同的处理器。</p>
+<hr>
+<h3 id="处理器-处理器函数"><a href="#处理器-处理器函数" class="headerlink" title="处理器 &amp;&amp; 处理器函数"></a>处理器 &amp;&amp; 处理器函数</h3><p>处理器：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">type IndexHandler struct&#123;&#125;</span><br><span class="line">func (h *IndexHandler) ServeHTTP (writer http.ResponseWriter, request *http.Request) &#123;</span><br><span class="line">    fmt.Fprintf(writer, &quot;Index&quot;)</span><br><span class="line">&#125;</span><br><span class="line">type LoginHandler struct&#123;&#125;</span><br><span class="line">func (h *LoginHandler) ServeHTTP (writer http.ResponseWriter, request *http.Request) &#123;</span><br><span class="line">    fmt.Fprintf(writer, &quot;Login&quot;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>路由配置：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">index := IndexHandler&#123;&#125;</span><br><span class="line">login := LoginHandler&#123;&#125;</span><br><span class="line">http.Handle(&quot;/index&quot;, &amp;index)</span><br><span class="line">http.Handle(&quot;/login&quot;, &amp;login)</span><br></pre></td></tr></table></figure>
+
+<p>处理器函数：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">func index(writer http.ResponseWriter, request *http.Request) &#123;</span><br><span class="line">    fmt.Fprintf(writer, &quot;Index&quot;)</span><br><span class="line">&#125;</span><br><span class="line">func login(writer http.ResponseWriter, request *http.Request) &#123;</span><br><span class="line">    fmt.Fprintf(writer, &quot;Login&quot;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>路由配置：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">http.HandleFunc(&quot;/index&quot;, index)</span><br><span class="line">http.HandleFunc(&quot;/login&quot;, login)</span><br></pre></td></tr></table></figure>
+
+<p>处理器是一个拥有ServeHTTP方法的接口，它被用来处理HTTP请求，而处理器函数则是与处理器拥有相同行为的函数，也是用来创建处理器的一种便利的方法，当我们调用HandlerFunc函数来注册路由的时候，HandlerFunc就会将处理器函数转换成处理器，然后将它与DefaultServeMux进行绑定。</p>
+<p>串联处理器函数：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">package main</span><br><span class="line"></span><br><span class="line">import (</span><br><span class="line">    &quot;fmt&quot;</span><br><span class="line">	&quot;net/http&quot;</span><br><span class="line">	&quot;reflect&quot;</span><br><span class="line">	&quot;runtime&quot;</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">func index(writer http.ResponseWriter, request *http.Request) &#123;</span><br><span class="line">    fmt.Fprintf(writer, &quot;Index&quot;)</span><br><span class="line">&#125;</span><br><span class="line">func login(writer http.ResponseWriter, request *http.Request) &#123;</span><br><span class="line">    fmt.Fprintf(writer, &quot;Login&quot;)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func log(h http.HandlerFunc) http.HandlerFunc &#123;</span><br><span class="line">	return func(w http.ResponseWriter, r *http.Request) &#123;</span><br><span class="line">		name := runtime.FuncForPC(reflect.ValueOf(h).Pointer()).Name()</span><br><span class="line">		fmt.Println(name)</span><br><span class="line">		h(w, r)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func main() &#123;</span><br><span class="line">    server := http.Server &#123;</span><br><span class="line">		Addr: &quot;0.0.0.0:80&quot;,</span><br><span class="line">	&#125;</span><br><span class="line">	http.HandleFunc(&quot;/index&quot;, log(index))</span><br><span class="line">	http.HandleFunc(&quot;/login&quot;, log(login))</span><br><span class="line">	server.ListenAndServe()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>runtime.FuncForPC的作用是在程序运行时获取函数信息，reflect.ValueOf的作用是获取函数的副本，Go的处理器函数调用相当于一种先hook住处理器函数index，先执行完log函数代码之后再继续执行它的感觉，跟一般的函数调用不太一样。</p>
+<p>串联处理器跟串联处理器函数十分相似，只要修改一下类型就好了：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">func log(h http.Handler) http.Handler &#123;</span><br><span class="line">    return http.HandlerFunc (func(w http.ResponseWriter, r *http.Request) &#123;</span><br><span class="line">        h.ServeHTTP(w, r)</span><br><span class="line">    &#125;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="使用第三方多路复用器"><a href="#使用第三方多路复用器" class="headerlink" title="使用第三方多路复用器"></a>使用第三方多路复用器</h3><p>DefaultServe的缺陷在于访问&#x2F;index&#x2F;123之类的地址的时候，无法获取GET请求的参数。为了弥补这个缺陷，我们可以使用julienschmidt&#x2F;httprouter，一个高效的轻量级第三方多路复用器，安装：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">apt-get install git</span><br><span class="line">go get github.com/julienschmidt/httprouter</span><br></pre></td></tr></table></figure>
+
+<p>Go会使用git从GitHub上下载源代码，然后储存到$GOPATH&#x2F;src目录下，我们还需要把它从github.com文件夹中取出来：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">package main</span><br><span class="line"></span><br><span class="line">import (</span><br><span class="line">    &quot;fmt&quot;</span><br><span class="line">	&quot;net/http&quot;</span><br><span class="line">	&quot;julienschmidt/httprouter&quot;</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">func index(writer http.ResponseWriter, request *http.Request, p httprouter.Params) &#123;</span><br><span class="line">    fmt.Fprintf(writer, &quot;Index,  %s!&quot;, p.ByName(&quot;p&quot;))</span><br><span class="line">&#125;</span><br><span class="line">func login(writer http.ResponseWriter, request *http.Request, p httprouter.Params) &#123;</span><br><span class="line">    fmt.Fprintf(writer, &quot;Login, %s!&quot;, p.ByName(&quot;id&quot;))</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func main() &#123;</span><br><span class="line">	mux := httprouter.New()</span><br><span class="line">	mux.GET(&quot;/index:p&quot;, index)</span><br><span class="line">	mux.GET(&quot;/login/:id&quot;, login)</span><br><span class="line">    server := http.Server &#123;</span><br><span class="line">		Addr: &quot;0.0.0.0:80&quot;,</span><br><span class="line">		Handler: mux,</span><br><span class="line">	&#125;</span><br><span class="line">	server.ListenAndServe()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<p>HTTP2 &amp;&amp; HTTPS</p>
+<p>不整了，这个就靠反向代理。</p>
+<hr>
+<p>Orz</p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Go/">Go</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2019/04/04/SVG-XSS-CDN-Web%E7%BC%93%E5%AD%98%E6%8A%95%E6%AF%92/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>SVG XSS-CDN-Web缓存投毒</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2019/04/02/%E8%87%AA%E5%8A%A8%E7%BB%91%E5%AE%9A%E6%BC%8F%E6%B4%9E-war%E8%BF%9C%E7%A8%8B%E8%B0%83%E8%AF%95/">
+                        <span>自动绑定漏洞+war远程调试</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "Go(1)&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

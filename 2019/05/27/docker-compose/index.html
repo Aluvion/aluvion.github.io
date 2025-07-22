@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>docker-compose - Twings</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期一, 五月 27日 2019, 11:43 中午
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    4.7k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      20 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>以前我做 docker 的时候一般都用不到 docker-compose，毕竟很多时候我只需要用一个容器就够了。</p>
+<p>现在发现要搭建复杂一点的环境还是用 docker-compose 更方便一点，所以就来学习一下。</p>
+<span id="more"></span>
+
+<p>感觉生产环境还是使用 Alpine Linux 来得好？体积小，要装什么也可以使用 apk。</p>
+<hr>
+<h3 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h3><p>docker-compose 的安装很简单：<a href="https://docs.docker.com/compose/install/">https://docs.docker.com/compose/install/</a></p>
+<p>就 Linux 来说，装好依赖的环境只需要使用 CURL 将 docker-compose 下载到本地就可以了。</p>
+<h3 id="版本"><a href="#版本" class="headerlink" title="版本"></a>版本</h3><p>就 docker-compose 而言，需要关注的主要有三个组件的版本：docker engine、docker-compose、compose file。</p>
+<p>有的 compose file 的写法在不同版本不一定都支持。</p>
+<p>装最新版就对了（√）。</p>
+<p>具体的版本对应在这里：<a href="https://docs.docker.com/compose/compose-file/compose-versioning/">https://docs.docker.com/compose/compose-file/compose-versioning/</a></p>
+<h3 id="docker-compose-cli"><a href="#docker-compose-cli" class="headerlink" title="docker-compose cli"></a>docker-compose cli</h3><p>参考文档：<a href="https://docs.docker.com/compose/reference/overview/">https://docs.docker.com/compose/reference/overview/</a></p>
+<p>查看帮助信息：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker-compose --help</span><br></pre></td></tr></table></figure>
+
+<p>完整的 docker-compose 命令：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker-compose [-f &lt;arg&gt;...] [options] [COMMAND] [ARGS...]</span><br></pre></td></tr></table></figure>
+
+<p>-f 可以指定 docker-compose.yml 文件的路径，-p 则可以指定项目名称。</p>
+<h4 id="cli-环境变量"><a href="#cli-环境变量" class="headerlink" title="cli 环境变量"></a>cli 环境变量</h4><p>我们可以使用 export 来设置和删除环境变量，也可以使用 .env 文件，来配置一些 docker-compose cli 的操作。</p>
+<p>可使用的环境变量如下：</p>
+<table>
+<thead>
+<tr>
+<th>变量名</th>
+<th>使用效果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>COMPOSE_PROJECT_NAME</td>
+<td>设置项目名称。启动时，此值将与服务名称拼接来命名容器。<br />例如，如果你的项目名称为 myapp，它包括两个服务 db 和 web，容器名则分别为 myapp_db_1 和 myapp_web_1。<br />设置此选项是可选的。如果未设置此项，则 COMPOSE_PROJECT_NAME 默认为 basename 项目目录的默认值。</td>
+</tr>
+<tr>
+<td>COMPOSE_FILE</td>
+<td>指定 compose 文件的路径。如果未提供，compose 将查找当前目录，然后查找每个父目录，直到找到 docker-compose.yml 文件。（翻父目录真是神奇）<br/>此变量支持由路径分隔符分隔的多个 compose 文件（在 Linux 和 macOS 上，路径分隔符是 : ，在 Windows 上则是 ; ）。<br />例如： COMPOSE_FILE&#x3D;docker-compose.yml:docker-compose.prod.yml。<br />路径分隔符也可以使用自定义 COMPOSE_PATH_SEPARATOR。</td>
+</tr>
+<tr>
+<td>COMPOSE_API_VERSION</td>
+<td>如果遇到类似的问题：client and server don’t have same version (client : 1.22, server: 1.18)，可以通过设置 docker-compose 的 api 版本来解决。<br />这是 docker-compose 使用的 docker API 版本不匹配 docker 守护进程监听服务的问题。<br />可以设置为 auto 来进行匹配。</td>
+</tr>
+<tr>
+<td>DOCKER_HOST（不常用）</td>
+<td>设置 docker 守护程序的路径。<br />与 docker 客户端一样，默认为 unix:&#x2F;&#x2F;&#x2F;var&#x2F;run&#x2F;docker.sock。</td>
+</tr>
+<tr>
+<td>DOCKER_TLS_VERIFY（不常用）</td>
+<td>设置为空字符串以外的任何内容时，启用与 docker 守护程序的 TLS 通信。</td>
+</tr>
+<tr>
+<td>DOCKER_CERT_PATH（不常用）</td>
+<td>配置 ca.pem，cert.pem 以及 key.pem 的路径，用于 TLS 验证。<br />默认为 ~&#x2F;.docker。</td>
+</tr>
+<tr>
+<td>COMPOSE_HTTP_TIMEOUT（不常用）</td>
+<td>配置 compose 对 docker 守护程序的请求的超时时间（以秒为单位）。<br />默认为60秒。</td>
+</tr>
+<tr>
+<td>COMPOSE_TLS_VERSION（不常用）</td>
+<td>配置使用哪个 TLS 版本与 docker 守护程序进行 TLS 通信。默认为 TLSv1。<br />支持的值是：TLSv1，TLSv1_1，TLSv1_2。</td>
+</tr>
+<tr>
+<td>COMPOSE_CONVERT_WINDOWS_PATHS（不常用）</td>
+<td>启用将路径样式从 Windows 样式到 Unix 样式的转换。<br />Windows上 的 docker machine 和 docker toolbox 的用户应始终设置此项。<br />默认为0。支持的值：true 或 1 启用 false 或 0 禁用。</td>
+</tr>
+<tr>
+<td>COMPOSE_PATH_SEPARATOR</td>
+<td>如果设置此项，COMPOSE_FILE 则使用此字符作为路径分隔符来分隔环境变量的值为多个路径。</td>
+</tr>
+<tr>
+<td>COMPOSE_FORCE_WINDOWS_HOST（不常用）</td>
+<td>如果设置，强制认定主机路径为 Windows 路径，即使 compose 运行在基于 UNIX 的系统上。<br />支持的值：true 或 1 启用 false 或 0 禁用。</td>
+</tr>
+<tr>
+<td>COMPOSE_IGNORE_ORPHANS</td>
+<td>如果设置，compose 不会尝试检测项目中的的孤立容器，即项目中没有在 docker-compose.yml 中定义的容器。<br />支持的值：true 或 1 启用 false 或 0 禁用。</td>
+</tr>
+<tr>
+<td>COMPOSE_PARALLEL_LIMIT（不常用）</td>
+<td>设置 compose 可以并行执行的操作数限制。<br />默认值为 64，并且可能不会设置为低于 2。</td>
+</tr>
+<tr>
+<td>COMPOSE_INTERACTIVE_NO_CLI（不常用）</td>
+<td>如果设置，compose 不会尝试使用 docker cli 进行来进行交互性的 run 和 exec 操作。在需要 cli 的 Windows 上，此选项不可用。<br />支持：true 或 1 启用 false 或 0 禁用。</td>
+</tr>
+</tbody></table>
+<h4 id="命令完成"><a href="#命令完成" class="headerlink" title="命令完成"></a>命令完成</h4><p>就像个扩展一样，装了之后 docker-compose 的命令可以写得更简单一点吧大概。</p>
+<h4 id="命令"><a href="#命令" class="headerlink" title="命令"></a>命令</h4><h5 id="build"><a href="#build" class="headerlink" title="build"></a>build</h5><p>从 docker-compose.yml 文件创建项目，镜像默认名为 project_service，也可以自行设置：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">Usage: build [options] [--build-arg key=val...] [SERVICE...]</span><br><span class="line"></span><br><span class="line">Options:</span><br><span class="line">    --compress              Compress the build context using gzip.</span><br><span class="line">    --force-rm              Always remove intermediate containers.</span><br><span class="line">    --no-cache              Do not use cache when building the image.</span><br><span class="line">    --pull                  Always attempt to pull a newer version of the image.</span><br><span class="line">    -m, --memory MEM        Sets memory limit for the build container.</span><br><span class="line">    --build-arg key=val     Set build-time variables for services.</span><br><span class="line">    --parallel              Build images in parallel.</span><br></pre></td></tr></table></figure>
+
+<h5 id="bundle"><a href="#bundle" class="headerlink" title="bundle"></a>bundle</h5><p>从Compose文件生成分布式应用程序包（DAB）：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">Usage: bundle [options]</span><br><span class="line"></span><br><span class="line">Options:</span><br><span class="line">    --push-images              Automatically push images for any services</span><br><span class="line">                               which have a `build` option specified.</span><br><span class="line"></span><br><span class="line">    -o, --output PATH          Path to write the bundle file to.</span><br><span class="line">                               Defaults to &quot;&lt;project name&gt;.dab&quot;.</span><br></pre></td></tr></table></figure>
+
+<h5 id="config"><a href="#config" class="headerlink" title="config"></a>config</h5><p>验证并查看 compose 文件：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">Usage: config [options]</span><br><span class="line"></span><br><span class="line">Options:</span><br><span class="line">    --resolve-image-digests  Pin image tags to digests.</span><br><span class="line">    -q, --quiet              Only validate the configuration, don&#x27;t print anything.</span><br><span class="line">    --services               Print the service names, one per line.</span><br><span class="line">    --volumes                Print the volume names, one per line.</span><br><span class="line">    --hash=&quot;*&quot;               Print the service config hash, one per line.</span><br><span class="line">                             Set &quot;service1,service2&quot; for a list of specified services</span><br><span class="line">                             or use the wildcard symbol to display all services.</span><br></pre></td></tr></table></figure>
+
+<h5 id="create"><a href="#create" class="headerlink" title="create"></a>create</h5><p>从项目创建容器但是不启动，被版本抛弃了，现在使用 up 以及 –no-start 选项来替代。</p>
+<h5 id="down"><a href="#down" class="headerlink" title="down"></a>down</h5><p>关闭 up 启动的项目，会暂停并删除容器、网络、存储卷和镜像：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">Usage: down [options]</span><br><span class="line"></span><br><span class="line">Options:</span><br><span class="line">    --rmi type              Remove images. Type must be one of:</span><br><span class="line">                              &#x27;all&#x27;: Remove all images used by any service.</span><br><span class="line">                              &#x27;local&#x27;: Remove only images that don&#x27;t have a</span><br><span class="line">                              custom tag set by the `image` field.</span><br><span class="line">    -v, --volumes           Remove named volumes declared in the `volumes`</span><br><span class="line">                            section of the Compose file and anonymous volumes</span><br><span class="line">                            attached to containers.</span><br><span class="line">    --remove-orphans        Remove containers for services not defined in the</span><br><span class="line">                            Compose file</span><br><span class="line">    -t, --timeout TIMEOUT   Specify a shutdown timeout in seconds.</span><br><span class="line">                            (default: 10)</span><br></pre></td></tr></table></figure>
+
+<p>默认情况下会删除的是：</p>
+<ul>
+<li>compose file 中定义的容器</li>
+<li>compose file 中定义的网络</li>
+<li>使用了的默认网络</li>
+<li>定义为 external 的存储卷的网络则不会被删除。</li>
+</ul>
+<h5 id="events"><a href="#events" class="headerlink" title="events"></a>events</h5><p>打印容器事件：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Usage: events [options] [SERVICE...]</span><br><span class="line"></span><br><span class="line">Options:</span><br><span class="line">    --json      Output events as a stream of json objects</span><br></pre></td></tr></table></figure>
+
+<h5 id="exec"><a href="#exec" class="headerlink" title="exec"></a>exec</h5><p>跟 docker exec 一样的用法，不同的是使用的不是容器名而是 docker-compose.yml 中定义的 service 名，以及命令默认是交互式执行：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">Usage: exec [options] [-e KEY=VAL...] SERVICE COMMAND [ARGS...]</span><br><span class="line"></span><br><span class="line">Options:</span><br><span class="line">    -d, --detach      Detached mode: Run command in the background.</span><br><span class="line">    --privileged      Give extended privileges to the process.</span><br><span class="line">    -u, --user USER   Run the command as this user.</span><br><span class="line">    -T                Disable pseudo-tty allocation. By default `docker-compose exec`</span><br><span class="line">                      allocates a TTY.</span><br><span class="line">    --index=index     index of the container if there are multiple</span><br><span class="line">                      instances of a service [default: 1]</span><br><span class="line">    -e, --env KEY=VAL Set environment variables (can be used multiple times,</span><br><span class="line">                      not supported in API &lt; 1.25)</span><br><span class="line">    -w, --workdir DIR Path to workdir directory for this command.</span><br></pre></td></tr></table></figure>
+
+<h5 id="help"><a href="#help" class="headerlink" title="help"></a>help</h5><p>显示命令的帮助和使用说明：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Usage: help COMMAND</span><br></pre></td></tr></table></figure>
+
+<h5 id="kill"><a href="#kill" class="headerlink" title="kill"></a>kill</h5><p>通过发送<code>SIGKILL</code>信号强制运行中的容器停止，也可以传递可选信号：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Usage: kill [options] [SERVICE...]</span><br><span class="line"></span><br><span class="line">Options:</span><br><span class="line">    -s SIGNAL         SIGNAL to send to the container.</span><br><span class="line">                      Default signal is SIGKILL.</span><br></pre></td></tr></table></figure>
+
+<h5 id="logs"><a href="#logs" class="headerlink" title="logs"></a>logs</h5><p>打印容器日志：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">Usage: logs [options] [SERVICE...]</span><br><span class="line"></span><br><span class="line">Options:</span><br><span class="line">    --no-color          Produce monochrome output.</span><br><span class="line">    -f, --follow        Follow log output.</span><br><span class="line">    -t, --timestamps    Show timestamps.</span><br><span class="line">    --tail=&quot;all&quot;        Number of lines to show from the end of the logs</span><br><span class="line">                        for each container.</span><br></pre></td></tr></table></figure>
+
+<h5 id="pause"><a href="#pause" class="headerlink" title="pause"></a>pause</h5><p>暂停正在运行的容器中的进程，可以使用 unpause 重新启动：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Usage: pause [SERVICE...]</span><br></pre></td></tr></table></figure>
+
+<h5 id="port"><a href="#port" class="headerlink" title="port"></a>port</h5><p>打印容器内端口的外部映射：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Usage: port [options] SERVICE PRIVATE_PORT</span><br><span class="line"></span><br><span class="line">Options:</span><br><span class="line">    --protocol=proto  tcp or udp [default: tcp]</span><br><span class="line">    --index=index     index of the container if there are multiple</span><br><span class="line">                      instances of a service [default: 1]</span><br></pre></td></tr></table></figure>
+
+<h5 id="ps"><a href="#ps" class="headerlink" title="ps"></a>ps</h5><p>列出项目中正在运行的容器：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">Usage: ps [options] [SERVICE...]</span><br><span class="line"></span><br><span class="line">Options:</span><br><span class="line">    -q, --quiet          Only display IDs</span><br><span class="line">    --services           Display services</span><br><span class="line">    --filter KEY=VAL     Filter services by a property</span><br><span class="line">    -a, --all            Show all stopped containers (including those created by the run command)</span><br></pre></td></tr></table></figure>
+
+<h5 id="pull"><a href="#pull" class="headerlink" title="pull"></a>pull</h5><p>与 docker pull 相似，拉取与 docker-compose.yml 文件中定义的服务相关联的镜像，但不会根据这些镜像启动容器：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">Usage: pull [options] [SERVICE...]</span><br><span class="line"></span><br><span class="line">Options:</span><br><span class="line">    --ignore-pull-failures  Pull what it can and ignores images with pull failures.</span><br><span class="line">    --parallel              Deprecated, pull multiple images in parallel (enabled by default).</span><br><span class="line">    --no-parallel           Disable parallel pulling.</span><br><span class="line">    -q, --quiet             Pull without printing progress information</span><br><span class="line">    --include-deps          Also pull services declared as dependencies</span><br></pre></td></tr></table></figure>
+
+<h5 id="push"><a href="#push" class="headerlink" title="push"></a>push</h5><p>与 docker push 相似，将 docker-compose.yml 文件中定义的服务相关联的镜像推送到服务端：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Usage: push [options] [SERVICE...]</span><br><span class="line"></span><br><span class="line">Options:</span><br><span class="line">    --ignore-push-failures  Push what it can and ignores images with push failures.</span><br></pre></td></tr></table></figure>
+
+<h5 id="restart"><a href="#restart" class="headerlink" title="restart"></a>restart</h5><p>重启容器，重启不会反映 docker-compose.yml 文件中的修改：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Usage: restart [options] [SERVICE...]</span><br><span class="line"></span><br><span class="line">Options:</span><br><span class="line">  -t, --timeout TIMEOUT      Specify a shutdown timeout in seconds.</span><br><span class="line">                             (default: 10)</span><br></pre></td></tr></table></figure>
+
+<h5 id="rm"><a href="#rm" class="headerlink" title="rm"></a>rm</h5><p>与 docker rm 相似，删除已经停止的容器，默认情况下，不会删除附加到容器的匿名存储卷，使用 docker volume ls 可以列出所有存储卷：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Usage: rm [options] [SERVICE...]</span><br><span class="line"></span><br><span class="line">Options:</span><br><span class="line">    -f, --force   Don&#x27;t ask to confirm removal</span><br><span class="line">    -s, --stop    Stop the containers, if required, before removing</span><br><span class="line">    -v            Remove any anonymous volumes attached to containers</span><br></pre></td></tr></table></figure>
+
+<h5 id="run"><a href="#run" class="headerlink" title="run"></a>run</h5><p>与 docker run 相似，会调用服务中定义的配置，但是会覆盖启动命令，同时不会开启端口：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">Usage:</span><br><span class="line">    run [options] [-v VOLUME...] [-p PORT...] [-e KEY=VAL...] [-l KEY=VALUE...]</span><br><span class="line">        SERVICE [COMMAND] [ARGS...]</span><br><span class="line"></span><br><span class="line">Options:</span><br><span class="line">    -d, --detach          Detached mode: Run container in the background, print</span><br><span class="line">                          new container name.</span><br><span class="line">    --name NAME           Assign a name to the container</span><br><span class="line">    --entrypoint CMD      Override the entrypoint of the image.</span><br><span class="line">    -e KEY=VAL            Set an environment variable (can be used multiple times)</span><br><span class="line">    -l, --label KEY=VAL   Add or override a label (can be used multiple times)</span><br><span class="line">    -u, --user=&quot;&quot;         Run as specified username or uid</span><br><span class="line">    --no-deps             Don&#x27;t start linked services.</span><br><span class="line">    --rm                  Remove container after run. Ignored in detached mode.</span><br><span class="line">    -p, --publish=[]      Publish a container&#x27;s port(s) to the host</span><br><span class="line">    --service-ports       Run command with the service&#x27;s ports enabled and mapped</span><br><span class="line">                          to the host.</span><br><span class="line">    --use-aliases         Use the service&#x27;s network aliases in the network(s) the</span><br><span class="line">                          container connects to.</span><br><span class="line">    -v, --volume=[]       Bind mount a volume (default [])</span><br><span class="line">    -T                    Disable pseudo-tty allocation. By default `docker-compose run`</span><br><span class="line">                          allocates a TTY.</span><br><span class="line">    -w, --workdir=&quot;&quot;      Working directory inside the container</span><br></pre></td></tr></table></figure>
+
+<h5 id="scale"><a href="#scale" class="headerlink" title="scale"></a>scale</h5><p>设置要运行的容器数量，建议使用 up 命令中的 –scale 选项。</p>
+<h5 id="start"><a href="#start" class="headerlink" title="start"></a>start</h5><p>启动现有的容器：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Usage: start [SERVICE...]</span><br></pre></td></tr></table></figure>
+
+<h5 id="stop"><a href="#stop" class="headerlink" title="stop"></a>stop</h5><p>关闭正在运行的容器：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Usage: stop [options] [SERVICE...]</span><br><span class="line"></span><br><span class="line">Options:</span><br><span class="line">  -t, --timeout TIMEOUT      Specify a shutdown timeout in seconds.</span><br><span class="line">                             (default: 10)</span><br></pre></td></tr></table></figure>
+
+<h5 id="top"><a href="#top" class="headerlink" title="top"></a>top</h5><p>显示正在运行的进程：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Usage: top [SERVICE...]</span><br></pre></td></tr></table></figure>
+
+<h5 id="unpause"><a href="#unpause" class="headerlink" title="unpause"></a>unpause</h5><p>启动暂停服务的容器中的进程：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Usage: unpause [SERVICE...]</span><br></pre></td></tr></table></figure>
+
+<h5 id="up"><a href="#up" class="headerlink" title="up"></a>up</h5><p>构建，（重新）创建，启动和关联服务相关容器：</p>
+<p>如果进程遇到错误，则此命令的退出代码为 1。</p>
+<p>如果使用 SIGINT（ctrl+ C）或者中断进程 SIGTERM，则停止容器，退出代码为 0。</p>
+<p>如果 SIGINT 或 SIGTERM 在这段停机阶段再次发送，运行容器被 kill，退出代码为 2。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">Usage: up [options] [--scale SERVICE=NUM...] [SERVICE...]</span><br><span class="line"></span><br><span class="line">Options:</span><br><span class="line">    -d, --detach               Detached mode: Run containers in the background,</span><br><span class="line">                               print new container names. Incompatible with</span><br><span class="line">                               --abort-on-container-exit.</span><br><span class="line">    --no-color                 Produce monochrome output.</span><br><span class="line">    --quiet-pull               Pull without printing progress information</span><br><span class="line">    --no-deps                  Don&#x27;t start linked services.</span><br><span class="line">    --force-recreate           Recreate containers even if their configuration</span><br><span class="line">                               and image haven&#x27;t changed.</span><br><span class="line">    --always-recreate-deps     Recreate dependent containers.</span><br><span class="line">                               Incompatible with --no-recreate.</span><br><span class="line">    --no-recreate              If containers already exist, don&#x27;t recreate</span><br><span class="line">                               them. Incompatible with --force-recreate and -V.</span><br><span class="line">    --no-build                 Don&#x27;t build an image, even if it&#x27;s missing.</span><br><span class="line">    --no-start                 Don&#x27;t start the services after creating them.</span><br><span class="line">    --build                    Build images before starting containers.</span><br><span class="line">    --abort-on-container-exit  Stops all containers if any container was</span><br><span class="line">                               stopped. Incompatible with -d.</span><br><span class="line">    -t, --timeout TIMEOUT      Use this timeout in seconds for container</span><br><span class="line">                               shutdown when attached or when containers are</span><br><span class="line">                               already running. (default: 10)</span><br><span class="line">    -V, --renew-anon-volumes   Recreate anonymous volumes instead of retrieving</span><br><span class="line">                               data from the previous containers.</span><br><span class="line">    --remove-orphans           Remove containers for services not defined</span><br><span class="line">                               in the Compose file.</span><br><span class="line">    --exit-code-from SERVICE   Return the exit code of the selected service</span><br><span class="line">                               container. Implies --abort-on-container-exit.</span><br><span class="line">    --scale SERVICE=NUM        Scale SERVICE to NUM instances. Overrides the</span><br><span class="line">                               `scale` setting in the Compose file if present.</span><br></pre></td></tr></table></figure>
+
+<h4 id="compose-file-2-x"><a href="#compose-file-2-x" class="headerlink" title="compose file(2.x)"></a>compose file(2.x)</h4><h5 id="blkio-config"><a href="#blkio-config" class="headerlink" title="blkio_config"></a>blkio_config</h5><p>一组用于限制 IO 的配置选项：</p>
+<table>
+<thead>
+<tr>
+<th>选项</th>
+<th>效果&#x2F;键</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>DEVICE_READ_BPS<br />DEVICE_WRITE_BPS</td>
+<td>为给定设备上的读&#x2F;写操作设置每秒字节数限制。<br />path：定义受影响设备的符号路径。<br />rate：表示字节数的整数值，或者是表示字节值的字符串。</td>
+</tr>
+<tr>
+<td>DEVICE_READ_IOPS<br />DEVICE_WRITE_IOPS</td>
+<td>为给定设备上的读&#x2F;写操作设置每秒操作限制。<br/>path：定义受影响设备的符号路径。<br/>rate：表示每秒允许操作数的整数值。</td>
+</tr>
+<tr>
+<td>weight</td>
+<td>修改分配给此服务的带宽相对于其他服务的比例。<br />取一个10到1000之间的整数值，默认值为500。</td>
+</tr>
+<tr>
+<td>weight_device</td>
+<td>按设备微调带宽分配。<br />path：定义受影响设备的符号路径。<br />weight：10到1000之间的整数值。</td>
+</tr>
+</tbody></table>
+<h5 id="build-image"><a href="#build-image" class="headerlink" title="build&#x2F;image"></a>build&#x2F;image</h5><p>一组用于构建镜像的配置选项，build 可以从自己的 dockerfile 中创建镜像，image 则是使用已用的镜像。</p>
+<p>在 1.x 版本中，build 和 image 不能同时使用，在 2.x 的版本中，同时使用会使用在 build 中配置的 dockerfile 创建镜像，并命名为 image 配置的名称。</p>
+<p>选项如下：</p>
+<table>
+<thead>
+<tr>
+<th>选项</th>
+<th>效果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>cache_from</td>
+<td>指定用于构建镜像的缓存。</td>
+</tr>
+<tr>
+<td>context</td>
+<td>指定 dockerfile 的路径。</td>
+</tr>
+<tr>
+<td>dockerfile</td>
+<td>指定 dockerfile 的文件名。</td>
+</tr>
+<tr>
+<td>args</td>
+<td>添加用在 dockerfile 中的参数变量。<br />需要在 dockerfile 中使用 ARG 指定参数名。<br />如果省略值，则会使用运行 compose 的环境中的值。<br />布尔值（true，false，yes，no，on，off）必须用引号括起来，这样分析器会将它们解释为字符串。</td>
+</tr>
+<tr>
+<td>extra_hosts</td>
+<td>添加 DNS 主机名映射。</td>
+</tr>
+<tr>
+<td>isolation</td>
+<td>指定容器的隔离技术：<a href="https://docs.docker.com/engine/reference/commandline/run/#specify-isolation-technology-for-container---isolation">https://docs.docker.com/engine/reference/commandline/run/#specify-isolation-technology-for-container---isolation</a> 。</td>
+</tr>
+<tr>
+<td>labels</td>
+<td>为容器添加Docker元数据（metadata）信息。</td>
+</tr>
+<tr>
+<td>network</td>
+<td>设置网络容器连接，可以设置 IP 地址以及是否与外部隔离。</td>
+</tr>
+<tr>
+<td>shm_size</td>
+<td>设置 &#x2F;dev&#x2F;shm 分区的大小。<br />指定为表示字节数的整数值或表示字节值的字符串。</td>
+</tr>
+<tr>
+<td>target</td>
+<td>在内部定义构建指定的阶段 dockerfile：<a href="https://docs.docker.com/develop/develop-images/multistage-build/">https://docs.docker.com/develop/develop-images/multistage-build/</a> 。</td>
+</tr>
+</tbody></table>
+<h5 id="cap-add，cap-drop"><a href="#cap-add，cap-drop" class="headerlink" title="cap_add，cap_drop"></a>cap_add，cap_drop</h5><p>添加或删除容器功能。</p>
+<h5 id="command"><a href="#command" class="headerlink" title="command"></a>command</h5><p>覆盖容器启动后默认执行的命令。</p>
+<h5 id="cgroup-parent"><a href="#cgroup-parent" class="headerlink" title="cgroup_parent"></a>cgroup_parent</h5><p>为容器指定一个可选的所属组（当以 swarm 模式部署栈时该选项会被忽略）。</p>
+<h5 id="CONTAINER-NAME"><a href="#CONTAINER-NAME" class="headerlink" title="CONTAINER_NAME"></a>CONTAINER_NAME</h5><p>指定自定义容器名称，而不是生成的默认名称。</p>
+<h5 id="cpu-rt-runtime，cpu-rt-period"><a href="#cpu-rt-runtime，cpu-rt-period" class="headerlink" title="cpu_rt_runtime，cpu_rt_period"></a>cpu_rt_runtime，cpu_rt_period</h5><p>使用 docker 守护程序实时调度程序来配置 CPU 分配参数。（不懂）</p>
+<h5 id="device-cgroup-rules"><a href="#device-cgroup-rules" class="headerlink" title="device_cgroup_rules"></a>device_cgroup_rules</h5><p>将规则添加到cgroup允许的设备列表。（也不懂）</p>
+<h5 id="devices"><a href="#devices" class="headerlink" title="devices"></a>devices</h5><p>设备映射列表。</p>
+<h5 id="depend-on"><a href="#depend-on" class="headerlink" title="depend on"></a>depend on</h5><p>服务之间的依赖，会影响启动顺序，启动一个服务的同时会启动它所依赖的服务。</p>
+<h5 id="dns"><a href="#dns" class="headerlink" title="dns"></a>dns</h5><p>自定义 DNS 服务器。</p>
+<h5 id="dns-opt"><a href="#dns-opt" class="headerlink" title="dns_opt"></a>dns_opt</h5><p>要添加到容器<code>resolv.conf</code>文件的自定义 DNS 选项列表。</p>
+<h5 id="dns-search"><a href="#dns-search" class="headerlink" title="dns_search"></a>dns_search</h5><p>自定义 DNS 搜索域。可以是单个值或列表。</p>
+<h5 id="tmpfs"><a href="#tmpfs" class="headerlink" title="tmpfs"></a>tmpfs</h5><p>在容器内安装临时文件系统。可以是单个值或列表。</p>
+<h5 id="entrypoint"><a href="#entrypoint" class="headerlink" title="entrypoint"></a>entrypoint</h5><p>设置容器的启动命令。</p>
+<h5 id="env-file"><a href="#env-file" class="headerlink" title="env_file"></a>env_file</h5><p>从文件添加环境变量。可以是单个值或列表。</p>
+<h5 id="environment"><a href="#environment" class="headerlink" title="environment"></a>environment</h5><p>添加环境变量。您可以使用数组或字典。任何布尔值：true，false，yes，no，需要用引号括起来，以确保解析器不会将它们转换为 True 或 False。</p>
+<p>会覆盖 env_file 中配置的环境变量。</p>
+<h5 id="expose"><a href="#expose" class="headerlink" title="expose"></a>expose</h5><p>暴露端口而不将它们发布到主机，它们只能被链接服务访问。只能指定内部端口。</p>
+<h5 id="extends"><a href="#extends" class="headerlink" title="extends"></a>extends</h5><p>用于扩展服务：<a href="https://docs.docker.com/compose/extends/#extending-services">https://docs.docker.com/compose/extends/#extending-services</a> 。</p>
+<h5 id="external-links"><a href="#external-links" class="headerlink" title="external_links"></a>external_links</h5><p>链接到此容器外部 docker-compose.yml 甚至是 compose 外部的容器，尤其是对于提供共享或公共服务的容器。 external_links 遵循类似于 links 指定容器名称和链接别名（CONTAINER:ALIAS）时的语义。</p>
+<h5 id="extra-hosts"><a href="#extra-hosts" class="headerlink" title="extra_hosts"></a>extra_hosts</h5><p>添加 DNS 主机名映射。</p>
+<h5 id="group-add"><a href="#group-add" class="headerlink" title="group_add"></a>group_add</h5><p>给容器内的用户添加组。</p>
+<h5 id="healthcheck"><a href="#healthcheck" class="headerlink" title="healthcheck"></a>healthcheck</h5><p>配置运行的检查以确定此服务的容器是否“健康”：<a href="https://docs.docker.com/engine/reference/builder/#healthcheck">https://docs.docker.com/engine/reference/builder/#healthcheck</a> 。</p>
+<h5 id="image"><a href="#image" class="headerlink" title="image"></a>image</h5><p>上面说过了，不说了。</p>
+<h5 id="init"><a href="#init" class="headerlink" title="init"></a>init</h5><p>在容器内运行 init，使用的默认 init 二进制文件是 Tini：<a href="https://github.com/krallin/tini">https://github.com/krallin/tini</a></p>
+<p>关于 init：<a href="https://www.cnblogs.com/ilinuxer/p/6188303.html">https://www.cnblogs.com/ilinuxer/p/6188303.html</a></p>
+<h5 id="isolation"><a href="#isolation" class="headerlink" title="isolation"></a>isolation</h5><p>指定容器的隔离技术：<a href="https://docs.docker.com/engine/reference/commandline/run/#specify-isolation-technology-for-container---isolation">https://docs.docker.com/engine/reference/commandline/run/#specify-isolation-technology-for-container---isolation</a> 。</p>
+<h5 id="labels"><a href="#labels" class="headerlink" title="labels"></a>labels</h5><p>使用 docker 标签向容器添加元数据，可以使用数组或字典。</p>
+<h5 id="links"><a href="#links" class="headerlink" title="links"></a>links</h5><p>链接到另一个服务中的容器。指定服务名称和链接别名（”SERVICE:ALIAS”），或仅指定服务名称。</p>
+<p>使用 links 可以将服务名 DNS 解析为 IP。</p>
+<p>链接是一种传统选择，建议使用网络。</p>
+<h5 id="logging"><a href="#logging" class="headerlink" title="logging"></a>logging</h5><p>配置记录服务的方式。</p>
+<h5 id="network-mode"><a href="#network-mode" class="headerlink" title="network_mode"></a>network_mode</h5><p>网络模式。</p>
+<h5 id="networks"><a href="#networks" class="headerlink" title="networks"></a>networks</h5><p>要加入的网络，可以用于规划内网，需要自行配置网络，选项如下：</p>
+<table>
+<thead>
+<tr>
+<th>选项</th>
+<th>效果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>ipv4_address<br />ipv6_address</td>
+<td>在加入网络时为此服务指定容器的静态IP地址。</td>
+</tr>
+<tr>
+<td>link_local_ips</td>
+<td>指定链接本地IP列表。</td>
+</tr>
+<tr>
+<td>priority</td>
+<td>指定优先级以指示 compose 应将服务的容器连接到其网络的顺序。如果未指定，则默认值为0。</td>
+</tr>
+</tbody></table>
+<h5 id="PID"><a href="#PID" class="headerlink" title="PID"></a>PID</h5><p>如果设置为以下形式之一：container:<container_name>,, service:<service_name> 则服务共享指定容器或服务的 PID 地址空间。</p>
+<p>如果设置为“host”，则服务的 PID 模式为主机 PID 模式。这打开了容器和主机操作系统之间的 PID 地址空间共享。使用此标志启动的容器可以访问和操作裸机计算机命名空间中的其他容器，反之亦然。</p>
+<h5 id="pids-limit"><a href="#pids-limit" class="headerlink" title="pids_limit"></a>pids_limit</h5><p>调整容器的PID限制。设置-1为无限制的PID。</p>
+<h5 id="platform"><a href="#platform" class="headerlink" title="platform"></a>platform</h5><p>此参数确定将拉下哪个版本的映像、将在哪个平台上执行服务的构建。</p>
+<h5 id="ports"><a href="#ports" class="headerlink" title="ports"></a>ports</h5><p>暴露端口。指定 ports（HOST:CONTAINER）或仅指定容器端口（选择短暂的主机端口），可以是一个范围内的端口。</p>
+<h5 id="runtime"><a href="#runtime" class="headerlink" title="runtime"></a>runtime</h5><p>指定用于服务容器的 runtime 。默认 runtime 和可用 runtime 可以用 docker info 查看。</p>
+<h5 id="scale-1"><a href="#scale-1" class="headerlink" title="scale"></a>scale</h5><p>指定要为此服务部署的默认容器数。</p>
+<h5 id="security-opt"><a href="#security-opt" class="headerlink" title="security_opt"></a>security_opt</h5><p>覆盖每个容器的默认标签方案。</p>
+<h5 id="stop-grace-period"><a href="#stop-grace-period" class="headerlink" title="stop_grace_period"></a>stop_grace_period</h5><p>指定 stop_signal 在发送 SIGKILL 之前，如果它未处理 SIGTERM（或指定了任何停止信号），则尝试停止容器时要等待多长时间 。指定为持续时间。默认情况下，stop 在发送 SIGKILL 之前等待容器退出 10 秒。</p>
+<h5 id="stop-signal"><a href="#stop-signal" class="headerlink" title="stop_signal"></a>stop_signal</h5><p>设置替代信号以停止容器。默认情况下 stop 使用 SIGTERM。使用 stop_signal 设置一个替代信号来让 stop 来发送该停止信号。</p>
+<h5 id="storage-opt"><a href="#storage-opt" class="headerlink" title="storage_opt"></a>storage_opt</h5><p>设置此服务的存储驱动程序选项。</p>
+<h5 id="sysctls"><a href="#sysctls" class="headerlink" title="sysctls"></a>sysctls</h5><p>要在容器中设置的内核参数。</p>
+<h5 id="ulimits"><a href="#ulimits" class="headerlink" title="ulimits"></a>ulimits</h5><p>覆盖容器的默认 ulimits。您可以将单个限制指定为整数，也可以将软&#x2F;硬限制指定为映射。</p>
+<h5 id="userns-mode"><a href="#userns-mode" class="headerlink" title="userns_mode"></a>userns_mode</h5><p>如果 docker 守护程序配置了用户空间，则禁用此服务的用户空间：<a href="https://docs.docker.com/engine/reference/commandline/dockerd/#disable-user-namespace-for-a-container">https://docs.docker.com/engine/reference/commandline/dockerd/#disable-user-namespace-for-a-container</a></p>
+<h5 id="volumes"><a href="#volumes" class="headerlink" title="volumes"></a>volumes</h5><p>设置文件映射，详细的参考文档。</p>
+<h5 id="volume-driver"><a href="#volume-driver" class="headerlink" title="volume_driver"></a>volume_driver</h5><p>指定要用于此服务上所有已声明卷的默认卷驱动程序：<a href="https://docs.docker.com/engine/userguide/dockervolumes/">https://docs.docker.com/engine/userguide/dockervolumes/</a> 、<a href="https://docs.docker.com/engine/extend/plugins_volume/">https://docs.docker.com/engine/extend/plugins_volume/</a> 。</p>
+<h5 id="volumes-from"><a href="#volumes-from" class="headerlink" title="volumes_from"></a>volumes_from</h5><p>从另一个服务或容器挂载所有卷。</p>
+<h5 id="restart-1"><a href="#restart-1" class="headerlink" title="restart"></a>restart</h5><p>no 是默认的重新启动策略，它不会在任何情况下重新启动容器。当 always 指定时，容器总是重新启动。指定为 on-failure 时则在退出代码表示为故障错误时重启。</p>
+<h5 id="cpu-count，cpu-percent，cpu-shares，cpu-period，cpu-quota，cpus，cpuset，domainname，hostname，ipc，mac-address，mem-limit，memswap-limit，mem-swappiness，mem-reservation，oom-kill-disable，oom-score-adj，privileged，read-only，shm-size，stdin-open，tty，user，working-dir"><a href="#cpu-count，cpu-percent，cpu-shares，cpu-period，cpu-quota，cpus，cpuset，domainname，hostname，ipc，mac-address，mem-limit，memswap-limit，mem-swappiness，mem-reservation，oom-kill-disable，oom-score-adj，privileged，read-only，shm-size，stdin-open，tty，user，working-dir" class="headerlink" title="cpu_count，cpu_percent，cpu_shares，cpu_period，cpu_quota，cpus，cpuset，domainname，hostname，ipc，mac_address，mem_limit，memswap_limit，mem_swappiness，mem_reservation，oom_kill_disable，oom_score_adj，privileged，read_only，shm_size，stdin_open，tty，user，working_dir"></a>cpu_count，cpu_percent，cpu_shares，cpu_period，cpu_quota，cpus，cpuset，domainname，hostname，ipc，mac_address，mem_limit，memswap_limit，mem_swappiness，mem_reservation，oom_kill_disable，oom_score_adj，privileged，read_only，shm_size，stdin_open，tty，user，working_dir</h5><p>跟 docker run 的选项一致：<a href="https://docs.docker.com/engine/reference/run/">https://docs.docker.com/engine/reference/run/</a></p>
+<h5 id="Volume-configuration-reference"><a href="#Volume-configuration-reference" class="headerlink" title="Volume configuration reference"></a>Volume configuration reference</h5><p>比较复杂一般用不着，详细看文档。</p>
+<h5 id="Network-configuration-reference"><a href="#Network-configuration-reference" class="headerlink" title="Network configuration reference"></a>Network configuration reference</h5><p>如何配置自己的网络，主要使用 internal、IPAM 选项。</p>
+<p>internal 选项用于配置是否与外部隔离，IPAM 选项用于配置子网、IP 范围等。</p>
+<p>一个配置实例如下，在 service 中：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">networks:</span></span><br><span class="line">	<span class="attr">my_network:</span></span><br><span class="line">		<span class="attr">ipv4_address:</span> <span class="number">10.0</span><span class="number">.20</span><span class="number">.10</span></span><br></pre></td></tr></table></figure>
+
+<p>然后在 networs 中：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">my_network:</span></span><br><span class="line">    <span class="attr">internal:</span> <span class="literal">true</span></span><br><span class="line">    <span class="attr">ipam:</span></span><br><span class="line">    	<span class="attr">driver:</span> <span class="string">default</span></span><br><span class="line">    	<span class="attr">config:</span></span><br><span class="line">    		<span class="bullet">-</span> <span class="attr">subnet:</span> <span class="number">10.0</span><span class="number">.20</span><span class="number">.0</span><span class="string">/24</span></span><br></pre></td></tr></table></figure>
+
+<p>就可以配置一个内网容器。</p>
+<hr>
+<p>Orz</p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Docker/">Docker</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2019/05/29/%E5%86%85%E7%BD%91%E7%AB%AF%E5%8F%A3%E8%BD%AC%E5%8F%91/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>内网端口转发</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2019/05/25/RCTF2019-Web-nextphp%E5%BC%95%E5%8F%91%E7%9A%84%E6%80%9D%E8%80%83%E5%92%8C%E5%AD%A6%E4%B9%A0/">
+                        <span>RCTF2019-Web-nextphp引发的思考和学习</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "docker-compose&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

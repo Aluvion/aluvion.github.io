@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>C++环境下钩取API函数 - Twings</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期六, 一月 28日 2023, 10:28 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    988 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      4 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>有意思的。</p>
+<span id="more"></span>
+
+<hr>
+<h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>首先需要C++的开发环境，下载<a href="https://sourceforge.net/projects/mingw-w64/files/mingw-w64/mingw-w64-release/">MinGW安装程序</a>，得到一个mingw-w64-install.exe。</p>
+<p>运行之后发现网络问题导致在线安装失败，选择需要的版本，比如我就是Windowsx64，<a href="https://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win64/Personal%20Builds/mingw-builds/8.1.0/threads-win32/seh/x86_64-8.1.0-release-win32-seh-rt_v6-rev0.7z">离线下载安装</a>，网络问题好像还是很大，总归是能下载了。</p>
+<p>下载完成后解压，并配置好环境变量，将bin下面的可执行文件加入path中。</p>
+<p>执行gcc -v命令，可以看到安装成功了：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Using built-in specs.</span><br><span class="line">...</span><br><span class="line">Thread model: win32</span><br><span class="line">gcc version 8.1.0 (x86_64-win32-seh-rev0, Built by MinGW-W64 project)</span><br></pre></td></tr></table></figure>
+
+<h3 id="测试编译C-程序"><a href="#测试编译C-程序" class="headerlink" title="测试编译C++程序"></a>测试编译C++程序</h3><p>新建一个hello.cpp文件，写一个hello world：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> std;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    cout&lt;&lt;<span class="string">&quot;hello world&quot;</span>&lt;&lt;endl;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>配置好g++编译器后编译运行，不过我的环境下似乎自动配置好了，新建终端并输入：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">g++ .\hello.cpp</span><br></pre></td></tr></table></figure>
+
+<p>生成a.exe程序并运行，可以看到输出：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">PS D:\Cpp&gt; .\a.exe</span><br><span class="line">hello world</span><br></pre></td></tr></table></figure>
+
+<h3 id="关于函数调用栈"><a href="#关于函数调用栈" class="headerlink" title="关于函数调用栈"></a>关于函数调用栈</h3><p>观摩一下一个函数最开始会干什么，将程序放到IDA中打开，看到main函数的前几个汇编代码：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">.text:0000000000401550                 push    rbp</span><br><span class="line">.text:0000000000401551                 mov     rbp, rsp</span><br><span class="line">.text:0000000000401554                 sub     rsp, 20h</span><br></pre></td></tr></table></figure>
+
+<p>保存rbp寄存器，更新rbp寄存器并开拓栈空间用于保存局部变量。</p>
+<p>也就是说，如果是x86环境，此时的栈中只有函数返回地址和函数参数，还没有rbp。</p>
+<h3 id="API钩取"><a href="#API钩取" class="headerlink" title="API钩取"></a>API钩取</h3><p>然而我是x64环境，此时前四个参数被放在了寄存器中。</p>
+<p>根据参考文章稍作修改，要注意的点比如寄存器名字、一些变量的类型要放大到适合64位系统以及ContextFlags要设置为CONTEXT_FULL来获取所有寄存器：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;windows.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;tchar.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;tlhelp32.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;shlobj.h&gt;</span></span></span><br><span class="line"></span><br><span class="line">LPVOID g_pWriteFile = <span class="literal">NULL</span>;</span><br><span class="line">CREATE_PROCESS_DEBUG_INFO g_cpdi;</span><br><span class="line">BYTE g_chINT3 = <span class="number">0xCC</span>;</span><br><span class="line">BYTE g_orgByte = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line"><span class="function">BOOL <span class="title">CreateProcessDebugEvent</span><span class="params">(LPDEBUG_EVENT pde)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    g_pWriteFile = (<span class="type">void</span>*)<span class="built_in">GetProcAddress</span>(<span class="built_in">GetModuleHandleA</span>(<span class="string">&quot;kernel32.dll&quot;</span>), <span class="string">&quot;WriteFile&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="built_in">memcpy</span>(&amp;g_cpdi, &amp;pde-&gt;u.CreateProcessInfo, <span class="built_in">sizeof</span>(CREATE_PROCESS_DEBUG_INFO)); </span><br><span class="line"></span><br><span class="line">    <span class="built_in">ReadProcessMemory</span>(g_cpdi.hProcess, g_pWriteFile, &amp;g_orgByte, <span class="built_in">sizeof</span>(BYTE), <span class="literal">NULL</span>);</span><br><span class="line"></span><br><span class="line">    <span class="built_in">WriteProcessMemory</span>(g_cpdi.hProcess, g_pWriteFile, &amp;g_chINT3, <span class="built_in">sizeof</span>(BYTE), <span class="literal">NULL</span>); </span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> TRUE;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function">BOOL <span class="title">ExceprtionDebugEvent</span><span class="params">(LPDEBUG_EVENT pde)</span> </span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    CONTEXT ctx;</span><br><span class="line">    PBYTE lpBuffer = <span class="literal">NULL</span>; </span><br><span class="line">    ULONG_PTR dwNumOfBytesToWrite, dwAddrOfBuffer;</span><br><span class="line">    DWORD i = <span class="number">0</span>;</span><br><span class="line">    PEXCEPTION_RECORD per = &amp;pde-&gt;u.Exception.ExceptionRecord;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (per-&gt;ExceptionCode == EXCEPTION_BREAKPOINT)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span> (g_pWriteFile == per-&gt;ExceptionAddress) </span><br><span class="line">        &#123;</span><br><span class="line"></span><br><span class="line">            <span class="built_in">WriteProcessMemory</span>(g_cpdi.hProcess, g_pWriteFile, &amp;g_orgByte, <span class="built_in">sizeof</span>(BYTE), <span class="literal">NULL</span>); </span><br><span class="line"></span><br><span class="line">            ctx.ContextFlags = CONTEXT_FULL;</span><br><span class="line">            <span class="built_in">GetThreadContext</span>(g_cpdi.hThread, &amp;ctx); </span><br><span class="line"></span><br><span class="line">            <span class="comment">// ReadProcessMemory(g_cpdi.hProcess, (LPVOID)(ctx.Rsp + 0x10), &amp;dwAddrOfBuffer, sizeof(DWORD), NULL); </span></span><br><span class="line">            <span class="comment">// ReadProcessMemory(g_cpdi.hProcess, (LPVOID)(ctx.Rsp + 0x18), &amp;dwNumofBytestTowrite, sizeof(DWORD), NULL);</span></span><br><span class="line"></span><br><span class="line">            dwAddrOfBuffer = ctx.Rdx;</span><br><span class="line">            dwNumOfBytesToWrite = ctx.R8;</span><br><span class="line"></span><br><span class="line">            lpBuffer = (PBYTE)<span class="built_in">malloc</span>(dwNumOfBytesToWrite + <span class="number">1</span>);</span><br><span class="line">            <span class="built_in">memset</span>(lpBuffer, <span class="number">0</span>, dwNumOfBytesToWrite + <span class="number">1</span>); </span><br><span class="line"></span><br><span class="line">            <span class="built_in">ReadProcessMemory</span>(g_cpdi.hProcess, (LPVOID)dwAddrOfBuffer, lpBuffer, dwNumOfBytesToWrite, <span class="literal">NULL</span>);</span><br><span class="line">            <span class="built_in">printf</span>(<span class="string">&quot;orignal string: %s\n&quot;</span>, lpBuffer);</span><br><span class="line"></span><br><span class="line">            <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; dwNumOfBytesToWrite; i++)</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">if</span> (lpBuffer[i] &gt;= <span class="number">0x61</span> &amp;&amp; lpBuffer[i] &lt;= <span class="number">0x7A</span>)</span><br><span class="line">                &#123;</span><br><span class="line">                    lpBuffer[i] -= <span class="number">0x20</span>; </span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="built_in">printf</span>(<span class="string">&quot;string after changing:%s\n&quot;</span>, lpBuffer);</span><br><span class="line"></span><br><span class="line">            <span class="built_in">WriteProcessMemory</span>(g_cpdi.hProcess, (LPVOID)dwAddrOfBuffer, lpBuffer, dwNumOfBytesToWrite, <span class="literal">NULL</span>);</span><br><span class="line"></span><br><span class="line">            <span class="built_in">free</span>(lpBuffer);</span><br><span class="line"></span><br><span class="line">            ctx.Rip = (DWORD64)g_pWriteFile;</span><br><span class="line">            <span class="built_in">SetThreadContext</span>(g_cpdi.hThread, &amp;ctx);</span><br><span class="line"></span><br><span class="line">            <span class="built_in">ContinueDebugEvent</span>(pde-&gt;dwProcessId, pde-&gt;dwThreadId, DBG_CONTINUE);</span><br><span class="line">            <span class="built_in">Sleep</span>(<span class="number">0</span>); </span><br><span class="line"></span><br><span class="line">            <span class="built_in">WriteProcessMemory</span>(g_cpdi.hProcess, g_pWriteFile, &amp;g_chINT3, <span class="built_in">sizeof</span>(BYTE), <span class="literal">NULL</span>);</span><br><span class="line"></span><br><span class="line">            <span class="keyword">return</span> TRUE;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> FALSE;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">DebugLoop</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    DEBUG_EVENT de;</span><br><span class="line">    DWORD dwContinueStatus;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span> (<span class="built_in">WaitForDebugEvent</span>(&amp;de, INFINITE))</span><br><span class="line">    &#123;</span><br><span class="line">        dwContinueStatus = DBG_CONTINUE;</span><br><span class="line">        <span class="keyword">if</span> (de.dwDebugEventCode == CREATE_PROCESS_DEBUG_EVENT)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="built_in">CreateProcessDebugEvent</span>(&amp;de);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span> <span class="keyword">if</span> (de.dwDebugEventCode == EXCEPTION_DEBUG_EVENT)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">if</span> (<span class="built_in">ExceprtionDebugEvent</span>(&amp;de))</span><br><span class="line">                <span class="keyword">continue</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span> <span class="keyword">if</span> (de.dwDebugEventCode == EXIT_PROCESS_DEBUG_EVENT)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="built_in">ContinueDebugEvent</span>(de.dwProcessId, de.dwThreadId, dwContinueStatus);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">(<span class="type">int</span> argc, <span class="type">char</span>* argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    DWORD dwPID = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    dwPID = <span class="built_in">atoi</span>(argv[<span class="number">1</span>]);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (!<span class="built_in">DebugActiveProcess</span>(dwPID))</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;DebugActiveProcess(%d) failed!!!\n&quot;</span><span class="string">&quot;Error Code = %d\n&quot;</span>, dwPID, <span class="built_in">GetLastError</span>());</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;DebugActiveProcess(%d) successfully!!!\n&quot;</span>, dwPID);</span><br><span class="line"></span><br><span class="line">    <span class="built_in">DebugLoop</span>();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>打开一个记事本，并使用PowerShell运行该程序调试记事本进程：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">.\a.exe 27276</span><br></pre></td></tr></table></figure>
+
+<p>开始调试后，往记事本中写入一些字符串并保存，可以看到调试程序捕获了这些字符串：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">orignal string: twings</span><br><span class="line">twings hello world</span><br><span class="line">string after changing:TWINGS</span><br><span class="line">TWINGS HELLO WORLD</span><br></pre></td></tr></table></figure>
+
+<p>关闭记事本后再打开，可以发现写入的字符串已经被改为了大写字母。</p>
+<hr>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://blog.csdn.net/kramer_1711/article/details/119416512">wingw-w64安装时 the file has been downloaded incorrectly!</a></p>
+<p><a href="https://zhuanlan.zhihu.com/p/76613134">MinGW-w64安装教程——著名C&#x2F;C++编译器GCC的Windows版本</a></p>
+<p><a href="https://zhuanlan.zhihu.com/p/87864677/">VSCode配置C&#x2F;C++环境</a></p>
+<p><a href="https://xz.aliyun.com/t/11963">API钩取：通过调试手段钩取API函数</a></p>
+<p><a href="https://www.bbsmax.com/A/gAJGq77ZdZ/">x64 下记事本WriteFile() API钩取</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/%E4%BA%8C%E8%BF%9B%E5%88%B6/">二进制</a>
+                    
+                      <a class="hover-with-bg" href="/tags/C/">C++</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2023/01/29/CVE-2022-39198-Dubbo-Hession%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>CVE-2022-39198 Dubbo Hession反序列化漏洞</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2023/01/26/ThinkPHP%E5%A4%9A%E8%AF%AD%E8%A8%80%E6%A8%A1%E5%9D%97%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB%E6%BC%8F%E6%B4%9E/">
+                        <span>ThinkPHP多语言模块文件包含漏洞</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "C++环境下钩取API函数&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

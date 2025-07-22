@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>shiro-550 1.2.4反序列化漏洞 - Twings</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期三, 十月 20日 2021, 10:22 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    1.4k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      6 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> 前置知识(?)。</p>
+<span id="more"></span>
+
+<hr>
+<h3 id="RememberMe"><a href="#RememberMe" class="headerlink" title="RememberMe"></a>RememberMe</h3><p>先把shiro依赖版本改成1.2.4。</p>
+<p>漏洞发生在shiro的rememberMe功能，因为这项功能只能允许访问user权限的路径，所以先改改配置文件中的权限配置：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">map.put(<span class="string">&quot;/logout&quot;</span>, <span class="string">&quot;user&quot;</span>);</span><br><span class="line">map.put(<span class="string">&quot;/user&quot;</span>, <span class="string">&quot;user&quot;</span>);</span><br></pre></td></tr></table></figure>
+
+<p>再改改控制器代码，开启这项功能：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">UsernamePasswordToken</span> <span class="variable">token</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">UsernamePasswordToken</span>(<span class="string">&quot;Twings&quot;</span>, <span class="string">&quot;123456&quot;</span>);</span><br><span class="line">token.setRememberMe(<span class="literal">true</span>);</span><br><span class="line">subject.login(token);</span><br></pre></td></tr></table></figure>
+
+<p>之后shiro会将身份信息加密，base64编码保存在cookie中，用于下一次身份认证：</p>
+<p><img src="/css/images/shiro550/2021101401.png" srcset="/img/loading.gif"></p>
+<h3 id="RememberMe解密"><a href="#RememberMe解密" class="headerlink" title="RememberMe解密"></a>RememberMe解密</h3><p>开始找相关的代码，直接搜索名字相关的类可以找到CookieRememberMeManager类及其父类AbstractRememberMeManager，但是换了几个点，断了几次都没有断下来，后来发现浏览器重启后第一次访问才会触发断点，原因不明，可能跟session有关，后面再来研究。最后的断点打在了getRememberedPrincipals函数，此时的调用栈如下：</p>
+<p><img src="/css/images/shiro550/2021101402.png" srcset="/img/loading.gif"></p>
+<p>getRememberedPrincipals函数如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> PrincipalCollection <span class="title function_">getRememberedPrincipals</span><span class="params">(SubjectContext subjectContext)</span> &#123;</span><br><span class="line">    <span class="type">PrincipalCollection</span> <span class="variable">principals</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="type">byte</span>[] bytes = getRememberedSerializedIdentity(subjectContext);</span><br><span class="line">        <span class="comment">//SHIRO-138 - only call convertBytesToPrincipals if bytes exist:</span></span><br><span class="line">        <span class="keyword">if</span> (bytes != <span class="literal">null</span> &amp;&amp; bytes.length &gt; <span class="number">0</span>) &#123;</span><br><span class="line">            principals = convertBytesToPrincipals(bytes, subjectContext);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">catch</span> (RuntimeException re) &#123;</span><br><span class="line">        principals = onRememberedPrincipalFailure(re, subjectContext);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> principals;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这段代码以前似乎还出现过代号为SHIRO-138的问题，这里通过getRememberedSerializedIdentity函数获取了base64解码后的cookie中保存的加密数据：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> <span class="type">byte</span>[] getRememberedSerializedIdentity(SubjectContext subjectContext) &#123;</span><br><span class="line">	...</span><br><span class="line">    <span class="type">String</span> <span class="variable">base64</span> <span class="operator">=</span> getCookie().readValue(request, response);</span><br><span class="line">    <span class="comment">// Browsers do not always remove cookies immediately (SHIRO-183)</span></span><br><span class="line">    <span class="comment">// ignore cookies that are scheduled for removal</span></span><br><span class="line">    <span class="keyword">if</span> (Cookie.DELETED_COOKIE_VALUE.equals(base64)) <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (base64 != <span class="literal">null</span>) &#123;</span><br><span class="line">        base64 = ensurePadding(base64);</span><br><span class="line">        ...</span><br><span class="line">        <span class="type">byte</span>[] decoded = Base64.decode(base64);</span><br><span class="line">        ...</span><br><span class="line">        <span class="keyword">return</span> decoded;</span><br><span class="line">    &#125; </span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后调用convertBytesToPrincipals开始解密：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> PrincipalCollection <span class="title function_">convertBytesToPrincipals</span><span class="params">(<span class="type">byte</span>[] bytes, SubjectContext subjectContext)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (getCipherService() != <span class="literal">null</span>) &#123;</span><br><span class="line">        bytes = decrypt(bytes);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> deserialize(bytes);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里的处理分为两部分，decrypt函数负责解密：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> <span class="type">byte</span>[] decrypt(<span class="type">byte</span>[] encrypted) &#123;</span><br><span class="line">    <span class="type">byte</span>[] serialized = encrypted;</span><br><span class="line">    <span class="type">CipherService</span> <span class="variable">cipherService</span> <span class="operator">=</span> getCipherService();</span><br><span class="line">    <span class="keyword">if</span> (cipherService != <span class="literal">null</span>) &#123;</span><br><span class="line">        <span class="type">ByteSource</span> <span class="variable">byteSource</span> <span class="operator">=</span> cipherService.decrypt(encrypted, getDecryptionCipherKey());</span><br><span class="line">        serialized = byteSource.getBytes();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> serialized;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="type">byte</span>[] getDecryptionCipherKey() &#123;</span><br><span class="line">    <span class="keyword">return</span> decryptionCipherKey;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>解密的key来自该对象中的decryptionCipherKey属性，通过调试可以发现该属性通过setter赋值，而在不特别设置的情况下，该属性在实例化时赋值：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">byte</span>[] DEFAULT_CIPHER_KEY_BYTES = Base64.decode(<span class="string">&quot;kPH+bIxk5D2deZiIxcaaaA==&quot;</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="title function_">AbstractRememberMeManager</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>.serializer = <span class="keyword">new</span> <span class="title class_">DefaultSerializer</span>&lt;PrincipalCollection&gt;();</span><br><span class="line">    <span class="built_in">this</span>.cipherService = <span class="keyword">new</span> <span class="title class_">AesCipherService</span>();</span><br><span class="line">    setCipherKey(DEFAULT_CIPHER_KEY_BYTES);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>是一个固定值，而cipherService是一个JcaCipherService对象，其在解密时会从密文中读取iv：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">System.arraycopy(ciphertext, <span class="number">0</span>, iv, <span class="number">0</span>, ivByteSize);</span><br></pre></td></tr></table></figure>
+
+<p>第二部分的deserialize函数负责反序列化：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> T <span class="title function_">deserialize</span><span class="params">(<span class="type">byte</span>[] serialized)</span> <span class="keyword">throws</span> SerializationException &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="type">ByteArrayInputStream</span> <span class="variable">bais</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ByteArrayInputStream</span>(serialized);</span><br><span class="line">    <span class="type">BufferedInputStream</span> <span class="variable">bis</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">BufferedInputStream</span>(bais);</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="type">ObjectInputStream</span> <span class="variable">ois</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ClassResolvingObjectInputStream</span>(bis);</span><br><span class="line">        <span class="meta">@SuppressWarnings(&#123;&quot;unchecked&quot;&#125;)</span></span><br><span class="line">        <span class="type">T</span> <span class="variable">deserialized</span> <span class="operator">=</span> (T) ois.readObject();</span><br><span class="line">        ois.close();</span><br><span class="line">        <span class="keyword">return</span> deserialized;</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">        <span class="type">String</span> <span class="variable">msg</span> <span class="operator">=</span> <span class="string">&quot;Unable to deserialze argument byte array.&quot;</span>;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">SerializationException</span>(msg, e);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>一个没有做安全检验的反序列化点，如果依赖中存在可利用的反序列化链就会导致一个反序列化漏洞。</p>
+<h3 id="后续"><a href="#后续" class="headerlink" title="后续"></a>后续</h3><p>尝试复现漏洞时发现出现这么一个错误：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">org.apache.shiro.io.SerializationException: Unable to deserialze argument byte array.</span><br></pre></td></tr></table></figure>
+
+<p>看起来是不能处理数组类型的对象？不过读读代码就会发现反序列化中只要捕捉到Exception就会抛出这种错误，晚点再看看具体原因。</p>
+<h4 id="commons-beanutils"><a href="#commons-beanutils" class="headerlink" title="commons-beanutils"></a>commons-beanutils</h4><p>shiro自带的commons-beanutils依赖是1.8.3版本的：</p>
+<p><img src="/css/images/shiro550/2021101403.png" srcset="/img/loading.gif"></p>
+<p>1.9.3版本下打得通的利用链在这个版本生成时会出现一点问题：</p>
+<p><img src="/css/images/shiro550/2021102001.png" srcset="/img/loading.gif"></p>
+<p>问题发生在类的初始化函数中：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="title function_">BeanComparator</span><span class="params">( String property )</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>( property, ComparableComparator.getInstance() );</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>简单来说就是BeanComparator对象的实例化依赖于commons-collections中的一个类org.apache.commons.collections.comparators.ComparableComparator，而由于依赖中不存在commons-collections就导致了这个问题。按照参考文章的说法就是：</p>
+<p><img src="/css/images/shiro550/2021102002.png" srcset="/img/loading.gif"></p>
+<p>所以如果想在这个版本下实现RCE，就要通过反射的方式实例化BeanComparator类再给它的属性赋值，Comparator找不找倒是无所谓：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">BeanComparator</span> <span class="variable">beanComparator</span> <span class="operator">=</span> (BeanComparator)Utils.createWithoutConstructor(<span class="string">&quot;org.apache.commons.beanutils.BeanComparator&quot;</span>);</span><br><span class="line">Utils.setField(beanComparator, <span class="string">&quot;property&quot;</span>, <span class="string">&quot;outputProperties&quot;</span>);</span><br></pre></td></tr></table></figure>
+
+<p>要注意的一点是，最好用byte[]类型来存放Java序列化数据，后面通过base64编码输出，不然转换为String类型时可能会有编码问题，序列化数据头会被弄成两个问号，一开始没注意踩了一会的坑，生成序列化数据后用python写个脚本发送就行了。</p>
+<h4 id="commons-collections"><a href="#commons-collections" class="headerlink" title="commons-collections"></a>commons-collections</h4><p>CommonsCollections的利用链可以直接打通，看参考文章似乎在tomcat+shiro环境下，会因为数组形式存在加载问题而无法利用。</p>
+<h4 id="JRMP"><a href="#JRMP" class="headerlink" title="JRMP"></a>JRMP</h4><p>本地Java版本为8u281，这个版本已经有了对JRMP利用的限制，反序列化时会触发安全检查：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">2021</span>-<span class="number">10</span>-<span class="number">20</span> <span class="number">21</span>:<span class="number">49</span>:<span class="number">54.771</span>  INFO <span class="number">42580</span> --- [<span class="number">127.0</span><span class="number">.0</span><span class="number">.1</span>:<span class="number">1099</span>]] java.io.serialization                    : ObjectInputFilter REJECTED: <span class="keyword">class</span> <span class="title class_">javax</span>.management.BadAttributeValueExpException, array length: -<span class="number">1</span>, nRefs: <span class="number">2</span>, depth: <span class="number">1</span>, bytes: <span class="number">110</span>, ex: n/a</span><br></pre></td></tr></table></figure>
+
+<p>ObjectInputStream类在反序列化JRMPClient传输的数据时，会调用filterCheck函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Call filterCheck on the class before reading anything else</span></span><br><span class="line">filterCheck(cl, -<span class="number">1</span>);</span><br></pre></td></tr></table></figure>
+
+<p>其检验代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">    status = serialFilter.checkInput(<span class="keyword">new</span> <span class="title class_">FilterValues</span>(clazz, arrayLength,</span><br><span class="line">                                                      totalObjectRefs, depth, bytesRead));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>serialFilter是一个DGCImpl_Stub对象，其检验代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (var1.isPrimitive()) &#123;</span><br><span class="line">    <span class="keyword">return</span> Status.ALLOWED;</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> var1 != UID.class &amp;&amp; var1 != VMID.class &amp;&amp; var1 != Lease.class &amp;&amp; (var1.getPackage() == <span class="literal">null</span> || !Throwable.class.isAssignableFrom(var1) || !<span class="string">&quot;java.lang&quot;</span>.equals(var1.getPackage().getName()) &amp;&amp; !<span class="string">&quot;java.rmi&quot;</span>.equals(var1.getPackage().getName())) &amp;&amp; var1 != StackTraceElement.class &amp;&amp; var1 != ArrayList.class &amp;&amp; var1 != Object.class &amp;&amp; !var1.getName().equals(<span class="string">&quot;java.util.Collections$UnmodifiableList&quot;</span>) &amp;&amp; !var1.getName().equals(<span class="string">&quot;java.util.Collections$UnmodifiableCollection&quot;</span>) &amp;&amp; !var1.getName().equals(<span class="string">&quot;java.util.Collections$UnmodifiableRandomAccessList&quot;</span>) &amp;&amp; !var1.getName().equals(<span class="string">&quot;java.util.Collections$EmptyList&quot;</span>) ? Status.REJECTED : Status.ALLOWED;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>对要反序列化的类做了白名单检测，按照<a href="https://mp.weixin.qq.com/s/DIgEe2HpwzHcvNM71cKxvg">文章</a>所说，应该是8u231版本做的安全检验，然后因为出现了绕过所以8u241做了进一步的修复。</p>
+<h4 id="tomcat-shiro"><a href="#tomcat-shiro" class="headerlink" title="tomcat+shiro"></a>tomcat+shiro</h4><p>留坑。</p>
+<hr>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://www.freebuf.com/vuls/178014.html">https://www.freebuf.com/vuls/178014.html</a></p>
+<p><a href="https://cloud.tencent.com/developer/article/1816604">https://cloud.tencent.com/developer/article/1816604</a></p>
+<p><a href="https://blog.zsxsoft.com/post/35">https://blog.zsxsoft.com/post/35</a></p>
+<p><a href="https://www.cnblogs.com/W4nder/p/14508817.html">https://www.cnblogs.com/W4nder/p/14508817.html</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Java/">Java</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Shiro/">Shiro</a>
+                    
+                      <a class="hover-with-bg" href="/tags/%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/">反序列化</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2021/10/21/%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E4%B8%AD%E7%9A%84JRMP%E6%9C%AB%E8%B7%AF/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>反序列化中的JRMP末路(?)</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2021/10/12/shiro2/">
+                        <span>shiro2</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "shiro-550 1.2.4反序列化漏洞&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

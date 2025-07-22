@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>关于Java17下面的类加载问题 - Twings</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期一, 七月 29日 2024, 10:25 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    1.2k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      5 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>就像以前看到过的，Java8以后的一些版本对反射操作做了限制，比如Java9就对反射操作进行了一定程度的WARNING。</p>
+<p>这里学习一下具体的限制版本和绕过方式，顺带一说的是，IDEA切换Maven项目的Java版本时，也要记得把pom.xml里面的改一下。</p>
+<span id="more"></span>
+
+<hr>
+<h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>搞两个版本的Java，分别是Java11和Java17。</p>
+<h3 id="Java11"><a href="#Java11" class="headerlink" title="Java11"></a>Java11</h3><p>首先，反射使用TemplatesImpl加载类依旧行得通，计算器正常弹出，只是会发生大量WARNING：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        Class&lt;?&gt; cls = Class.forName(<span class="string">&quot;com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl&quot;</span>);</span><br><span class="line">        <span class="type">Object</span> <span class="variable">templates</span> <span class="operator">=</span> cls.getConstructor().newInstance();</span><br><span class="line">        Class&lt;?&gt; cls2 = Class.forName(<span class="string">&quot;com.sun.org.apache.xalan.internal.xsltc.trax.TransformerFactoryImpl&quot;</span>);</span><br><span class="line">        <span class="type">Object</span> <span class="variable">factory</span> <span class="operator">=</span> cls2.getConstructor().newInstance();</span><br><span class="line">        setField(templates, <span class="string">&quot;_name&quot;</span>, <span class="string">&quot;Twings&quot;</span>);</span><br><span class="line">        setField(templates, <span class="string">&quot;_bytecodes&quot;</span>, <span class="keyword">new</span> <span class="title class_">byte</span>[][]&#123;getBytes()&#125;);</span><br><span class="line">        setField(templates, <span class="string">&quot;_tfactory&quot;</span>, factory);</span><br><span class="line">        <span class="type">Method</span> <span class="variable">m</span> <span class="operator">=</span> cls.getDeclaredMethod(<span class="string">&quot;getOutputProperties&quot;</span>);</span><br><span class="line">        m.invoke(templates);</span><br><span class="line">    &#125;<span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">        log.info(e.getMessage());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="type">byte</span>[] getBytes() &#123;</span><br><span class="line">    <span class="keyword">return</span> Base64.getDecoder().decode(<span class="string">&quot;yv66vgAAADQAIwoAAwAOBwAPBwAQBwARAQAGPGluaXQ+AQADKClWAQAEQ29kZQEAD0xpbmVOdW1iZXJUYWJsZQEAEkxvY2FsVmFyaWFibGVUYWJsZQEABHRoaXMBABtMb3JnL2V4YW1wbGUvVGVzdEphdmFzc2lzdDsBAApTb3VyY2VGaWxlAQASVGVzdEphdmFzc2lzdC5qYXZhDAAFAAYBABlvcmcvZXhhbXBsZS9UZXN0SmF2YXNzaXN0AQAQamF2YS9sYW5nL09iamVjdAEAFGphdmEvaW8vU2VyaWFsaXphYmxlAQAIPGNsaW5pdD4BABFqYXZhL2xhbmcvUnVudGltZQcAEwEACmdldFJ1bnRpbWUBABUoKUxqYXZhL2xhbmcvUnVudGltZTsMABUAFgoAFAAXAQAIY2FsYy5leGUIABkBAARleGVjAQAnKExqYXZhL2xhbmcvU3RyaW5nOylMamF2YS9sYW5nL1Byb2Nlc3M7DAAbABwKABQAHQEADVN0YWNrTWFwVGFibGUBAEBjb20vc3VuL29yZy9hcGFjaGUveGFsYW4vaW50ZXJuYWwveHNsdGMvcnVudGltZS9BYnN0cmFjdFRyYW5zbGV0BwAgCgAhAA4AIQACACEAAQAEAAAAAgABAAUABgABAAcAAAAvAAEAAQAAAAUqtwAisQAAAAIACAAAAAYAAQAAAAUACQAAAAwAAQAAAAUACgALAAAACAASAAYAAQAHAAAAJAADAAIAAAAPpwADAUy4ABgSGrYAHlexAAAAAQAfAAAAAwABAwABAAwAAAACAA0=&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>WARNING：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">WARNING: An illegal reflective access operation has occurred</span><br><span class="line">WARNING: Illegal reflective access by org.example.Main (file:/D:/Java1.8/Unsafe/Unsafe/target/classes/) to constructor com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl()</span><br><span class="line">WARNING: Please consider reporting this to the maintainers of org.example.Main</span><br><span class="line">WARNING: Use --illegal-access=warn to enable warnings of further illegal reflective access operations</span><br><span class="line">WARNING: All illegal access operations will be denied in a future release</span><br></pre></td></tr></table></figure>
+
+<p>该版本下Unsafe类去除了defineClass函数，只能通过defineAnonymousClass函数来加载类字节码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Class&lt;?&gt; cls = Class.forName(<span class="string">&quot;sun.misc.Unsafe&quot;</span>);</span><br><span class="line"><span class="type">Field</span> <span class="variable">field</span> <span class="operator">=</span> getField(cls, <span class="string">&quot;theUnsafe&quot;</span>);</span><br><span class="line"><span class="type">Object</span> <span class="variable">unSafe</span> <span class="operator">=</span> field.get(<span class="literal">null</span>);</span><br><span class="line"><span class="type">Method</span> <span class="variable">method</span> <span class="operator">=</span> unSafe.getClass().getDeclaredMethod(<span class="string">&quot;defineAnonymousClass&quot;</span>, Class.class, <span class="type">byte</span>[].class, Object[].class);</span><br><span class="line">Class&lt;?&gt; c = (Class&lt;?&gt;)method.invoke(unSafe, <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;Runtime.class, getBytes(), <span class="literal">null</span>&#125;);</span><br><span class="line">c.newInstance();</span><br></pre></td></tr></table></figure>
+
+<p>以前在Java9行得通，但是在Java11.0.23版本下出现了问题：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Host class java/lang/Runtime and anonymous class org/example/TestJavassist are in different packages</span><br></pre></td></tr></table></figure>
+
+<p>看起来是待加载类和hostClass参数所属包不同导致的，应该可以通过修改待加载类的所属包来解决，但如果直接修改包名为java.lang来匹配就会遇到问题：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Prohibited package name: java.lang</span><br></pre></td></tr></table></figure>
+
+<p>解决方法一是修改类加载的hostClass或者在已知环境的条件下修改待加载类的包：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Class&lt;?&gt; cls = Class.forName(<span class="string">&quot;sun.misc.Unsafe&quot;</span>);</span><br><span class="line"><span class="type">Field</span> <span class="variable">field</span> <span class="operator">=</span> getField(cls, <span class="string">&quot;theUnsafe&quot;</span>);</span><br><span class="line"><span class="type">Object</span> <span class="variable">unSafe</span> <span class="operator">=</span> field.get(<span class="literal">null</span>);</span><br><span class="line"><span class="type">Method</span> <span class="variable">method</span> <span class="operator">=</span> unSafe.getClass().getDeclaredMethod(<span class="string">&quot;defineAnonymousClass&quot;</span>, Class.class, <span class="type">byte</span>[].class, Object[].class);</span><br><span class="line">Class&lt;?&gt; c = (Class&lt;?&gt;)method.invoke(unSafe, <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;Main.class, getBytes(), <span class="literal">null</span>&#125;);</span><br><span class="line">c.newInstance();</span><br></pre></td></tr></table></figure>
+
+<p>另一个方法好像也可以用于Java17的绕过，所以在下一部分再研究。</p>
+<h3 id="Java17"><a href="#Java17" class="headerlink" title="Java17"></a>Java17</h3><p>在该版本下，TemplatesImpl类也无法直接使用了，会爆出异常：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">信息: class org.example.Main cannot access class com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl (in module java.xml) because module java.xml does not export com.sun.org.apache.xalan.internal.xsltc.trax to unnamed module @4dd8dc3</span><br></pre></td></tr></table></figure>
+
+<p>可以看出，Java17加强了对反射的限制，禁止了跨模块的反射访问，报错发生在getDeclaredConstructor之后的newInstance步骤，也就是说无法通过反射获得对象实例进行函数调用。根据参考文章的说法，现在采用的是强封装，所有反射在访问java.*包下非public属性和函数时，将抛出InaccessibleObjectException异常。</p>
+<p>而且Unsafe中的defineClass函数和defineAnonymousClass函数都被移除了，不能直接进行类加载，但是根据参考文章，此时官方还预留了sun.misc和sun.reflect两个包，这两个包仍然可以可以被反射调用，所以就有一种可能性，这两个包内存在某个类，通过反射调用它的某个函数可以绕过模块限制。</p>
+<p>此时我们需要使用ClassLoader的defineClass函数进行类加载，所以我们就需要想办法让此时正在运行的代码（如Main函数）与ClassLoader属于同一个包，比如修改当前代码所属的包。</p>
+<p>而Unsafe类正好有这个功能：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">Class&lt;?&gt; unSafe=Class.forName(<span class="string">&quot;sun.misc.Unsafe&quot;</span>);</span><br><span class="line">Field unSafeField=unSafe.getDeclaredField(<span class="string">&quot;theUnsafe&quot;</span>);</span><br><span class="line">unSafeField.setAccessible(<span class="literal">true</span>);</span><br><span class="line"><span class="type">Unsafe</span> <span class="variable">unSafeClass</span> <span class="operator">=</span> (Unsafe) unSafeField.get(<span class="literal">null</span>);</span><br><span class="line"><span class="type">Module</span> <span class="variable">baseModule</span> <span class="operator">=</span> Object.class.getModule();</span><br><span class="line">Class&lt;?&gt; currentClass= Main.class;</span><br><span class="line"><span class="type">long</span> <span class="variable">addr</span> <span class="operator">=</span> unSafeClass.objectFieldOffset(Class.class.getDeclaredField(<span class="string">&quot;module&quot;</span>));</span><br><span class="line">unSafeClass.getAndSetObject(currentClass, addr, baseModule);</span><br><span class="line"><span class="type">Method</span> <span class="variable">defineClass</span> <span class="operator">=</span> ClassLoader.class.getDeclaredMethod(<span class="string">&quot;defineClass&quot;</span>, String.class, <span class="type">byte</span>[].class, <span class="type">int</span>.class, <span class="type">int</span>.class);</span><br><span class="line">defineClass.setAccessible(<span class="literal">true</span>);</span><br><span class="line"><span class="type">byte</span>[] bytes = getBytes();</span><br><span class="line">Class&lt;?&gt; calc= (Class&lt;?&gt;) defineClass.invoke(ClassLoader.getSystemClassLoader(), <span class="string">&quot;org.example.TestJavassist&quot;</span>, bytes, <span class="number">0</span>, bytes.length);</span><br><span class="line">calc.newInstance();</span><br></pre></td></tr></table></figure>
+
+<p>需要注意的是，字节码需要重新生成，去掉TemplatesImpl使用时加上的superClass。</p>
+<p>可以看到，虽然可以进行类加载，但是由于模块隔离，想要调用TemplatesImpl等类的函数就需要先获得其module并改写当前类，然而这种方法又需要反射其Class和Field，看起来好像没什么办法。</p>
+<p>至于对反序列化的影响，改日再学习。</p>
+<hr>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://xz.aliyun.com/t/15035?time__1311=GqjxuiqiuDgDlxGgx+xCqiKfdb82Ypo3x#toc-3">浅析高版本JDK反射类加载问题</a></p>
+<p><a href="https://xz.aliyun.com/t/14048?time__1311=GqAxuDRD0GK7qGNPeeqBKWtkKGCAsa4D#toc-2">从一道题初接触RASP</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Java/">Java</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2024/07/31/%E5%85%B3%E4%BA%8EJava17%E4%B8%8B%E9%9D%A2%E7%9A%84%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E9%97%AE%E9%A2%98/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>关于Java17下面的反序列化问题</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2024/07/25/yolov10%E5%85%A5%E9%97%A8/">
+                        <span>yolov10入门</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "关于Java17下面的类加载问题&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

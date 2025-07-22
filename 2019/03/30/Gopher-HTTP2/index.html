@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>Gopher-HTTP2 - Twings</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期六, 三月 30日 2019, 10:57 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    1.1k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      5 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>最近逛pwnhub的时候，看到了以前的一道题Pink friend，因为题目已经关闭的原因，所以我直接去看了下题解，发现题目的解法是利用gopher来发HTTP2的包，顿时觉得很有意思，这种操作方式和HTTP2都是我所不熟悉的，所以决定要稍微研究一下，然后写篇文章总结一下。本文不侧重HTTP2包的分析，网上有很多的分析文章，本文只是研究总结下这种操作方式。</p>
+<span id="more"></span>
+
+<hr>
+<h3 id="Nginx配置HTTP2"><a href="#Nginx配置HTTP2" class="headerlink" title="Nginx配置HTTP2"></a>Nginx配置HTTP2</h3><p>Nginx配置很简单，只要在sites-available的HTTPS配置文件中加上http2即可：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">listen 443 ssl http2 default_server;</span><br><span class="line">listen [::]:443 ssl http2 default_server;</span><br></pre></td></tr></table></figure>
+
+<p>因为操作环境的需要，所以我也给HTTP的配置文件开启了http2支持。之后重启Nginx即可看到它支持了HTTP2：</p>
+<p><img src="/css/images/http2/2019033001.png" srcset="/img/loading.gif"></p>
+<h3 id="配置抓包HTTPS"><a href="#配置抓包HTTPS" class="headerlink" title="配置抓包HTTPS"></a>配置抓包HTTPS</h3><p>因为浏览器只支持建立在HTTPS上的HTTP2的缘故，如果用浏览器访问建立在HTTP上的HTTP2，就会变成下载一个服务端发来的HTTP2的升级要求包了，十六进制如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">000012040000000000000300000080000400010000000500FFFFFF0000040800000000007FFF00000000080700000000000000000000000001</span><br></pre></td></tr></table></figure>
+
+<p>所以为了更好地研究HTTP2的一些交互流程，我们就需要从HTTPS来进行抓包了。</p>
+<p>HTTPS的抓包流程详情见参考文章1，主要的几步就是：</p>
+<ul>
+<li>关闭浏览器</li>
+<li>配置环境变量SSLKEYLOGFILE为一个log文件，这样浏览器就会把公钥储存在这里</li>
+<li>配置wireshark的首选项&#x2F;Protocols&#x2F;ssl&#x2F;(Pre)-Master-Secret log filename为该log文件</li>
+<li>启动抓包和浏览器</li>
+</ul>
+<p>抓包结果：</p>
+<p><img src="/css/images/http2/2019033002.png" srcset="/img/loading.gif"></p>
+<p>这个抓包流程其实有点坑，有时候抓到的包会无法解密，如果遇到这种情况就可以尝试从第一步重新来过了……</p>
+<p>不想麻烦的话，也可以利用curl+nc的方式来获取HTTP2的请求包，详情见参考文章4。</p>
+<h3 id="发送请求"><a href="#发送请求" class="headerlink" title="发送请求"></a>发送请求</h3><p>后一半的包是属于第二个HTTP2请求的，我们主要看前一半的包。从抓到的包可以看到，我们只需要发送两个包就可以了。我们模拟客户端有两种方式，一种是使用curl+gopher，另一种是使用pwntools，我们先把数据取出来（追踪SSL流，然后复制原始数据），然后加工成能够使用的样子：</p>
+<p><img src="/css/images/http2/2019033003.png" srcset="/img/loading.gif"></p>
+<p>然后将服务端的返回包保存起来，等下一包进行解包查看数据。curl也是差不多的处理方式，只要将请求包URL编码一下就好了：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl -vv gopher://laohulaohuhu.cn:80/_PRI%20%2A%20HTTP/2.0%0D%0A%0D%0ASM%0D%0A%0D%0A%00%00%12%04%00%00%00%00%00%00%01%00%01%00%00%00%03%00%00%03%E8%00%04%00%60%00%00%00%00%04%08%00%00%00%00%00%00%EF%00%01%00%01%06%01%25%00%00%00%01%80%00%00%00m%82A%8B%A0g%9E%DA%06y%ED%9E%D5%C9W%87%84%40%85%AE%DB%2B%3A%0B%86%AE%C2%CAT%92%7F%40%92%B6%B9%AC%1C%85X%D5%20%A4%B6%C2%ADa%7BZT%25%1F%011z%D4%D0%7Ff%A2%81%B0%DA%E0S%FA%E4j%A4%3F%84%29%A7z%81%02%E0%FBS%96%AEN5%FD%A9%0Du%D0%5EE%8F1%92%C3l%BA%BB.%29%FDf%C7%BFF%7F%A5%287R%A9%88%A4%EA%7F%EDK%D3%D8zJ%C3%AC%AE%05%D9q%E6Wy%C57%0EQ%D8f%1Be%D5%D9sS%D8I%7C%A5%89%D3M%1FC%AE%BA%0CA%A4%C7%A9%8F3%A6%9A%3F%DF%9Ah%FA%1Du%D0b%0D%26%3DLy%A6%8F%BE%D0%01w%FE%8DH%E6%2B%1E%0B%1D%7FF%A4s%15%81%D7T%DF_%2C%7C%FD%F6%80%0B%BD%F4%3A%EB%A0%C4%1ALz%98A%A6%A8%B2%2C_%24%9CuL_%BE%F0F%CFP%8D%9B%D9%AB%FARB%CB%40%D2_%A5%23%B3Q%8C%F7%3A%D7%B4%FD%7B%9F%EF%B4%00%5D%FF --output data</span><br></pre></td></tr></table></figure>
+
+<h3 id="解包"><a href="#解包" class="headerlink" title="解包"></a>解包</h3><p>解包可以使用writeup中的方式，即伪造一个HTTP2服务器，将保存的返回包发送给CURL，我们就可以看到解包的结果了，伪造服务器：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">import socket</span><br><span class="line"></span><br><span class="line">a = open(&quot;data&quot;, &quot;rb&quot;).read()</span><br><span class="line">s = socket.socket()</span><br><span class="line">host = &#x27;127.0.0.1&#x27;</span><br><span class="line">port = 2333</span><br><span class="line">s.bind((host, port))</span><br><span class="line"></span><br><span class="line">s.listen(5)</span><br><span class="line">while True:</span><br><span class="line">    c, addr = s.accept()</span><br><span class="line">    print &#x27;Connect from:&#x27;, addr</span><br><span class="line">    c.send(a)</span><br></pre></td></tr></table></figure>
+
+<p>curl访问：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl --http2-prior-knowledge -v http://127.0.0.1:2333 --output -</span><br></pre></td></tr></table></figure>
+
+<p>结果如下：</p>
+<p><img src="/css/images/http2/2019033004.png" srcset="/img/loading.gif"></p>
+<p>可以看到服务端的响应头和gzip编码后的响应主体，我们直接gzip解压，即可看到HTML：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">root@05b1494e5951:~# mv data2 data2.gz</span><br><span class="line">root@05b1494e5951:~# gzip -d data2.gz </span><br><span class="line">root@05b1494e5951:~# ls</span><br><span class="line">curl  data  data2  s.py</span><br><span class="line">root@05b1494e5951:~# cat data2</span><br><span class="line">&lt;html&gt;  </span><br><span class="line">&lt;meta http-equiv=&quot;refresh&quot; content=&quot;0;url=https://*.*.*.*/&quot;&gt;  </span><br><span class="line">&lt;/html&gt;  </span><br><span class="line">root@05b1494e5951:~# </span><br></pre></td></tr></table></figure>
+
+<hr>
+<p>参考文章：</p>
+<p><a href="https://blog.csdn.net/vetala/article/details/79172605">https://blog.csdn.net/vetala/article/details/79172605</a></p>
+<p><a href="https://www.jianshu.com/p/e57ca4fec26f">https://www.jianshu.com/p/e57ca4fec26f</a></p>
+<p><a href="https://imququ.com/post/protocol-negotiation-in-http2.html">https://imququ.com/post/protocol-negotiation-in-http2.html</a></p>
+<p><a href="http://f1sh.site/2019/01/30/pwnhub-pink-friend-writeup/">http://f1sh.site/2019/01/30/pwnhub-pink-friend-writeup/</a></p>
+<p><a href="http://www.pdosgk.com/Home/News/show/id/464798.html">http://www.pdosgk.com/Home/News/show/id/464798.html</a></p>
+<p><a href="https://altman.vip/2019/01/31/pwnhub-pinkfriend/">https://altman.vip/2019/01/31/pwnhub-pinkfriend/</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Gopher/">Gopher</a>
+                    
+                      <a class="hover-with-bg" href="/tags/HTTP2/">HTTP2</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2019/04/02/Pwnhub-Always-be-with-U-%E5%AD%A6%E4%B9%A0/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>Pwnhub Always be with U 学习</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2019/03/28/0CTF-TCTF-Crypto%E5%AD%A6%E4%B9%A0/">
+                        <span>0CTF/TCTF2019 Crypto学习</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "Gopher-HTTP2&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

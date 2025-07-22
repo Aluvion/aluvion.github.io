@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>php://filter过滤器的奇妙操作 - Twings</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期五, 二月 19日 2021, 7:56 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    3k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      15 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> 在一个Laravel Debug RCE（CVE-2021-3129）利用中看到的奇妙操作，通过php:&#x2F;&#x2F;filter过滤器配合文件写入读取操作，去除文件中的多余字符，很有意思。</p>
+<span id="more"></span>
+
+<hr>
+<h3 id="phar"><a href="#phar" class="headerlink" title="phar"></a>phar</h3><p>一个phar文件要满足什么条件才能正常地触发反序列化？</p>
+<p>翻一翻php源码，在phar.c中找到phar解析函数phar_parse_pharfile，第一个条件：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* check for ?&gt;\n and increment accordingly */</span></span><br><span class="line"><span class="keyword">if</span> (<span class="number">-1</span> == php_stream_seek(fp, halt_offset, SEEK_SET)) &#123;</span><br><span class="line">    MAPPHAR_ALLOC_FAIL(<span class="string">&quot;cannot seek to __HALT_COMPILER(); location in phar \&quot;%s\&quot;&quot;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到，php会搜索stub中的：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">__HALT_COMPILER();</span><br></pre></td></tr></table></figure>
+
+<p>标识作为phar文件的开头，在实际测试中如果存在多个标识，则会选择最后一个，所以phar文件前面部分有冗余数据并不影响，后面就是一个完整的phar文件。</p>
+<p>再看看phar文件后面部分存在冗余数据会不会影响，再看后面的代码：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (<span class="number">-1</span> == php_stream_seek(fp, <span class="number">-8</span>, SEEK_END)</span><br><span class="line">    || (read_len = php_stream_tell(fp)) &lt; <span class="number">20</span></span><br><span class="line">    || <span class="number">8</span> != php_stream_read(fp, sig_buf, <span class="number">8</span>)</span><br><span class="line">    || <span class="built_in">memcmp</span>(sig_buf+<span class="number">4</span>, <span class="string">&quot;GBMB&quot;</span>, <span class="number">4</span>)) &#123;</span><br><span class="line">    efree(savebuf);</span><br><span class="line">    php_stream_close(fp);</span><br><span class="line">    <span class="keyword">if</span> (error) &#123;</span><br><span class="line">        spprintf(error, <span class="number">0</span>, <span class="string">&quot;phar \&quot;%s\&quot; has a broken signature&quot;</span>, fname);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> FAILURE;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里会读取最后的8个字符，限制了必须以GBMB这个标识结束，所以后面就不能存在一些乱七八糟的冗余数据了。</p>
+<p>经过测试，在phar压缩包的内部文件数据部分加上些奇奇怪怪的数据并不会影响phar反序列化。</p>
+<h3 id="场景"><a href="#场景" class="headerlink" title="场景"></a>场景</h3><p>原场景中的处理代码如下：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$output</span> = <span class="title function_ invoke__">file_get_contents</span>(<span class="variable">$parameters</span>[<span class="string">&#x27;viewFile&#x27;</span>]);</span><br><span class="line"></span><br><span class="line"><span class="comment">//省略xxx（对$output做一些处理）</span></span><br><span class="line"><span class="comment">//xxx</span></span><br><span class="line"></span><br><span class="line"><span class="title function_ invoke__">file_put_contents</span>(<span class="variable">$parameters</span>[<span class="string">&#x27;viewFile&#x27;</span>], <span class="variable">$output</span>);</span><br></pre></td></tr></table></figure>
+
+<p>简单来说就是读取某个文件中的内容，处理之后又放了回去，期间就可以通过php:&#x2F;&#x2F;filter对文件内容进行编码方面的修改。</p>
+<h3 id="read-write"><a href="#read-write" class="headerlink" title="read&#x2F;write"></a>read&#x2F;write</h3><p>用于标识文件操作类型的标识，类似：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">php://filter/write=convert.iconv.utf-8.utf-16le/resource=C:/twings.txt</span><br></pre></td></tr></table></figure>
+
+<p>在标识为write的情况下，file_get_contents这种文件读操作就不会触发编码转换，所以就可以在不影响读出数据的情况下对写入的数据进行修改。</p>
+<h3 id="Base64编码"><a href="#Base64编码" class="headerlink" title="Base64编码"></a>Base64编码</h3><p>先看一眼php进行base64解码的相关代码，找到base64.c，这里首先设置了一张base64码表：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">$base64_reverse_table = [</span><br><span class="line">    <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-1</span>, <span class="number">-1</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-1</span>, <span class="number">-2</span>, <span class="number">-2</span>,</span><br><span class="line">	<span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>,</span><br><span class="line">	<span class="number">-1</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">62</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">63</span>,</span><br><span class="line">	<span class="number">52</span>, <span class="number">53</span>, <span class="number">54</span>, <span class="number">55</span>, <span class="number">56</span>, <span class="number">57</span>, <span class="number">58</span>, <span class="number">59</span>, <span class="number">60</span>, <span class="number">61</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>,</span><br><span class="line">	<span class="number">-2</span>,  <span class="number">0</span>,  <span class="number">1</span>,  <span class="number">2</span>,  <span class="number">3</span>,  <span class="number">4</span>,  <span class="number">5</span>,  <span class="number">6</span>,  <span class="number">7</span>,  <span class="number">8</span>,  <span class="number">9</span>, <span class="number">10</span>, <span class="number">11</span>, <span class="number">12</span>, <span class="number">13</span>, <span class="number">14</span>,</span><br><span class="line">	<span class="number">15</span>, <span class="number">16</span>, <span class="number">17</span>, <span class="number">18</span>, <span class="number">19</span>, <span class="number">20</span>, <span class="number">21</span>, <span class="number">22</span>, <span class="number">23</span>, <span class="number">24</span>, <span class="number">25</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>,</span><br><span class="line">	<span class="number">-2</span>, <span class="number">26</span>, <span class="number">27</span>, <span class="number">28</span>, <span class="number">29</span>, <span class="number">30</span>, <span class="number">31</span>, <span class="number">32</span>, <span class="number">33</span>, <span class="number">34</span>, <span class="number">35</span>, <span class="number">36</span>, <span class="number">37</span>, <span class="number">38</span>, <span class="number">39</span>, <span class="number">40</span>,</span><br><span class="line">	<span class="number">41</span>, <span class="number">42</span>, <span class="number">43</span>, <span class="number">44</span>, <span class="number">45</span>, <span class="number">46</span>, <span class="number">47</span>, <span class="number">48</span>, <span class="number">49</span>, <span class="number">50</span>, <span class="number">51</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>,</span><br><span class="line">	<span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>,</span><br><span class="line">	<span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>,</span><br><span class="line">	<span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>,</span><br><span class="line">	<span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>,</span><br><span class="line">	<span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>,</span><br><span class="line">	<span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>,</span><br><span class="line">	<span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>,</span><br><span class="line">	<span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span>, <span class="number">-2</span></span><br><span class="line">];</span><br></pre></td></tr></table></figure>
+
+<p>然后</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">ch = base64_reverse_table[ch];</span><br><span class="line"><span class="keyword">if</span> (!strict) &#123;</span><br><span class="line">    <span class="comment">/* skip unknown characters and whitespace */</span></span><br><span class="line">    <span class="keyword">if</span> (ch &lt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">continue</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="comment">/* skip whitespace */</span></span><br><span class="line">    <span class="keyword">if</span> (ch == <span class="number">-1</span>) &#123;</span><br><span class="line">        <span class="keyword">continue</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">/* fail on bad characters or if any data follows padding */</span></span><br><span class="line">    <span class="keyword">if</span> (ch == <span class="number">-2</span> || padding) &#123;</span><br><span class="line">        <span class="keyword">goto</span> fail;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>解码时的第二个参数代表是否开启strict模式（默认不开启），此时会跳过空格和非法字符。</p>
+<p>而开启之后，解码过程中只会跳过空格，而遇到非法字符（或者&#x3D;后面还有其他字符）则会终止解码。</p>
+<p>实际上php:&#x2F;&#x2F;filter会进行的base64解码却有些许不一样，找到filter.c，同样先是一个类似的码表：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">unsigned</span> <span class="type">int</span> b64_tbl_dec[<span class="number">256</span>] = &#123;</span><br><span class="line">	<span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>,</span><br><span class="line">	<span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>,</span><br><span class="line">	<span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">62</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">63</span>,</span><br><span class="line">	<span class="number">52</span>, <span class="number">53</span>, <span class="number">54</span>, <span class="number">55</span>, <span class="number">56</span>, <span class="number">57</span>, <span class="number">58</span>, <span class="number">59</span>, <span class="number">60</span>, <span class="number">61</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>,<span class="number">128</span>, <span class="number">64</span>, <span class="number">64</span>,</span><br><span class="line">	<span class="number">64</span>,  <span class="number">0</span>,  <span class="number">1</span>,  <span class="number">2</span>,  <span class="number">3</span>,  <span class="number">4</span>,  <span class="number">5</span>,  <span class="number">6</span>,  <span class="number">7</span>,  <span class="number">8</span>,  <span class="number">9</span>, <span class="number">10</span>, <span class="number">11</span>, <span class="number">12</span>, <span class="number">13</span>, <span class="number">14</span>,</span><br><span class="line">	<span class="number">15</span>, <span class="number">16</span>, <span class="number">17</span>, <span class="number">18</span>, <span class="number">19</span>, <span class="number">20</span>, <span class="number">21</span>, <span class="number">22</span>, <span class="number">23</span>, <span class="number">24</span>, <span class="number">25</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>,</span><br><span class="line">	<span class="number">64</span>, <span class="number">26</span>, <span class="number">27</span>, <span class="number">28</span>, <span class="number">29</span>, <span class="number">30</span>, <span class="number">31</span>, <span class="number">32</span>, <span class="number">33</span>, <span class="number">34</span>, <span class="number">35</span>, <span class="number">36</span>, <span class="number">37</span>, <span class="number">38</span>, <span class="number">39</span>, <span class="number">40</span>,</span><br><span class="line">	<span class="number">41</span>, <span class="number">42</span>, <span class="number">43</span>, <span class="number">44</span>, <span class="number">45</span>, <span class="number">46</span>, <span class="number">47</span>, <span class="number">48</span>, <span class="number">49</span>, <span class="number">50</span>, <span class="number">51</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>,</span><br><span class="line">	<span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>,</span><br><span class="line">	<span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>,</span><br><span class="line">	<span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>,</span><br><span class="line">	<span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>,</span><br><span class="line">	<span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>,</span><br><span class="line">	<span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>,</span><br><span class="line">	<span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>,</span><br><span class="line">	<span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">64</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>其中一段处理代码则如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">i = b64_tbl_dec[(<span class="type">unsigned</span> <span class="type">int</span>)*(ps++)];</span><br><span class="line">icnt--;</span><br><span class="line">ustat |= i &amp; <span class="number">0x80</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (!(i &amp; <span class="number">0xc0</span>)) &#123;</span><br><span class="line">    <span class="keyword">if</span> (ustat) &#123;</span><br><span class="line">        err = PHP_CONV_ERR_INVALID_SEQ;</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (<span class="number">6</span> &lt;= pack_bcnt) &#123;</span><br><span class="line">        pack_bcnt -= <span class="number">6</span>;</span><br><span class="line">        pack |= (i &lt;&lt; pack_bcnt);</span><br><span class="line">        urem = <span class="number">0</span>;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        urem_nbits = <span class="number">6</span> - pack_bcnt;</span><br><span class="line">        pack |= (i &gt;&gt; urem_nbits);</span><br><span class="line">        urem = i &amp; bmask(urem_nbits);</span><br><span class="line">        pack_bcnt = <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125; <span class="keyword">else</span> <span class="keyword">if</span> (ustat) &#123;</span><br><span class="line">    <span class="keyword">if</span> (pack_bcnt == <span class="number">8</span> || pack_bcnt == <span class="number">2</span>) &#123;</span><br><span class="line">        err = PHP_CONV_ERR_INVALID_SEQ;</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    inst-&gt;eos = <span class="number">1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里的变量命名比较奇特，ustat看起来用于标识是否识别到了padding（即&#x3D;），当识别到合法字符则会进入上面的判断，如果上个字符为&#x3D;则会判断为解码失败而结束解码。</p>
+<p>一般情况下如果识别到了非法字符或者&#x3D;，则会跳过。</p>
+<p>所以虽然可以通过多次解码跳过非法字符来清除冗余字符，但是其中还是存在问题的，如果多次解码中出现了&#x3D;，而且&#x3D;后面还存在合法字符则会发生错误。</p>
+<h3 id="UTF编码"><a href="#UTF编码" class="headerlink" title="UTF编码"></a>UTF编码</h3><p>既然base64不是很好用，那么就需要找到另一种更方便去除冗余字符的编码方式了，比如UTF-8和UTF-16le。</p>
+<p>UTF-8大家都知道是什么，UTF-16le用两个字节表示UTF-8中的一个字节（所以需要让冗余字符数为偶数），对我们常用的字母和符号来说就是在UTF-8的字符后面加多一个\x00。</p>
+<p>它们之间的转换一般不会发生错误（字符数为奇数时会发生错误），同时一般可写文件也不会存在\x00这种奇怪字符，所以通过这两种编码之间的编码转换就可以将文件中原本存在的字符转化为base64中的非法字符，再结合base64解码就可以去除冗余字符。</p>
+<h3 id="quoted-printable"><a href="#quoted-printable" class="headerlink" title="quoted-printable"></a>quoted-printable</h3><p>一种看起来不是很有用的转码，能够将不可见字符替换成&#x3D;xx的形式，可以用来处理一些特殊字符。</p>
+<h3 id="CVE-2021-3129"><a href="#CVE-2021-3129" class="headerlink" title="CVE-2021-3129"></a>CVE-2021-3129</h3><p>总之先搭个环境，因为我只是对其中一部分感兴趣，所以根据参考文章简单弄一个，去下载一个别人搭建好的<a href="https://github.com/SNCKER/CVE-2021-3129">环境</a>，然后用docker-compose启动。</p>
+<p>先简单看看它的报错日志，有点长：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line">[2021-02-28 11:43:31] local.ERROR: file_get_contents(abcdefghijklmnopqrstuvwxyz): failed to open stream: No such file or directory &#123;&quot;exception&quot;:&quot;[object] (ErrorException(code: 0): file_get_contents(abcdefghijklmnopqrstuvwxyz): failed to open stream: No such file or directory at /src/vendor/facade/ignition/src/Solutions/MakeViewVariableOptionalSolution.php:75)</span><br><span class="line">[stacktrace]</span><br><span class="line">#0 [internal function]: Illuminate\\Foundation\\Bootstrap\\HandleExceptions-&gt;handleError(2, &#x27;file_get_conten...&#x27;, &#x27;/src/vendor/fac...&#x27;, 75, Array)</span><br><span class="line">#1 /src/vendor/facade/ignition/src/Solutions/MakeViewVariableOptionalSolution.php(75): file_get_contents(&#x27;abcdefghijklmno...&#x27;)</span><br><span class="line">#2 /src/vendor/facade/ignition/src/Solutions/MakeViewVariableOptionalSolution.php(67): Facade\\Ignition\\Solutions\\MakeViewVariableOptionalSolution-&gt;makeOptional(Array)</span><br><span class="line">#3 /src/vendor/facade/ignition/src/Http/Controllers/ExecuteSolutionController.php(19): Facade\\Ignition\\Solutions\\MakeViewVariableOptionalSolution-&gt;run(Array)</span><br><span class="line">#4 /src/vendor/laravel/framework/src/Illuminate/Routing/ControllerDispatcher.php(48): Facade\\Ignition\\Http\\Controllers\\ExecuteSolutionController-&gt;__invoke(Object(Facade\\Ignition\\Http\\Requests\\ExecuteSolutionRequest), Object(Facade\\Ignition\\SolutionProviders\\SolutionProviderRepository))</span><br><span class="line">#5 /src/vendor/laravel/framework/src/Illuminate/Routing/Route.php(254): Illuminate\\Routing\\ControllerDispatcher-&gt;dispatch(Object(Illuminate\\Routing\\Route), Object(Facade\\Ignition\\Http\\Controllers\\ExecuteSolutionController), &#x27;__invoke&#x27;)</span><br><span class="line">#6 /src/vendor/laravel/framework/src/Illuminate/Routing/Route.php(197): Illuminate\\Routing\\Route-&gt;runController()</span><br><span class="line">#7 /src/vendor/laravel/framework/src/Illuminate/Routing/Router.php(693): Illuminate\\Routing\\Route-&gt;run()</span><br><span class="line">#8 /src/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(128): Illuminate\\Routing\\Router-&gt;Illuminate\\Routing\\&#123;closure&#125;(Object(Illuminate\\Http\\Request))</span><br><span class="line">#9 /src/vendor/facade/ignition/src/Http/Middleware/IgnitionConfigValueEnabled.php(25): Illuminate\\Pipeline\\Pipeline-&gt;Illuminate\\Pipeline\\&#123;closure&#125;(Object(Illuminate\\Http\\Request))</span><br><span class="line">#10 /src/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(167): Facade\\Ignition\\Http\\Middleware\\IgnitionConfigValueEnabled-&gt;handle(Object(Illuminate\\Http\\Request), Object(Closure), &#x27;enableRunnableS...&#x27;)</span><br><span class="line">#11 /src/vendor/facade/ignition/src/Http/Middleware/IgnitionEnabled.php(23): Illuminate\\Pipeline\\Pipeline-&gt;Illuminate\\Pipeline\\&#123;closure&#125;(Object(Illuminate\\Http\\Request))</span><br><span class="line">#12 /src/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(167): Facade\\Ignition\\Http\\Middleware\\IgnitionEnabled-&gt;handle(Object(Illuminate\\Http\\Request), Object(Closure))</span><br><span class="line">#13 /src/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(103): Illuminate\\Pipeline\\Pipeline-&gt;Illuminate\\Pipeline\\&#123;closure&#125;(Object(Illuminate\\Http\\Request))</span><br><span class="line">#14 /src/vendor/laravel/framework/src/Illuminate/Routing/Router.php(695): Illuminate\\Pipeline\\Pipeline-&gt;then(Object(Closure))</span><br><span class="line">#15 /src/vendor/laravel/framework/src/Illuminate/Routing/Router.php(670): Illuminate\\Routing\\Router-&gt;runRouteWithinStack(Object(Illuminate\\Routing\\Route), Object(Illuminate\\Http\\Request))</span><br><span class="line">#16 /src/vendor/laravel/framework/src/Illuminate/Routing/Router.php(636): Illuminate\\Routing\\Router-&gt;runRoute(Object(Illuminate\\Http\\Request), Object(Illuminate\\Routing\\Route))</span><br><span class="line">#17 /src/vendor/laravel/framework/src/Illuminate/Routing/Router.php(625): Illuminate\\Routing\\Router-&gt;dispatchToRoute(Object(Illuminate\\Http\\Request))</span><br><span class="line">#18 /src/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(166): Illuminate\\Routing\\Router-&gt;dispatch(Object(Illuminate\\Http\\Request))</span><br><span class="line">#19 /src/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(128): Illuminate\\Foundation\\Http\\Kernel-&gt;Illuminate\\Foundation\\Http\\&#123;closure&#125;(Object(Illuminate\\Http\\Request))</span><br><span class="line">#20 /src/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate\\Pipeline\\Pipeline-&gt;Illuminate\\Pipeline\\&#123;closure&#125;(Object(Illuminate\\Http\\Request))</span><br><span class="line">#21 /src/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(167): Illuminate\\Foundation\\Http\\Middleware\\TransformsRequest-&gt;handle(Object(Illuminate\\Http\\Request), Object(Closure))</span><br><span class="line">#22 /src/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate\\Pipeline\\Pipeline-&gt;Illuminate\\Pipeline\\&#123;closure&#125;(Object(Illuminate\\Http\\Request))</span><br><span class="line">#23 /src/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(167): Illuminate\\Foundation\\Http\\Middleware\\TransformsRequest-&gt;handle(Object(Illuminate\\Http\\Request), Object(Closure))</span><br><span class="line">#24 /src/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/ValidatePostSize.php(27): Illuminate\\Pipeline\\Pipeline-&gt;Illuminate\\Pipeline\\&#123;closure&#125;(Object(Illuminate\\Http\\Request))</span><br><span class="line">#25 /src/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(167): Illuminate\\Foundation\\Http\\Middleware\\ValidatePostSize-&gt;handle(Object(Illuminate\\Http\\Request), Object(Closure))</span><br><span class="line">#26 /src/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/PreventRequestsDuringMaintenance.php(86): Illuminate\\Pipeline\\Pipeline-&gt;Illuminate\\Pipeline\\&#123;closure&#125;(Object(Illuminate\\Http\\Request))</span><br><span class="line">#27 /src/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(167): Illuminate\\Foundation\\Http\\Middleware\\PreventRequestsDuringMaintenance-&gt;handle(Object(Illuminate\\Http\\Request), Object(Closure))</span><br><span class="line">#28 /src/vendor/fruitcake/laravel-cors/src/HandleCors.php(37): Illuminate\\Pipeline\\Pipeline-&gt;Illuminate\\Pipeline\\&#123;closure&#125;(Object(Illuminate\\Http\\Request))</span><br><span class="line">#29 /src/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(167): Fruitcake\\Cors\\HandleCors-&gt;handle(Object(Illuminate\\Http\\Request), Object(Closure))</span><br><span class="line">#30 /src/vendor/fideloper/proxy/src/TrustProxies.php(57): Illuminate\\Pipeline\\Pipeline-&gt;Illuminate\\Pipeline\\&#123;closure&#125;(Object(Illuminate\\Http\\Request))</span><br><span class="line">#31 /src/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(167): Fideloper\\Proxy\\TrustProxies-&gt;handle(Object(Illuminate\\Http\\Request), Object(Closure))</span><br><span class="line">#32 /src/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(103): Illuminate\\Pipeline\\Pipeline-&gt;Illuminate\\Pipeline\\&#123;closure&#125;(Object(Illuminate\\Http\\Request))</span><br><span class="line">#33 /src/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(141): Illuminate\\Pipeline\\Pipeline-&gt;then(Object(Closure))</span><br><span class="line">#34 /src/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(110): Illuminate\\Foundation\\Http\\Kernel-&gt;sendRequestThroughRouter(Object(Illuminate\\Http\\Request))</span><br><span class="line">#35 /src/public/index.php(52): Illuminate\\Foundation\\Http\\Kernel-&gt;handle(Object(Illuminate\\Http\\Request))</span><br><span class="line">#36 /src/server.php(21): require_once(&#x27;/src/public/ind...&#x27;)</span><br><span class="line">#37 &#123;main&#125;</span><br><span class="line">&quot;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>调用file_get_contens读文件时，因不存在的文件名报错后会将文件名会写入日志中，一共会写入三处，因为第三处会将超出长度上限的内容省略，所以这里可以控制的内容为两处，它们前后都存在一些冗余字符。</p>
+<p>正确操作应该是运用前面提到的多种转码手段，quoted-printable用于解决文件名无法存在\x00的问题（UTF-16le需要用到），UTF-16le用于解决base64解码会因为&#x3D;出现错误的问题，base64解码用于去除冗余字符。</p>
+<p>具体的操作流程应该如下：</p>
+<ol>
+<li>通过base64解码和write标识符，利用解码失败解码结果为空的特性清空整个log（可跳过），如果清空不了可以和convert.iconv.utf-16le.utf-8一起用</li>
+<li>加上15个字符的前缀发送poc</li>
+<li>发送一个数据包，用于保证UTF-16le转码时字符数为偶数</li>
+<li>按顺序解码去除冗余字符</li>
+<li>触发phar反序列化</li>
+</ol>
+<p>此时会解码出两段poc，可以通过添加后缀也可以通过修改phar数据的方式来完成反序列化。</p>
+<hr>
+<h3 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h3><p><a href="https://xz.aliyun.com/t/9165">Laravel Debug RCE</a></p>
+<p><a href="https://blog.csdn.net/qq_45521281/article/details/112993957">另一篇Laravel Debug RCE</a></p>
+<p><a href="https://www.cnblogs.com/JKding233/p/11572514.html">phar相关知识</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                      <a class="hover-with-bg" href="/tags/PHP/">PHP</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2021/03/02/%E4%BB%8EFTP%E5%88%B0PHP-FPM/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>从FTP到PHP-FPM</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2020/11/25/Jenkins%E7%9B%B8%E5%85%B3%E6%BC%8F%E6%B4%9E%E5%AD%A6%E4%B9%A0%EF%BC%88%E4%BA%8C%EF%BC%89/">
+                        <span>Jenkins相关漏洞学习（二）</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "php://filter过滤器的奇妙操作&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

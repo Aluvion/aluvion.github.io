@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>RCTF2019-Web-rblog/ez4cr引发的思考和学习 - Twings</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期五, 五月 24日 2019, 8:44 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    945 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      3 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>这一篇是 rblog&#x2F;ez4cr 这两道 XSS 题目的学习。</p>
+<span id="more"></span>
+
+<p>搭 nextphp 的环境的时候踩了一些坑，有点难受。</p>
+<hr>
+<h3 id="Chrome-XSS-Auditor"><a href="#Chrome-XSS-Auditor" class="headerlink" title="Chrome XSS Auditor"></a>Chrome XSS Auditor</h3><p>XSS Auditor 是 Chrome 用来防范反射型 XSS 的一种机制，主要工作原理就是字符串匹配，在语法解析阶段，Chrome 会逐一扫描文档中的标签，然后检查这些标签中的属性，如果检查到危险的属性就会跟 URL 进行比较，如果 URL 中含有同样的危险数据，XSS Auditor 就会认为这是一个反射型 XSS，并加以拦截。</p>
+<p>XSS Auditor 有两种模式，block 和 filter，block 模式下拦截会丢给你一个异常页面，filter 模式则会将它觉得恶意的代码替换掉。</p>
+<p>Chrome 在 57 版本的时候将默认模式设置为了 block，在 74 版本又将默认模式设置回了 filter。开发者也可以通过：</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">X-XSS-Protection</span><span class="punctuation">: </span>1; mode=block</span><br></pre></td></tr></table></figure>
+
+<p>这样子的 HTTP 返回头来设置 Chrome 的拦截模式。</p>
+<p>一个拦截的栗子：</p>
+<p>解析器解析：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">iframe</span> <span class="attr">src</span>=<span class="string">&quot;x&quot;</span> <span class="attr">onerror</span>=<span class="string">&quot;alert(1)&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">iframe</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<ol>
+<li><p>依次检查标签 iframe 是否包含恶意属性，src&#x2F;onerror</p>
+</li>
+<li><p>如果 src 不是以 javascript: 开头，则安全，放行</p>
+</li>
+<li><p>onerror 中含有脚本，检查 URL 是否包含</p>
+</li>
+<li><p>如果出现在 URL 中，认为存在安全问题，将过滤：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">iframe</span> <span class="attr">src</span>=<span class="string">&quot;x&quot;</span> <span class="attr">onerror</span>=<span class="string">&quot;alert(1)&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">iframe</span>&gt;</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>中止 iframe 标签检查</p>
+</li>
+</ol>
+<p>而实际上，XSS Auditor 的检查要更加简单粗暴一点，一个简单粗暴的例子如下：</p>
+<p><img src="/css/images/rctf2019/2019052401.png" srcset="/img/loading.gif"></p>
+<p>看起来它并不在意你的标签是什么，也不在意你的事件是什么，这匹配也是很简单粗暴……</p>
+<p>iframe 标签的 srcdoc 属性也很粗暴：</p>
+<p><img src="/css/images/rctf2019/2019052403.png" srcset="/img/loading.gif"></p>
+<p>src 属性一样粗暴，不能是 javascript: 打头，在 script 标签里面的时候也不能有 GET 参数：</p>
+<p><img src="/css/images/rctf2019/2019052404.png" srcset="/img/loading.gif"></p>
+<p>还有更简单粗暴的：</p>
+<p><img src="/css/images/rctf2019/2019052402.png" srcset="/img/loading.gif"></p>
+<p>由于浏览器无法区分 URL 中的数据是不是真的填充到了页面中，所以甚至会把静态页面中的 JavaScript 代码给一刀切了，而在 filter 模式下，有时候就可以利用这一点来吃掉页面中本来有的 JavaScript 代码。</p>
+<p>block 模式也有利用方式，比如之前 35C3 的题目，我们可以利用 XSS Auditor 来泄露用户的数据。</p>
+<p>我说的肯定不够详细，大家可以自行探索。</p>
+<hr>
+<h3 id="编码"><a href="#编码" class="headerlink" title="编码"></a>编码</h3><p>在 Web 应用的交互中，最主要的是两个地方的编码，URL 和 HTML 页面。</p>
+<p>原来 script 标签也可以设置加载的 js 文件的编码。</p>
+<p>浏览器对请求 URL 的编码有如下规则：</p>
+<p><img src="/css/images/rctf2019/2019052405.png" srcset="/img/loading.gif"></p>
+<p>浏览器会按照编码对请求的 URL 进行编码。</p>
+<p>HTML 页面的编码有三种设置方式：</p>
+<p><img src="/css/images/rctf2019/2019052406.png" srcset="/img/loading.gif"></p>
+<p>HTML 会按照设置的编码对服务器的响应进行解码。</p>
+<p>通过设置 Conteny-type 为 gbk 的方式好像绕不过 XSS Auditor，预期解究竟是什么呢？</p>
+<hr>
+<h3 id="赛题复现"><a href="#赛题复现" class="headerlink" title="赛题复现"></a>赛题复现</h3><p>bot 好像关了，我提交自己的 IP 都没有反应，所以这里只写下简单的思路。</p>
+<h4 id="rblog"><a href="#rblog" class="headerlink" title="rblog"></a>rblog</h4><p>因为后端进行了 JSON 编码，所以使用非 ascii 字符就可以绕过 XSS Auditor，所以给 iframe 加点中文句号绕过 XSS Auditor，再用 HTML 实体编码绕过 JSON 编码来闭合 script 标签。</p>
+<p>因为使用的是 iframe，所以跳转需要使用 parent.location.href。</p>
+<h4 id="ez4cr"><a href="#ez4cr" class="headerlink" title="ez4cr"></a>ez4cr</h4><p>这题的非预期是因为 Cloudflare CDN 对 HTTP 协议进行了 upgrade，http 变成了 https 导致了页面和 URL 不一致，从而绕过了 XSS Auditor。腾讯云的 CDN 好像没有这种功能。</p>
+<hr>
+<p>参考文章：</p>
+<p><a href="https://www.cnblogs.com/sevck/p/8868605.html">https://www.cnblogs.com/sevck/p/8868605.html</a></p>
+<p><a href="https://yanhaijing.com/web/2014/12/20/web-charset/">https://yanhaijing.com/web/2014/12/20/web-charset/</a></p>
+<p><a href="https://www.ibm.com/developerworks/cn/web/wa-lo-ecoding-response-problem/index.html">https://www.ibm.com/developerworks/cn/web/wa-lo-ecoding-response-problem/index.html</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/CTF/">CTF</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                      <a class="hover-with-bg" href="/tags/%E5%89%8D%E7%AB%AF/">前端</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2019/05/25/RCTF2019-Web-nextphp%E5%BC%95%E5%8F%91%E7%9A%84%E6%80%9D%E8%80%83%E5%92%8C%E5%AD%A6%E4%B9%A0/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>RCTF2019-Web-nextphp引发的思考和学习</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2019/05/23/RCTF2019-Web-jail-password%E5%BC%95%E5%8F%91%E7%9A%84%E6%80%9D%E8%80%83%E5%92%8C%E5%AD%A6%E4%B9%A0/">
+                        <span>RCTF2019-Web-jail/password引发的思考和学习</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "RCTF2019-Web-rblog/ez4cr引发的思考和学习&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

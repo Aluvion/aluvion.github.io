@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>shiro2 - Twings</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期二, 十月 12日 2021, 12:16 中午
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    3.5k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      17 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> 这篇看看shiro的工作流程，研究一下config文件中的3个Bean是怎么运作的。</p>
+<span id="more"></span>
+
+<hr>
+<h3 id="开头"><a href="#开头" class="headerlink" title="开头"></a>开头</h3><p>回顾一下配置文件里的三个Bean，他们的返回类型和参数类型是互相吻合的：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Bean</span></span><br><span class="line"><span class="keyword">public</span> ShiroFilterFactoryBean <span class="title function_">myShiroFilterFactoryBean</span><span class="params">(DefaultWebSecurityManager securityManager)</span> &#123;</span><br><span class="line">    <span class="type">ShiroFilterFactoryBean</span> <span class="variable">shiroFilterFactoryBean</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ShiroFilterFactoryBean</span>();</span><br><span class="line">    shiroFilterFactoryBean.setSecurityManager(securityManager);</span><br><span class="line">    Map&lt;String, String&gt; map = <span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;&gt;();</span><br><span class="line">    map.put(<span class="string">&quot;/shiro&quot;</span>, <span class="string">&quot;authc&quot;</span>);</span><br><span class="line">    map.put(<span class="string">&quot;/logout&quot;</span>, <span class="string">&quot;authc&quot;</span>);</span><br><span class="line">    shiroFilterFactoryBean.setLoginUrl(<span class="string">&quot;/index&quot;</span>);</span><br><span class="line">    shiroFilterFactoryBean.setFilterChainDefinitionMap(map);</span><br><span class="line">    <span class="keyword">return</span> shiroFilterFactoryBean;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Bean</span></span><br><span class="line"><span class="keyword">public</span> DefaultWebSecurityManager <span class="title function_">myDefaultWebSecurityManager</span><span class="params">(Realm realm)</span> &#123;</span><br><span class="line">    <span class="type">DefaultWebSecurityManager</span> <span class="variable">defaultWebSecurityManager</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">DefaultWebSecurityManager</span>();</span><br><span class="line">    defaultWebSecurityManager.setRealm(realm);</span><br><span class="line">    <span class="keyword">return</span> defaultWebSecurityManager;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Bean</span></span><br><span class="line"><span class="keyword">public</span> Realm <span class="title function_">myRealm</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">MyRealm</span>();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通过调试可以发现，它们是套娃调用，上一个作为下一个的参数，最后合并成一个ShiroFilterFactoryBean。</p>
+<h3 id="配置加载-BeanPostProcessor注册"><a href="#配置加载-BeanPostProcessor注册" class="headerlink" title="配置加载-BeanPostProcessor注册"></a>配置加载-BeanPostProcessor注册</h3><p>这个ShiroFilterFactoryBean对象继承了FactoryBean和BeanPostProcessor两个接口，BeanPostProcessor接口可以用于在实例化Bean时对其进行拦截、修改，具有比较高的加载优先度。</p>
+<p>在加载BeanPostProcessor的registerBeanPostProcessors函数中，会通过beanFactory的getBeanNamesForType函数获取要加载的BeanPostProcessor名称：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">String[] postProcessorNames = beanFactory.getBeanNamesForType(BeanPostProcessor.class, <span class="literal">true</span>, <span class="literal">false</span>);</span><br></pre></td></tr></table></figure>
+
+<p>通过调试可以发现，这里获取到了我们自定义的Bean，名字叫做&amp;myShiroFilterFactoryBean：</p>
+<p><img src="/css/images/shiro2/2021101201.png" srcset="/img/loading.gif"></p>
+<p>进入这个getBeanNamesForType函数，来到doGetBeanNamesForType函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> String[] doGetBeanNamesForType(ResolvableType type, <span class="type">boolean</span> includeNonSingletons, <span class="type">boolean</span> allowEagerInit) &#123;</span><br><span class="line">    List&lt;String&gt; result = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;&gt;();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Check all bean definitions.</span></span><br><span class="line">    <span class="keyword">for</span> (String beanName : <span class="built_in">this</span>.beanDefinitionNames) &#123;</span><br><span class="line">        <span class="comment">// Only consider bean as eligible if the bean name is not defined as alias for some other bean.</span></span><br><span class="line">        <span class="keyword">if</span> (!isAlias(beanName)) &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                <span class="type">RootBeanDefinition</span> <span class="variable">mbd</span> <span class="operator">=</span> getMergedLocalBeanDefinition(beanName);</span><br><span class="line">                <span class="comment">// Only check bean definition if it is complete.</span></span><br><span class="line">                <span class="keyword">if</span> (!mbd.isAbstract() &amp;&amp; (allowEagerInit ||</span><br><span class="line">                                          (mbd.hasBeanClass() || !mbd.isLazyInit() || isAllowEagerClassLoading()) &amp;&amp;</span><br><span class="line">                                          !requiresEagerInitForType(mbd.getFactoryBeanName()))) &#123;</span><br><span class="line">                    <span class="type">boolean</span> <span class="variable">isFactoryBean</span> <span class="operator">=</span> isFactoryBean(beanName, mbd);</span><br><span class="line">                    <span class="type">BeanDefinitionHolder</span> <span class="variable">dbd</span> <span class="operator">=</span> mbd.getDecoratedDefinition();</span><br><span class="line">                    <span class="type">boolean</span> <span class="variable">matchFound</span> <span class="operator">=</span> <span class="literal">false</span>;</span><br><span class="line">                    <span class="type">boolean</span> <span class="variable">allowFactoryBeanInit</span> <span class="operator">=</span> (allowEagerInit || containsSingleton(beanName));</span><br><span class="line">                    <span class="type">boolean</span> <span class="variable">isNonLazyDecorated</span> <span class="operator">=</span> (dbd != <span class="literal">null</span> &amp;&amp; !mbd.isLazyInit());</span><br><span class="line">                    <span class="keyword">if</span> (!isFactoryBean) &#123;</span><br><span class="line">                        <span class="keyword">if</span> (includeNonSingletons || isSingleton(beanName, mbd, dbd)) &#123;</span><br><span class="line">                            matchFound = isTypeMatch(beanName, type, allowFactoryBeanInit);</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="keyword">else</span> &#123;</span><br><span class="line">                        <span class="keyword">if</span> (includeNonSingletons || isNonLazyDecorated ||</span><br><span class="line">                            (allowFactoryBeanInit &amp;&amp; isSingleton(beanName, mbd, dbd))) &#123;</span><br><span class="line">                            matchFound = isTypeMatch(beanName, type, allowFactoryBeanInit);</span><br><span class="line">                        &#125;</span><br><span class="line">                        <span class="keyword">if</span> (!matchFound) &#123;</span><br><span class="line">                            <span class="comment">// In case of FactoryBean, try to match FactoryBean instance itself next.</span></span><br><span class="line">                            beanName = FACTORY_BEAN_PREFIX + beanName;</span><br><span class="line">                            matchFound = isTypeMatch(beanName, type, allowFactoryBeanInit);</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="keyword">if</span> (matchFound) &#123;</span><br><span class="line">                        result.add(beanName);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            ...</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> StringUtils.toStringArray(result);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里遍历了定义的Bean进行确认，根据调试中看到的Bean名前多出来的&amp;，我们可以确定当遍历到myShiroFilterFactoryBean时进入了这段代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (!matchFound) &#123;</span><br><span class="line">    <span class="comment">// In case of FactoryBean, try to match FactoryBean instance itself next.</span></span><br><span class="line">    beanName = FACTORY_BEAN_PREFIX + beanName;</span><br><span class="line">    matchFound = isTypeMatch(beanName, type, allowFactoryBeanInit);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>首先是这一段判断：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Only check bean definition if it is complete.</span></span><br><span class="line"><span class="keyword">if</span> (!mbd.isAbstract() &amp;&amp; (allowEagerInit ||</span><br><span class="line">                          (mbd.hasBeanClass() || !mbd.isLazyInit() || isAllowEagerClassLoading()) &amp;&amp;</span><br><span class="line">                          !requiresEagerInitForType(mbd.getFactoryBeanName())))</span><br></pre></td></tr></table></figure>
+
+<p>根据注释，这里只是确认该Bean是否完整，略过，然后是第二个判断用的布尔值isFactoryBean，其通过isFactoryBean函数赋值：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">boolean</span> <span class="variable">isFactoryBean</span> <span class="operator">=</span> isFactoryBean(beanName, mbd);</span><br></pre></td></tr></table></figure>
+
+<p>跟进去看看：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> <span class="type">boolean</span> <span class="title function_">isFactoryBean</span><span class="params">(String beanName, RootBeanDefinition mbd)</span> &#123;</span><br><span class="line">    <span class="type">Boolean</span> <span class="variable">result</span> <span class="operator">=</span> mbd.isFactoryBean;</span><br><span class="line">    <span class="keyword">if</span> (result == <span class="literal">null</span>) &#123;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到结果直接来自mbd对象的isFactoryBean属性，回头看看这个对象是通过getMergedLocalBeanDefinition函数生成的：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> RootBeanDefinition <span class="title function_">getMergedLocalBeanDefinition</span><span class="params">(String beanName)</span> <span class="keyword">throws</span> BeansException &#123;</span><br><span class="line">    <span class="comment">// Quick check on the concurrent map first, with minimal locking.</span></span><br><span class="line">    <span class="type">RootBeanDefinition</span> <span class="variable">mbd</span> <span class="operator">=</span> <span class="built_in">this</span>.mergedBeanDefinitions.get(beanName);</span><br><span class="line">    <span class="keyword">if</span> (mbd != <span class="literal">null</span> &amp;&amp; !mbd.stale) &#123;</span><br><span class="line">        <span class="keyword">return</span> mbd;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> getMergedBeanDefinition(beanName, getBeanDefinition(beanName));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>调试可以发现，此时的mbd是直接从内部map中取出的，虽然不会直接返回，但是其isFactoryBean属性和resolvedTargetType属性等已经有了值：</p>
+<p><img src="/css/images/shiro2/2021101202.png" srcset="/img/loading.gif"></p>
+<p>调试发现对这些属性的赋值是在注册BeanPostProcessor之前，会加载Bean，期间还有一次调用doGetBeanNamesForType函数的操作：</p>
+<p><img src="/css/images/shiro2/2021101203.png" srcset="/img/loading.gif"></p>
+<p>这次调用isFactoryBean函数时就会因为其isFactoryBean属性未赋值而进入predictBeanType函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> Class&lt;?&gt; predictBeanType(String beanName, RootBeanDefinition mbd, Class&lt;?&gt;... typesToMatch) &#123;</span><br><span class="line">    Class&lt;?&gt; targetType = determineTargetType(beanName, mbd, typesToMatch);</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">return</span> targetType;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后到determineTargetType函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> Class&lt;?&gt; determineTargetType(String beanName, RootBeanDefinition mbd, Class&lt;?&gt;... typesToMatch) &#123;</span><br><span class="line">    Class&lt;?&gt; targetType = mbd.getTargetType();</span><br><span class="line">    <span class="keyword">if</span> (targetType == <span class="literal">null</span>) &#123;</span><br><span class="line">        targetType = (mbd.getFactoryMethodName() != <span class="literal">null</span> ?</span><br><span class="line">                      getTypeForFactoryMethod(beanName, mbd, typesToMatch) :</span><br><span class="line">                      resolveBeanClass(mbd, beanName, typesToMatch));</span><br><span class="line">        <span class="keyword">if</span> (ObjectUtils.isEmpty(typesToMatch) || getTempClassLoader() == <span class="literal">null</span>) &#123;</span><br><span class="line">            mbd.resolvedTargetType = targetType;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> targetType;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>再到getTypeForFactoryMethod函数，这里会遍历myShiroFilterFactoryBean所属的BeanFactory，即myShiroConfig类中的函数，找到与该Bean同名的函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (Method candidate : candidates) &#123;</span><br><span class="line">    <span class="keyword">if</span> (Modifier.isStatic(candidate.getModifiers()) == isStatic &amp;&amp; mbd.isFactoryMethod(candidate) &amp;&amp;</span><br><span class="line">        candidate.getParameterCount() &gt;= minNrOfArgs) &#123;</span><br><span class="line">        <span class="comment">// Declared type variables to inspect?</span></span><br><span class="line">        <span class="keyword">if</span> (candidate.getTypeParameters().length &gt; <span class="number">0</span>) &#123;</span><br><span class="line">            ...</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span> &#123;</span><br><span class="line">            uniqueCandidate = (commonType == <span class="literal">null</span> ? candidate : <span class="literal">null</span>);</span><br><span class="line">            commonType = ClassUtils.determineCommonAncestor(candidate.getReturnType(), commonType);</span><br><span class="line">            <span class="keyword">if</span> (commonType == <span class="literal">null</span>) &#123;</span><br><span class="line">                <span class="comment">// Ambiguous return types found: return null to indicate &quot;not determinable&quot;.</span></span><br><span class="line">                <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>再：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">cachedReturnType = (uniqueCandidate != <span class="literal">null</span> ?</span><br><span class="line">                    ResolvableType.forMethodReturnType(uniqueCandidate) : ResolvableType.forClass(commonType));</span><br><span class="line">mbd.factoryMethodReturnType = cachedReturnType;</span><br><span class="line"><span class="keyword">return</span> cachedReturnType.resolve();</span><br></pre></td></tr></table></figure>
+
+<p>简单来说就是返回了该函数的返回类型，即ShiroFilterFactoryBean。然后回到determineTargetType函数将其放入mbd的resolvedTargetType属性中，再回到isFactoryBean函数中，因为ShiroFilterFactoryBean是FactoryBean类的子类，所以mbd的isFactoryBean属性被赋值为了true。</p>
+<p>回到doGetBeanNamesForType函数，最后会通过isTypeMatch函数确认myShiroFilterFactoryBean是否满足BeanPostProcessor这个Type的要求。</p>
+<p>当bean名称前面有一个&amp;符号时，isFactoryDereference就会是true，代表这个bean是一个FactoryBean：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">boolean</span> <span class="variable">isFactoryDereference</span> <span class="operator">=</span> BeanFactoryUtils.isFactoryDereference(name);</span><br><span class="line">...</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="type">boolean</span> <span class="title function_">isFactoryDereference</span><span class="params">(<span class="meta">@Nullable</span> String name)</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> (name != <span class="literal">null</span> &amp;&amp; name.startsWith(BeanFactory.FACTORY_BEAN_PREFIX));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后整一个typesToMatch变量：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Setup the types that we want to match against</span></span><br><span class="line">Class&lt;?&gt; classToMatch = typeToMatch.resolve();</span><br><span class="line"><span class="keyword">if</span> (classToMatch == <span class="literal">null</span>) &#123;</span><br><span class="line">    classToMatch = FactoryBean.class;</span><br><span class="line">&#125;</span><br><span class="line">Class&lt;?&gt;[] typesToMatch = (FactoryBean.class == classToMatch ?</span><br><span class="line">                           <span class="keyword">new</span> <span class="title class_">Class</span>&lt;?&gt;[] &#123;classToMatch&#125; : <span class="keyword">new</span> <span class="title class_">Class</span>&lt;?&gt;[] &#123;FactoryBean.class, classToMatch&#125;);</span><br></pre></td></tr></table></figure>
+
+<p>此时classToMatch变量值为BeanPostProcessor，因为不等于FactoryBean，所以typesToMatch是一个数组，需要该bean同时继承BeanPostProcessor和FactoryBean接口。</p>
+<p>因为myShiroFilterFactoryBean是一个FactoryBean，所以会跳过下面的判断到：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// If we couldn&#x27;t use the target type, try regular prediction.</span></span><br><span class="line"><span class="keyword">if</span> (predictedType == <span class="literal">null</span>) &#123;</span><br><span class="line">    predictedType = predictBeanType(beanName, mbd, typesToMatch);</span><br><span class="line">    <span class="keyword">if</span> (predictedType == <span class="literal">null</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>predictBeanType函数如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> Class&lt;?&gt; predictBeanType(String beanName, RootBeanDefinition mbd, Class&lt;?&gt;... typesToMatch) &#123;</span><br><span class="line">    Class&lt;?&gt; targetType = mbd.getTargetType();</span><br><span class="line">    <span class="keyword">if</span> (targetType != <span class="literal">null</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> targetType;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (mbd.getFactoryMethodName() != <span class="literal">null</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> resolveBeanClass(mbd, beanName, typesToMatch);</span><br><span class="line">&#125;</span><br><span class="line">...</span><br><span class="line"><span class="keyword">public</span> Class&lt;?&gt; getTargetType() &#123;</span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">this</span>.resolvedTargetType != <span class="literal">null</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">this</span>.resolvedTargetType;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="type">ResolvableType</span> <span class="variable">targetType</span> <span class="operator">=</span> <span class="built_in">this</span>.targetType;</span><br><span class="line">    <span class="keyword">return</span> (targetType != <span class="literal">null</span> ? targetType.resolve() : <span class="literal">null</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>返回值来自mbd的resolvedTargetType属性，即ShiroFilterFactoryBean，再下一步：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// We don&#x27;t have an exact type but if bean definition target type or the factory</span></span><br><span class="line"><span class="comment">// method return type matches the predicted type then we can use that.</span></span><br><span class="line"><span class="keyword">if</span> (beanType == <span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="type">ResolvableType</span> <span class="variable">definedType</span> <span class="operator">=</span> mbd.targetType;</span><br><span class="line">    <span class="keyword">if</span> (definedType == <span class="literal">null</span>) &#123;</span><br><span class="line">        definedType = mbd.factoryMethodReturnType;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (definedType != <span class="literal">null</span> &amp;&amp; definedType.resolve() == predictedType) &#123;</span><br><span class="line">        beanType = definedType;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// If we have a bean type use it so that generics are considered</span></span><br><span class="line"><span class="keyword">if</span> (beanType != <span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> typeToMatch.isAssignableFrom(beanType);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>beanType来自mbd的factoryMethodReturnType属性为ShiroFilterFactoryBean，而typeToMatch是来自参数的BeanPostProcessor，因为ShiroFilterFactoryBean继承了BeanPostProcessor接口，所以返回值为true。</p>
+<p>回到doGetBeanNamesForType函数，将&amp;myShiroFilterFactoryBean加入到了要注册的BeanPostProcessor中，最后返回registerBeanPostProcessors函数进行注册：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">String ppName;</span><br><span class="line">BeanPostProcessor pp;</span><br><span class="line"><span class="keyword">for</span>(<span class="type">int</span> <span class="variable">var10</span> <span class="operator">=</span> <span class="number">0</span>; var10 &lt; var9; ++var10) &#123;</span><br><span class="line">    ppName = var8[var10];</span><br><span class="line">    <span class="keyword">if</span> (beanFactory.isTypeMatch(ppName, PriorityOrdered.class)) &#123;</span><br><span class="line">        pp = (BeanPostProcessor)beanFactory.getBean(ppName, BeanPostProcessor.class);</span><br><span class="line">        priorityOrderedPostProcessors.add(pp);</span><br><span class="line">        <span class="keyword">if</span> (pp <span class="keyword">instanceof</span> MergedBeanDefinitionPostProcessor) &#123;</span><br><span class="line">            internalPostProcessors.add(pp);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (beanFactory.isTypeMatch(ppName, Ordered.class)) &#123;</span><br><span class="line">        orderedPostProcessorNames.add(ppName);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        nonOrderedPostProcessorNames.add(ppName);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>因为myShiroFilterFactoryBean没有继承PriorityOrdered、Ordered之类的优先级接口，所以会放入低优先级的nonOrderedPostProcessorNames队列中，再到后面进行实例化：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">List&lt;BeanPostProcessor&gt; nonOrderedPostProcessors = <span class="keyword">new</span> <span class="title class_">ArrayList</span>(nonOrderedPostProcessorNames.size());</span><br><span class="line"><span class="type">Iterator</span> <span class="variable">var17</span> <span class="operator">=</span> nonOrderedPostProcessorNames.iterator();</span><br><span class="line"></span><br><span class="line"><span class="keyword">while</span>(var17.hasNext()) &#123;</span><br><span class="line">    ppName = (String)var17.next();</span><br><span class="line">    pp = (BeanPostProcessor)beanFactory.getBean(ppName, BeanPostProcessor.class);</span><br><span class="line">    nonOrderedPostProcessors.add(pp);</span><br><span class="line">    <span class="keyword">if</span> (pp <span class="keyword">instanceof</span> MergedBeanDefinitionPostProcessor) &#123;</span><br><span class="line">        internalPostProcessors.add(pp);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>实例化用的是getBean函数，给myShiroFilterFactoryBean函数下个断点，找到关键实例化函数instantiateUsingFactoryMethod：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">String</span> <span class="variable">factoryBeanName</span> <span class="operator">=</span> mbd.getFactoryBeanName();</span><br><span class="line"><span class="keyword">if</span> (factoryBeanName != <span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="keyword">if</span> (factoryBeanName.equals(beanName)) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">BeanDefinitionStoreException</span>(mbd.getResourceDescription(), beanName,</span><br><span class="line">                                               <span class="string">&quot;factory-bean reference points back to the same bean definition&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    factoryBean = <span class="built_in">this</span>.beanFactory.getBean(factoryBeanName);</span><br><span class="line">    <span class="keyword">if</span> (mbd.isSingleton() &amp;&amp; <span class="built_in">this</span>.beanFactory.containsSingleton(beanName)) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">ImplicitlyAppearedSingletonException</span>();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">this</span>.beanFactory.registerDependentBean(factoryBeanName, beanName);</span><br><span class="line">    factoryClass = factoryBean.getClass();</span><br><span class="line">    isStatic = <span class="literal">false</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>首先实例化了一个myShiroConfig对象，然后：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Need to determine the factory method...</span></span><br><span class="line"><span class="comment">// Try all methods with this name to see if they match the given arguments.</span></span><br><span class="line">factoryClass = ClassUtils.getUserClass(factoryClass);</span><br><span class="line"></span><br><span class="line">List&lt;Method&gt; candidates = <span class="literal">null</span>;</span><br><span class="line"><span class="keyword">if</span> (mbd.isFactoryMethodUnique) &#123;</span><br><span class="line">    <span class="keyword">if</span> (factoryMethodToUse == <span class="literal">null</span>) &#123;</span><br><span class="line">        factoryMethodToUse = mbd.getResolvedFactoryMethod();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (factoryMethodToUse != <span class="literal">null</span>) &#123;</span><br><span class="line">        candidates = Collections.singletonList(factoryMethodToUse);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>从mbd中获取了myShiroFilterFactoryBean函数放在candidates中作为下面要调用的factoryMethod，再然后：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (Method candidate : candidates) &#123;</span><br><span class="line">    <span class="type">int</span> <span class="variable">parameterCount</span> <span class="operator">=</span> candidate.getParameterCount();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (parameterCount &gt;= minNrOfArgs) &#123;</span><br><span class="line">        ArgumentsHolder argsHolder;</span><br><span class="line"></span><br><span class="line">        Class&lt;?&gt;[] paramTypes = candidate.getParameterTypes();</span><br><span class="line">        <span class="keyword">if</span> (explicitArgs != <span class="literal">null</span>) &#123;</span><br><span class="line">            ...</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="comment">// Resolved constructor arguments: type conversion and/or autowiring necessary.</span></span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                String[] paramNames = <span class="literal">null</span>;</span><br><span class="line">                <span class="type">ParameterNameDiscoverer</span> <span class="variable">pnd</span> <span class="operator">=</span> <span class="built_in">this</span>.beanFactory.getParameterNameDiscoverer();</span><br><span class="line">                <span class="keyword">if</span> (pnd != <span class="literal">null</span>) &#123;</span><br><span class="line">                    paramNames = pnd.getParameterNames(candidate);</span><br><span class="line">                &#125;</span><br><span class="line">                argsHolder = createArgumentArray(beanName, mbd, resolvedValues, bw,</span><br><span class="line">                                                 paramTypes, paramNames, candidate, autowiring, candidates.size() == <span class="number">1</span>);</span><br><span class="line">            &#125;</span><br><span class="line">            ...</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里会调用createArgumentArray处理参数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">MethodParameter</span> <span class="variable">methodParam</span> <span class="operator">=</span> MethodParameter.forExecutable(executable, paramIndex);</span><br><span class="line"><span class="comment">// No explicit match found: we&#x27;re either supposed to autowire or</span></span><br><span class="line"><span class="comment">// have to fail creating an argument array for the given constructor.</span></span><br><span class="line"><span class="keyword">if</span> (!autowiring) &#123;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="type">Object</span> <span class="variable">autowiredArgument</span> <span class="operator">=</span> resolveAutowiredArgument(</span><br><span class="line">        methodParam, beanName, autowiredBeanNames, converter, fallback);</span><br><span class="line">    args.rawArguments[paramIndex] = autowiredArgument;</span><br><span class="line">    args.arguments[paramIndex] = autowiredArgument;</span><br><span class="line">    args.preparedArguments[paramIndex] = autowiredArgumentMarker;</span><br><span class="line">    args.resolveNecessary = <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>根据函数名resolveAutowiredArgument可以看出来，下一步通过自动装载获取参数。那什么时候会进入这段代码来获取参数？往上找找，可以看到要求为</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (valueHolder != <span class="literal">null</span>)</span><br></pre></td></tr></table></figure>
+
+<p>而valueHolder为null的要求为：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (resolvedValues != <span class="literal">null</span>) &#123;</span><br><span class="line">    valueHolder = resolvedValues.getArgumentValue(paramIndex, paramType, paramName, usedValueHolders);</span><br><span class="line">    <span class="comment">// If we couldn&#x27;t find a direct match and are not supposed to autowire,</span></span><br><span class="line">    <span class="comment">// let&#x27;s try the next generic, untyped argument value as fallback:</span></span><br><span class="line">    <span class="comment">// it could match after type conversion (for example, String -&gt; int).</span></span><br><span class="line">    <span class="keyword">if</span> (valueHolder == <span class="literal">null</span> &amp;&amp; (!autowiring || paramTypes.length == resolvedValues.getArgumentCount())) &#123;</span><br><span class="line">        valueHolder = resolvedValues.getGenericArgumentValue(<span class="literal">null</span>, <span class="literal">null</span>, usedValueHolders);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>就是取决于来自参数的变量resolvedValues，回到上一级函数instantiateUsingFactoryMethod中：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// We don&#x27;t have arguments passed in programmatically, so we need to resolve the</span></span><br><span class="line"><span class="comment">// arguments specified in the constructor arguments held in the bean definition.</span></span><br><span class="line"><span class="keyword">if</span> (mbd.hasConstructorArgumentValues()) &#123;</span><br><span class="line">    <span class="type">ConstructorArgumentValues</span> <span class="variable">cargs</span> <span class="operator">=</span> mbd.getConstructorArgumentValues();</span><br><span class="line">    resolvedValues = <span class="keyword">new</span> <span class="title class_">ConstructorArgumentValues</span>();</span><br><span class="line">    minNrOfArgs = resolveConstructorArguments(beanName, mbd, bw, cargs, resolvedValues);</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">else</span> &#123;</span><br><span class="line">    minNrOfArgs = <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>简单来说就是代码中找不到参数，所以要通过自动装载从其他bean中获取参数，也就是说注册BeanPostProcessor要调用myShiroFilterFactoryBean这个bean，而由于缺失参数所以要调用myDefaultWebSecurityManager，又因为缺失参数要调用myRealm，从而形成了一种bean之间的依赖传递的情况。</p>
+<p>所以我们把三个bean简化成一个也还是可以用的：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">MyShiroConfig</span> &#123;</span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="keyword">public</span> ShiroFilterFactoryBean <span class="title function_">myShiroFilterFactoryBean</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="type">DefaultWebSecurityManager</span> <span class="variable">defaultWebSecurityManager</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">DefaultWebSecurityManager</span>();</span><br><span class="line">        defaultWebSecurityManager.setRealm(<span class="keyword">new</span> <span class="title class_">MyRealm</span>());</span><br><span class="line">        <span class="type">ShiroFilterFactoryBean</span> <span class="variable">shiroFilterFactoryBean</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ShiroFilterFactoryBean</span>();</span><br><span class="line">        shiroFilterFactoryBean.setSecurityManager(defaultWebSecurityManager);</span><br><span class="line">        Map&lt;String, String&gt; map = <span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;&gt;();</span><br><span class="line">        map.put(<span class="string">&quot;/shiro&quot;</span>, <span class="string">&quot;authc&quot;</span>);</span><br><span class="line">        map.put(<span class="string">&quot;/logout&quot;</span>, <span class="string">&quot;authc&quot;</span>);</span><br><span class="line">        shiroFilterFactoryBean.setLoginUrl(<span class="string">&quot;/index&quot;</span>);</span><br><span class="line">        shiroFilterFactoryBean.setFilterChainDefinitionMap(map);</span><br><span class="line">        <span class="keyword">return</span> shiroFilterFactoryBean;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>至此，我们编写的三个bean已经执行完毕，最后的执行结果就是在内存中形成了一个属于myShiroFilterFactoryBean这个bean的ShiroFilterFactoryBean对象。</p>
+<h3 id="权限控制"><a href="#权限控制" class="headerlink" title="权限控制"></a>权限控制</h3><p>用于配置权限控制的map会被放入ShiroFilterFactoryBean对象的filterChainDefinitionMap属性中：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">shiroFilterFactoryBean.setFilterChainDefinitionMap(map);</span><br><span class="line">...</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setFilterChainDefinitionMap</span><span class="params">(Map&lt;String, String&gt; filterChainDefinitionMap)</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>.filterChainDefinitionMap = filterChainDefinitionMap;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>而createFilterChainManager函数会取出此map进行下一步操作，先不看具体的处理代码，下个断点看看调用栈，找到ServletContextInitializerBeans类的addAdaptableBeans函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">addAdaptableBeans</span><span class="params">(ListableBeanFactory beanFactory)</span> &#123;</span><br><span class="line">    <span class="type">MultipartConfigElement</span> <span class="variable">multipartConfig</span> <span class="operator">=</span> <span class="built_in">this</span>.getMultipartConfig(beanFactory);</span><br><span class="line">    <span class="built_in">this</span>.addAsRegistrationBean(beanFactory, Servlet.class, <span class="keyword">new</span> <span class="title class_">ServletContextInitializerBeans</span>.ServletRegistrationBeanAdapter(multipartConfig));</span><br><span class="line">    <span class="built_in">this</span>.addAsRegistrationBean(beanFactory, Filter.class, <span class="keyword">new</span> <span class="title class_">ServletContextInitializerBeans</span>.FilterRegistrationBeanAdapter());</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到这个函数用于处理跟servlet、filter相关的bean，跟下去可以发现用于获取要处理的bean名称所用的同样是getBeanNamesForType函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">String[] names = beanFactory.getBeanNamesForType(type, <span class="literal">true</span>, <span class="literal">false</span>);</span><br></pre></td></tr></table></figure>
+
+<p>不过不同的是这次筛选要求的type为Filter，而且在通过isTypeMatch函数判断是否符合要求时，会进入这段代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Check manually registered singletons.</span></span><br><span class="line"><span class="type">Object</span> <span class="variable">beanInstance</span> <span class="operator">=</span> getSingleton(beanName, <span class="literal">false</span>);</span><br><span class="line"><span class="keyword">if</span> (beanInstance != <span class="literal">null</span> &amp;&amp; beanInstance.getClass() != NullBean.class) &#123;</span><br><span class="line">    <span class="keyword">if</span> (beanInstance <span class="keyword">instanceof</span> FactoryBean) &#123;</span><br><span class="line">        <span class="keyword">if</span> (!isFactoryDereference) &#123;</span><br><span class="line">            Class&lt;?&gt; type = getTypeForFactoryBean((FactoryBean&lt;?&gt;) beanInstance);</span><br><span class="line">            <span class="keyword">return</span> (type != <span class="literal">null</span> &amp;&amp; typeToMatch.isAssignableFrom(type));</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> typeToMatch.isInstance(beanInstance);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>由于内存中已经保存了myShiroFilterFactoryBean这个bean对应的组装好的ShiroFilterFactoryBean对象，所以getSingleton函数就会获取到这个对象，getTypeForFactoryBean函数如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> Class&lt;?&gt; getTypeForFactoryBean(FactoryBean&lt;?&gt; factoryBean) &#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (System.getSecurityManager() != <span class="literal">null</span>) &#123;</span><br><span class="line">            ...</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> factoryBean.getObjectType();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>而ShiroFilterFactoryBean类是一个用于生产SpringShiroFilter的类，其getObject函数和getObjectType函数如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> Object <span class="title function_">getObject</span><span class="params">()</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    <span class="keyword">if</span> (instance == <span class="literal">null</span>) &#123;</span><br><span class="line">        instance = createInstance();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> instance;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> Class <span class="title function_">getObjectType</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> SpringShiroFilter.class;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>getObjectType函数告知Spring这个工厂bean会生产一个SpringShiroFilter对象，以满足前面type要求的Filter，getObject函数用于后面的生产工作。</p>
+<p>回到getOrderedBeansOfType：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">Map&lt;String, T&gt; map = <span class="keyword">new</span> <span class="title class_">LinkedHashMap</span>();</span><br><span class="line">String[] var6 = names;</span><br><span class="line"><span class="type">int</span> <span class="variable">var7</span> <span class="operator">=</span> names.length;</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span>(<span class="type">int</span> <span class="variable">var8</span> <span class="operator">=</span> <span class="number">0</span>; var8 &lt; var7; ++var8) &#123;</span><br><span class="line">    <span class="type">String</span> <span class="variable">name</span> <span class="operator">=</span> var6[var8];</span><br><span class="line">    <span class="keyword">if</span> (!excludes.contains(name) &amp;&amp; !ScopedProxyUtils.isScopedTarget(name)) &#123;</span><br><span class="line">        <span class="type">T</span> <span class="variable">bean</span> <span class="operator">=</span> beanFactory.getBean(name, type);</span><br><span class="line">        <span class="keyword">if</span> (!excludes.contains(bean)) &#123;</span><br><span class="line">            map.put(name, bean);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>获取到符合filter要求的bean后，会调用getBean函数，同样由于内存中存在这个ShiroFilterFactoryBean对象，会一步步进入doGetObjectFromFactoryBean函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> Object <span class="title function_">doGetObjectFromFactoryBean</span><span class="params">(FactoryBean&lt;?&gt; factory, String beanName)</span> <span class="keyword">throws</span> BeanCreationException &#123;</span><br><span class="line">    Object object;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (System.getSecurityManager() != <span class="literal">null</span>) &#123;</span><br><span class="line">            ...</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span> &#123;</span><br><span class="line">            object = factory.getObject();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">return</span> object;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>调用ShiroFilterFactoryBean类的getObject开始生产，一步步来到我们要看的createFilterChainManager函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//build up the chains:</span></span><br><span class="line">Map&lt;String, String&gt; chains = getFilterChainDefinitionMap();</span><br><span class="line"><span class="keyword">if</span> (!CollectionUtils.isEmpty(chains)) &#123;</span><br><span class="line">    <span class="keyword">for</span> (Map.Entry&lt;String, String&gt; entry : chains.entrySet()) &#123;</span><br><span class="line">        <span class="type">String</span> <span class="variable">url</span> <span class="operator">=</span> entry.getKey();</span><br><span class="line">        <span class="type">String</span> <span class="variable">chainDefinition</span> <span class="operator">=</span> entry.getValue();</span><br><span class="line">        manager.createChain(url, chainDefinition);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// create the default chain, to match anything the path matching would have missed</span></span><br><span class="line">manager.createDefaultChain(<span class="string">&quot;/**&quot;</span>); <span class="comment">// TODO this assumes ANT path matching, which might be OK here</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">return</span> manager;</span><br></pre></td></tr></table></figure>
+
+<p>url为要拦截的url，chainDefinition为所需的权限。然后调用manager的createChain函数开始创建权限规则，这是一个DefaultFilterChainManager类，经过createChain、addToChain等函数来到addToChain函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">addToChain</span><span class="params">(String chainName, String filterName, String chainSpecificFilterConfig)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (!StringUtils.hasText(chainName)) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalArgumentException</span>(<span class="string">&quot;chainName cannot be null or empty.&quot;</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="type">Filter</span> <span class="variable">filter</span> <span class="operator">=</span> <span class="built_in">this</span>.getFilter(filterName);</span><br><span class="line">        <span class="keyword">if</span> (filter == <span class="literal">null</span>) &#123;</span><br><span class="line">            ...</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="built_in">this</span>.applyChainConfig(chainName, filter, chainSpecificFilterConfig);</span><br><span class="line">            <span class="type">NamedFilterList</span> <span class="variable">chain</span> <span class="operator">=</span> <span class="built_in">this</span>.ensureChain(chainName);</span><br><span class="line">            chain.add(filter);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通过定义的权限获取对应的filter，比如authc获取到的就是FormAuthenticationFilter，然后调用applyChainConfig函数应用新的规则，一路来到processPathConfig函数中：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> Filter <span class="title function_">processPathConfig</span><span class="params">(String path, String config)</span> &#123;</span><br><span class="line">    String[] values = <span class="literal">null</span>;</span><br><span class="line">    <span class="keyword">if</span> (config != <span class="literal">null</span>) &#123;</span><br><span class="line">        values = StringUtils.split(config);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">this</span>.appliedPaths.put(path, values);</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">this</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其实就是将要拦截的路径放入appliedPaths这个map中，当请求到来时就会调用preHandle函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (String path : <span class="built_in">this</span>.appliedPaths.keySet()) &#123;</span><br><span class="line">    <span class="comment">// If the path does match, then pass on to the subclass implementation for specific checks</span></span><br><span class="line">    <span class="comment">//(first match &#x27;wins&#x27;):</span></span><br><span class="line">    <span class="keyword">if</span> (pathsMatch(path, request)) &#123;</span><br><span class="line">        log.trace(<span class="string">&quot;Current requestURI matches pattern &#x27;&#123;&#125;&#x27;.  Determining filter chain execution...&quot;</span>, path);</span><br><span class="line">        <span class="type">Object</span> <span class="variable">config</span> <span class="operator">=</span> <span class="built_in">this</span>.appliedPaths.get(path);</span><br><span class="line">        <span class="keyword">return</span> isFilterChainContinued(request, response, path, config);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>将请求路径跟appliedPaths中的配置相匹配，然后调用isAccessAllowed函数进行权限判断：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> <span class="type">boolean</span> <span class="title function_">isAccessAllowed</span><span class="params">(ServletRequest request, ServletResponse response, Object mappedValue)</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">super</span>.isAccessAllowed(request, response, mappedValue) ||</span><br><span class="line">        (!isLoginRequest(request, response) &amp;&amp; isPermissive(mappedValue));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>mappedValue通常为null，所以继续看父类的isAccessAllowed函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> <span class="type">boolean</span> <span class="title function_">isAccessAllowed</span><span class="params">(ServletRequest request, ServletResponse response, Object mappedValue)</span> &#123;</span><br><span class="line">    <span class="type">Subject</span> <span class="variable">subject</span> <span class="operator">=</span> getSubject(request, response);</span><br><span class="line">    <span class="keyword">return</span> subject.isAuthenticated() &amp;&amp; subject.getPrincipal() != <span class="literal">null</span>;</span><br><span class="line">&#125;</span><br><span class="line">...</span><br><span class="line"><span class="keyword">protected</span> Subject <span class="title function_">getSubject</span><span class="params">(ServletRequest request, ServletResponse response)</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> SecurityUtils.getSubject();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>跟我们控制器中的写法差不多，简单来说就是通过读取session来检验是否登录。</p>
+<h3 id="身份认证"><a href="#身份认证" class="headerlink" title="身份认证"></a>身份认证</h3><p>懒得看了，应该差不多那个样子。</p>
+<hr>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://blog.csdn.net/lzx1991610/article/details/100743003">https://blog.csdn.net/lzx1991610/article/details/100743003</a></p>
+<p><a href="https://www.jianshu.com/p/cb77412fde4d">https://www.jianshu.com/p/cb77412fde4d</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Java/">Java</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Shiro/">Shiro</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2021/10/20/shiro-550-1-2-4%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>shiro-550 1.2.4反序列化漏洞</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2021/10/10/shiro/">
+                        <span>shiro入门</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "shiro2&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

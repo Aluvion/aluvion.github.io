@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>复习vue3.0+ElementUI - Twings</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期五, 十月 25日 2024, 4:29 下午
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    2.8k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      14 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>无。</p>
+<span id="more"></span>
+
+<hr>
+<h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><h4 id="首先安装Vue3-0"><a href="#首先安装Vue3-0" class="headerlink" title="首先安装Vue3.0"></a>首先安装Vue3.0</h4><p>找到<a href="https://cn.vuejs.org/guide/quick-start.html">官方文档</a>下面的安装方法，使用create命令创建一个新的Vue项目：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">npm create vue@latest</span><br></pre></td></tr></table></figure>
+
+<p>安装了3.11.1版本的vue，先安装vite构建工具：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">npm install vite</span><br></pre></td></tr></table></figure>
+
+<p>代码完成后再通过build命令可以将vue项目构建为发布的前端代码：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">npm run build</span><br></pre></td></tr></table></figure>
+
+<p>然后就会在项目根目录下生成一个新的dist目录，里面包含了js、css、html和其他静态文件等前端文件。</p>
+<h4 id="ElementUI"><a href="#ElementUI" class="headerlink" title="ElementUI"></a>ElementUI</h4><p>ElementUI是一个好用的组件库，方便我这种前端菜鸟抄来构建一个看得过去的前端界面，找到<a href="https://element-plus.org/zh-CN/guide/installation.html">官方文档</a>下面的安装方法：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">npm install element-plus</span><br></pre></td></tr></table></figure>
+
+<p>通过ElementUI标签，就可以方便地在前端页面引入各种组件，比如按钮，修改一下App.vue：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">script</span> <span class="attr">setup</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">template</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;app&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">el-button</span>&gt;</span>&#123;&#123; message &#125;&#125;<span class="tag">&lt;/<span class="name">el-button</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">template</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="language-javascript"></span></span><br><span class="line"><span class="language-javascript">  <span class="keyword">export</span> <span class="keyword">default</span> &#123;</span></span><br><span class="line"><span class="language-javascript">    <span class="title function_">data</span>(<span class="params"></span>) &#123;</span></span><br><span class="line"><span class="language-javascript">      <span class="keyword">return</span> &#123;</span></span><br><span class="line"><span class="language-javascript">        <span class="attr">message</span>: <span class="string">&quot;Hello ElementUI!&quot;</span></span></span><br><span class="line"><span class="language-javascript">      &#125;</span></span><br><span class="line"><span class="language-javascript">    &#125;</span></span><br><span class="line"><span class="language-javascript">  &#125;</span></span><br><span class="line"><span class="language-javascript"></span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>然后再修改一下main.js：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> <span class="string">&#x27;./assets/main.css&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> &#123; createApp &#125; <span class="keyword">from</span> <span class="string">&#x27;vue&#x27;</span></span><br><span class="line"><span class="keyword">import</span> <span class="string">&#x27;element-plus/dist/index.css&#x27;</span></span><br><span class="line"><span class="keyword">import</span> <span class="title class_">ElementPlus</span> <span class="keyword">from</span> <span class="string">&#x27;element-plus&#x27;</span></span><br><span class="line"><span class="keyword">import</span> <span class="title class_">App</span> <span class="keyword">from</span> <span class="string">&#x27;./App.vue&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> app = <span class="title function_">createApp</span>(<span class="title class_">App</span>);</span><br><span class="line">app.<span class="title function_">use</span>(<span class="title class_">ElementPlus</span>);</span><br><span class="line">app.<span class="title function_">mount</span>(<span class="string">&quot;#app&quot;</span>);</span><br></pre></td></tr></table></figure>
+
+<p>就能看到按钮了。</p>
+<h4 id="其他依赖"><a href="#其他依赖" class="headerlink" title="其他依赖"></a>其他依赖</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">npm install axios moment qs</span><br></pre></td></tr></table></figure>
+
+<h3 id="Vue基础语法"><a href="#Vue基础语法" class="headerlink" title="Vue基础语法"></a>Vue基础语法</h3><h4 id="模板语法"><a href="#模板语法" class="headerlink" title="模板语法"></a>模板语法</h4><p>两个大括号可以将数据当作纯文本填入模板：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">el-button</span>&gt;</span>&#123;&#123; message &#125;&#125;<span class="tag">&lt;/<span class="name">el-button</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>需要将数据当作HTML，即动态渲染页面时可以使用v-html：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">span</span> <span class="attr">v-html</span>=<span class="string">&quot;rawHtml&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>不怎么用得到，动态渲染还是比较危险的行为，什么表达式注入、模板注入、XSS都是动态渲染导致的。</p>
+<p>双大括号填充数据不能用在HTML标签的属性里面，需要使用v-bind，或者缩写:</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">v-bind:id</span>=<span class="string">&quot;dynamicId&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">:id</span>=<span class="string">&quot;dynamicId&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>也可以通过对象一次性绑定多个属性：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> objectOfAttrs = &#123;</span><br><span class="line">  <span class="attr">id</span>: <span class="string">&#x27;container&#x27;</span>,</span><br><span class="line">  <span class="attr">class</span>: <span class="string">&#x27;wrapper&#x27;</span>,</span><br><span class="line">  <span class="attr">style</span>: <span class="string">&#x27;background-color:green&#x27;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>除了单个变量，还可以填充一个表达式，包括字符串拼接和函数调用：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">&#123;&#123; number + <span class="number">1</span> &#125;&#125;</span><br><span class="line"></span><br><span class="line">&#123;&#123; ok ? <span class="string">&#x27;YES&#x27;</span> : <span class="string">&#x27;NO&#x27;</span> &#125;&#125;</span><br><span class="line"></span><br><span class="line">&#123;&#123; message.<span class="title function_">split</span>(<span class="string">&#x27;&#x27;</span>).<span class="title function_">reverse</span>().<span class="title function_">join</span>(<span class="string">&#x27;&#x27;</span>) &#125;&#125;</span><br><span class="line"></span><br><span class="line">&lt;div :id=<span class="string">&quot;`list-$&#123;id&#125;`&quot;</span>&gt;&lt;/div&gt;</span><br><span class="line"></span><br><span class="line"><span class="language-xml"><span class="tag">&lt;<span class="name">time</span> <span class="attr">:title</span>=<span class="string">&quot;toTitleDate(date)&quot;</span> <span class="attr">:datetime</span>=<span class="string">&quot;date&quot;</span>&gt;</span></span></span><br><span class="line"><span class="language-xml">  &#123;&#123; formatDate(date) &#125;&#125;</span></span><br><span class="line"><span class="language-xml"><span class="tag">&lt;/<span class="name">time</span>&gt;</span></span></span><br></pre></td></tr></table></figure>
+
+<p>除此之外，其他v-语法也各有用处，比如v-if控制标签存在与否，v-for遍历数组并生成多个HTML代码块，具体可以看<a href="https://cn.vuejs.org/api/built-in-directives">官方指令集文档</a>。</p>
+<h4 id="计算属性"><a href="#计算属性" class="headerlink" title="计算属性"></a>计算属性</h4><p>一种特殊的属性，在每次访问它时会先经过代码块运算得到结果，比如：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">el-progress</span> <span class="attr">type</span>=<span class="string">&quot;dashboard&quot;</span> <span class="attr">:percentage</span>=<span class="string">&quot;gotScorePercentage&quot;</span> <span class="attr">:format</span>=<span class="string">&quot;gotScore&quot;</span> <span class="attr">:color</span>=<span class="string">&quot;colors&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">el-progress</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>gotScorePercentage就是一个计算属性，在export default的computed中定义，访问时会先进行计算：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">computed</span>: &#123;</span><br><span class="line">    <span class="attr">gotScorePercentage</span>: <span class="keyword">function</span>(<span class="params"></span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="number">100</span> * (<span class="variable language_">this</span>.<span class="property">myScore</span> / <span class="variable language_">this</span>.<span class="property">fullScore</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;,</span><br></pre></td></tr></table></figure>
+
+<h4 id="条件渲染"><a href="#条件渲染" class="headerlink" title="条件渲染"></a>条件渲染</h4><p>先设置一个数据：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">data</span>(<span class="params"></span>) &#123;</span><br><span class="line">  <span class="keyword">return</span> &#123;</span><br><span class="line">    <span class="attr">ok</span>: <span class="number">1</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;,</span><br></pre></td></tr></table></figure>
+
+<p>条件渲染即v-if指令：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">v-if</span>=<span class="string">&quot;ok === 3&quot;</span>&gt;</span></span><br><span class="line">  A</span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">v-else-if</span>=<span class="string">&quot;ok === 2&quot;</span>&gt;</span></span><br><span class="line">  B</span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">v-else-if</span>=<span class="string">&quot;ok === 1&quot;</span>&gt;</span></span><br><span class="line">  C</span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">v-else</span>&gt;</span></span><br><span class="line">  Not A/B/C</span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>和v-show指令：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">h1</span> <span class="attr">v-show</span>=<span class="string">&quot;ok === 1&quot;</span>&gt;</span>Hello!<span class="tag">&lt;/<span class="name">h1</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>区别在于v-show的实现方式是切换标签的display属性，所以无论条件如何，标签都会被渲染。</p>
+<p>而v-if是惰性的，只有条件符合时才会被渲染。</p>
+<h4 id="列表渲染"><a href="#列表渲染" class="headerlink" title="列表渲染"></a>列表渲染</h4><p>先设置一串数据：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">data</span>(<span class="params"></span>) &#123;</span><br><span class="line">  <span class="keyword">return</span> &#123;</span><br><span class="line">    <span class="attr">items</span>: [</span><br><span class="line">      &#123;<span class="attr">msg</span>: <span class="string">&quot;Twings&quot;</span>&#125;,</span><br><span class="line">      &#123;<span class="attr">msg</span>: <span class="string">&quot;Aluvion&quot;</span>&#125;</span><br><span class="line">    ]</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>v-for指令可以遍历数组，分割成index和数据项并生成多个HTML块：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">li</span> <span class="attr">v-for</span>=<span class="string">&quot;(item, index) in items&quot;</span>&gt;</span></span><br><span class="line">  &#123;&#123; index &#125;&#125;: &#123;&#123; item.msg &#125;&#125;</span><br><span class="line"><span class="tag">&lt;/<span class="name">li</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>根据文档，使用v-for时最好给它提供一个唯一的key便于渲染。</p>
+<h4 id="事件处理"><a href="#事件处理" class="headerlink" title="事件处理"></a>事件处理</h4><p>JavaScript常用的on事件，在Vue里可以用v-on指令或者@click的简写方式监听事件，先定义一个method：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">methods: &#123;</span><br><span class="line">  clickButton(event) &#123;</span><br><span class="line">    console.log(event)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;,</span><br></pre></td></tr></table></figure>
+
+<p>然后再将它配置到click事件里：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;el-button @click=&quot;clickButton&quot;&gt;&#123;&#123; message &#125;&#125;&lt;/el-button&gt;</span><br></pre></td></tr></table></figure>
+
+<p>这样点击按钮就能触发事件了。</p>
+<h4 id="表单输入绑定"><a href="#表单输入绑定" class="headerlink" title="表单输入绑定"></a>表单输入绑定</h4><p>Web页面中常用的表单传值，为了JavaScript异步传值需要将表单输入绑定到某个变量上面：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">input</span> <span class="attr">v-model</span>=<span class="string">&quot;message&quot;</span> <span class="attr">placeholder</span>=<span class="string">&quot;edit me&quot;</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">el-button</span> @<span class="attr">click</span>=<span class="string">&quot;clickButton&quot;</span>&gt;</span>&#123;&#123; message &#125;&#125;<span class="tag">&lt;/<span class="name">el-button</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>将输入绑定到了message变量上面，这样按钮中的消息也会跟着输入框改变。</p>
+<p>此外，textarea、checkbox、radio和select等输入类型也是类似的绑定方式，使用multiple属性可以将多个值绑定到同一个select变量上。</p>
+<h4 id="生命周期钩子"><a href="#生命周期钩子" class="headerlink" title="生命周期钩子"></a>生命周期钩子</h4><p>如created等方法，方便初始化环境。</p>
+<h3 id="ElementUI-Plus"><a href="#ElementUI-Plus" class="headerlink" title="ElementUI Plus"></a>ElementUI Plus</h3><p>发现一个非常奇怪的问题，我最上层的app div只能显示非常小的一块地区，标签栏都被压缩了。</p>
+<p>后面发现问题出在默认引入的main.css里面，删掉body和app定义的display样式就恢复正常了：</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">@media</span> (<span class="attribute">min-width</span>: <span class="number">1024px</span>) &#123;</span><br><span class="line">  <span class="selector-tag">body</span> &#123;</span><br><span class="line">    <span class="comment">/* display: flex; */</span></span><br><span class="line">    <span class="attribute">place-items</span>: center;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="selector-id">#app</span> &#123;</span><br><span class="line">    <span class="comment">/* display: grid; */</span></span><br><span class="line">    <span class="attribute">grid-template-columns</span>: <span class="number">1</span>fr <span class="number">1</span>fr;</span><br><span class="line">    <span class="attribute">padding</span>: <span class="number">0</span> <span class="number">2rem</span>;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h4 id="抽屉式导航栏"><a href="#抽屉式导航栏" class="headerlink" title="抽屉式导航栏"></a>抽屉式导航栏</h4><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">el-switch</span> <span class="attr">v-model</span>=<span class="string">&quot;isCollapse&quot;</span> <span class="attr">size</span>=<span class="string">&quot;large&quot;</span> <span class="attr">style</span>=<span class="string">&quot;margin-left: 24px; margin-bottom: 20px;&quot;</span>/&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">el-menu</span> <span class="attr">defaultActive</span>=<span class="string">&quot;Reading&quot;</span> <span class="attr">class</span>=<span class="string">&quot;el-menu-vertical-demo&quot;</span> @<span class="attr">select</span>=<span class="string">&quot;handleTag&quot;</span> <span class="attr">:collapse</span>=<span class="string">&quot;!isCollapse&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">el-menu-item</span> <span class="attr">index</span>=<span class="string">&quot;Reading&quot;</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">el-icon</span>&gt;</span><span class="tag">&lt;<span class="name">Reading</span> /&gt;</span><span class="tag">&lt;/<span class="name">el-icon</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">span</span> <span class="attr">style</span>=<span class="string">&quot;width: 120px;&quot;</span>&gt;</span>查看<span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">el-menu-item</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">el-menu-item</span> <span class="attr">index</span>=<span class="string">&quot;Plus&quot;</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">el-icon</span>&gt;</span><span class="tag">&lt;<span class="name">Plus</span> /&gt;</span><span class="tag">&lt;/<span class="name">el-icon</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">span</span>&gt;</span>新增<span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">el-menu-item</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">el-menu-item</span> <span class="attr">index</span>=<span class="string">&quot;Edit&quot;</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">el-icon</span>&gt;</span><span class="tag">&lt;<span class="name">Edit</span> /&gt;</span><span class="tag">&lt;/<span class="name">el-icon</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">span</span>&gt;</span>修改<span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">el-menu-item</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">el-menu-item</span> <span class="attr">index</span>=<span class="string">&quot;Delete&quot;</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">el-icon</span>&gt;</span><span class="tag">&lt;<span class="name">Delete</span> /&gt;</span><span class="tag">&lt;/<span class="name">el-icon</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">span</span>&gt;</span>删除<span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">el-menu-item</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">el-menu-item</span> <span class="attr">index</span>=<span class="string">&quot;Search&quot;</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">el-icon</span>&gt;</span><span class="tag">&lt;<span class="name">Search</span> /&gt;</span><span class="tag">&lt;/<span class="name">el-icon</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">el-input</span> <span class="attr">v-if</span>=<span class="string">&quot;isCollapse&quot;</span> <span class="attr">v-model</span>=<span class="string">&quot;search&quot;</span> <span class="attr">style</span>=<span class="string">&quot;width: 120px;&quot;</span> <span class="attr">placeholder</span>=<span class="string">&quot;输入搜索&quot;</span> <span class="attr">clearable</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">el-menu-item</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">el-menu</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="环形进度条"><a href="#环形进度条" class="headerlink" title="环形进度条"></a>环形进度条</h4><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">style</span>=<span class="string">&quot;text-align: center;&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">el-progress</span> <span class="attr">type</span>=<span class="string">&quot;dashboard&quot;</span> <span class="attr">:percentage</span>=<span class="string">&quot;lunchTime&quot;</span> <span class="attr">:color</span>=<span class="string">&quot;colors&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">el-progress</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">br</span>/&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">span</span>&gt;</span>上午工作还有: &#123;&#123; leftTimeLunch() &#125;&#125;<span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">style</span>=<span class="string">&quot;text-align: center; margin-top: 100px;&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">el-progress</span> <span class="attr">type</span>=<span class="string">&quot;dashboard&quot;</span> <span class="attr">:percentage</span>=<span class="string">&quot;AfterNoonTime&quot;</span> <span class="attr">:color</span>=<span class="string">&quot;colors&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">el-progress</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">br</span>/&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">span</span>&gt;</span>下午工作还有: &#123;&#123; leftAfterNoon() &#125;&#125;<span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">style</span>=<span class="string">&quot;text-align: center; margin-top: 100px;&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">el-progress</span> <span class="attr">type</span>=<span class="string">&quot;dashboard&quot;</span> <span class="attr">:percentage</span>=<span class="string">&quot;workFinished&quot;</span> <span class="attr">:color</span>=<span class="string">&quot;colors&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">el-progress</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">br</span>/&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">span</span>&gt;</span>距离下班还有: &#123;&#123; leftTime() &#125;&#125;<span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>JS代码：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">data</span>(<span class="params"></span>) &#123;</span><br><span class="line">  <span class="attr">nowDate</span>: <span class="title function_">dayjs</span>(),</span><br><span class="line">  <span class="attr">restDate</span>: <span class="title function_">dayjs</span>().<span class="title function_">endOf</span>(<span class="string">&quot;week&quot;</span>).<span class="title function_">subtract</span>(<span class="number">20</span>, <span class="string">&#x27;day&#x27;</span>).<span class="title function_">subtract</span>(<span class="number">20</span>, <span class="string">&#x27;hour&#x27;</span>).<span class="title function_">subtract</span>(<span class="number">20</span>, <span class="string">&#x27;minute&#x27;</span>),</span><br><span class="line">  <span class="attr">morningDate</span>: <span class="title function_">dayjs</span>().<span class="title function_">startOf</span>(<span class="string">&quot;day&quot;</span>).<span class="title function_">add</span>(<span class="number">20</span>, <span class="string">&#x27;hour&#x27;</span>).<span class="title function_">add</span>(<span class="number">20</span>, <span class="string">&#x27;minute&#x27;</span>),</span><br><span class="line">  <span class="title class_">AfterNoonDate</span>: <span class="title function_">dayjs</span>().<span class="title function_">startOf</span>(<span class="string">&quot;day&quot;</span>).<span class="title function_">add</span>(<span class="number">20</span>, <span class="string">&#x27;hour&#x27;</span>).<span class="title function_">add</span>(<span class="number">20</span>, <span class="string">&#x27;minute&#x27;</span>),</span><br><span class="line">  <span class="attr">finishDate</span>: <span class="title function_">dayjs</span>().<span class="title function_">startOf</span>(<span class="string">&#x27;day&#x27;</span>).<span class="title function_">add</span>(<span class="number">20</span>, <span class="string">&#x27;hour&#x27;</span>).<span class="title function_">add</span>(<span class="number">20</span>, <span class="string">&#x27;minute&#x27;</span>),</span><br><span class="line">  <span class="attr">lunchDate</span>: <span class="title function_">dayjs</span>().<span class="title function_">startOf</span>(<span class="string">&#x27;day&#x27;</span>).<span class="title function_">add</span>(<span class="number">20</span>, <span class="string">&#x27;hour&#x27;</span>).<span class="title function_">add</span>(<span class="number">20</span>, <span class="string">&#x27;minute&#x27;</span>),</span><br><span class="line">&#125;,</span><br><span class="line"><span class="attr">methods</span>: &#123;</span><br><span class="line">  <span class="title function_">leftTime</span>(<span class="params"></span>) &#123;</span><br><span class="line">    <span class="keyword">if</span> (<span class="variable language_">this</span>.<span class="property">nowDate</span> &gt; <span class="variable language_">this</span>.<span class="property">finishDate</span>) &#123;</span><br><span class="line">      <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="variable language_">this</span>.<span class="property">nowDate</span> &lt; <span class="variable language_">this</span>.<span class="property">morningDate</span> ? <span class="variable language_">this</span>.<span class="property">morningDate</span>.<span class="title function_">to</span>(<span class="variable language_">this</span>.<span class="property">finishDate</span>, <span class="literal">true</span>) : <span class="variable language_">this</span>.<span class="property">nowDate</span>.<span class="title function_">to</span>(<span class="variable language_">this</span>.<span class="property">finishDate</span>, <span class="literal">true</span>)</span><br><span class="line">  &#125;,</span><br><span class="line">  <span class="title function_">leftTimeLunch</span>(<span class="params"></span>) &#123;</span><br><span class="line">    <span class="keyword">if</span> (<span class="variable language_">this</span>.<span class="property">nowDate</span> &gt; <span class="variable language_">this</span>.<span class="property">lunchDate</span>) &#123;</span><br><span class="line">      <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="variable language_">this</span>.<span class="property">nowDate</span> &lt; <span class="variable language_">this</span>.<span class="property">morningDate</span> ? <span class="variable language_">this</span>.<span class="property">morningDate</span>.<span class="title function_">to</span>(<span class="variable language_">this</span>.<span class="property">lunchDate</span>, <span class="literal">true</span>): <span class="variable language_">this</span>.<span class="property">nowDate</span>.<span class="title function_">to</span>(<span class="variable language_">this</span>.<span class="property">lunchDate</span>, <span class="literal">true</span>)</span><br><span class="line">  &#125;,</span><br><span class="line">  <span class="title function_">leftAfterNoon</span>(<span class="params"></span>) &#123;</span><br><span class="line">    <span class="keyword">if</span> (<span class="variable language_">this</span>.<span class="property">nowDate</span> &gt; <span class="variable language_">this</span>.<span class="property">finishDate</span>) &#123;</span><br><span class="line">      <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="variable language_">this</span>.<span class="property">nowDate</span> &lt; <span class="variable language_">this</span>.<span class="property">AfterNoonDate</span> ? <span class="variable language_">this</span>.<span class="property">AfterNoonDate</span>.<span class="title function_">to</span>(<span class="variable language_">this</span>.<span class="property">finishDate</span>, <span class="literal">true</span>) : <span class="variable language_">this</span>.<span class="property">nowDate</span>.<span class="title function_">to</span>(<span class="variable language_">this</span>.<span class="property">finishDate</span>, <span class="literal">true</span>)</span><br><span class="line">  &#125;,</span><br><span class="line">&#125;,</span><br><span class="line"><span class="attr">computed</span>: &#123;</span><br><span class="line">  <span class="attr">workFinished</span>: <span class="keyword">function</span>(<span class="params"></span>) &#123;</span><br><span class="line">    <span class="keyword">var</span> diff = <span class="variable language_">this</span>.<span class="property">finishDate</span>.<span class="title function_">diff</span>(<span class="variable language_">this</span>.<span class="property">nowDate</span>)</span><br><span class="line">    <span class="keyword">if</span> (diff.<span class="title function_">valueOf</span>() &lt; <span class="number">0</span>) &#123;</span><br><span class="line">      <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">var</span> percentage = <span class="title class_">Math</span>.<span class="title function_">ceil</span>(<span class="number">100</span> * diff.<span class="title function_">valueOf</span>() / (<span class="number">3600000</span> * <span class="number">8</span>)) &gt; <span class="number">100</span> ? <span class="number">100</span> : <span class="title class_">Math</span>.<span class="title function_">ceil</span>(<span class="number">100</span> * diff.<span class="title function_">valueOf</span>() / (<span class="number">3600000</span> * <span class="number">8</span>))</span><br><span class="line">    <span class="keyword">return</span> <span class="number">100</span> - percentage;</span><br><span class="line">  &#125;,</span><br><span class="line">  <span class="attr">lunchTime</span>: <span class="keyword">function</span>(<span class="params"></span>) &#123;</span><br><span class="line">    <span class="keyword">var</span> diff = <span class="variable language_">this</span>.<span class="property">lunchDate</span>.<span class="title function_">diff</span>(<span class="variable language_">this</span>.<span class="property">nowDate</span>)</span><br><span class="line">    <span class="keyword">if</span> (diff.<span class="title function_">valueOf</span>() &lt; <span class="number">0</span>) &#123;</span><br><span class="line">      <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">var</span> percentage = <span class="title class_">Math</span>.<span class="title function_">ceil</span>(<span class="number">100</span> * diff.<span class="title function_">valueOf</span>() / (<span class="number">3600000</span> * <span class="number">3</span> + <span class="number">60000</span> * <span class="number">10</span>)) &gt; <span class="number">100</span> ? <span class="number">100</span> : <span class="title class_">Math</span>.<span class="title function_">ceil</span>(<span class="number">100</span> * diff.<span class="title function_">valueOf</span>() / (<span class="number">3600000</span> * <span class="number">3</span> + <span class="number">60000</span> * <span class="number">10</span>))</span><br><span class="line">    <span class="keyword">return</span> <span class="number">100</span> - percentage</span><br><span class="line">  &#125;,</span><br><span class="line">  <span class="title class_">AfterNoonTime</span>: <span class="keyword">function</span>(<span class="params"></span>) &#123;</span><br><span class="line">    <span class="keyword">var</span> diff = <span class="variable language_">this</span>.<span class="property">finishDate</span>.<span class="title function_">diff</span>(<span class="variable language_">this</span>.<span class="property">nowDate</span>)</span><br><span class="line">    <span class="keyword">if</span> (diff.<span class="title function_">valueOf</span>() &lt; <span class="number">0</span>) &#123;</span><br><span class="line">      <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">var</span> percentage = <span class="title class_">Math</span>.<span class="title function_">ceil</span>(<span class="number">100</span> * diff.<span class="title function_">valueOf</span>() / (<span class="number">3600000</span> * <span class="number">2.5</span> + <span class="number">60000</span> * <span class="number">10</span>)) &gt; <span class="number">100</span> ? <span class="number">100</span> : <span class="title class_">Math</span>.<span class="title function_">ceil</span>(<span class="number">100</span> * diff.<span class="title function_">valueOf</span>() / (<span class="number">3600000</span> * <span class="number">2.5</span> + <span class="number">60000</span> * <span class="number">10</span>))</span><br><span class="line">    <span class="keyword">return</span> <span class="number">100</span> - percentage</span><br><span class="line">  &#125;,</span><br><span class="line">&#125;,</span><br></pre></td></tr></table></figure>
+
+<h4 id="标签式导航"><a href="#标签式导航" class="headerlink" title="标签式导航"></a>标签式导航</h4><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">el-menu</span> <span class="attr">style</span>=<span class="string">&quot;display:flex;&quot;</span> <span class="attr">:default-active</span>=<span class="string">&quot;defaultactiveIndex&quot;</span> <span class="attr">class</span>=<span class="string">&quot;el-menu-demo&quot;</span> <span class="attr">mode</span>=<span class="string">&quot;horizontal&quot;</span> @<span class="attr">select</span>=<span class="string">&quot;handleSelect&quot;</span> <span class="attr">textColor</span>=<span class="string">&quot;#A0CFFF&quot;</span> <span class="attr">activeTextColor</span>=<span class="string">&quot;#409EFF&quot;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">el-menu-item</span> <span class="attr">index</span>=<span class="string">&quot;index&quot;</span> <span class="attr">style</span>=<span class="string">&quot;margin-left: 5%&quot;</span>&gt;</span>主页<span class="tag">&lt;/<span class="name">el-menu-item</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">el-menu-item</span> <span class="attr">index</span>=<span class="string">&quot;note&quot;</span> <span class="attr">v-bind:disabled</span>=<span class="string">&quot;!isLogin&quot;</span> @<span class="attr">click</span>=<span class="string">&quot;note_info();&quot;</span>&gt;</span>备忘录<span class="tag">&lt;/<span class="name">el-menu-item</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">el-menu-item</span> <span class="attr">index</span>=<span class="string">&quot;todo&quot;</span> <span class="attr">v-bind:disabled</span>=<span class="string">&quot;!isLogin&quot;</span> @<span class="attr">click</span>=<span class="string">&quot;todo_info();&quot;</span>&gt;</span>待办<span class="tag">&lt;/<span class="name">el-menu-item</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">el-menu-item</span> <span class="attr">index</span>=<span class="string">&quot;file&quot;</span> <span class="attr">v-bind:disabled</span>=<span class="string">&quot;!isLogin&quot;</span> @<span class="attr">click</span>=<span class="string">&quot;file_info();&quot;</span>&gt;</span>附件<span class="tag">&lt;/<span class="name">el-menu-item</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">el-dropdown</span> <span class="attr">style</span>=<span class="string">&quot;align-self:center; position:fixed; right: 22%&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">span</span> <span class="attr">class</span>=<span class="string">&quot;el-dropdown-link&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">el-button</span> <span class="attr">type</span>=<span class="string">&quot;success&quot;</span>&gt;</span>&#123;&#123; loginForm.name != &#x27;&#x27; ? loginForm.name : &#x27;未登录&#x27;&#125;&#125;<span class="tag">&lt;/<span class="name">el-button</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br><span class="line">  <span class="comment">&lt;!--用户相关--&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">template</span> #<span class="attr">dropdown</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">el-dropdown-menu</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">v-if</span>=<span class="string">&quot;isLogin&quot;</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">el-dropdown-item</span> @<span class="attr">click</span>=<span class="string">&quot;logout()&quot;</span>&gt;</span></span><br><span class="line">        退出</span><br><span class="line">      <span class="tag">&lt;/<span class="name">el-dropdown-item</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">v-if</span>=<span class="string">&quot;!isLogin&quot;</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">el-dropdown-item</span> @<span class="attr">click</span>=<span class="string">&quot;dialogFormVisible = true&quot;</span>&gt;</span></span><br><span class="line">        登录</span><br><span class="line">      <span class="tag">&lt;/<span class="name">el-dropdown-item</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">el-dropdown-menu</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">template</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">el-dropdown</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">el-menu</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="日历"><a href="#日历" class="headerlink" title="日历"></a>日历</h4><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">v-if</span>=<span class="string">&quot;activeIndex == &#x27;index&#x27;&quot;</span> <span class="attr">style</span>=<span class="string">&quot;width: 95%; margin: 0 auto;&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">el-calendar</span> <span class="attr">v-model</span>=<span class="string">&quot;dateValue&quot;</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="倒计时"><a href="#倒计时" class="headerlink" title="倒计时"></a>倒计时</h4><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">el-countdown</span> <span class="attr">format</span>=<span class="string">&quot;DD [天] HH:mm:ss&quot;</span> <span class="attr">:value</span>=<span class="string">&quot;restDate&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">template</span> #<span class="attr">title</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">style</span>=<span class="string">&quot;display: inline-flex; align-items: center&quot;</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">el-icon</span> <span class="attr">style</span>=<span class="string">&quot;margin-right: 4px&quot;</span> <span class="attr">:size</span>=<span class="string">&quot;12&quot;</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">Calendar</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;/<span class="name">el-icon</span>&gt;</span></span><br><span class="line">      距离周末还有</span><br><span class="line">    <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">template</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">el-countdown</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;countdown-footer&quot;</span>&gt;</span>&#123;&#123; nowDate.format(&#x27;YYYY-MM-DD&#x27;) &#125;&#125;<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="dialog隐藏表单"><a href="#dialog隐藏表单" class="headerlink" title="dialog隐藏表单"></a>dialog隐藏表单</h4><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">el-dialog</span> <span class="attr">title</span>=<span class="string">&quot;登录&quot;</span> <span class="attr">v-model</span>=<span class="string">&quot;dialogFormVisible&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">el-form</span> <span class="attr">v-model</span>=<span class="string">&quot;loginForm&quot;</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">el-form-item</span> <span class="attr">label</span>=<span class="string">&quot;Username：&quot;</span> <span class="attr">:label-width</span>=<span class="string">&quot;formLabelWidth&quot;</span> <span class="attr">required</span>&gt;</span></span><br><span class="line">          <span class="tag">&lt;<span class="name">el-input</span> <span class="attr">placeholder</span>=<span class="string">&quot;请输入用户&quot;</span> <span class="attr">v-model</span>=<span class="string">&quot;loginForm.name&quot;</span> <span class="attr">maxlength</span>=<span class="string">&quot;20&quot;</span> <span class="attr">clearable</span>&gt;</span><span class="tag">&lt;/<span class="name">el-input</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;/<span class="name">el-form-item</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">el-form-item</span> <span class="attr">label</span>=<span class="string">&quot;Password：&quot;</span> <span class="attr">:label-width</span>=<span class="string">&quot;formLabelWidth&quot;</span> <span class="attr">required</span>&gt;</span></span><br><span class="line">          <span class="tag">&lt;<span class="name">el-input</span> <span class="attr">placeholder</span>=<span class="string">&quot;请输入密码&quot;</span> <span class="attr">v-model</span>=<span class="string">&quot;loginForm.pwd&quot;</span> <span class="attr">maxlength</span>=<span class="string">&quot;20&quot;</span> <span class="attr">clearable</span> <span class="attr">show-password</span>&gt;</span><span class="tag">&lt;/<span class="name">el-input</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;/<span class="name">el-form-item</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">el-form</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">slot</span>=<span class="string">&quot;footer&quot;</span> <span class="attr">class</span>=<span class="string">&quot;dialog-footer&quot;</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">el-button</span> @<span class="attr">click</span>=<span class="string">&quot;logout()&quot;</span>&gt;</span>取 消<span class="tag">&lt;/<span class="name">el-button</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">el-button</span> <span class="attr">type</span>=<span class="string">&quot;primary&quot;</span> @<span class="attr">click</span>=<span class="string">&quot;login()&quot;</span> <span class="attr">v-bind:disabled</span>=<span class="string">&quot;loginForm.name == &#x27;&#x27; || loginForm.pwd == &#x27;&#x27;&quot;</span>&gt;</span>登 录<span class="tag">&lt;/<span class="name">el-button</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">el-dialog</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<hr>
+<p><a href="https://cn.vuejs.org/guide/quick-start.html">Vue3.0官方文档</a></p>
+<p><a href="https://element-plus.org/zh-CN/guide/installation.html">ElementUI Plus官方文档</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                      <a class="hover-with-bg" href="/tags/%E5%89%8D%E7%AB%AF/">前端</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Vue/">Vue</a>
+                    
+                      <a class="hover-with-bg" href="/tags/ElementUI/">ElementUI</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2024/12/12/tai-e%E6%8C%87%E9%92%88%E5%88%86%E6%9E%90%E5%AD%A6%E4%B9%A0/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>tai-e指针分析学习(1)</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2024/10/15/RustWeb%E5%BC%80%E5%8F%91%E5%85%A5%E9%97%A8/">
+                        <span>RustWeb开发入门</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "复习vue3.0+ElementUI&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>Fastjson 1.2.80漏洞 - Twings</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期二, 二月 7日 2023, 5:36 下午
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    1.2k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      5 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>学习！</p>
+<span id="more"></span>
+
+<hr>
+<h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>依赖：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>com.alibaba<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>fastjson<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>1.2.80<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h3><p>autotype绕过漏洞，可以在不开启的情况下反序列化对象。</p>
+<p>整个漏洞利用分为两个部分，参照1.2.68漏洞的想法反序列化内置类，据说是通过内置类setter、构造函数、field跟攻击用类的关系将攻击用类加入缓存，最后使用攻击用类完成攻击。</p>
+<h4 id="autotype绕过"><a href="#autotype绕过" class="headerlink" title="autotype绕过"></a>autotype绕过</h4><h5 id="内置类表"><a href="#内置类表" class="headerlink" title="内置类表"></a>内置类表</h5><p>关注checkAutoType函数，黑白名单之后会从内置类表、缓存类表等地方先找类，内置类表使用TypeUtils.getClassFromMapping中查找：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">clazz = TypeUtils.getClassFromMapping(typeName);</span><br></pre></td></tr></table></figure>
+
+<p>即：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> Class&lt;?&gt; getClassFromMapping(String className) &#123;</span><br><span class="line">    <span class="keyword">return</span> mappings.get(className);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Exception就在这个内置类表中，所以并直接返回继续反序列化：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (clazz != <span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="keyword">if</span> (expectClass != <span class="literal">null</span></span><br><span class="line">            &amp;&amp; clazz != java.util.HashMap.class</span><br><span class="line">            &amp;&amp; clazz != java.util.LinkedHashMap.class</span><br><span class="line">            &amp;&amp; !expectClass.isAssignableFrom(clazz)) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">JSONException</span>(<span class="string">&quot;type not match. &quot;</span> + typeName + <span class="string">&quot; -&gt; &quot;</span> + expectClass.getName());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> clazz;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h5 id="缓存"><a href="#缓存" class="headerlink" title="缓存"></a>缓存</h5><p>写两个对象：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">MyClass</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setName</span><span class="params">(String name)</span> &#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;Set Name&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">MyException</span> <span class="keyword">extends</span> <span class="title class_">Throwable</span> &#123;</span><br><span class="line">    <span class="keyword">private</span> MyClass clazz;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">MyException</span><span class="params">(MyClass clazz)</span> &#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setClazz</span><span class="params">(MyClass clazz)</span> &#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后是测试用代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">String</span> <span class="variable">json1</span> <span class="operator">=</span></span><br><span class="line">    <span class="string">&quot;    &#123;\&quot;a\&quot;:&#123;&quot;</span> +</span><br><span class="line">    <span class="string">&quot;        \&quot;@type\&quot;:\&quot;java.lang.Exception\&quot;,&quot;</span> +</span><br><span class="line">    <span class="string">&quot;        \&quot;@type\&quot;:\&quot;org.example.MyException\&quot;,&quot;</span> +</span><br><span class="line">    <span class="string">&quot;        \&quot;clazz\&quot;:&#123;&#125;&quot;</span> +</span><br><span class="line">    <span class="string">&quot;    &#125;&#125;&quot;</span>;</span><br><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">    JSON.parse(json1);</span><br><span class="line">&#125;<span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">    <span class="comment">// pass</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Fastjson根据Exception类找到对应的反序列化器ThrowableDeserializer：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (JSON.DEFAULT_TYPE_KEY.equals(key)) &#123;</span><br><span class="line">    <span class="keyword">if</span> (lexer.token() == JSONToken.LITERAL_STRING) &#123;</span><br><span class="line">        <span class="type">String</span> <span class="variable">exClassName</span> <span class="operator">=</span> lexer.stringVal();</span><br><span class="line">        exClass = parser.getConfig().checkAutoType(exClassName, Throwable.class, lexer.getFeatures());</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">JSONException</span>(<span class="string">&quot;syntax error&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    lexer.nextToken(JSONToken.COMMA);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>调用checkAutoType函数加载org.example.MyException类，跟1.2.68版本的绕过方式相同，由于存在expectClass所以类加载正常进行：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (autoTypeSupport || jsonType || expectClassFlag) &#123;</span><br><span class="line">    <span class="type">boolean</span> <span class="variable">cacheClass</span> <span class="operator">=</span> autoTypeSupport || jsonType;</span><br><span class="line">    clazz = TypeUtils.loadClass(typeName, defaultClassLoader, cacheClass);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>加载类后反序列化，首先是遍历构造函数实例化对象：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ex = createException(message, cause, exClass);</span><br></pre></td></tr></table></figure>
+
+<p>但是这里对构造函数的参数有要求：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">Class&lt;?&gt;[] types = constructor.getParameterTypes();</span><br><span class="line"><span class="keyword">if</span> (types.length == <span class="number">0</span>) &#123;</span><br><span class="line">    defaultConstructor = constructor;</span><br><span class="line">    <span class="keyword">continue</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (types.length == <span class="number">1</span> &amp;&amp; types[<span class="number">0</span>] == String.class) &#123;</span><br><span class="line">    messageConstructor = constructor;</span><br><span class="line">    <span class="keyword">continue</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (types.length == <span class="number">2</span> &amp;&amp; types[<span class="number">0</span>] == String.class &amp;&amp; types[<span class="number">1</span>] == Throwable.class) &#123;</span><br><span class="line">    causeConstructor = constructor;</span><br><span class="line">    <span class="keyword">continue</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>不然只会实例化一个Exception对象而不是输入的org.example.MyException，到这里为止通过构造函数参数类型似乎无法使用。</p>
+<p>此时由于输入了clazz这个field，所以会开始准备set进去，首先找到对应的反序列化器：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">ObjectDeserializer</span> <span class="variable">exDeser</span> <span class="operator">=</span> parser.getConfig().getDeserializer(exClass);</span><br></pre></td></tr></table></figure>
+
+<p>找到ThrowableDeserializer：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">else</span> <span class="keyword">if</span> (Throwable.class.isAssignableFrom(clazz)) &#123;</span><br><span class="line">    deserializer = <span class="keyword">new</span> <span class="title class_">ThrowableDeserializer</span>(<span class="built_in">this</span>, clazz);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>构造函数会调用JavaBeanInfo.build构建成员信息，然后反序列化field：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">String</span> <span class="variable">key</span> <span class="operator">=</span> entry.getKey();</span><br><span class="line"><span class="type">Object</span> <span class="variable">value</span> <span class="operator">=</span> entry.getValue();</span><br><span class="line"></span><br><span class="line"><span class="type">FieldDeserializer</span> <span class="variable">fieldDeserializer</span> <span class="operator">=</span> exBeanDeser.getFieldDeserializer(key);</span><br><span class="line"><span class="keyword">if</span> (fieldDeserializer != <span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="type">FieldInfo</span> <span class="variable">fieldInfo</span> <span class="operator">=</span> fieldDeserializer.fieldInfo;</span><br><span class="line">    <span class="keyword">if</span> (!fieldInfo.fieldClass.isInstance(value)) &#123;</span><br><span class="line">        value = TypeUtils.cast(value, fieldInfo.fieldType, parser.getConfig());</span><br><span class="line">    &#125;</span><br><span class="line">    fieldDeserializer.setValue(ex, value);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>由于输入的clazz值为{}，是一个JSONObject，跟成员类型不合，所以会调用TypeUtils.cast函数进行类型转换。</p>
+<p>由于JSONObject继承自Map，所以走到castToJavaBean函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (obj <span class="keyword">instanceof</span> Map) &#123;</span><br><span class="line">    <span class="keyword">if</span> (clazz == Map.class) &#123;</span><br><span class="line">        <span class="keyword">return</span> (T) obj;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="type">Map</span> <span class="variable">map</span> <span class="operator">=</span> (Map) obj;</span><br><span class="line">    <span class="keyword">if</span> (clazz == Object.class &amp;&amp; !map.containsKey(JSON.DEFAULT_TYPE_KEY)) &#123;</span><br><span class="line">        <span class="keyword">return</span> (T) obj;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> castToJavaBean((Map&lt;String, Object&gt;) obj, clazz, config);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>关键代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">JavaBeanDeserializer</span> <span class="variable">javaBeanDeser</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line"><span class="type">ObjectDeserializer</span> <span class="variable">deserializer</span> <span class="operator">=</span> config.getDeserializer(clazz);</span><br><span class="line"><span class="keyword">if</span> (deserializer <span class="keyword">instanceof</span> JavaBeanDeserializer) &#123;</span><br><span class="line">    javaBeanDeser = (JavaBeanDeserializer) deserializer;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (javaBeanDeser == <span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">JSONException</span>(<span class="string">&quot;can not get javaBeanDeserializer. &quot;</span> + clazz.getName());</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">return</span> (T) javaBeanDeser.createInstance(map, config);</span><br></pre></td></tr></table></figure>
+
+<p>找反序列化器，又是一串getDeserializer函数调用，不同的是由于找不到对应的反序列化器，所以会创建：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">deserializer = createJavaBeanDeserializer(clazz, type);</span><br><span class="line">...</span><br><span class="line">putDeserializer(type, deserializer);</span><br></pre></td></tr></table></figure>
+
+<p>这就导致了org.example.MyClass在deserializers中有了自己对应的反序列化缓存，下次反序列化时流程就跟Exception类似：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Exception走这里</span></span><br><span class="line">clazz = TypeUtils.getClassFromMapping(typeName);</span><br><span class="line"></span><br><span class="line"><span class="comment">// org.example.MyClass走这里</span></span><br><span class="line"><span class="keyword">if</span> (clazz == <span class="literal">null</span>) &#123;</span><br><span class="line">    clazz = deserializers.findClass(typeName);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>也就绕过了autotype。</p>
+<p>把field、setter和构造函数分开一个个测试，会发现以下两种情况可以成功利用：</p>
+<ul>
+<li><p>构造函数</p>
+</li>
+<li><p>setter</p>
+</li>
+</ul>
+<p>只有field的情况下，调试一下因为它获取field的函数用的是getFields，所以要改成public形式的：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">MyException</span> <span class="keyword">extends</span> <span class="title class_">Throwable</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> MyClass clazz;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">MyException</span><span class="params">(MyClass clazz)</span> &#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setClazz</span><span class="params">(MyClass clazz)</span> &#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>也就是说field、setter和构造函数都可以绕过，最后调试一下构造函数的绕过点，给putDeserializer函数下断点，找到JavaBeanInfo.build函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Class&lt;?&gt; fieldClass = types[i];</span><br><span class="line"><span class="type">Type</span> <span class="variable">fieldType</span> <span class="operator">=</span> creatorConstructor.getGenericParameterTypes()[i];</span><br><span class="line">...</span><br><span class="line"><span class="type">FieldInfo</span> <span class="variable">fieldInfo</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">FieldInfo</span>(paramName, clazz, fieldClass, fieldType, field,</span><br><span class="line">        ordinal, serialzeFeatures, parserFeatures);</span><br><span class="line">add(fieldList, fieldInfo);</span><br></pre></td></tr></table></figure>
+
+<p>根据构造函数参数类型和参数名，直接新建了一个FieldInfo出来放到fieldList。</p>
+<h4 id="反序列化攻击"><a href="#反序列化攻击" class="headerlink" title="反序列化攻击"></a>反序列化攻击</h4><p>在能加载到的类里找到能利用的就行，参考文章有groovy、jdbc和aspectj的利用链。</p>
+<hr>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://xz.aliyun.com/t/11727">某json 1.2.80 漏洞分析</a></p>
+<p><a href="https://hosch3n.github.io/2022/09/01/Fastjson1-2-80%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/">Fastjson1.2.80漏洞复现</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Java/">Java</a>
+                    
+                      <a class="hover-with-bg" href="/tags/%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/">反序列化</a>
+                    
+                      <a class="hover-with-bg" href="/tags/FastJSON/">FastJSON</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2023/02/08/%E5%85%B3%E4%BA%8EAnnotationInvocationHandler%E5%9C%A8%E9%AB%98%E7%89%88%E6%9C%AC%E4%B8%8B%E7%9A%84%E7%A0%94%E7%A9%B6/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>关于AnnotationInvocationHandler在高版本下的研究</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2023/02/06/CVE-2022-33980-Apache-Commons-Configuration%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/">
+                        <span>CVE-2022-33980 Apache Commons Configuration命令执行漏洞</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "Fastjson 1.2.80漏洞&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

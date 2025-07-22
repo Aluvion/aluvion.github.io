@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>VueElectronElementUI开发自己的B站弹幕姬 - Twings</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期四, 三月 12日 2020, 8:28 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    1.2k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      5 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>兴趣，顺便学一学。</p>
+<p>以后可能会学习的东西：系统的日语、打轴、剪辑、MMD、3D建模(?)。</p>
+<span id="more"></span>
+
+<hr>
+<h3 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h3><p>因为我已经安装过 vue 了，所以直接使用 vue create 一个新的项目。</p>
+<p>安装 Electron 来结合 Vue 网上有各种各样的说法，我采用的是创建完 Vue 项目后再安装 vue-cli-plugin-electron-builder 的方式：<a href="https://www.jianshu.com/p/dfcf2a6a497c">https://www.jianshu.com/p/dfcf2a6a497c</a> 。</p>
+<p>安装过程中可能会因为网络问题卡顿，可以用这两条命令安装 chromedriver 和 Electron：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">npm install chromedriver --chromedriver_cdnurl=http://cdn.npm.taobao.org/dist/chromedriver</span><br><span class="line">npm install electron --ELECTRON_MIRROR=&quot;https://cdn.npm.taobao.org/dist/electron/&quot;</span><br></pre></td></tr></table></figure>
+
+<p>安装完之后虽然后面安装 vue-cli-plugin-electron-builder 的时候还是会卡住，我直接 Ctrl C 中断后重新安装，下载步骤就会跳过了，安装完之后查看 package.json，看看 electron:build 和 electron:serve 命令是否配置好，然后输入启动服务命令试一试：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">npm run electron:serve</span><br></pre></td></tr></table></figure>
+
+<p>正常的话应该会看到程序跑起来了。</p>
+<p>跟 Electron 窗口相关的 background.js 文件会生成在 src 目录下。</p>
+<p>serve 是可以了，build 的时候还是需要下载一些工具，具体做法可以参考这篇文章的做法：<a href="https://segmentfault.com/a/1190000018533945">https://segmentfault.com/a/1190000018533945</a> 。</p>
+<p>网络环境简直是一生之敌。</p>
+<h3 id="开发"><a href="#开发" class="headerlink" title="开发"></a>开发</h3><p>首先是引入之前删减过的第三方 WebSocket 加解密 JS 文件，因为 JS 文件里面已经将入口挂载到了 window 上，所以直接将 JS 放在 public 目录下， 然后在 index.html 里 app 上面用 script 标签引用就可以在 App.vue 里面使用了。</p>
+<p>因为从浏览器也就是渲染层访问 B 站接口要跨域，就算更改了跨域设置 B 站也只会给个 403 给我，所以不使用 axios，打算从主进程那边发出 HTTP 请求，进程间使用 ipcMain 通信：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; ipcRenderer &#125; <span class="keyword">from</span> <span class="string">&#x27;electron&#x27;</span></span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(ipcRenderer.<span class="title function_">sendSync</span>(<span class="string">&quot;httpProxy&quot;</span>, <span class="variable language_">this</span>.<span class="property">roomInfoURL</span> + <span class="variable language_">this</span>.<span class="property">roomID</span>));</span><br></pre></td></tr></table></figure>
+
+<p>然后在主进程：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; net &#125; <span class="keyword">from</span> <span class="string">&#x27;electron&#x27;</span></span><br><span class="line">ipcMain.<span class="title function_">on</span>(<span class="string">&#x27;httpProxy&#x27;</span>, <span class="function">(<span class="params">event, arg</span>) =&gt;</span> &#123;</span><br><span class="line">  event.<span class="property">returnValue</span> = arg;</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>参考：<a href="https://www.electronjs.org/docs/api/ipc-main">https://www.electronjs.org/docs/api/ipc-main</a> ，或者可以看看这个别人写好的 demo：<a href="https://github.com/sunnie1992/electron-vue-print-demo/">https://github.com/sunnie1992/electron-vue-print-demo/</a> 。</p>
+<p>然后主进程使用 request。</p>
+<p>以上都是麻烦的做法，后面我发现引用第三方图片 403，发现只要加上一句：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">meta</span> <span class="attr">name</span>=<span class="string">&quot;referrer&quot;</span> <span class="attr">content</span>=<span class="string">&quot;no-referrer&quot;</span>/&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>就可以 axios 了，用不着那么麻烦进程间通信了。</p>
+<p>直播间相关信息可以带上直播间 ID 访问 <a href="https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=">https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=</a> 获得，包括 tags、直播间名称、封面图片路径等等信息。</p>
+<p>获取完直播间信息就可以开始准备连接 WebSocket 了，要注意的是在连接上 B 站的 WebSocket 服务器之后，必须发送一个验证数据包，不然就会断开连接，验证数据包大致是这个格式：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> authCode = &#123;</span><br><span class="line">    <span class="string">&quot;uid&quot;</span>: <span class="number">0</span>,</span><br><span class="line">    <span class="string">&quot;roomid&quot;</span>: <span class="title class_">Number</span>(<span class="variable language_">this</span>.<span class="property">roomID</span>),</span><br><span class="line">    <span class="string">&quot;protover&quot;</span>: <span class="number">2</span>,</span><br><span class="line">    <span class="string">&quot;platform&quot;</span>: <span class="string">&quot;web&quot;</span>,</span><br><span class="line">    <span class="string">&quot;clientver&quot;</span>: <span class="string">&quot;1.10.3&quot;</span>,</span><br><span class="line">    <span class="string">&quot;type&quot;</span>: <span class="number">2</span>,</span><br><span class="line">    <span class="string">&quot;key&quot;</span>: <span class="string">&quot;&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>要注意数据类型，其中 key 可以通过访问接口获得，但是好像服务器根本不检测。</p>
+<p>之后每隔一段时间发送一个心跳检测数据包即可，简陋的代码大概是这个样子：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable language_">this</span>.<span class="property">ws</span> = <span class="keyword">new</span> <span class="title class_">WebSocket</span>(<span class="string">&quot;ws://broadcastlv.chat.bilibili.com:2244/sub&quot;</span>);</span><br><span class="line"><span class="variable language_">this</span>.<span class="property">ws</span>.<span class="property">binaryType</span> = <span class="string">&quot;arraybuffer&quot;</span>,</span><br><span class="line"><span class="variable language_">this</span>.<span class="property">ws</span>.<span class="property">myCoder</span> = <span class="keyword">new</span> <span class="variable language_">window</span>.<span class="title function_">coder</span>();</span><br><span class="line"><span class="variable language_">this</span>.<span class="property">ws</span>.<span class="property">HEART_BEAT_INTERVA</span> = <span class="literal">null</span>,</span><br><span class="line"><span class="variable language_">this</span>.<span class="property">ws</span>.<span class="property">heartBeat</span> = <span class="keyword">function</span>(<span class="params"></span>) &#123;</span><br><span class="line">    <span class="keyword">var</span> e = <span class="variable language_">this</span>;</span><br><span class="line">    <span class="built_in">clearTimeout</span>(<span class="variable language_">this</span>.<span class="property">HEART_BEAT_INTERVAL</span>);</span><br><span class="line">    <span class="keyword">var</span> t = <span class="variable language_">this</span>.<span class="property">myCoder</span>.<span class="title function_">convertToArrayBuffer</span>(&#123;&#125;, <span class="number">2</span>);</span><br><span class="line">    <span class="variable language_">this</span>.<span class="title function_">send</span>(t),</span><br><span class="line">    <span class="variable language_">this</span>.<span class="property">HEART_BEAT_INTERVAL</span> = <span class="built_in">setTimeout</span>(<span class="keyword">function</span>(<span class="params"></span>) &#123;</span><br><span class="line">    	e.<span class="title function_">heartBeat</span>();</span><br><span class="line">    &#125;, <span class="number">1e3</span> * <span class="number">30</span>)</span><br><span class="line">&#125;;</span><br><span class="line"><span class="variable language_">this</span>.<span class="property">ws</span>.<span class="property">onopen</span> = <span class="keyword">function</span>(<span class="params"></span>) &#123;</span><br><span class="line">    <span class="variable language_">this</span>.<span class="title function_">send</span>(<span class="variable language_">this</span>.<span class="property">myCoder</span>.<span class="title function_">convertToArrayBuffer</span>(<span class="title class_">JSON</span>.<span class="title function_">stringify</span>(authCode), <span class="number">7</span>));</span><br><span class="line">    <span class="variable language_">this</span>.<span class="title function_">heartBeat</span>();</span><br><span class="line">&#125;</span><br><span class="line"><span class="variable language_">this</span>.<span class="property">ws</span>.<span class="property">onmessage</span> = <span class="variable language_">this</span>.<span class="property">getMessage</span>;</span><br></pre></td></tr></table></figure>
+
+<p>authCode 是验证数据，getMessage 是自己写的处理弹幕的函数。</p>
+<p>最后牌子的样式代码是用 Vue 动态绑定的，大概是这个样子：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">:style</span>=<span class="string">&quot;&#123;&#x27;display&#x27;: &#x27;inline&#x27;, &#x27;border&#x27;: &#x27;1px solid &#x27; + danma.color, &#x27;border-radius&#x27;: &#x27;2px&#x27;&#125;&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">span</span> <span class="attr">:style</span>=<span class="string">&quot;&#123;&#x27;background&#x27;: danma.color, &#x27;color&#x27;: &#x27;#fff&#x27;&#125;&quot;</span>&gt;</span>&#123;&#123; danma.medal &#125;&#125;<span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">span</span> <span class="attr">:style</span>=<span class="string">&quot;&#123;&#x27;margin-left&#x27;: &#x27;5px&#x27;, &#x27;color&#x27;: danma.color, &#x27;margin-right&#x27;: &#x27;5px&#x27;&#125;&quot;</span>&gt;</span>&#123;&#123; danma.level &#125;&#125;<span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">style</span>=<span class="string">&quot;display: inline;&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">span</span> <span class="attr">style</span>=<span class="string">&quot;margin-left: 10px; color: #23ade5;&quot;</span>&gt;</span>&#123;&#123; danma.uname &#125;&#125;:<span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">span</span> <span class="attr">style</span>=<span class="string">&quot;margin-left: 5px;&quot;</span>&gt;</span>&#123;&#123; danma.danma &#125;&#125;<span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>最后做好的低配版本：</p>
+<p><img src="/css/images/2020031301.png" srcset="/img/loading.gif"></p>
+<p>这部分学习就暂告一段落了，明天开始学习其他东西。</p>
+<p>注：后来发现 Electron 可以直接在 Vue 里面引用 node 的模块，比如 request 之类的，也可以引用 child_process，所以如果存在 XSS 漏洞危害还是蛮大的。</p>
+<hr>
+<p>Orz</p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                      <a class="hover-with-bg" href="/tags/%E5%89%8D%E7%AB%AF/">前端</a>
+                    
+                      <a class="hover-with-bg" href="/tags/%E5%BC%80%E5%8F%91/">开发</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2020/03/16/Go-gin-C-cinatra-Web%E5%BC%80%E5%8F%91/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>Go-gin/C++-cinatra Web开发</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2020/03/12/%E5%8F%91%E6%95%A3%E6%80%A7%E5%AD%A6%E4%B9%A0-%E4%B9%B1%E5%AD%A6/">
+                        <span>发散性学习(乱学)</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "VueElectronElementUI开发自己的B站弹幕姬&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

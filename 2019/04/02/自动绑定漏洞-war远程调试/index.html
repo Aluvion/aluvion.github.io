@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
+  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="摸鱼">
+  <meta name="author" content="Aluvion">
+  <meta name="keywords" content="">
+  <title>自动绑定漏洞+war远程调试 - Twings</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/links/">友链</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期二, 四月 2日 2019, 7:29 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    2.1k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      8 分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="far fa-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>这些天看了看volgactf2019的题目，里面有一道100分的web题shop，因为是少见的Java Web代码审计题目，源码以war包的形式给出，而且考点是我没有怎么了解过的Spring自动绑定漏洞，所以现在写一篇文章研究总结一下这个漏洞。</p>
+<p>漏洞的发生和利用在下面的参考链接里都写得很清楚了，所以我主要对非预期解的大小写绕过和预期解的传递对象成员变量两种情况做一下分析，分析的方式是本地环境+IDEA远程调试war。</p>
+<span id="more"></span>
+
+<p>源码shop v.1：<a href="/file/volgactf2019/shop-1.0.0.war">附件</a></p>
+<p>源码shop v.2：<a href="/file/volgactf2019/shop-1.0.1.war">附件</a></p>
+<p>不过其实只用v.1就可以了，除了buy路由之外其他地方改动不大。</p>
+<hr>
+<h3 id="本地环境搭建"><a href="#本地环境搭建" class="headerlink" title="本地环境搭建"></a>本地环境搭建</h3><h4 id="IDEA配置"><a href="#IDEA配置" class="headerlink" title="IDEA配置"></a>IDEA配置</h4><p>首先将war包解压，然后按照class的package构造Java源代码目录，并将它标识为源代码目录，方便我们对源代码下断点进行调试：</p>
+<p><img src="/css/images/volgactf2019/2019040201.png" srcset="/img/loading.gif"></p>
+<p>然后使用maven下载依赖，我这里是已经下载好的：</p>
+<p><img src="/css/images/volgactf2019/2019040202.png" srcset="/img/loading.gif"></p>
+<p>最后配置远程调试：</p>
+<p><img src="/css/images/volgactf2019/2019040203.png" srcset="/img/loading.gif"></p>
+<p>IDEA配置完成。</p>
+<h4 id="服务器搭建"><a href="#服务器搭建" class="headerlink" title="服务器搭建"></a>服务器搭建</h4><p>我使用的环境是docker+Ubuntu18+tomcat9+jdk1.8.0_201，首先安装Java和其他需要的软件：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">apt-get install software-properties-common</span><br><span class="line">add-apt-repository ppa:webupd8team/java</span><br><span class="line">apt-get install oracle-java8-installer</span><br><span class="line">apt-get install wget</span><br><span class="line">apt-get install vim</span><br></pre></td></tr></table></figure>
+
+<p>然后安装tomcat9：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">cd /opt</span><br><span class="line">wget http://apache.otenet.gr/dist/tomcat/tomcat-9/v9.0.17/bin/apache-tomcat-9.0.17.tar.gz</span><br><span class="line">tar zxvf apache-tomcat-9.0.17.tar.gz</span><br></pre></td></tr></table></figure>
+
+<p>然后修改&#x2F;opt&#x2F;apache-tomcat-9.0.17&#x2F;conf&#x2F;server.xml：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&lt;Host name=&quot;localhost&quot;  appBase=&quot;&quot; unpackWARs=&quot;true&quot; autoDeploy=&quot;true&quot;&gt;</span><br><span class="line">&lt;Context path=&quot;&quot; docBase=&quot;/opt/apache-tomcat-9.0.17/webapps/shop-1.0.0&quot; debug=&quot;0&quot; reloadable=&quot;true&quot; crossContext=&quot;true&quot;/&gt;</span><br></pre></td></tr></table></figure>
+
+<p>然后修改&#x2F;opt&#x2F;apache-tomcat-9.0.17&#x2F;bin目录下的catalina.sh文件，加上一行代码以开放2333端口给我们进行远程调试：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">CATALINA_OPTS=&quot;-agentlib:jdwp=transport=dt_socket,server=y,address=2333,suspend=n&quot;</span><br></pre></td></tr></table></figure>
+
+<p>最后将war包放到&#x2F;opt&#x2F;apache-tomcat-9.0.17&#x2F;webapps目录下。</p>
+<h4 id="开始调试"><a href="#开始调试" class="headerlink" title="开始调试"></a>开始调试</h4><p>启动tomcat：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./catalina.sh start</span><br></pre></td></tr></table></figure>
+
+<p>然后开启IDEA的远程调试，下断点并访问网站，即可开始调试：</p>
+<p><img src="/css/images/volgactf2019/2019040204.png" srcset="/img/loading.gif"></p>
+<p>顺带一提的是，这样搭建的环境在调试反编译出来的Java源代码的时候，有时候会有字节码和源代码不匹配的提示。不过这个无伤大雅，我们可以删掉几行不需要的代码（比如IDEA反编译源代码最上方的注释），来让行号匹配起来，让我们看得更舒服一点。</p>
+<p>环境搭建结束。</p>
+<hr>
+<h3 id="shop-v-1"><a href="#shop-v-1" class="headerlink" title="shop v.1"></a>shop v.1</h3><p>出题人已经想到了buy路由有可能被人利用自动绑定漏洞来覆盖balance并购买flag的情况，所以出题人用这一句代码禁止了这样修改balance：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">binder.setDisallowedFields(new String[]&#123;&quot;balance&quot;&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>但是出题人没有想到的是，Spring底层会对字段名字进行大小写上的处理，导致buy路由向POST这样的payload可以绕过这个限制，导致了非预期：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">productId=4&amp;Balance=23333</span><br></pre></td></tr></table></figure>
+
+<p>因为我们并不知道底层实现的原因，我们无法知道去哪里下断点，所以现在我们可以直接给buy下个断点，然后通过查看调用栈的方式来寻找触发点：</p>
+<p><img src="/css/images/volgactf2019/2019040205.png" srcset="/img/loading.gif"></p>
+<p>这时候我们可以看到，用户信息里面的balance已经被修改成了23333，要买个1337价格的flag自然不在话下，这时候我们就可以一点点查看左下角的调用栈和当时的变量，开始确定漏洞触发点：</p>
+<p><img src="/css/images/volgactf2019/2019040206.png" srcset="/img/loading.gif"></p>
+<p>经过一番寻找，我们可以看到从invokeHandlerMethod方法开始有了我们的目标的痕迹，我们给这里下个断点再次调试，这里因为这次请求结束后balance发生了变化，所以我重新弄了个账号：</p>
+<p><img src="/css/images/volgactf2019/2019040207.png" srcset="/img/loading.gif"></p>
+<p>可以看到现在都是很正常的，并且多次调试发现，到buy之前不会再次经过这里，所以我们可以猜测漏洞触发点在这个函数里面，我们跟入invokeAndHandle，来到invokeForRequest：</p>
+<p><img src="/css/images/volgactf2019/2019040208.png" srcset="/img/loading.gif"></p>
+<p>虽然猜测第一行的代码是buy之后的事情了，但是为了求稳还是断点调试一下，可以发现确实如此。所以我们跟入invokeForRequest：</p>
+<p><img src="/css/images/volgactf2019/2019040209.png" srcset="/img/loading.gif"></p>
+<p>同样断点调试，发现这里会经过不止一次，我们注意观察args变量在buy之前的变化，可以看到User在args中出现了两次，而第二次出现的时候，balance已经被我们覆盖了</p>
+<p><img src="/css/images/volgactf2019/2019040210.png" srcset="/img/loading.gif"></p>
+<p><img src="/css/images/volgactf2019/2019040211.png" srcset="/img/loading.gif"></p>
+<p>或者我们可以返回以前的invokeHandlerMethod，可以看到现在的User还没有被改写：</p>
+<p><img src="/css/images/volgactf2019/2019040212.png" srcset="/img/loading.gif"></p>
+<p>在User出现的两次之间还有一次会经过这里，我们同样在那个时候回过头去查看，可以看到现在的User已经被改写了：</p>
+<p><img src="/css/images/volgactf2019/2019040212_5.png" srcset="/img/loading.gif"></p>
+<p>所以我们直接在User第一次出现的时候跟入，可以看到代码初始化了Binder，然后来到resolveArgument，调用了bindRequestParameters：</p>
+<p><img src="/css/images/volgactf2019/2019040213.png" srcset="/img/loading.gif"></p>
+<p>看起来这个函数就很关键，似乎对请求的参数进行了绑定，我们跟入，可看到代码对request做了处理，然后调用了servletBinder.bind：</p>
+<p><img src="/css/images/volgactf2019/2019040214.png" srcset="/img/loading.gif"></p>
+<p>这里也是对request进行处理，然后是doBind：</p>
+<p><img src="/css/images/volgactf2019/2019040215.png" srcset="/img/loading.gif"></p>
+<p>这里对我们输入的参数进行了检查，然后继续doBind：</p>
+<p><img src="/css/images/volgactf2019/2019040216.png" srcset="/img/loading.gif"></p>
+<p>这里也是检查输入的参数，binder.setDisallowedFields(new String[]{“balance”})就是在这里发挥作用的，然后是applyPropertyValues函数：</p>
+<p><img src="/css/images/volgactf2019/2019040217.png" srcset="/img/loading.gif"></p>
+<p>然后是setPropertyValues，看来这里进行了绑定：</p>
+<p><img src="/css/images/volgactf2019/2019040218.png" srcset="/img/loading.gif"></p>
+<p>这里调用setPropertyValue对Balance进行了赋值：</p>
+<p><img src="/css/images/volgactf2019/2019040219.png" srcset="/img/loading.gif"></p>
+<p>继续nestedPa.setPropertyValue：</p>
+<p><img src="/css/images/volgactf2019/2019040220.png" srcset="/img/loading.gif"></p>
+<p>一路跟踪来到processLocalProperty，看起来这里通过字段名获取了字段的处理方法，那么这里就是漏洞的触发点了，我们跟入getLocalPropertyHandler：</p>
+<p><img src="/css/images/volgactf2019/2019040221.png" srcset="/img/loading.gif"></p>
+<p>最后来到getPropertyDescriptor：</p>
+<p><img src="/css/images/volgactf2019/2019040222.png" srcset="/img/loading.gif"></p>
+<p>这里就看得很清楚了，通过字段名获取了字段的处理方法的时候，如果Balance获取不到，就会调用StringUtils.uncapitalize和StringUtils.capitalize，在将首字母进行大小写转换之后再重新获取，这就导致了非预期解的产生。</p>
+<h3 id="shop-v-2"><a href="#shop-v-2" class="headerlink" title="shop v.2"></a>shop v.2</h3><p>预期解的payload，向profile路由POST：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cartItems[0].id=4</span><br></pre></td></tr></table></figure>
+
+<p>因为后端显示已购买物品的时候是通过遍历User的cartItems中各个Product对象的id来实现的：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">user.getCartItems().forEach((p) -&gt; &#123;</span><br><span class="line">	cart.add(this.productDao.geProduct(p.getId()));</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<p>所以我们可以通过改写id的方式，来将flag加入我们的已购买物品栏，而Spring中表示对象属性的字符就是.。</p>
+<p>现在我来研究一下它的处理流程，因为有了上一次的经验的缘故，所以我们直接从setPropertyValues入手：</p>
+<p><img src="/css/images/volgactf2019/2019040301.png" srcset="/img/loading.gif"></p>
+<p>来到getPropertyAccessorForPropertyPath，看名字应该就是我们的目的地了，我们跟进去：</p>
+<p><img src="/css/images/volgactf2019/2019040302.png" srcset="/img/loading.gif"></p>
+<p>看到这里调用getFirstNestedPropertySeparatorIndex来获取第一个属性分隔符，然后进行字符串的分割，我们继续跟入来到getNestedPropertySeparatorIndex函数：</p>
+<p><img src="/css/images/volgactf2019/2019040303.png" srcset="/img/loading.gif"></p>
+<p>这里就是我们的目的地了，可以看到这里遍历了cartItems[0].id，然后返回了.的位置，这个时候我们的cartItems还是空的，所以我们继续往下走，来到getPropertyValue：</p>
+<p><img src="/css/images/volgactf2019/2019040304.png" srcset="/img/loading.gif"></p>
+<p>可以看到这里根据我们传入的list的长度开始循环，判断类型，然后进入了list的分支，调用growCollectionIfNecessary函数来进行扩张，我们继续往下走，回到setPropertyValue中：</p>
+<p><img src="/css/images/volgactf2019/2019040305.png" srcset="/img/loading.gif"></p>
+<p>可以看到现在cartItems中已经有了个空的Product，接下来的步骤就跟上面差不多了，我们继续走下去，来到processLocalProperty：</p>
+<p><img src="/css/images/volgactf2019/2019040306.png" srcset="/img/loading.gif"></p>
+<p><img src="/css/images/volgactf2019/2019040307.png" srcset="/img/loading.gif"></p>
+<p>看到这里调用了setValue，然后在setValue中获取了id的setter并invoke调用进行赋值：</p>
+<p><img src="/css/images/volgactf2019/2019040308.png" srcset="/img/loading.gif"></p>
+<p>可以看到这里已经完成了赋值，漏洞触发。</p>
+<hr>
+<h3 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h3><p>Java博大精深，亲手跟踪了一下底层的实现，加深了对Java的理解和动手调试能力，感觉自己又离各位师傅近了一点Orz</p>
+<hr>
+<p>参考链接：</p>
+<p><a href="http://www.beesfun.com/2017/07/22/Spring-MVC-%E8%87%AA%E5%8A%A8%E7%BB%91%E5%AE%9A%E6%BC%8F%E6%B4%9E/">http://www.beesfun.com/2017/07/22/Spring-MVC-%E8%87%AA%E5%8A%A8%E7%BB%91%E5%AE%9A%E6%BC%8F%E6%B4%9E/</a></p>
+<p><a href="https://github.com/Cryin/Paper/blob/master/Spring%20MVC%20Autobinding%E6%BC%8F%E6%B4%9E%E5%AE%9E%E4%BE%8B%E5%88%9D%E7%AA%A5.md">https://github.com/Cryin/Paper/blob/master/Spring%20MVC%20Autobinding%E6%BC%8F%E6%B4%9E%E5%AE%9E%E4%BE%8B%E5%88%9D%E7%AA%A5.md</a></p>
+<p><a href="https://xz.aliyun.com/t/128">https://xz.aliyun.com/t/128</a></p>
+<p><a href="https://tuanlinh.gitbook.io/ctf/volgactf-2019-qualifier">https://tuanlinh.gitbook.io/ctf/volgactf-2019-qualifier</a></p>
+<p><a href="https://www.cnblogs.com/yunqing/p/10605399.html">https://www.cnblogs.com/yunqing/p/10605399.html</a></p>
+<p><a href="https://blog.csdn.net/qq_38086836/article/details/83472744">https://blog.csdn.net/qq_38086836/article/details/83472744</a></p>
+<p><a href="https://www.howtoing.com/ubuntu-apache-tomcat">https://www.howtoing.com/ubuntu-apache-tomcat</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/CTF/">CTF</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Java/">Java</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Spring/">Spring</a>
+                    
+                      <a class="hover-with-bg" href="/tags/%E8%87%AA%E5%8A%A8%E7%BB%91%E5%AE%9A/">自动绑定</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-12 col-md-6">
+                    
+                      <a href="/2019/04/04/Go-1/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span>Go(1)</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-12 col-md-6">
+                    
+                      <a href="/2019/04/02/Pwnhub-Always-be-with-U-%E5%AD%A6%E4%B9%A0/">
+                        <span>Pwnhub Always be with U 学习</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "自动绑定漏洞+war远程调试&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

